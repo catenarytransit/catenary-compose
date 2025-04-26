@@ -14,15 +14,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
 import org.maplibre.android.MapLibre
 import dev.sargunv.maplibrecompose.compose.MaplibreMap
+import androidx.compose.foundation.isSystemInDarkTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val styleUri = if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json" else "https://maps.catenarymaps.org/light-style.json"
+
             CatenaryComposeTheme {
                 MaplibreMap(
-
+                    styleUri = styleUri,
                 )
             }
         }
