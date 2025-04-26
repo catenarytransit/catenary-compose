@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
+import org.maplibre.android.MapLibre
+import dev.sargunv.maplibrecompose.compose.MaplibreMap
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,12 +21,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CatenaryComposeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Catenary",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                MaplibreMap(
+
+                )
             }
         }
     }
