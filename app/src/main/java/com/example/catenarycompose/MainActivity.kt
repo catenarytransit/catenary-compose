@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             CatenaryComposeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "Catenary",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -42,6 +42,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     CatenaryComposeTheme {
-        Greeting("Android")
+        Greeting("Catenary")
     }
 }
