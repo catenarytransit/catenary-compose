@@ -1,5 +1,6 @@
 package com.example.catenarycompose
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -49,6 +50,8 @@ import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.EaseOutCirc
+// CHANGE: Import for configuration awareness
+import androidx.compose.ui.platform.LocalConfiguration
 
 val easeOutSpec: AnimationSpec<Float> = tween(
     durationMillis = 300, // Specify the duration of the animation
@@ -74,6 +77,10 @@ class MainActivity : ComponentActivity() {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     val density = LocalDensity.current
                     val screenHeightPx = with(density) { maxHeight.toPx() }
+
+                    // CHANGE: Get screen configuration to determine orientation
+                    val configuration = LocalConfiguration.current
+                    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val anchors = DraggableAnchors<SheetSnapPoint> {
                         SheetSnapPoint.Collapsed at screenHeightPx - with(density) { 64.dp.toPx() }
@@ -104,9 +111,17 @@ class MainActivity : ComponentActivity() {
                         )
                     )
 
+                    // CHANGE: Conditionally define the modifier based on orientation
+                    val sheetModifier = if (isLandscape) {
+                        Modifier
+                            .fillMaxWidth(0.5f)
+                            .align(Alignment.BottomStart)
+                    } else {
+                        Modifier.fillMaxWidth()
+                    }
+
                     Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = sheetModifier // CHANGE: Apply the conditional modifier
                             .offset {
                                 IntOffset(
                                     x = 0,
