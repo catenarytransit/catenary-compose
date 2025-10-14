@@ -58,4 +58,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("org.maplibre.gl:android-sdk:11.8.6")
     implementation(libs.maplibre.compose)
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }
