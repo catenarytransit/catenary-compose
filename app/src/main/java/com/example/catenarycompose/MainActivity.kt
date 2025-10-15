@@ -52,8 +52,12 @@ import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.EaseOutCirc
 // CHANGE: Import for configuration awareness
 import androidx.compose.ui.platform.LocalConfiguration
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.style.BaseStyle
+import org.maplibre.compose.sources.rememberGeoJsonSource
 
 val easeOutSpec: AnimationSpec<Float> = tween(
     durationMillis = 300, // Specify the duration of the animation
@@ -113,7 +117,19 @@ class MainActivity : ComponentActivity() {
                                 isScaleBarEnabled = false,
                             )
                         )
-                    )
+
+                    ) {
+                        // START: Added GeoJSON source and layer
+                        val chateausSource = rememberGeoJsonSource(
+                            GeoJsonData.Uri("https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json")
+                        )
+
+                        FillLayer(
+                            id = "chateaus_calc",
+                            source = chateausSource
+                        )
+                        // END: Added GeoJSON source and layer
+                    }
 
                     // CHANGE: Conditionally define the modifier based on orientation
                     val sheetModifier = if (isLandscape) {
