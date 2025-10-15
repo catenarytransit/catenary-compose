@@ -188,12 +188,7 @@ class MainActivity : ComponentActivity() {
                             opacity = const(0.0f)
                         )
 
-                        LineLayer(
-                            id = "chateaus_calc_line",
-                            source = chateausSource,
-                            color = const(Color.White),
-                            width = const(0.dp),
-                        )
+
                     }
 
                     // Sheet width differs in landscape
