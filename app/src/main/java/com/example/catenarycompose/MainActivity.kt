@@ -54,6 +54,7 @@ import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 
 private const val TAG = "CatenaryDebug"
+var visibleChateaus: List<String> = emptyList()
 
 val easeOutSpec: AnimationSpec<Float> = tween(
     durationMillis = 300,
@@ -81,6 +82,7 @@ private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {
     )
 
     val names = features.map { f -> f.properties["chateau"]?.toString() ?: "Unknown" }
+    visibleChateaus = names
     Log.d(TAG, "Visible chateaus (${names.size}): ${names.joinToString(limit = 100)}")
 }
 
