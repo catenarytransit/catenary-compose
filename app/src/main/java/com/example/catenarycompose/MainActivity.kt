@@ -1,15 +1,20 @@
 package com.example.catenarycompose
 
+import android.content.Context
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 // CHANGE: Add new imports for animation specs
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.EaseOut
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -32,13 +37,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect // NEW
+import androidx.compose.runtime.getValue // NEW
+import androidx.compose.runtime.mutableStateOf // NEW
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue // NEW
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset // NEW
+import androidx.compose.ui.geometry.Rect // NEW
+import androidx.compose.ui.layout.onSizeChanged // NEW
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize // NEW
 import androidx.compose.ui.unit.dp
 import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
 import org.maplibre.compose.map.MaplibreMap
@@ -52,12 +65,25 @@ import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.EaseOutCirc
 // CHANGE: Import for configuration awareness
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.DpRect
+import io.github.dellisd.spatialk.geojson.Position
 import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.compose.layers.FillExtrusionLayer
 import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.sources.rememberGeoJsonSource
+// NEW: camera APIs to read the current projection/viewport
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.rememberCameraState
+// NEW: coroutines delay for 1s ticker
+import kotlinx.coroutines.delay
+import org.maplibre.compose.layers.LineLayer
+import org.maplibre.compose.expressions.dsl.const
+import android.content.res.Resources
+
+private const val TAG = "CatenaryDebug"
 
 val easeOutSpec: AnimationSpec<Float> = tween(
     durationMillis = 300, // Specify the duration of the animation
@@ -77,7 +103,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val styleUri = if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json" else "https://maps.catenarymaps.org/light-style.json"
+            val styleUri =
+                if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json"
+                else "https://maps.catenarymaps.org/light-style.json"
 
             CatenaryComposeTheme {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -106,29 +134,97 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                    // NEW: camera state so we can query visible features
+                    val camera = rememberCameraState(
+                        firstPosition = CameraPosition(
+                            target = Position(-118.250,34.050), // any default
+                            zoom = 6.0
+                        )
+                    )
+
+                    // NEW: Track the size of the map composable in pixels
+                    var mapSize by remember { mutableStateOf(IntSize.Zero) }
+
+                    // Map
                     MaplibreMap(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .onSizeChanged { mapSize = it }, // NEW
                         baseStyle = BaseStyle.Uri(styleUri),
-                        options = MapOptions (
+                        options = MapOptions(
                             ornamentOptions = OrnamentOptions(
                                 isLogoEnabled = false,
                                 isAttributionEnabled = true,
                                 isCompassEnabled = false,
                                 isScaleBarEnabled = false,
                             )
-                        )
-
+                        ),
+                        cameraState = camera // NEW
                     ) {
+
                         // START: Added GeoJSON source and layer
                         val chateausSource = rememberGeoJsonSource(
-                            GeoJsonData.Uri("https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json")
+                            data = GeoJsonData.Uri("https://birch.catenarymaps.org/getchateaus")
                         )
+
+                        println(chateausSource.toString());
+
 
                         FillLayer(
                             id = "chateaus_calc",
-                            source = chateausSource
+                            source = chateausSource,
+                            opacity = const(0.0f)
                         )
+
+                        LineLayer(
+                            id = "chateaus_calc_line",
+                            source = chateausSource,
+                            color = const(Color.White),
+                            width = const(0.dp),
+                        )
+
                         // END: Added GeoJSON source and layer
+                    }
+
+
+                    // NEW: Poll visible chateaus once/second and print to the console
+                    LaunchedEffect(camera, mapSize) {
+                        // Wait until we have a non-zero size and a projection
+                        while (true) {
+                            delay(1000)
+                            val projection = camera.projection
+                            if (projection == null || mapSize.width == 0 || mapSize.height == 0) continue
+
+                            println("height ${mapSize.height} width ${mapSize.width} density ${Resources.getSystem().displayMetrics.density}")
+
+
+                            // Build a screen-space rect covering the whole map composable
+                            val rect: DpRect = DpRect(
+                                left = 0.dp,
+                                top = 0.dp,
+                                right = (mapSize.width / Resources.getSystem().displayMetrics.density).dp,
+                                bottom = (mapSize.height / Resources.getSystem().displayMetrics.density).dp,
+                            )
+
+                            // Query rendered features in our chateaus layer within the rect
+                            // NOTE: projection.queryRenderedFeatures(rect, layerIds = listOf(...)) is provided by MapLibre Compose. :contentReference[oaicite:1]{index=1}
+                            val features = projection.queryRenderedFeatures(
+                                rect = rect,
+                                layerIds = listOf("chateaus_calc").toSet()
+                            )
+
+                            println(features.size)
+
+                            // Try to extract chateau name
+                            val names = features.map { f ->
+                                val name = f.properties["chateau"]?.toString()
+                                name ?: "Unknown"
+                            }
+
+                            val msg = "Visible chateaus (${names.size}): ${names.joinToString(limit = 100)}"
+                            Log.d(TAG, msg)
+                            //println(msg)
+                        }
                     }
 
                     // CHANGE: Conditionally define the modifier based on orientation
