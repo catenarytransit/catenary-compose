@@ -61,20 +61,18 @@ import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 
-data class VectorSrc(val id: String, val url: String)
-
-val SHAPES_SOURCES = listOf(
-    VectorSrc("intercityrailshapes", "https://birch1.catenarymaps.org/shapes_intercity_rail"),
-    VectorSrc("localcityrailshapes", "https://birch2.catenarymaps.org/shapes_local_rail"),
-    VectorSrc("othershapes", "https://birch3.catenarymaps.org/shapes_ferry"),
-    VectorSrc("busshapes", "https://birch4.catenarymaps.org/shapes_bus"),
+val SHAPES_SOURCES = mapOf(
+    "intercityrailshapes" to "https://birch1.catenarymaps.org/shapes_intercity_rail",
+    "localcityrailshapes" to "https://birch2.catenarymaps.org/shapes_local_rail",
+    "othershapes" to "https://birch3.catenarymaps.org/shapes_ferry",
+    "busshapes" to "https://birch4.catenarymaps.org/shapes_bus"
 )
 
-val STOP_SOURCES = listOf(
-    VectorSrc("busstops", "https://birch6.catenarymaps.org/busstops"),
-    VectorSrc("stationfeatures", "https://birch7.catenarymaps.org/station_features"),
-    VectorSrc("railstops", "https://birch5.catenarymaps.org/railstops"),
-    VectorSrc("otherstops", "https://birch8.catenarymaps.org/otherstops"),
+val STOP_SOURCES = mapOf(
+    "busstops" to "https://birch6.catenarymaps.org/busstops",
+    "stationfeatures" to "https://birch7.catenarymaps.org/station_features",
+    "railstops" to "https://birch5.catenarymaps.org/railstops",
+    "otherstops" to "https://birch8.catenarymaps.org/otherstops"
 )
 
 private const val TAG = "CatenaryDebug"
