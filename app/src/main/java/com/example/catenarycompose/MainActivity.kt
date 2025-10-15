@@ -260,17 +260,26 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+
+                    val layerButtonColor = if (isSystemInDarkTheme()) Color.DarkGray else Color.White
+                    val layerButtonContentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
+
                     // Layers Button
                     FloatingActionButton(
                         onClick = { showLayersPanel = !showLayersPanel },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(8.dp),
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            .padding(24.dp)
+                            .width(48.dp)
+                            .height(48.dp),
+                        shape = CircleShape,
+                        containerColor = layerButtonColor,
+                        contentColor = layerButtonContentColor
                     ) {
-                        Icon(Icons.Filled.Layers, contentDescription = "Toggle Layers")
+                        Icon(Icons.Filled.Layers, contentDescription = "Toggle Layers", Modifier.width(32.dp))
                     }
+
+
 
                     // Layers Panel
                     AnimatedVisibility(
