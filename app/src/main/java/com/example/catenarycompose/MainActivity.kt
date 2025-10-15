@@ -8,10 +8,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.EaseOutCirc
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.splineBasedDecay
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -22,6 +25,12 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,18 +54,12 @@ import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.FillLayer
-import org.maplibre.compose.layers.LineLayer
-import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import org.maplibre.compose.layers.*
-import org.maplibre.compose.expressions.dsl.*
 
 data class VectorSrc(val id: String, val url: String)
 
@@ -143,6 +146,9 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                    // State for layers panel visibility
+                    var showLayersPanel by remember { mutableStateOf(false) }
+
                     // Camera
                     val camera = rememberCameraState(
                         firstPosition = CameraPosition(
@@ -210,11 +216,9 @@ class MainActivity : ComponentActivity() {
                             source = chateausSource,
                             opacity = const(0.0f)
                         )
-
-
                     }
 
-                    // Sheet width differs in landscape
+                    // Main Draggable Bottom Sheet
                     val sheetModifier = if (isLandscape) {
                         Modifier
                             .fillMaxWidth(0.5f)
@@ -228,7 +232,9 @@ class MainActivity : ComponentActivity() {
                             .offset {
                                 IntOffset(
                                     x = 0,
-                                    y = draggableState.requireOffset().roundToInt()
+                                    y = draggableState
+                                        .requireOffset()
+                                        .roundToInt()
                                 )
                             }
                             .anchoredDraggable(
@@ -252,7 +258,56 @@ class MainActivity : ComponentActivity() {
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                             )
-                            Text("This is the bottom sheet!")
+                            Text("Bottom Sheet Placeholder")
+                        }
+                    }
+
+                    // Layers Button
+                    FloatingActionButton(
+                        onClick = { showLayersPanel = !showLayersPanel },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ) {
+                        Icon(Icons.Filled.Layers, contentDescription = "Toggle Layers")
+                    }
+
+                    // Layers Panel
+                    AnimatedVisibility(
+                        visible = showLayersPanel,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        enter = slideInVertically(initialOffsetY = { it }),
+                        exit = slideOutVertically(targetOffsetY = { it })
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 100.dp, max = maxHeight / 2),
+                            shadowElevation = 8.dp
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween // Pushes text to left, icon to right
+                                ) {
+                                    Text("Layers", style = MaterialTheme.typography.headlineSmall)
+                                    IconButton(onClick = { showLayersPanel = false }) {
+                                        Icon(Icons.Filled.Close, contentDescription = "Close Layers")
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // layers options shit goes here
+
+                            }
                         }
                     }
                 }
@@ -260,10 +315,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-@Composable
-private fun isWideScreen(): Boolean {
-    val cfg = LocalConfiguration.current
-    return cfg.screenWidthDp >= 768
-}
-
