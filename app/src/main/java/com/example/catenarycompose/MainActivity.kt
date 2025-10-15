@@ -46,12 +46,33 @@ import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.layers.LineLayer
+import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import org.maplibre.compose.layers.*
+import org.maplibre.compose.expressions.dsl.*
+
+data class VectorSrc(val id: String, val url: String)
+
+val SHAPES_SOURCES = listOf(
+    VectorSrc("intercityrailshapes", "https://birch1.catenarymaps.org/shapes_intercity_rail"),
+    VectorSrc("localcityrailshapes", "https://birch2.catenarymaps.org/shapes_local_rail"),
+    VectorSrc("othershapes", "https://birch3.catenarymaps.org/shapes_ferry"),
+    VectorSrc("busshapes", "https://birch4.catenarymaps.org/shapes_bus"),
+)
+
+val STOP_SOURCES = listOf(
+    VectorSrc("busstops", "https://birch6.catenarymaps.org/busstops"),
+    VectorSrc("stationfeatures", "https://birch7.catenarymaps.org/station_features"),
+    VectorSrc("railstops", "https://birch5.catenarymaps.org/railstops"),
+    VectorSrc("otherstops", "https://birch8.catenarymaps.org/otherstops"),
+)
 
 private const val TAG = "CatenaryDebug"
 var visibleChateaus: List<String> = emptyList()
@@ -239,3 +260,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+@Composable
+private fun isWideScreen(): Boolean {
+    val cfg = LocalConfiguration.current
+    return cfg.screenWidthDp >= 768
+}
+
