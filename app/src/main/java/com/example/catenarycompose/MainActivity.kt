@@ -41,8 +41,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
-import dev.sargunv.maplibrecompose.compose.MaplibreMap
-import dev.sargunv.maplibrecompose.core.OrnamentSettings
+import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.map.OrnamentOptions
 import kotlin.math.roundToInt
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.splineBasedDecay
@@ -52,6 +52,8 @@ import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.EaseOutCirc
 // CHANGE: Import for configuration awareness
 import androidx.compose.ui.platform.LocalConfiguration
+import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.style.BaseStyle
 
 val easeOutSpec: AnimationSpec<Float> = tween(
     durationMillis = 300, // Specify the duration of the animation
@@ -102,12 +104,14 @@ class MainActivity : ComponentActivity() {
 
                     MaplibreMap(
                         modifier = Modifier.fillMaxSize(),
-                        styleUri = styleUri,
-                        ornamentSettings = OrnamentSettings(
-                            isLogoEnabled = false,
-                            isAttributionEnabled = true,
-                            isCompassEnabled = false,
-                            isScaleBarEnabled = false,
+                        baseStyle = BaseStyle.Uri(styleUri),
+                        options = MapOptions (
+                            ornamentOptions = OrnamentOptions(
+                                isLogoEnabled = false,
+                                isAttributionEnabled = true,
+                                isCompassEnabled = false,
+                                isScaleBarEnabled = false,
+                            )
                         )
                     )
 
