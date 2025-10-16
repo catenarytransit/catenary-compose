@@ -515,7 +515,15 @@ class MainActivity : ComponentActivity() {
 
 // shapes
 
-                        /*
+                        val line_opacity_intercity:  Expression<NumberValue<Number>> = switch(
+                              input = get("stop_to_stop_generated").cast<BooleanValue>().asString(),
+                               case(
+                                    label = "true",
+                                    output = const(0.2f)
+                               ),
+                                    fallback = const(0.9f)
+                           )
+
                         LineLayer(
                             id = LayersPerCategory.IntercityRail.Shapes,
                             source = intercityRailSource,
@@ -530,29 +538,14 @@ class MainActivity : ComponentActivity() {
                                 9  to const(2.0.dp),
                                 11 to const(2.5.dp),
                             ),
-                            opacity = case(
-                                eq(const(true), get("stop_to_stop_generated").cast()),
-                                const(0.2f),
-                                const(0.9f)
-                            ),
+                            opacity = line_opacity_intercity,
                             minZoom = 3f,
                             visible = intercitySettings.shapes,
                             filter = all(
-                                any(eq(const(2), get("route_type").cast())), // just matches JS
-                                not(
-                                    all(
-                                        eq(get("chateau").cast(), const("gotransit")),
-                                        eq(get("shape_id").cast(), const("UNGL"))
-                                    )
-                                ),
-                                not(
-                                    all(
-                                        eq(const("amtrak"), get("chateau").cast()),
-                                        eq(const(true), get("stop_to_stop_generated").cast())
-                                    )
-                                )
+                                any(get("route_type").cast<NumberValue<EquatableValue>>().eq(const(2))),
                             )
                         )
+
 
 // labelshapes
                         SymbolLayer(
@@ -560,10 +553,10 @@ class MainActivity : ComponentActivity() {
                             source = intercityRailSource,
                             sourceLayer = "data",
                             placement = const(SymbolPlacement.Line),
-                            textField = get("route_label").cast(), // your JS toggles debug; you can replicate if needed
+                            textField = get("route_label").cast<StringValue>(), // your JS toggles debug; you can replicate if needed
                             textFont  = step(
                                 input = zoom(),
-                                output = const(listOf("Barlow-Semibold")),
+                                const(listOf("Barlow-Semibold")),
                                 7.0 to const(listOf("Barlow-Bold"))
                             ),
                             textSize = interpolate(
@@ -583,23 +576,11 @@ class MainActivity : ComponentActivity() {
                             minZoom = 5.5f,
                             visible = intercitySettings.labelshapes,
                             filter = all(
-                                any(eq(const(2), get("route_type").cast())),
-                                not(
-                                    all(
-                                        eq(get("chateau").cast(), const("gotransit")),
-                                        eq(get("shape_id").cast(), const("UNGL"))
-                                    )
-                                ),
-                                not(
-                                    all(
-                                        eq(const("amtrak"), get("chateau").cast()),
-                                        eq(const(true), get("stop_to_stop_generated").cast())
-                                    )
-                                )
+                                any(get("route_type").cast<NumberValue<EquatableValue>>().eq(const(2))),
                             )
                         )
 
-                         */
+
 
                         /* =========================
                            METRO (localcityrailshapes, route_type 1 or 12)
