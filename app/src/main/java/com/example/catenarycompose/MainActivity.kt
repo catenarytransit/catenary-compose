@@ -588,7 +588,7 @@ class MainActivity : ComponentActivity() {
 
 // shapes
 
-                        /*
+
                         LineLayer(
                             id = LayersPerCategory.Metro.Shapes,
                             source = localCityRailSource,
@@ -606,15 +606,15 @@ class MainActivity : ComponentActivity() {
                             visible = localRailSettings.shapes,
                             filter = all(
                                 any(
-                                    eq(const(1),  get("route_type").cast()),
-                                    eq(const(12), get("route_type").cast())
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(1)),
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(12))
                                 ),
-                                not(
+
                                     all(
-                                        eq(const("nyct"), get("chateau").cast()),
-                                        eq(const(true), get("stop_to_stop_generated").cast())
+                                        const("nyct").eq( get("chateau").cast()),
+                                        const(true).eq(get("stop_to_stop_generated").cast())
                                     )
-                                )
+                                .not()
                             )
                         )
 
@@ -635,13 +635,9 @@ class MainActivity : ComponentActivity() {
                             ),
                             textIgnorePlacement = const(false),
                             textAllowOverlap    = const(false),
-                            textPitchAlignment  = const("viewport"),
+                            textPitchAlignment  =  const(TextPitchAlignment.Viewport),
                             // text color: if color == '000000' use white else '#'+text_color
-                            textColor = case_(
-                                eq(get("color").cast(), const("000000")),
-                                const("#ffffff").convertToColor(),
-                                colorText
-                            ),
+                            textColor = colorText,
                             textHaloColor = colorLine,
                             textHaloWidth = const(1.dp),
                             textHaloBlur  = const(1.dp),
@@ -649,20 +645,39 @@ class MainActivity : ComponentActivity() {
                             visible = localRailSettings.labelshapes,
                             filter = all(
                                 any(
-                                    eq(const(1),  get("route_type").cast()),
-                                    eq(const(12), get("route_type").cast())
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(1)),
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(12))
                                 )
                             )
                         )
 
-                         */
+
 
                         /* =========================
                            TRAM (localcityrailshapes, route_type 0 or 5)
                            ========================= */
 
 // shapes
-                       /*
+
+                        val tram_filter:  Expression<BooleanValue> = all(
+                            any(
+                                const(0).eq(get("route_type").cast()),
+                                const(5).eq(get("route_type").cast())
+                            ),
+
+
+                            all(
+                                const("nyct").eq( get("chateau").cast()),
+                                const(true).eq(get("stop_to_stop_generated").cast())
+                            ).not(),
+
+
+
+
+
+                            )
+
+
                         LineLayer(
                             id = LayersPerCategory.Tram.Shapes,
                             source = localCityRailSource,
@@ -678,31 +693,10 @@ class MainActivity : ComponentActivity() {
                             opacity = const(1f),
                             minZoom = 5f,
                             visible = localRailSettings.shapes,
-                            filter = all(
-                                any(
-                                    eq(const(0), get("route_type").cast()),
-                                    eq(const(5), get("route_type").cast())
-                                ),
-                                not(
-                                    all(
-                                        eq(const("f-9mu-mts"), get("onestop_feed_id").cast()),
-                                        eq(coalesce(get("route_label").cast(), const("")), const("Event"))
-                                    )
-                                ),
-                                not(
-                                    all(
-                                        eq(const("f-9mu-mts"), get("onestop_feed_id").cast()),
-                                        eq(coalesce(get("route_label").cast(), const("")), const("Silver"))
-                                    )
-                                ),
-                                not(
-                                    all(
-                                        eq(const("nyct"), get("chateau").cast()),
-                                        eq(const(true), get("stop_to_stop_generated").cast())
-                                    )
-                                )
-                            )
+                            filter = tram_filter
                         )
+
+
 
 // labelshapes
                         SymbolLayer(
@@ -713,7 +707,7 @@ class MainActivity : ComponentActivity() {
                             textField = coalesce(get("route_label").cast(), const("")),
                             textFont  = step(
                                 input = zoom(),
-                                output = const(listOf("Barlow-Regular")),
+                                const(listOf("Barlow-Regular")),
                                 12.0 to const(listOf("Barlow-Medium"))
                             ),
                             textSize  = interpolate(
@@ -725,33 +719,16 @@ class MainActivity : ComponentActivity() {
                             ),
                             textIgnorePlacement = const(false),
                             textAllowOverlap    = const(false),
-                            textPitchAlignment  = const("viewport"),
+                            textPitchAlignment  = const(TextPitchAlignment.Viewport),
                             textColor     = colorText,
                             textHaloColor = colorLine,
                             textHaloWidth = const(1.dp),
                             textHaloBlur  = const(1.dp),
                             minZoom = 6f,
                             visible = localRailSettings.labelshapes,
-                            filter = all(
-                                any(
-                                    eq(const(0), get("route_type").cast()),
-                                    eq(const(5), get("route_type").cast())
-                                ),
-                                not(
-                                    all(
-                                        eq(const("f-9mu-mts"), get("onestop_feed_id").cast()),
-                                        eq(coalesce(get("route_label").cast(), const("")), const("Event"))
-                                    )
-                                ),
-                                not(
-                                    all(
-                                        eq(const("f-9mu-mts"), get("onestop_feed_id").cast()),
-                                        eq(coalesce(get("route_label").cast(), const("")), const("Silver"))
-                                    )
-                                )
-                            )
+                            filter =  tram_filters
                         )
-                        */
+
 
 
                     }
