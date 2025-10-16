@@ -17,6 +17,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,13 +55,101 @@ import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
-import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
+import org.maplibre.compose.layers.*;
+import org.maplibre.compose.sources.rememberVectorSource
+import org.maplibre.compose.expressions.dsl.*
+import org.maplibre.compose.expressions.value.*;
+import org.maplibre.compose.expressions.ast.*;
+import androidx.compose.runtime.mutableStateOf
+
+import org.maplibre.compose.expressions.dsl.convertToColor
+import org.maplibre.compose.expressions.dsl.Feature.get
+import org.maplibre.compose.expressions.value.InterpolatableValue
+import org.maplibre.compose.expressions.value.InterpolationValue
+import org.maplibre.compose.expressions.value.ColorValue
+import org.maplibre.compose.expressions.dsl.plus
+import org.maplibre.compose.expressions.value.TextUnitValue
+
+object LayersPerCategory {
+    object Bus {
+        const val Shapes = "bus-shapes"
+        const val LabelShapes = "bus-labelshapes"
+    }
+    object Other {
+        const val Shapes = "other-shapes"
+        const val LabelShapes = "other-labelshapes"
+        const val FerryShapes = "ferryshapes"
+    }
+    object IntercityRail {
+        const val Shapes = "intercityrail-shapes"
+        const val LabelShapes = "intercityrail-labelshapes"
+    }
+    object Metro {
+        const val Shapes = "metro-shapes"
+        const val LabelShapes = "metro-labelshapes"
+    }
+    object Tram {
+        const val Shapes = "tram-shapes"
+        const val LabelShapes = "tram-labelshapes"
+    }
+}
+
+
+// Label settings (route/trip/vehicle/etc.)
+data class LabelSettings(
+    var route: Boolean = true,
+    var trip: Boolean = false,
+    var vehicle: Boolean = false,
+    var headsign: Boolean = false,
+    var direction: Boolean = false,
+    var speed: Boolean = false,
+    var occupancy: Boolean = true,
+    var delay: Boolean = true
+)
+
+// Main category settings (bus/localrail/intercityrail/other)
+data class LayerCategorySettings(
+    var visible: Boolean = true,
+    var labelshapes: Boolean = true,
+    var Pairs: Boolean = true,
+    var shapes: Boolean = true,
+    var Pairlabels: Boolean = true,
+    var label: LabelSettings = LabelSettings()
+)
+
+// Extra "more" settings
+data class FoamermodeSettings(
+    var infra: Boolean = false,
+    var maxspeed: Boolean = false,
+    var signalling: Boolean = false,
+    var electrification: Boolean = false,
+    var gauge: Boolean = false,
+    var dummy: Boolean = true
+)
+
+data class MoreSettings(
+    var foamermode: FoamermodeSettings = FoamermodeSettings(),
+    var showstationentrances: Boolean = true,
+    var showstationart: Boolean = false,
+    var showbikelanes: Boolean = false,
+    var showcoords: Boolean = false
+)
+
+val layerSettings = mutableStateOf(
+    mapOf(
+        "bus" to LayerCategorySettings(),
+        "localrail" to LayerCategorySettings(),
+        "intercityrail" to LayerCategorySettings(label = LabelSettings(trip = true)),
+        "other" to LayerCategorySettings(),
+        "more" to MoreSettings()
+    )
+)
 
 val SHAPES_SOURCES = mapOf(
     "intercityrailshapes" to "https://birch1.catenarymaps.org/shapes_intercity_rail",
@@ -68,11 +158,11 @@ val SHAPES_SOURCES = mapOf(
     "busshapes" to "https://birch4.catenarymaps.org/shapes_bus"
 )
 
-val STOP_SOURCES = mapOf(
-    "busstops" to "https://birch6.catenarymaps.org/busstops",
+val Pair_SOURCES = mapOf(
+    "busPairs" to "https://birch6.catenarymaps.org/busPairs",
     "stationfeatures" to "https://birch7.catenarymaps.org/station_features",
-    "railstops" to "https://birch5.catenarymaps.org/railstops",
-    "otherstops" to "https://birch8.catenarymaps.org/otherstops"
+    "railPairs" to "https://birch5.catenarymaps.org/railPairs",
+    "otherPairs" to "https://birch8.catenarymaps.org/otherPairs"
 )
 
 private const val TAG = "CatenaryDebug"
@@ -214,6 +304,98 @@ class MainActivity : ComponentActivity() {
                             source = chateausSource,
                             opacity = const(0.0f)
                         )
+
+                        val busShapesSource = rememberVectorSource(
+                            uri = SHAPES_SOURCES.getValue("busshapes") // tilejson or tiles URL
+                        )
+                        val otherShapesSource = rememberVectorSource(
+                            uri = SHAPES_SOURCES.getValue("othershapes")
+                        )
+                        val intercityRailSource = rememberVectorSource(
+                            uri = SHAPES_SOURCES.getValue("intercityrailshapes")
+                        )
+                        val localCityRailSource = rememberVectorSource(
+                             uri = SHAPES_SOURCES.getValue("localcityrailshapes")
+                        )
+
+                        val bus = layerSettings.value["bus"] as LayerCategorySettings
+
+                        // BUS
+
+
+
+// BUS
+                        var colorBusLine: org.maplibre.compose.expressions.ast.Expression<ColorValue> =
+                            const("#").plus(get("color").cast()).convertToColor()
+
+                        var colorBusLineText: org.maplibre.compose.expressions.ast.Expression<ColorValue> =
+                            const("#").plus(get("text_color").cast()).convertToColor()
+
+
+                        LineLayer(
+                            id = LayersPerCategory.Bus.Shapes,
+                            source = busShapesSource,
+                            sourceLayer = "data",
+                            color = colorBusLine,
+                            width = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                7  to const(0.5.dp),
+                                10 to const(0.7.dp),
+                                12 to const(1.0.dp),
+                                14 to const(2.6.dp),
+                            ),
+                            opacity = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                7  to const(0.08f),
+                                8  to const(0.10f),
+                                11 to const(0.30f),
+                            ),
+                            minZoom = 8f,
+                            visible = bus.shapes
+                        )
+
+                        var busTextSize:  Expression<TextUnitValue> = interpolate(
+                            type = linear(),
+                            input = zoom(),
+                            10 to const(0.3125f).em,
+                            11 to const(0.4375f).em,
+                            13 to const(0.625f).em,
+                        );
+
+                        /*
+                        spacing = step(
+                            input = zoom(),
+                            // base value, then threshold -> value pairs
+                            const(200.dp),
+                            12 to const(100.dp),
+                            13 to const(100.dp),
+                            15 to const(120.dp),
+                            20 to const(150.dp),
+                        );
+                         */
+
+                        SymbolLayer(
+                            id = LayersPerCategory.Bus.LabelShapes,
+                            source = busShapesSource,
+                            sourceLayer = "data",
+                            placement = const(SymbolPlacement.Line),
+                            textField = coalesce(get("route_label").cast(), const("")),
+                            // ListValue<StringValue>
+                            textFont = const(listOf("Barlow-Regular")),
+                            textSize = busTextSize,
+                            textIgnorePlacement = const(false),
+                            textAllowOverlap   = const(false),
+
+                            textColor     = colorBusLineText,
+                            textHaloColor = colorBusLine,
+                            textHaloWidth = const(2.dp),
+                            textHaloBlur  = const(0.dp),
+                            minZoom = 11f,
+                            visible = bus.labelshapes
+                        )
+
                     }
 
                     // Main Draggable Bottom Sheet
@@ -288,10 +470,13 @@ class MainActivity : ComponentActivity() {
                         enter = slideInVertically(initialOffsetY = { it }),
                         exit = slideOutVertically(targetOffsetY = { it })
                     ) {
+
+                        var selectedTab by remember { mutableStateOf("intercityrail") }
+
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 100.dp, max = maxHeight / 2),
+                                .heightIn(min = 100.dp, max = 300.dp),
                             shadowElevation = 8.dp
                         ) {
                             Column(
@@ -303,22 +488,131 @@ class MainActivity : ComponentActivity() {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween // Pushes text to left, icon to right
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text("Layers", style = MaterialTheme.typography.headlineSmall)
                                     IconButton(onClick = { showLayersPanel = false }) {
                                         Icon(Icons.Filled.Close, contentDescription = "Close Layers")
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(16.dp))
 
-                                // layers options shit goes here
+                                LayerTabs(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
 
+                                if (selectedTab in listOf("intercityrail", "localrail", "bus", "other")) {
+                                    // First row of buttons: shapes/labels/Pairs/etc.
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        // use LayerToggleButton composables here
+
+
+                                        val currentSettings = layerSettings.value[selectedTab] as? LayerCategorySettings
+                                        currentSettings?.let { settings ->
+                                            LayerToggleButton(
+                                                name = "Shapes",
+                                                icon = { Icon(Icons.Default.Route, contentDescription = null) },
+                                                isActive = settings.shapes,
+                                                onToggle = {
+                                                    val updated = settings.copy(shapes = !settings.shapes)
+                                                    layerSettings.value = layerSettings.value.toMutableMap().apply { put(selectedTab, updated) }
+                                                }
+                                            )
+
+                                            LayerToggleButton(
+                                                name = "Shape Labels",
+                                                icon = { Icon(Icons.Default.Route, contentDescription = null) },
+                                                isActive = settings.labelshapes,
+                                                onToggle = {
+                                                    val updated = settings.copy(labelshapes = !settings.labelshapes)
+                                                    layerSettings.value = layerSettings.value.toMutableMap().apply { put(selectedTab, updated) }
+                                                }
+                                            )
+                                            // Repeat for labels, Pairs, vehicles etc.
+                                        }
+
+                                    }
+
+                                    // Second row: route/trip/vehicle/headsign/speed/occupancy/delay
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        // more LayerToggleButton composables here
+                                    }
+                                }
                             }
                         }
+
+
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+fun LayerTabs(
+    selectedTab: String,
+    onTabSelected: (String) -> Unit
+) {
+    val tabs = listOf("intercityrail", "localrail", "bus", "other")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        tabs.forEach { tab ->
+            val isSelected = tab == selectedTab
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    .padding(vertical = 8.dp, horizontal = 12.dp)
+                    .clickable { onTabSelected(tab) }
+            ) {
+                Text(
+                    text = tab.replaceFirstChar { it.uppercase() },
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LayerToggleButton(
+    name: String,
+    icon: @Composable () -> Unit,
+    isActive: Boolean,
+    onToggle: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(4.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                else MaterialTheme.colorScheme.surfaceVariant
+            )
+            .clickable { onToggle() }
+            .padding(8.dp)
+    ) {
+        icon()
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+private fun visibilityOf(isOn: Boolean) = isOn
+
