@@ -396,6 +396,383 @@ class MainActivity : ComponentActivity() {
                             visible = bus.labelshapes
                         )
 
+                        // Pull per-category settings
+                        val otherSettings       = layerSettings.value["other"] as LayerCategorySettings
+                        val intercitySettings   = layerSettings.value["intercityrail"] as LayerCategorySettings
+                        val localRailSettings   = layerSettings.value["localrail"] as LayerCategorySettings
+
+// Common color expressions (same style as your bus code)
+                        val colorLine: org.maplibre.compose.expressions.ast.Expression<ColorValue> =
+                            const("#").plus(get("color").cast()).convertToColor()
+                        val colorText: org.maplibre.compose.expressions.ast.Expression<ColorValue> =
+                            const("#").plus(get("text_color").cast()).convertToColor()
+
+                        /* =========================
+                           OTHER (othershapes)
+                           ========================= */
+
+                        val cast_chateau: Expression<StringValue> = get("chateau").cast()
+                        val get_stop_to_stop_generated: Expression<BooleanValue> = get("stop_to_stop_generated").cast()
+
+// shapes (routes_type 6/7, excluding schweiz stop_to_stop_generated)
+                        LineLayer(
+                            id = LayersPerCategory.Other.Shapes,
+                            source = otherShapesSource,
+                            sourceLayer = "data",
+                            color = colorLine,
+                            width = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                7  to const(2.dp),
+                                9  to const(3.dp),
+                            ),
+                            opacity = const(1f),
+                            minZoom = 3f,
+                            visible = otherSettings.shapes,
+                            // filter: ! (chateau=='schweiz' && stop_to_stop_generated==true)  && (route_type==6 || route_type==7)
+                            filter = all(
+                                all(
+                                    cast_chateau.eq(const("schweiz")),
+                                    get_stop_to_stop_generated.eq(const(true))
+                                ).not(),
+                                any(
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)),
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(7))
+                                )
+                            )
+                        )
+
+// labelshapes
+                        SymbolLayer(
+                            id = LayersPerCategory.Other.LabelShapes,
+                            source = otherShapesSource,
+                            sourceLayer = "data",
+                            placement = const(SymbolPlacement.Line),
+                            textField = coalesce(get("route_label").cast(), const("")),
+                            textFont  = const(listOf("Barlow-Regular")),
+                            textSize  = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                3  to const(0.4375f).em, // 7px
+                                9  to const(0.5625f).em, // 9px
+                                13 to const(0.6875f).em  //11px
+                            ),
+                            textIgnorePlacement = const(false),
+                            textAllowOverlap    = const(false),
+                            textColor     = colorText,
+                            textHaloColor = colorLine,
+                            textHaloWidth = const(2.dp),
+                            textHaloBlur  = const(1.dp),
+                            minZoom = 3f,
+                            visible = otherSettings.labelshapes,
+                            // filter: (route_type in 4,6,7) && !(schweiz && stop_to_stop_generated)
+                            filter = all(
+                                any(
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(4)),
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)),
+                                    get("route_type").cast<NumberValue<EquatableValue>>().eq(const(7))
+                                ),
+                                all(
+                                    get("chateau").cast<StringValue>().eq(const("schweiz")),
+                                    (get("stop_to_stop_generated").cast<BooleanValue>().convertToBoolean()).eq(const(true))
+                                ).not()
+                            )
+                        )
+
+// ferry (route_type == 4) with dash
+
+                        LineLayer(
+                            id = LayersPerCategory.Other.FerryShapes,
+                            source = otherShapesSource,
+                            sourceLayer = "data",
+                            color = colorLine,
+                            width = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                6  to const(0.5.dp),
+                                7  to const(1.0.dp),
+                                10 to const(1.5.dp),
+                                14 to const(3.0.dp),
+                            ),
+                            opacity = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                6 to const(0.8f),
+                                7 to const(0.9f)
+                            ),
+                            minZoom = 3f,
+                            visible = otherSettings.shapes,
+                            filter = all(
+                                get("route_type").cast<NumberValue<EquatableValue>>().eq(const(4))
+                            ),
+                            dasharray = const(listOf(1f, 2f))
+                        )
+
+
+                        /* =========================
+                           INTERCITY RAIL (intercityrailshapes)
+                           ========================= */
+
+// shapes
+
+                        /*
+                        LineLayer(
+                            id = LayersPerCategory.IntercityRail.Shapes,
+                            source = intercityRailSource,
+                            sourceLayer = "data",
+                            color = colorLine,
+                            width = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                3  to const(0.4.dp),
+                                5  to const(0.7.dp),
+                                7  to const(1.0.dp),
+                                9  to const(2.0.dp),
+                                11 to const(2.5.dp),
+                            ),
+                            opacity = case(
+                                eq(const(true), get("stop_to_stop_generated").cast()),
+                                const(0.2f),
+                                const(0.9f)
+                            ),
+                            minZoom = 3f,
+                            visible = intercitySettings.shapes,
+                            filter = all(
+                                any(eq(const(2), get("route_type").cast())), // just matches JS
+                                not(
+                                    all(
+                                        eq(get("chateau").cast(), const("gotransit")),
+                                        eq(get("shape_id").cast(), const("UNGL"))
+                                    )
+                                ),
+                                not(
+                                    all(
+                                        eq(const("amtrak"), get("chateau").cast()),
+                                        eq(const(true), get("stop_to_stop_generated").cast())
+                                    )
+                                )
+                            )
+                        )
+
+// labelshapes
+                        SymbolLayer(
+                            id = LayersPerCategory.IntercityRail.LabelShapes,
+                            source = intercityRailSource,
+                            sourceLayer = "data",
+                            placement = const(SymbolPlacement.Line),
+                            textField = get("route_label").cast(), // your JS toggles debug; you can replicate if needed
+                            textFont  = step(
+                                input = zoom(),
+                                output = const(listOf("Barlow-Semibold")),
+                                7.0 to const(listOf("Barlow-Bold"))
+                            ),
+                            textSize = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                3  to const(0.375f).em,  // 6px
+                                6  to const(0.4375f).em, // 7px
+                                9  to const(0.5625f).em, // 9px
+                                13 to const(0.6875f).em  // 11px
+                            ),
+                            textIgnorePlacement = const(false),
+                            textAllowOverlap    = const(false),
+                            textColor     = colorText,
+                            textHaloColor = colorLine,
+                            textHaloWidth = const(1.dp),
+                            textHaloBlur  = const(1.dp),
+                            minZoom = 5.5f,
+                            visible = intercitySettings.labelshapes,
+                            filter = all(
+                                any(eq(const(2), get("route_type").cast())),
+                                not(
+                                    all(
+                                        eq(get("chateau").cast(), const("gotransit")),
+                                        eq(get("shape_id").cast(), const("UNGL"))
+                                    )
+                                ),
+                                not(
+                                    all(
+                                        eq(const("amtrak"), get("chateau").cast()),
+                                        eq(const(true), get("stop_to_stop_generated").cast())
+                                    )
+                                )
+                            )
+                        )
+
+                         */
+
+                        /* =========================
+                           METRO (localcityrailshapes, route_type 1 or 12)
+                           ========================= */
+
+// shapes
+
+                        /*
+                        LineLayer(
+                            id = LayersPerCategory.Metro.Shapes,
+                            source = localCityRailSource,
+                            sourceLayer = "data",
+                            color = colorLine,
+                            width = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                6  to const(0.5.dp),
+                                7  to const(1.0.dp),
+                                9  to const(2.0.dp),
+                            ),
+                            opacity = const(1f),
+                            minZoom = 5f,
+                            visible = localRailSettings.shapes,
+                            filter = all(
+                                any(
+                                    eq(const(1),  get("route_type").cast()),
+                                    eq(const(12), get("route_type").cast())
+                                ),
+                                not(
+                                    all(
+                                        eq(const("nyct"), get("chateau").cast()),
+                                        eq(const(true), get("stop_to_stop_generated").cast())
+                                    )
+                                )
+                            )
+                        )
+
+// labelshapes
+                        SymbolLayer(
+                            id = LayersPerCategory.Metro.LabelShapes,
+                            source = localCityRailSource,
+                            sourceLayer = "data",
+                            placement = const(SymbolPlacement.Line),
+                            textField = coalesce(get("route_label").cast(), const("")),
+                            textFont  = const(listOf("Barlow-Bold")),
+                            textSize  = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                3  to const(0.4375f).em, // 7px
+                                9  to const(0.5625f).em, // 9px
+                                13 to const(0.6875f).em  // 11px
+                            ),
+                            textIgnorePlacement = const(false),
+                            textAllowOverlap    = const(false),
+                            textPitchAlignment  = const("viewport"),
+                            // text color: if color == '000000' use white else '#'+text_color
+                            textColor = case_(
+                                eq(get("color").cast(), const("000000")),
+                                const("#ffffff").convertToColor(),
+                                colorText
+                            ),
+                            textHaloColor = colorLine,
+                            textHaloWidth = const(1.dp),
+                            textHaloBlur  = const(1.dp),
+                            minZoom = 6f,
+                            visible = localRailSettings.labelshapes,
+                            filter = all(
+                                any(
+                                    eq(const(1),  get("route_type").cast()),
+                                    eq(const(12), get("route_type").cast())
+                                )
+                            )
+                        )
+
+                         */
+
+                        /* =========================
+                           TRAM (localcityrailshapes, route_type 0 or 5)
+                           ========================= */
+
+// shapes
+                       /*
+                        LineLayer(
+                            id = LayersPerCategory.Tram.Shapes,
+                            source = localCityRailSource,
+                            sourceLayer = "data",
+                            color = colorLine,
+                            width = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                6  to const(0.5.dp),
+                                7  to const(1.0.dp),
+                                9  to const(2.0.dp),
+                            ),
+                            opacity = const(1f),
+                            minZoom = 5f,
+                            visible = localRailSettings.shapes,
+                            filter = all(
+                                any(
+                                    eq(const(0), get("route_type").cast()),
+                                    eq(const(5), get("route_type").cast())
+                                ),
+                                not(
+                                    all(
+                                        eq(const("f-9mu-mts"), get("onestop_feed_id").cast()),
+                                        eq(coalesce(get("route_label").cast(), const("")), const("Event"))
+                                    )
+                                ),
+                                not(
+                                    all(
+                                        eq(const("f-9mu-mts"), get("onestop_feed_id").cast()),
+                                        eq(coalesce(get("route_label").cast(), const("")), const("Silver"))
+                                    )
+                                ),
+                                not(
+                                    all(
+                                        eq(const("nyct"), get("chateau").cast()),
+                                        eq(const(true), get("stop_to_stop_generated").cast())
+                                    )
+                                )
+                            )
+                        )
+
+// labelshapes
+                        SymbolLayer(
+                            id = LayersPerCategory.Tram.LabelShapes,
+                            source = localCityRailSource,
+                            sourceLayer = "data",
+                            placement = const(SymbolPlacement.Line),
+                            textField = coalesce(get("route_label").cast(), const("")),
+                            textFont  = step(
+                                input = zoom(),
+                                output = const(listOf("Barlow-Regular")),
+                                12.0 to const(listOf("Barlow-Medium"))
+                            ),
+                            textSize  = interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                3  to const(0.4375f).em, // 7px
+                                9  to const(0.5625f).em, // 9px
+                                13 to const(0.6875f).em  // 11px
+                            ),
+                            textIgnorePlacement = const(false),
+                            textAllowOverlap    = const(false),
+                            textPitchAlignment  = const("viewport"),
+                            textColor     = colorText,
+                            textHaloColor = colorLine,
+                            textHaloWidth = const(1.dp),
+                            textHaloBlur  = const(1.dp),
+                            minZoom = 6f,
+                            visible = localRailSettings.labelshapes,
+                            filter = all(
+                                any(
+                                    eq(const(0), get("route_type").cast()),
+                                    eq(const(5), get("route_type").cast())
+                                ),
+                                not(
+                                    all(
+                                        eq(const("f-9mu-mts"), get("onestop_feed_id").cast()),
+                                        eq(coalesce(get("route_label").cast(), const("")), const("Event"))
+                                    )
+                                ),
+                                not(
+                                    all(
+                                        eq(const("f-9mu-mts"), get("onestop_feed_id").cast()),
+                                        eq(coalesce(get("route_label").cast(), const("")), const("Silver"))
+                                    )
+                                )
+                            )
+                        )
+                        */
+
+
                     }
 
                     // Main Draggable Bottom Sheet
