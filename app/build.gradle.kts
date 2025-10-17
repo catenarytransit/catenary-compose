@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.catenarycompose"
+    namespace = "com.catenarymaps.catenary"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.catenarycompose"
+        applicationId = "com.catenarymaps.catenary"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
