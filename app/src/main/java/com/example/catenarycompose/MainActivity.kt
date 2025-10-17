@@ -268,6 +268,7 @@ class MainActivity : ComponentActivity() {
                                 isScaleBarEnabled = false,
                             )
                         ),
+                        zoomRange = 2f..20f,
                         // 2) Map done loading
                         onMapLoadFinished = {
                             queryVisibleChateaus(camera, mapSize)
@@ -427,7 +428,7 @@ class MainActivity : ComponentActivity() {
                                 9  to const(3.dp),
                             ),
                             opacity = const(1f),
-                            minZoom = 3f,
+                            minZoom = 1f,
                             visible = otherSettings.shapes,
                             // filter: ! (chateau=='schweiz' && stop_to_stop_generated==true)  && (route_type==6 || route_type==7)
                             filter = all(
@@ -539,7 +540,7 @@ class MainActivity : ComponentActivity() {
                                 11 to const(2.5.dp),
                             ),
                             opacity = line_opacity_intercity,
-                            minZoom = 3f,
+                            minZoom = 2f,
                             visible = intercitySettings.shapes,
                             filter = all(
                                 any(get("route_type").cast<NumberValue<EquatableValue>>().eq(const(2))),
