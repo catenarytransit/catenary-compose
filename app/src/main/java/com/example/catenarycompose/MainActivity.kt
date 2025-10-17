@@ -1,4 +1,4 @@
-package com.example.catenarycompose
+package com.catenarymaps.catenary
 
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -726,7 +726,7 @@ class MainActivity : ComponentActivity() {
                             textHaloBlur  = const(1.dp),
                             minZoom = 6f,
                             visible = localRailSettings.labelshapes,
-                            filter =  tram_filters
+                            filter =  tram_filter
                         )
 
 
