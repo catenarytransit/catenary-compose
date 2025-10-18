@@ -67,7 +67,10 @@ import org.maplibre.compose.expressions.dsl.*
 import org.maplibre.compose.expressions.value.*;
 import org.maplibre.compose.expressions.ast.*;
 import androidx.compose.runtime.mutableStateOf
-
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import org.maplibre.compose.expressions.dsl.convertToColor
 import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.value.InterpolatableValue
@@ -782,19 +785,44 @@ class MainActivity : ComponentActivity() {
                     val layerButtonColor = if (isSystemInDarkTheme()) Color.DarkGray else Color.White
                     val layerButtonContentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
 
-                    // Layers Button
-                    FloatingActionButton(
-                        onClick = { showLayersPanel = !showLayersPanel },
+                    var searchQuery by remember { mutableStateOf("") }
+
+                    Column(
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(24.dp)
-                            .width(48.dp)
-                            .height(48.dp),
-                        shape = CircleShape,
-                        containerColor = layerButtonColor,
-                        contentColor = layerButtonContentColor
+                            .align(Alignment.TopCenter) // center so the search can span full width
+                            .windowInsetsPadding(WindowInsets.safeDrawing) // below status bar & cutout
+
+                            .padding(top = 8.dp, start = 16.dp, end = 16.dp), // extra margins
+                        horizontalAlignment = Alignment.End
                     ) {
-                        Icon(Icons.Filled.Layers, contentDescription = "Toggle Layers", Modifier.width(32.dp))
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 32.dp)
+                                .height(48.dp),
+                            singleLine = true,
+                            shape = RoundedCornerShape(100.dp),
+                            placeholder = { Text("Search here") },
+
+
+                                )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Layers Button (now below the search bar)
+                        FloatingActionButton(
+                            onClick = { showLayersPanel = !showLayersPanel },
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(48.dp),
+                            shape = CircleShape,
+                            containerColor = layerButtonColor,
+                            contentColor = layerButtonContentColor
+                        ) {
+                            Icon(Icons.Filled.Layers, contentDescription = "Toggle Layers", Modifier.width(32.dp))
+                        }
                     }
 
 
@@ -886,6 +914,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 }
 
 @Composable
@@ -905,7 +935,6 @@ fun LayerTabs(
             val isSelected = tab == selectedTab
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
                     .background(
                         if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                         else MaterialTheme.colorScheme.surfaceVariant
@@ -933,6 +962,11 @@ fun LayerToggleButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .padding(4.dp)
+    ) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(4.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(
                 if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
@@ -940,14 +974,18 @@ fun LayerToggleButton(
             )
             .clickable { onToggle() }
             .padding(8.dp)
-    ) {
+    )
+    {
         icon()
-        Text(
-            text = name,
-            style = MaterialTheme.typography.bodySmall,
-            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-        )
+
     }
+
+    Text(
+        text = name,
+        style = MaterialTheme.typography.bodySmall,
+        color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    )
+}
 }
 
 private fun visibilityOf(isOn: Boolean) = isOn
