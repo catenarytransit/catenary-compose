@@ -118,12 +118,12 @@ data class LabelSettings(
 
 // Main category settings (bus/localrail/intercityrail/other)
 data class LayerCategorySettings(
-    var visible: Boolean = true,
+    var visiblerealtimedots: Boolean = true,
     var labelshapes: Boolean = true,
-    var Pairs: Boolean = true,
+    var stops: Boolean = true,
     var shapes: Boolean = true,
-    var Pairlabels: Boolean = true,
-    var label: LabelSettings = LabelSettings()
+    var labelstops: Boolean = true,
+    var labelrealtimedots: LabelSettings = LabelSettings()
 )
 
 // Extra "more" settings
@@ -148,7 +148,7 @@ val layerSettings = mutableStateOf(
     mapOf(
         "bus" to LayerCategorySettings(),
         "localrail" to LayerCategorySettings(),
-        "intercityrail" to LayerCategorySettings(label = LabelSettings(trip = true)),
+        "intercityrail" to LayerCategorySettings(labelrealtimedots = LabelSettings(trip = true)),
         "other" to LayerCategorySettings(),
         "more" to MoreSettings()
     )
