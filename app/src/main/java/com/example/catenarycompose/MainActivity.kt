@@ -85,6 +85,8 @@ object LayersPerCategory {
         const val LabelShapes = "bus-labelshapes"
 
         const val Stops = "busstopscircle"
+
+        const val LabelStops = "busstopslabel"
     }
     object Other {
         const val Shapes = "other-shapes"
@@ -554,6 +556,10 @@ fun AddStops() {
         uri = STOP_SOURCES.getValue("busstops")
     )
 
+    val otherStopsSource = rememberVectorSource(
+        uri = STOP_SOURCES.getValue("otherstops")
+    )
+
     CircleLayer(
         id = LayersPerCategory.Bus.Stops,
         source = busStopsSource,
@@ -582,6 +588,24 @@ fun AddStops() {
             14 to const(0.5f)
         ),
     )
+
+    SymbolLayer(
+        id = LayersPerCategory.Bus.LabelStops,
+        source = busStopsSource,
+        sourceLayer = "data",
+        minZoom = 15f,
+        textSize = interpolate(
+            type = linear(),
+            input = zoom(),
+            14 to const(0.5f).em,
+            16 to const(0.7f).em
+        ),
+        textField = get("displayname").cast(),
+        textFont = const(listOf("Barlow-Medium")),
+        textColor = if (isSystemInDarkTheme()) const(Color.White) else const(Color.Black)
+    )
+
+
 }
 
 @Composable
