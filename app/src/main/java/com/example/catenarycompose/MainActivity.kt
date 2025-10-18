@@ -83,6 +83,8 @@ object LayersPerCategory {
     object Bus {
         const val Shapes = "bus-shapes"
         const val LabelShapes = "bus-labelshapes"
+
+        const val Stops = "busstopscircle"
     }
     object Other {
         const val Shapes = "other-shapes"
@@ -161,11 +163,11 @@ val SHAPES_SOURCES = mapOf(
     "busshapes" to "https://birch4.catenarymaps.org/shapes_bus"
 )
 
-val Pair_SOURCES = mapOf(
-    "busPairs" to "https://birch6.catenarymaps.org/busPairs",
+val STOP_SOURCES = mapOf(
+    "busstops" to "https://birch6.catenarymaps.org/busstops",
     "stationfeatures" to "https://birch7.catenarymaps.org/station_features",
-    "railPairs" to "https://birch5.catenarymaps.org/railPairs",
-    "otherPairs" to "https://birch8.catenarymaps.org/otherPairs"
+    "railstops" to "https://birch5.catenarymaps.org/railstops",
+    "otherstops" to "https://birch8.catenarymaps.org/otherstops"
 )
 
 private const val TAG = "CatenaryDebug"
@@ -316,6 +318,8 @@ class MainActivity : ComponentActivity() {
                         )
 
                         AddShapes()
+
+                        AddStops()
 
                     }
 
@@ -545,9 +549,45 @@ fun NearbyDepartures(
 }
 
 @Composable
+fun AddStops() {
+    val busStopsSource = rememberVectorSource(
+        uri = STOP_SOURCES.getValue("busstops")
+    )
+
+    CircleLayer(
+        id = LayersPerCategory.Bus.Stops,
+        source = busStopsSource,
+        sourceLayer = "data",
+        opacity = const(0.1f),
+        minZoom = 11f,
+        strokeColor = if (isSystemInDarkTheme()) const(Color.White) else const(Color.Black),
+        strokeWidth = interpolate(
+            type = linear(),
+            input = zoom(),
+            10 to const(0.8.dp),
+            12 to const(1.dp),
+            13 to const(1.3.dp),
+            15 to const(2.dp)
+        ),
+        radius = interpolate(
+            type = linear(),
+            input = zoom(),
+            11 to const(0.9.dp),
+            13 to const(2.dp)
+        ),
+        strokeOpacity = interpolate(
+            type = linear(),
+            input = zoom(),
+            11 to const(0.2f),
+            14 to const(0.5f)
+        ),
+    )
+}
+
+@Composable
 fun AddShapes() {
     val busShapesSource = rememberVectorSource(
-        uri = SHAPES_SOURCES.getValue("busshapes") // tilejson or tiles URL
+        uri = SHAPES_SOURCES.getValue("busshapes")
     )
     val otherShapesSource = rememberVectorSource(
         uri = SHAPES_SOURCES.getValue("othershapes")
