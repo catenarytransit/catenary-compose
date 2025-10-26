@@ -16,6 +16,7 @@ import androidx.compose.animation.splineBasedDecay
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -24,9 +25,11 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Layers
@@ -69,12 +72,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
-
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -234,6 +241,9 @@ class MainActivity : ComponentActivity() {
                 if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json"
                 else "https://maps.catenarymaps.org/light-style.json"
 
+            var searchQuery by remember { mutableStateOf("") }
+            var isSearchFocused by remember { mutableStateOf(false) }
+
             CatenaryComposeTheme {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     val density = LocalDensity.current
@@ -391,20 +401,30 @@ class MainActivity : ComponentActivity() {
                     val layerButtonColor = if (isSystemInDarkTheme()) Color.DarkGray else Color.White
                     val layerButtonContentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
 
-                    var searchQuery by remember { mutableStateOf("") }
+
+                    var searchBarBottomPx by remember { mutableStateOf(0) }
 
                     Column(
                         modifier = Modifier
                             .align(searchAlignment)
                             .fillMaxWidth(contentWidthFraction)
                             .windowInsetsPadding(WindowInsets.safeDrawing)
-                            .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+                            .padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                            .zIndex(3f), // <- search bar above the results surface
                         horizontalAlignment = Alignment.Start
                     ) {
-                        SearchBarCatenary(
-                            searchQuery = searchQuery,
-                            onValueChange = { searchQuery = it }
-                        )
+                        Box(
+                            modifier = Modifier.onGloballyPositioned { coords ->
+                                val bottom = coords.positionInRoot().y + coords.size.height
+                                searchBarBottomPx = bottom.toInt()
+                            }
+                        ) {
+                            SearchBarCatenary(
+                                searchQuery = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                onFocusChange = { isFocused -> isSearchFocused = isFocused }
+                            )
+                        }
                     }
 
                     FloatingActionButton(
@@ -425,8 +445,42 @@ class MainActivity : ComponentActivity() {
                     }
 
 
+                    // The results overlay that shows when the searchbar is focused.
+// On tablets (contentWidthFraction < 1f) it covers the left pane,
+// on phones it covers the full window.
+                    AnimatedVisibility(
+                        visible = isSearchFocused,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .zIndex(2f), // below the bar (z=3), above the map/sheet
+                        enter = slideInVertically(initialOffsetY = { -it / 2 }),
+                        exit = slideOutVertically(targetOffsetY = { -it / 2 }),
 
+                    ) {
+                        val overlayBase = if (contentWidthFraction < 1f) {
+                            Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(contentWidthFraction)
+                        } else {
+                            Modifier.fillMaxSize()
+                        }
 
+                        Surface(
+                            modifier = overlayBase
+                                .offset { IntOffset(x = 0, y = 0) }
+
+                                .shadow(8.dp),
+                            tonalElevation = 6.dp,
+                            shadowElevation = 8.dp
+                        ) {
+                            // Your results go here
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(MaterialTheme.colorScheme.surface)
+                            )
+                        }
+                    }
 
                     // Layers Panel
                     AnimatedVisibility(
@@ -1109,28 +1163,27 @@ fun SearchBarPreview() {
 
 
 @Composable
-fun SearchBarCatenary(searchQuery: String = "",
-                      onValueChange: (String) -> Unit = {}) {
-    // This box just wraps the background and the OutlinedTextField
+fun SearchBarCatenary(
+    searchQuery: String = "",
+    onValueChange: (String) -> Unit = {},
+    onFocusChange: (Boolean) -> Unit = {}
+) {
+    val focusManager = LocalFocusManager.current
+    var isFocused by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                color = Color.Transparent,
-                shape = RoundedCornerShape(100.dp)
-
-            )
-
+            .background(color = Color.Transparent, shape = RoundedCornerShape(100.dp))
     ) {
-        // This box works as background
         Box(
-
             modifier = Modifier
                 .fillMaxWidth()
-                .matchParentSize() // adding some space to the label
+                .matchParentSize()
                 .padding(vertical = 0.dp)
                 .shadow(4.dp, shape = RoundedCornerShape(100.dp))
         )
+
         TextField(
             value = searchQuery,
             onValueChange = onValueChange,
@@ -1143,14 +1196,32 @@ fun SearchBarCatenary(searchQuery: String = "",
                 .fillMaxWidth()
                 .height(48.dp)
                 .background(color = Color.Transparent)
-                .padding(vertical = 0.dp, horizontal = 0.dp),
+                .padding(vertical = 0.dp, horizontal = 0.dp)
+                .onFocusChanged {
+                    isFocused = it.isFocused // 👈 keep local state in sync
+                    onFocusChange(it.isFocused)
+                },
             shape = RoundedCornerShape(100.dp),
-            placeholder = { Text("Search here",
-                fontSize = 3.5.em,
-                overflow = TextOverflow.Visible
-            ) }
+            placeholder = {
+                Text("Search here", fontSize = 3.5.em, overflow = TextOverflow.Visible)
+            },
+            leadingIcon = {
+                if (isFocused) {
+                    IconButton(onClick = { focusManager.clearFocus(force = true) }) {
+                        Icon(Icons.Filled.Close, contentDescription = "Dismiss search focus")
+                    }
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "Catenary logo",
+                        modifier = Modifier
+                            .size(28.dp)
+                            .padding(start = 4.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+            }
         )
     }
-
-
 }
+
