@@ -78,6 +78,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
@@ -1145,6 +1146,7 @@ fun SearchBarCatenary(searchQuery: String = "",
             shape = RoundedCornerShape(100.dp),
             placeholder = { Text("Search here",
                 fontSize = 3.5.em,
+                overflow = TextOverflow.Visible
             ) }
         )
     }
