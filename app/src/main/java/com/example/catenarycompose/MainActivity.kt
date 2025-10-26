@@ -37,7 +37,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -74,6 +73,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.BaselineShift
@@ -239,6 +239,12 @@ class MainActivity : ComponentActivity() {
                     val density = LocalDensity.current
                     val screenHeightPx = with(density) { maxHeight.toPx() }
 
+                    // ✅ Tablet/wide layout breakpoint
+                    val isWideLayout = maxWidth >= 600.dp
+                    val contentWidthFraction = if (isWideLayout) 0.5f else 1f
+                    val searchAlignment = if (isWideLayout) Alignment.TopStart else Alignment.TopCenter
+                    val sheetAlignment = if (isWideLayout) Alignment.BottomStart else Alignment.BottomCenter
+
                     val configuration = LocalConfiguration.current
                     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -338,13 +344,9 @@ class MainActivity : ComponentActivity() {
                     }
 
                     // Main Draggable Bottom Sheet
-                    val sheetModifier = if (isLandscape) {
-                        Modifier
-                            .fillMaxWidth(0.5f)
-                            .align(Alignment.BottomStart)
-                    } else {
-                        Modifier.fillMaxWidth()
-                    }
+                    val sheetModifier = Modifier
+                        .fillMaxWidth(contentWidthFraction)
+                        .align(Alignment.BottomStart)
 
                     Surface(
                         modifier = sheetModifier
@@ -393,37 +395,36 @@ class MainActivity : ComponentActivity() {
 
                     Column(
                         modifier = Modifier
-                            .align(Alignment.TopCenter) // center so the search can span full width
-                            .windowInsetsPadding(WindowInsets.safeDrawing) // below status bar & cutout
-
-                            .padding(top = 8.dp, start = 4.dp, end = 16.dp), // extra margins
-                        horizontalAlignment = Alignment.End
+                            .align(searchAlignment)
+                            .fillMaxWidth(contentWidthFraction)
+                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+                        horizontalAlignment = Alignment.Start
                     ) {
-
-
-
                         SearchBarCatenary(
                             searchQuery = searchQuery,
-                            onValueChange = {
-                                searchQuery = it
-                            }
+                            onValueChange = { searchQuery = it }
                         )
-
-                        Spacer(Modifier.height(12.dp))
-
-                        // Layers Button (now below the search bar)
-                        FloatingActionButton(
-                            onClick = { showLayersPanel = !showLayersPanel },
-                            modifier = Modifier
-                                .width(48.dp)
-                                .height(48.dp),
-                            shape = CircleShape,
-                            containerColor = layerButtonColor,
-                            contentColor = layerButtonContentColor
-                        ) {
-                            Icon(Icons.Filled.Layers, contentDescription = "Toggle Layers", Modifier.width(32.dp))
-                        }
                     }
+
+                    FloatingActionButton(
+                        onClick = { showLayersPanel = !showLayersPanel },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .padding(
+                                top = if (contentWidthFraction == 1.0f) 72.dp else 16.dp, // ✅ more top margin in portrait
+                                end = 16.dp
+                            )
+                            .size(36.dp),
+                        shape = CircleShape,
+                        containerColor = layerButtonColor,
+                        contentColor = layerButtonContentColor
+                    ) {
+                        Icon(Icons.Filled.Layers, contentDescription = "Toggle Layers", Modifier.size(24.dp))
+                    }
+
+
 
 
 
