@@ -97,6 +97,8 @@ import org.maplibre.compose.expressions.value.InterpolationValue
 import org.maplibre.compose.expressions.value.ColorValue
 import org.maplibre.compose.expressions.dsl.plus
 import org.maplibre.compose.expressions.value.TextUnitValue
+import org.maplibre.compose.map.RenderOptions
+import kotlin.time.Duration
 
 object LayersPerCategory {
     object Bus {
@@ -282,12 +284,52 @@ class MainActivity : ComponentActivity() {
                     val camera = rememberCameraState(
                         firstPosition = CameraPosition(
                             target = Position(-118.250, 34.050),
-                            zoom = 6.0
+                            zoom = 6.0,
+                            padding = PaddingValues(0.dp, 0.dp, 0.dp, 0.dp)
                         )
                     )
 
                     // Track map size
                     var mapSize by remember { mutableStateOf(IntSize.Zero) }
+
+                    // 1) Helper: are we half or more?
+                    val sheetHalfOrMore by remember {
+                        derivedStateOf {
+                            draggableState.currentValue == SheetSnapPoint.PartiallyExpanded ||
+                                    draggableState.currentValue == SheetSnapPoint.Expanded
+                        }
+                    }
+
+                    // 2) Compute desired PaddingValues in dp from the current map size
+                    val desiredPadding: PaddingValues = run {
+                        val density = LocalDensity.current
+                        val halfHeightDp = with(density) { (mapSize.height / 2f).toDp() }
+                        val halfWidthDp = with(density) { (mapSize.width / 2f).toDp() }
+
+                        when {
+                            // Rule A: full-width content + bottom sheet half or more
+                            contentWidthFraction == 1f && sheetHalfOrMore -> PaddingValues(bottom = halfHeightDp)
+
+                            // Rule B: 0.5 content width + (search focused OR bottom sheet half or more)
+                            contentWidthFraction == 0.5f && (isSearchFocused || sheetHalfOrMore) ->
+                                PaddingValues(start = halfWidthDp)
+
+                            else -> PaddingValues(0.dp)
+                        }
+                    }
+
+                    // 3) Apply padding to the camera when it changes
+                    LaunchedEffect(desiredPadding) {
+                        camera.animateTo(
+                            CameraPosition(
+                                target = camera.position.target,
+                                zoom = camera.position.zoom,
+                                bearing = camera.position.bearing,
+                                tilt = camera.position.tilt,
+                                padding = desiredPadding
+                            )
+                        )
+                    }
 
                     /** idle detection state for move/zoom end */
                     var lastCameraPos by remember { mutableStateOf<CameraPosition?>(null) }
@@ -307,12 +349,20 @@ class MainActivity : ComponentActivity() {
                                 isAttributionEnabled = true,
                                 isCompassEnabled = false,
                                 isScaleBarEnabled = false,
+
+                                ),
+                            renderOptions = RenderOptions(
+
                             )
                         ),
                         zoomRange = 2f..20f,
+                        pitchRange = 0f..20f,
+
                         // 2) Map done loading
                         onMapLoadFinished = {
                             queryVisibleChateaus(camera, mapSize)
+
+
                         },
                         // 3) Use onFrame to detect camera idle -> covers move end & zoom end
                         onFrame = {
@@ -387,7 +437,11 @@ class MainActivity : ComponentActivity() {
                                     .width(40.dp)
                                     .height(4.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                                    .background(
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.4f
+                                        )
+                                    )
                             )
 
 
