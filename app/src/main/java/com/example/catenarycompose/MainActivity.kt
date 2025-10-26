@@ -68,9 +68,20 @@ import org.maplibre.compose.expressions.value.*;
 import org.maplibre.compose.expressions.ast.*;
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
+
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.zIndex
 import org.maplibre.compose.expressions.dsl.convertToColor
 import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.value.InterpolatableValue
@@ -384,22 +395,18 @@ class MainActivity : ComponentActivity() {
                             .align(Alignment.TopCenter) // center so the search can span full width
                             .windowInsetsPadding(WindowInsets.safeDrawing) // below status bar & cutout
 
-                            .padding(top = 8.dp, start = 16.dp, end = 16.dp), // extra margins
+                            .padding(top = 8.dp, start = 4.dp, end = 16.dp), // extra margins
                         horizontalAlignment = Alignment.End
                     ) {
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 32.dp)
-                                .height(48.dp),
-                            singleLine = true,
-                            shape = RoundedCornerShape(100.dp),
-                            placeholder = { Text("Search here") },
 
 
-                                )
+
+                        SearchBarCatenary(
+                            searchQuery = searchQuery,
+                            onValueChange = {
+                                searchQuery = it
+                            }
+                        )
 
                         Spacer(Modifier.height(12.dp))
 
@@ -560,6 +567,10 @@ fun AddStops() {
         uri = STOP_SOURCES.getValue("otherstops")
     )
 
+    val railStops = rememberVectorSource(
+        uri = STOP_SOURCES.getValue("railstops")
+    )
+
     CircleLayer(
         id = LayersPerCategory.Bus.Stops,
         source = busStopsSource,
@@ -587,6 +598,7 @@ fun AddStops() {
             11 to const(0.2f),
             14 to const(0.5f)
         ),
+        visible = (layerSettings.value["bus"] as LayerCategorySettings).stops
     )
 
     SymbolLayer(
@@ -602,8 +614,11 @@ fun AddStops() {
         ),
         textField = get("displayname").cast(),
         textFont = const(listOf("Barlow-Medium")),
+        visible = (layerSettings.value["bus"] as LayerCategorySettings).labelstops,
         textColor = if (isSystemInDarkTheme()) const(Color.White) else const(Color.Black)
     )
+
+
 
 
 }
@@ -1075,3 +1090,64 @@ fun LayerToggleButton(
 
 private fun visibilityOf(isOn: Boolean) = isOn
 
+
+
+@Preview
+@Composable
+fun SearchBarPreview() {
+    var searchQuery = ""
+
+
+
+    SearchBarCatenary(
+        searchQuery = searchQuery,
+        onValueChange = { searchQuery = it }
+    )
+}
+
+
+@Composable
+fun SearchBarCatenary(searchQuery: String = "",
+                      onValueChange: (String) -> Unit = {}) {
+    // This box just wraps the background and the OutlinedTextField
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = Color.Transparent,
+                shape = RoundedCornerShape(100.dp)
+
+            )
+
+    ) {
+        // This box works as background
+        Box(
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .matchParentSize() // adding some space to the label
+                .padding(vertical = 0.dp)
+                .shadow(4.dp, shape = RoundedCornerShape(100.dp))
+        )
+        TextField(
+            value = searchQuery,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = LocalTextStyle.current.copy(
+                fontSize = 3.5.em,
+                baselineShift = BaselineShift(1f)
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .background(color = Color.Transparent)
+                .padding(vertical = 0.dp, horizontal = 0.dp),
+            shape = RoundedCornerShape(100.dp),
+            placeholder = { Text("Search here",
+                fontSize = 3.5.em,
+            ) }
+        )
+    }
+
+
+}
