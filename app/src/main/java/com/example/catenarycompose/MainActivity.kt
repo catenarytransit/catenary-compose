@@ -266,6 +266,7 @@ class MainActivity : ComponentActivity() {
                         SheetSnapPoint.Expanded at with(density) { 60.dp.toPx() }
                     }
 
+
                     val draggableState = remember {
                         AnchoredDraggableState(
                             initialValue = SheetSnapPoint.Collapsed,
@@ -275,6 +276,10 @@ class MainActivity : ComponentActivity() {
                             snapAnimationSpec = easeOutSpec,
                             decayAnimationSpec = splineBasedDecay(density),
                         )
+                    }
+
+                    val sheetIsExpanded by remember {
+                        derivedStateOf { draggableState.currentValue == SheetSnapPoint.Expanded }
                     }
 
                     // State for layers panel visibility
@@ -458,26 +463,31 @@ class MainActivity : ComponentActivity() {
 
                     var searchBarBottomPx by remember { mutableStateOf(0) }
 
-                    Column(
+                    AnimatedVisibility(
+                        visible = !sheetIsExpanded, // hide when sheet is fully expanded
                         modifier = Modifier
                             .align(searchAlignment)
                             .fillMaxWidth(contentWidthFraction)
                             .windowInsetsPadding(WindowInsets.safeDrawing)
                             .padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                            .zIndex(3f), // <- search bar above the results surface
-                        horizontalAlignment = Alignment.Start
+                            .zIndex(3f),
+                        enter = slideInVertically(initialOffsetY = { -it / 2 }), // subtle drop-in
+                        exit = slideOutVertically(targetOffsetY = { -it })      // swipe up & out
                     ) {
-                        Box(
-                            modifier = Modifier.onGloballyPositioned { coords ->
-                                val bottom = coords.positionInRoot().y + coords.size.height
-                                searchBarBottomPx = bottom.toInt()
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Box(
+                                modifier = Modifier.onGloballyPositioned { coords ->
+                                    val bottom = coords.positionInRoot().y + coords.size.height
+                                    // keep if you still need this; otherwise it can be removed
+                                    // searchBarBottomPx = bottom.toInt()
+                                }
+                            ) {
+                                SearchBarCatenary(
+                                    searchQuery = searchQuery,
+                                    onValueChange = { searchQuery = it },
+                                    onFocusChange = { isFocused -> isSearchFocused = isFocused }
+                                )
                             }
-                        ) {
-                            SearchBarCatenary(
-                                searchQuery = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                onFocusChange = { isFocused -> isSearchFocused = isFocused }
-                            )
                         }
                     }
 
