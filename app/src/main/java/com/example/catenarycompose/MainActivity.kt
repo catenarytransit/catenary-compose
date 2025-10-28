@@ -15,6 +15,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.splineBasedDecay
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -90,6 +94,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.zIndex
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import org.maplibre.compose.expressions.dsl.convertToColor
 import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.value.InterpolatableValue
@@ -233,12 +239,69 @@ private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {
 }
 
 class MainActivity : ComponentActivity() {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+
+
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        fun fetchLocation(onSuccess: (Double, Double) -> Unit) {
+            // Check permission
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    1001
+                )
+                return
+            }
+
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location ->
+                    location?.let {
+                        onSuccess(it.latitude, it.longitude)
+                    }
+                }
+        }
+
+        // Optional: handle permission result
+        fun onRequestPermissionsResult(
+            requestCode: Int, permissions: Array<String>, grantResults: IntArray
+        ) {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+            if (requestCode == 1001 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                fetchLocation { lat, lon ->
+                    // You could trigger a recomposition by setting state again
+
+
+                }
+            }
+        }
+
         setContent {
+
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+            var currentLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
+            // Launch location fetch once
+            LaunchedEffect(Unit) {
+                fetchLocation { lat, lon ->
+                    currentLocation = lat to lon
+                }
+            }
+
+
+
+
+
             val styleUri =
                 if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json"
                 else "https://maps.catenarymaps.org/light-style.json"
@@ -451,7 +514,14 @@ class MainActivity : ComponentActivity() {
 
 
                             if (CatenaryStack.size == 0) {
-                                NearbyDepartures()
+
+                                NearbyDepartures(
+                                    userLocation = currentLocation,           // TODO: pass (lat to Pair(lat,lon)) when GPS wired
+                                    pickedLocation = null,         // TODO: pass when “pin” mode wired
+                                    usePickedLocation = false,
+                                    darkMode = isSystemInDarkTheme()
+                                )
+
                             }
                         }
                     }
@@ -1205,7 +1275,9 @@ fun LayerToggleButton(
         style = MaterialTheme.typography.bodySmall,
         color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
     )
-}
+
+
+    }
 }
 
 private fun visibilityOf(isOn: Boolean) = isOn
@@ -1279,7 +1351,7 @@ fun SearchBarCatenary(
                         painter = painterResource(id = R.drawable.logo),
                         contentDescription = "Catenary logo",
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(32.dp)
                             .padding(start = 4.dp),
                         contentScale = ContentScale.Fit
                     )
@@ -1287,5 +1359,7 @@ fun SearchBarCatenary(
             }
         )
     }
+
+
 }
 
