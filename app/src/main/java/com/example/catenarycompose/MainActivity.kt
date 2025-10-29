@@ -561,21 +561,30 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    FloatingActionButton(
-                        onClick = { showLayersPanel = !showLayersPanel },
+                    AnimatedVisibility(
+                        visible = !(sheetIsExpanded && contentWidthFraction == 1f),
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .windowInsetsPadding(WindowInsets.safeDrawing)
                             .padding(
-                                top = if (contentWidthFraction == 1.0f) 72.dp else 16.dp, // ✅ more top margin in portrait
+                                top = if (contentWidthFraction == 1.0f) 72.dp else 16.dp,
                                 end = 16.dp
                             )
-                            .size(36.dp),
-                        shape = CircleShape,
-                        containerColor = layerButtonColor,
-                        contentColor = layerButtonContentColor
+                            .zIndex(3f) // keep above map
                     ) {
-                        Icon(Icons.Filled.Layers, contentDescription = "Toggle Layers", Modifier.size(24.dp))
+                        FloatingActionButton(
+                            onClick = { showLayersPanel = !showLayersPanel },
+                            modifier = Modifier.size(36.dp),
+                            shape = CircleShape,
+                            containerColor = layerButtonColor,
+                            contentColor = layerButtonContentColor
+                        ) {
+                            Icon(
+                                Icons.Filled.Layers,
+                                contentDescription = "Toggle Layers",
+                                Modifier.size(24.dp)
+                            )
+                        }
                     }
 
 
