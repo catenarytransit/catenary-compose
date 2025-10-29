@@ -45,6 +45,8 @@ import androidx.compose.foundation.layout.Arrangement
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.*
 
 /* -------------------------------------------------------------------------- */
 /*  Data models that match the JSON payload (only the fields we actually use)  */
@@ -81,18 +83,19 @@ private data class RouteGroup(
     val color: String? = null,
     @SerialName("text_color") val textColor: String? = null,
     // directions is a map keyed by headsign after consolidation server-side; we normalize on load
-    val directions: Map<String, DirectionGroup> = emptyMap()
+    val directions: Map<String, Map<String, DirectionGroup>>
 )
 
 @Serializable
 private data class DirectionGroup(
-    val headsign: String = "",
-    val trips: List<TripEntry> = emptyList()
+    val headsign: String,
+    val trips: List<TripEntry>,
 )
 
 @Serializable
 private data class TripEntry(
-    val stop_id: String,
+    @SerialName("stop_id") val stopId: String,
+    @SerialName("trip_id") val tripId: String,
     val tz: String? = null,
     val platform: String? = null,
     val cancelled: Boolean? = null,
@@ -112,6 +115,30 @@ private data class Filters(
     val bus: Boolean = true,
     val other: Boolean = true
 )
+
+private fun flattenDirections(
+    nested: Map<String, Map<String, DirectionGroup>>
+): Map<String, DirectionGroup> {
+    // Merge all sub-direction maps into a single map keyed by headsign,
+    // concatenating trips, then sort trips by (realtime || schedule).
+    val merged = mutableMapOf<String, MutableList<TripEntry>>()
+
+    nested.values.forEach { inner ->
+        inner.values.forEach { dg ->
+            val key = dg.headsign
+            val list = merged.getOrPut(key) { mutableListOf() }
+            list += dg.trips
+        }
+    }
+
+    // Build final map with trips sorted ascending by departure
+    return merged.mapValues { (headsign, trips) ->
+        val sortedTrips = trips.sortedBy { t ->
+            t.departureRealtime ?: t.departureSchedule ?: Long.MAX_VALUE
+        }
+        DirectionGroup(headsign = headsign, trips = sortedTrips)
+    }
+}
 
 private fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     val toRad = { d: Double -> d * Math.PI / 180.0 }
@@ -147,8 +174,8 @@ private fun normalizeHex(c: String?): Color? {
 
 private val json = Json {
     ignoreUnknownKeys = true
-    isLenient = true
-    explicitNulls = false
+    //isLenient = true
+    explicitNulls = true
 }
 
 private val httpClient by lazy { OkHttpClient() }
@@ -177,6 +204,107 @@ private fun logJsonTopLevelShape(raw: String) {
                 elem["debug"]?.let { Log.d(NEARBY_TAG, "debug: ${it}") }
                 elem["departures"]?.let { Log.d(NEARBY_TAG, "departures: ${it::class.simpleName}") }
                 elem["stop"]?.let { Log.d(NEARBY_TAG, "stop: ${it::class.simpleName}") }
+
+                elem["departures"]?.let {
+                    val depsEl = elem["departures"]
+                    if (depsEl is JsonArray && depsEl.isNotEmpty()) {
+                        val firstRouteEl = depsEl.first()
+                        if (firstRouteEl is JsonObject) {
+                            val directionsEl = firstRouteEl["directions"]
+                            Log.d(
+                                NEARBY_TAG,
+                                "first departures[0].directions type = ${directionsEl?.let { it::class.simpleName }}"
+                            )
+
+                            if (directionsEl is JsonObject) {
+                                val firstDirEntry = directionsEl.entries.firstOrNull()
+                                if (firstDirEntry == null) {
+                                    Log.w(NEARBY_TAG, "directions is empty")
+                                } else {
+                                    val (dirKey, dirVal) = firstDirEntry
+                                    when (dirVal) {
+                                        is JsonObject -> {
+                                            // Try decoding as your DirectionGroup {headsign, direction_id, trips}
+                                            runCatching {
+                                                json.decodeFromJsonElement(
+                                                    DirectionGroup.serializer(),
+                                                    dirVal
+                                                )
+                                            }.onSuccess { dg ->
+                                                Log.d(
+                                                    NEARBY_TAG,
+                                                    "Decoded DirectionGroup OK (key=$dirKey): headsign='${dg.headsign}',  trips=${dg.trips.size}"
+                                                )
+                                            }.onFailure { e ->
+                                                Log.e(
+                                                    NEARBY_TAG,
+                                                    "Failed to decode DirectionGroup (key=$dirKey) as object: ${e.message}"
+                                                )
+                                                // Optional: log a small preview
+                                                Log.e(
+                                                    NEARBY_TAG,
+                                                    "dirVal preview: ${dirVal.toString().take(600)}"
+                                                )
+                                            }
+                                        }
+
+                                        is JsonArray -> {
+                                            // Legacy shape: array of trips. Decode trips to confirm.
+                                            runCatching {
+                                                json.decodeFromJsonElement(
+                                                    ListSerializer(TripEntry.serializer()),
+                                                    dirVal
+                                                )
+                                            }.onSuccess { trips ->
+                                                Log.d(
+                                                    NEARBY_TAG,
+                                                    "directions[$dirKey] is an ARRAY of trips (legacy). trips=${trips.size}"
+                                                )
+                                                // If you want, synthesize a DirectionGroup-like view for downstream:
+                                                // val synthetic = DirectionGroup(headsign = dirKey, trips = trips, directionId = dirKey)
+                                            }.onFailure { e ->
+                                                Log.e(
+                                                    NEARBY_TAG,
+                                                    "Failed to decode trips array at directions[$dirKey]: ${e.message}"
+                                                )
+                                                Log.e(
+                                                    NEARBY_TAG,
+                                                    "dirVal preview: ${dirVal.toString().take(600)}"
+                                                )
+                                            }
+                                        }
+
+                                        else -> {
+                                            Log.w(
+                                                NEARBY_TAG,
+                                                "directions[$dirKey] unexpected JSON type: ${dirVal::class.simpleName}"
+                                            )
+                                            Log.w(
+                                                NEARBY_TAG,
+                                                "dirVal preview: ${dirVal.toString().take(600)}"
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                Log.w(
+                                    NEARBY_TAG,
+                                    "departures[0].directions is not an object: ${directionsEl?.let { it::class.simpleName }}"
+                                )
+                            }
+                        } else {
+                            Log.w(
+                                NEARBY_TAG,
+                                "departures[0] is not an object: ${firstRouteEl::class.simpleName}"
+                            )
+                        }
+                    } else {
+                        Log.w(
+                            NEARBY_TAG,
+                            "departures is not a non-empty array (type=${depsEl?.let { it::class.simpleName }})"
+                        )
+                    }
+                }
             }
 
             else -> Log.d(NEARBY_TAG, "Top-level is not an object: ${elem::class.simpleName}")
@@ -315,6 +443,8 @@ fun NearbyDepartures(
     }
 
     val sorted = remember(filtered, sortMode, origin, stopsTable) {
+        println("sort mode ${sortMode}")
+
         when (sortMode) {
             SortMode.ALPHA -> filtered.sortedWith(
                 compareBy(
@@ -327,7 +457,14 @@ fun NearbyDepartures(
                 filtered.sortedWith(
                     compareBy(
                         {
-                            if (origin == null) Double.POSITIVE_INFINITY else tryDistanceForRouteGroup(
+                            if (origin == null) {
+
+                                println("origin is null")
+
+                                Double.POSITIVE_INFINITY
+
+                            } else
+                                tryDistanceForRouteGroup(
                                 it, origin, stopsTable
                             )
                         },
@@ -570,15 +707,18 @@ private fun RouteGroupCard(
         }
 
         // Directions
-        route.directions.entries
-            .sortedBy { it.value.headsign.lowercase(Locale.UK) }
+        val flatDirections = remember(route.directions) { flattenDirections(route.directions) }
+
+        flatDirections.entries
+            .sortedBy { it.value.headsign }
             .forEach { (_, dir) ->
-                val visibleTrips = dir.trips
-                    .filter { t ->
-                        val dep = t.departureRealtime ?: t.departureSchedule ?: 0L
-                        val now = System.currentTimeMillis() / 1000
-                        dep in (now - 600)..(now + 64800)
-                    }
+                val visibleTrips = dir.trips.filter { t ->
+                    val dep = t.departureRealtime ?: t.departureSchedule ?: 0L
+                    val now = System.currentTimeMillis() / 1000
+                    dep in (now - 600)..(now + 64800)
+                }
+
+                println("How many trips are visible ${dir.trips.count()} -> ${visibleTrips.count()}")
 
                 if (visibleTrips.isEmpty()) return@forEach
 
@@ -621,7 +761,7 @@ private fun TripPill(
     val nowSec = System.currentTimeMillis() / 1000
     val dep = trip.departureRealtime ?: trip.departureSchedule ?: 0L
     val secondsLeft = dep - nowSec
-    val stop = stopsTable[chateauId]?.get(trip.stop_id)
+    val stop = stopsTable[chateauId]?.get(trip.stopId)
     val tz = stop?.timezone ?: trip.tz
 
     Surface(
@@ -650,7 +790,14 @@ private fun TripPill(
             }
 
             // “in 5 min” / “now”
-            TimeDiffText(seconds = secondsLeft)
+            DiffTimer(
+                diff = secondsLeft.toDouble(),
+                showBrackets = false,
+                showSeconds = false,
+                large = false,
+                showDays = false,
+                showPlus = false
+            )
 
             // Wall-clock time
             if (tz != null) {
@@ -694,22 +841,6 @@ private fun TripPill(
     }
 }
 
-@Composable
-private fun TimeDiffText(seconds: Long) {
-    val abs = kotlin.math.abs(seconds)
-    val nowish = abs <= 60
-    val text = if (nowish) "now" else {
-        val mins = max(1, (abs / 60).toInt())
-        if (seconds >= 0) "in ${mins} min" else "${mins} min ago"
-    }
-    val color =
-        if (seconds < -60) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        else if (seconds >= -60 && seconds <= 60) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurface
-
-    Text(text, color = color, style = MaterialTheme.typography.titleSmall)
-}
-
 /* ---------------------------- Distance helper ----------------------------- */
 
 private fun tryDistanceForRouteGroup(
@@ -719,9 +850,15 @@ private fun tryDistanceForRouteGroup(
 ): Double {
     val (olat, olon) = origin
     var best = Double.POSITIVE_INFINITY
-    for (dir in rg.directions.values) {
+
+    // Flatten before iterating
+    val flat = flattenDirections(rg.directions)
+
+    println("for route group ${rg.routeId}")
+    for (dir in flat.values) {
+        println("for direction, ${dir.headsign} ${dir.trips.count()}")
         val first = dir.trips.firstOrNull() ?: continue
-        val s = stopsTable[rg.chateauId]?.get(first.stop_id) ?: continue
+        val s = stopsTable[rg.chateauId]?.get(first.stopId) ?: continue
         val lat = s.lat ?: s.latitude
         val lon = s.lon ?: s.longitude
         if (lat != null && lon != null) {
@@ -729,5 +866,8 @@ private fun tryDistanceForRouteGroup(
             if (d < best) best = d
         }
     }
+
+    println("Distance is ${best}m")
     return best
 }
+
