@@ -96,6 +96,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.zIndex
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import io.github.dellisd.spatialk.geojson.Point
 import org.maplibre.compose.expressions.dsl.convertToColor
 import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.value.InterpolatableValue
@@ -468,6 +469,37 @@ class MainActivity : ComponentActivity() {
                         AddShapes()
 
                         AddStops()
+
+                        // Show a dot for the user's current location
+                        if (currentLocation != null) {
+                            val (lat, lon) = currentLocation!!
+
+                            val userLocationSource = rememberGeoJsonSource(
+                                data = GeoJsonData.Features(
+                                    Point(Position(lon, lat))
+                                )
+                            )
+
+                            CircleLayer(
+                                id = "user-location-dot",
+                                source = userLocationSource,
+                                radius = interpolate(
+                                    type = linear(),
+                                    input = zoom(),
+                                    0 to const(3.dp),
+                                    12 to const(6.dp),
+                                    15 to const(8.dp)
+                                ),
+                                color = if (isSystemInDarkTheme()) const(Color(0xFF4CC9F0)) else const(
+                                    Color(0xFF1D4ED8)
+                                ),
+                                strokeColor = const(Color.White),
+                                strokeWidth = const(2.dp),
+                                minZoom = 0f,
+                                visible = true
+                            )
+                        }
+
 
                     }
 
