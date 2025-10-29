@@ -409,7 +409,7 @@ fun NearbyDepartures(
 
     // choose query origin
     val origin: Pair<Double, Double>? =
-        if (pickedLocation != null && pin?.active == true) pickedLocation else userLocation
+        if (pickedLocation != null && usePickedLocation == true) pickedLocation else userLocation
 
     // polling: try immediately, again at 1.5s, then every 10s
     LaunchedEffect(origin) {

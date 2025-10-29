@@ -48,14 +48,14 @@ data class PinState(
 fun DraggablePinLayers(pin: PinState, pinSource: GeoJsonSource) {
 
 
-    /*
+
     LaunchedEffect(pin.active, pin.position) {
         if (pin.active && pin.position != null) {
             pinSource.setData(GeoJsonData.Features(Point(pin.position)))
         } else {
             pinSource.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
         }
-    }*/
+    }
 
 
     val pinIcon = painterResource(id = R.drawable.map_marker_1)

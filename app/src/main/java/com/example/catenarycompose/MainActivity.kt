@@ -84,6 +84,11 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import android.os.Looper
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.Priority
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -312,6 +317,55 @@ class MainActivity : ComponentActivity() {
                 )
             )
 
+
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+            var currentLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
+            // Start live location updates and keep currentLocation in sync
+            val hasFinePermission = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            DisposableEffect(hasFinePermission) {
+                if (!hasFinePermission) {
+                    // Request permission if needed; you can keep your existing request flow
+                    ActivityCompat.requestPermissions(
+                        this@MainActivity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        1001
+                    )
+                    onDispose { }
+                } else {
+                    // Build a request: high accuracy, ~5s desired interval, 2s min, and 5m min distance
+                    val request = LocationRequest.Builder(
+                        Priority.PRIORITY_HIGH_ACCURACY, /* intervalMillis = */ 5_000L
+                    )
+                        .setMinUpdateIntervalMillis(2_000L)
+                        .setMinUpdateDistanceMeters(5f)
+                        .build()
+
+                    val callback = object : LocationCallback() {
+                        override fun onLocationResult(result: LocationResult) {
+                            val loc = result.lastLocation ?: return
+                            currentLocation = loc.latitude to loc.longitude
+                            // If you want to follow the user, you can animate the camera here (optional):
+                            // camera.animateTo(camera.position.copy(target = Position(loc.longitude, loc.latitude)))
+                        }
+                    }
+
+                    // Start updates on the main looper
+                    fusedLocationClient.requestLocationUpdates(
+                        request, callback, Looper.getMainLooper()
+                    )
+
+                    // Stop updates when this composable leaves composition
+                    onDispose {
+                        fusedLocationClient.removeLocationUpdates(callback)
+                    }
+                }
+            }
+
             val onPinDrop: () -> Unit = {
                 //val proj = camera.projection
 
@@ -353,9 +407,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-            var currentLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
             // Launch location fetch once
             LaunchedEffect(Unit) {
@@ -587,12 +638,12 @@ class MainActivity : ComponentActivity() {
 
                         onDragEndCommit = { newPos ->
                             // Update Compose state
-                            pin = pin.copy(position = newPos)
+                            pin = pin.copy(position = newPos, active = true)
                             // Also update your map source (inside MaplibreMap scope) via your existing plumbing.
                             // e.g.
 
 
-                            pinSourceRef.value?.setData(GeoJsonData.Features(Point(newPos)))
+                            // pinSourceRef.value?.setData(GeoJsonData.Features(Point(newPos)))
                         })
 
 
@@ -645,7 +696,7 @@ class MainActivity : ComponentActivity() {
                                     darkMode = isSystemInDarkTheme(),
                                     onMyLocation = {
                                         // Mimic JS “my_location_press()”: exit pin mode
-                                        pin = pin.copy(active = false, position = null)
+                                        pin = pin.copy(active = false)
                                         pinSourceRef.value?.setData(
                                             GeoJsonData.Features(FeatureCollection(emptyList()))
                                         )
