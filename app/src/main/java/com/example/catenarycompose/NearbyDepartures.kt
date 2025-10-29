@@ -392,7 +392,7 @@ fun NearbyDepartures(
     darkMode: Boolean = false,
 ) {
     var filters by remember { mutableStateOf(Filters()) }
-    var sortMode by remember { mutableStateOf(SortMode.ALPHA) }
+    var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
     var loading by remember { mutableStateOf(false) }
     var firstAttemptSent by remember { mutableStateOf(false) }
     var firstLoadComplete by remember { mutableStateOf(false) }
