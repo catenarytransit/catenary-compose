@@ -690,9 +690,9 @@ class MainActivity : ComponentActivity() {
                                 NearbyDepartures(
                                     userLocation = currentLocation,
                                     pickedLocation = pickedPair,
-                                    //usePickedLocation = usePickedLocation,
+                                    usePickedLocation = usePickedLocation,
                                     pin = pin,
-                                    usePickedLocation = false,
+                                    //usePickedLocation = false,
                                     darkMode = isSystemInDarkTheme(),
                                     onMyLocation = {
                                         // Mimic JS “my_location_press()”: exit pin mode

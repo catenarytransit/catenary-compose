@@ -407,54 +407,82 @@ fun NearbyDepartures(
     var stopsTable by remember { mutableStateOf<Map<String, Map<String, StopEntry>>>(emptyMap()) }
     var departureList by remember { mutableStateOf<List<RouteGroup>>(emptyList()) }
 
-    // choose query origin
-    val origin: Pair<Double, Double>? =
-        if (pickedLocation != null && usePickedLocation == true) pickedLocation else userLocation
+    // NEW: we "lock" the origin after the first fix so GPS drift won't restart fetches.
+    var lockedOrigin by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
-    // polling: try immediately, again at 1.5s, then every 10s
-    LaunchedEffect(origin) {
-        if (origin != null) {
-            suspend fun once() {
-                loading = true
-                firstAttemptSent = true
-                val res = fetchNearby(origin.first, origin.second)
-                if (res != null) {
-                    stopsTable = res.stop
-                    departureList = res.departures
-                    serverMs = res.debug?.totalTimeMs
-
-                    println("nearby took ${res.debug?.totalTimeMs}")
-                } else {
-                    println("nearby returned with nothing")
-                }
-                loading = false
-            }
-            once()
-            delay(1500)
-            once()
-            firstLoadComplete = true
-            while (true) {
-                delay(10_000)
-                once()
-            }
-        }
-
+    // NEW: bump this to cancel current polling and start a fresh session
+    var pollSession by remember { mutableStateOf(0) }
+    fun restartPolling() {
+        pollSession++
     }
 
+    // --- LOCK INITIAL ORIGIN ONCE (GPS MODE) ---
+    // When we first get a GPS fix and we're NOT using the pin, lock it once.
+    LaunchedEffect(userLocation, usePickedLocation) {
+        if (!usePickedLocation && lockedOrigin == null && userLocation != null) {
+            lockedOrigin = userLocation
+            restartPolling()
+        }
+    }
+
+    // --- UPDATE LOCK WHEN SWITCHING MODES ---
+    // If user toggles into pin mode and we have a pin, lock to the pin and restart.
+    LaunchedEffect(usePickedLocation) {
+        if (usePickedLocation && pickedLocation != null) {
+            if (lockedOrigin != pickedLocation) {
+                lockedOrigin = pickedLocation
+                restartPolling()
+            }
+        } else if (!usePickedLocation && userLocation != null) {
+            // Switching back to GPS: keep current lock unless the user explicitly presses My Location.
+            // No action here to avoid auto updates past the first GPS fix.
+        }
+    }
+
+    // --- PIN MOVES SHOULD CANCEL & REFETCH ---
+    // If the pin moves while we are in pin mode, cancel and restart with the new pin.
+    LaunchedEffect(pickedLocation) {
+        if (usePickedLocation && pickedLocation != null && pickedLocation != lockedOrigin) {
+            lockedOrigin = pickedLocation
+            restartPolling()
+        }
+    }
+
+    // --- POLLING LOOP: immediate fetch, then every 10s. Not tied to raw origin updates. ---
+    LaunchedEffect(pollSession) {
+        val origin = lockedOrigin ?: return@LaunchedEffect
+        suspend fun once() {
+            loading = true
+            firstAttemptSent = true
+            val res = fetchNearby(origin.first, origin.second)
+            if (res != null) {
+                stopsTable = res.stop
+                departureList = res.departures
+                serverMs = res.debug?.totalTimeMs
+                println("nearby took ${res.debug?.totalTimeMs}")
+            } else {
+                println("nearby returned with nothing")
+            }
+            loading = false
+        }
+
+        // immediate fetch, then every 10 seconds
+        once()
+        firstLoadComplete = true
+        while (currentCoroutineContext().isActive) {
+            delay(10_000)
+            once()
+        }
+    }
 
     // derived + sorting
     val filtered = remember(departureList, filters) {
         departureList.filter { rg ->
-            rg.directions.isNotEmpty() && isAllowedByFilter(
-                rg.routeType,
-                filters
-            )
+            rg.directions.isNotEmpty() && isAllowedByFilter(rg.routeType, filters)
         }
     }
 
-    val sorted = remember(filtered, sortMode, origin, stopsTable) {
-        println("sort mode ${sortMode}")
-
+    val sorted = remember(filtered, sortMode, lockedOrigin, stopsTable) {
         when (sortMode) {
             SortMode.ALPHA -> filtered.sortedWith(
                 compareBy(
@@ -462,26 +490,16 @@ fun NearbyDepartures(
                     { it.routeId }
                 )
             )
-
-            SortMode.DISTANCE -> {
-                filtered.sortedWith(
-                    compareBy(
-                        {
-                            if (origin == null) {
-
-                                println("origin is null")
-
-                                Double.POSITIVE_INFINITY
-
-                            } else
-                                tryDistanceForRouteGroup(
-                                    it, origin!!, stopsTable
-                                )
-                        },
-                        { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) }
-                    )
+            SortMode.DISTANCE -> filtered.sortedWith(
+                compareBy(
+                    {
+                        val o = lockedOrigin
+                        if (o == null) Double.POSITIVE_INFINITY
+                        else tryDistanceForRouteGroup(it, o, stopsTable)
+                    },
+                    { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) }
                 )
-            }
+            )
         }
     }
 
@@ -494,13 +512,21 @@ fun NearbyDepartures(
         TopRow(
             currentPickModeIsPin = usePickedLocation,
             onMyLocation = {
+                // User explicitly requested GPS recenter:
                 onMyLocation()
+                // If we have a current GPS fix, take it and restart polling.
+                userLocation?.let {
+                    lockedOrigin = it
+                    restartPolling()
+                }
             },
             onPinDrop = {
                 onPinDrop()
+                // Parent will update pickedLocation; our LaunchedEffect(pickedLocation) will handle restart.
             },
             onCenterPin = {
                 onCenterPin()
+                // No-op here; movement will be observed by pickedLocation change if it happens.
             },
             serverMs = serverMs,
             sortMode = sortMode,
