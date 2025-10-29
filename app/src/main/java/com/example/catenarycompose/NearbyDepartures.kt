@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -44,6 +45,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.*
@@ -389,7 +391,11 @@ fun NearbyDepartures(
     userLocation: Pair<Double, Double>? = null,
     pickedLocation: Pair<Double, Double>? = null,
     usePickedLocation: Boolean = false,
+    pin: PinState? = null,
     darkMode: Boolean = false,
+    onMyLocation: () -> Unit = {},
+    onPinDrop: () -> Unit = {},
+    onCenterPin: () -> Unit = {}
 ) {
     var filters by remember { mutableStateOf(Filters()) }
     var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
@@ -402,35 +408,39 @@ fun NearbyDepartures(
     var departureList by remember { mutableStateOf<List<RouteGroup>>(emptyList()) }
 
     // choose query origin
-    val origin: Pair<Double, Double>? = if (usePickedLocation) pickedLocation else userLocation
+    val origin: Pair<Double, Double>? =
+        if (pickedLocation != null && pin?.active == true) pickedLocation else userLocation
 
     // polling: try immediately, again at 1.5s, then every 10s
-    LaunchedEffect(origin, usePickedLocation) {
-        if (origin == null) return@LaunchedEffect
-        suspend fun once() {
-            loading = true
-            firstAttemptSent = true
-            val res = fetchNearby(origin.first, origin.second)
-            if (res != null) {
-                stopsTable = res.stop
-                departureList = res.departures
-                serverMs = res.debug?.totalTimeMs
+    LaunchedEffect(origin) {
+        if (origin != null) {
+            suspend fun once() {
+                loading = true
+                firstAttemptSent = true
+                val res = fetchNearby(origin.first, origin.second)
+                if (res != null) {
+                    stopsTable = res.stop
+                    departureList = res.departures
+                    serverMs = res.debug?.totalTimeMs
 
-                println("nearby took ${res.debug?.totalTimeMs}")
-            } else {
-                println("nearby returned with nothing")
+                    println("nearby took ${res.debug?.totalTimeMs}")
+                } else {
+                    println("nearby returned with nothing")
+                }
+                loading = false
             }
-            loading = false
-        }
-        once()
-        delay(1500)
-        once()
-        firstLoadComplete = true
-        while (true) {
-            delay(10_000)
             once()
+            delay(1500)
+            once()
+            firstLoadComplete = true
+            while (true) {
+                delay(10_000)
+                once()
+            }
         }
+
     }
+
 
     // derived + sorting
     val filtered = remember(departureList, filters) {
@@ -465,8 +475,8 @@ fun NearbyDepartures(
 
                             } else
                                 tryDistanceForRouteGroup(
-                                it, origin, stopsTable
-                            )
+                                    it, origin!!, stopsTable
+                                )
                         },
                         { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) }
                     )
@@ -483,9 +493,15 @@ fun NearbyDepartures(
     ) {
         TopRow(
             currentPickModeIsPin = usePickedLocation,
-            onMyLocation = { /* TODO hook to nearby_pick_state_store = 0 */ },
-            onPinDrop = { /* TODO hook to nearby_pick_state_store = 1 */ },
-            onCenterPin = { /* TODO hook to “center” */ },
+            onMyLocation = {
+                onMyLocation()
+            },
+            onPinDrop = {
+                onPinDrop()
+            },
+            onCenterPin = {
+                onCenterPin()
+            },
             serverMs = serverMs,
             sortMode = sortMode,
             onSortChange = { sortMode = it },
@@ -718,7 +734,7 @@ private fun RouteGroupCard(
                     dep in (now - 600)..(now + 64800)
                 }
 
-                println("How many trips are visible ${dir.trips.count()} -> ${visibleTrips.count()}")
+                // println("How many trips are visible ${dir.trips.count()} -> ${visibleTrips.count()}")
 
                 if (visibleTrips.isEmpty()) return@forEach
 
@@ -854,9 +870,9 @@ private fun tryDistanceForRouteGroup(
     // Flatten before iterating
     val flat = flattenDirections(rg.directions)
 
-    println("for route group ${rg.routeId}")
+    // println("for route group ${rg.routeId}")
     for (dir in flat.values) {
-        println("for direction, ${dir.headsign} ${dir.trips.count()}")
+        //println("for direction, ${dir.headsign} ${dir.trips.count()}")
         val first = dir.trips.firstOrNull() ?: continue
         val s = stopsTable[rg.chateauId]?.get(first.stopId) ?: continue
         val lat = s.lat ?: s.latitude
@@ -867,7 +883,7 @@ private fun tryDistanceForRouteGroup(
         }
     }
 
-    println("Distance is ${best}m")
+    //println("Distance is ${best}m")
     return best
 }
 

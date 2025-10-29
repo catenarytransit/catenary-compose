@@ -64,4 +64,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("org.maplibre.spatialk:geojson:0.5.0")
+    implementation("org.maplibre.spatialk:turf:0.5.0")
+    implementation("org.maplibre.spatialk:units:0.5.0")
 }

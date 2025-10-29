@@ -106,6 +106,10 @@ import org.maplibre.compose.expressions.dsl.plus
 import org.maplibre.compose.expressions.value.TextUnitValue
 import org.maplibre.compose.map.RenderOptions
 import kotlin.time.Duration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.DpOffset
+import io.github.dellisd.spatialk.geojson.FeatureCollection
+import org.maplibre.compose.sources.GeoJsonSource
 
 object LayersPerCategory {
     object Bus {
@@ -116,19 +120,23 @@ object LayersPerCategory {
 
         const val LabelStops = "busstopslabel"
     }
+
     object Other {
         const val Shapes = "other-shapes"
         const val LabelShapes = "other-labelshapes"
         const val FerryShapes = "ferryshapes"
     }
+
     object IntercityRail {
         const val Shapes = "intercityrail-shapes"
         const val LabelShapes = "intercityrail-labelshapes"
     }
+
     object Metro {
         const val Shapes = "metro-shapes"
         const val LabelShapes = "metro-labelshapes"
     }
+
     object Tram {
         const val Shapes = "tram-shapes"
         const val LabelShapes = "tram-labelshapes"
@@ -204,9 +212,7 @@ private const val TAG = "CatenaryDebug"
 var visibleChateaus: List<String> = emptyList()
 
 val easeOutSpec: AnimationSpec<Float> = tween(
-    durationMillis = 300,
-    delayMillis = 0,
-    easing = EaseOutCirc
+    durationMillis = 300, delayMillis = 0, easing = EaseOutCirc
 )
 
 var CatenaryStack: ArrayDeque<CatenaryStackEnum> = ArrayDeque(listOf())
@@ -230,8 +236,7 @@ private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {
     )
 
     val features = projection.queryRenderedFeatures(
-        rect = rect,
-        layerIds = setOf("chateaus_calc")
+        rect = rect, layerIds = setOf("chateaus_calc")
     )
 
     val names = features.map { f -> f.properties["chateau"]?.toString() ?: "Unknown" }
@@ -243,7 +248,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
 
-
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -252,20 +256,16 @@ class MainActivity : ComponentActivity() {
         fun fetchLocation(onSuccess: (Double, Double) -> Unit) {
             // Check permission
             if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
+                    this, Manifest.permission.ACCESS_FINE_LOCATION
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    1001
+                    this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1001
                 )
                 return
             }
 
-            fusedLocationClient.lastLocation
-                .addOnSuccessListener { location ->
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     location?.let {
                         onSuccess(it.latitude, it.longitude)
                     }
@@ -287,6 +287,71 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val pinSourceRef = remember { mutableStateOf<GeoJsonSource?>(null) }
+            val density = LocalDensity.current
+            var pin by remember { mutableStateOf(PinState(active = false, position = null)) }
+
+
+            val usePickedLocation = pin.active && pin.position != null
+            val pickedPair: Pair<Double, Double>? =
+                pin.position?.let { it.latitude to it.longitude }
+
+            var mapSize by remember { mutableStateOf(IntSize.Zero) }
+
+// Button actions (same behavior as your JS app)
+            val onMyLocation: () -> Unit = {
+                pin = pin.copy(active = false, position = null)
+            }
+
+            // Camera
+            val camera = rememberCameraState(
+                firstPosition = CameraPosition(
+                    target = Position(-118.250, 34.050),
+                    zoom = 6.0,
+                    padding = PaddingValues(0.dp, 0.dp, 0.dp, 0.dp)
+                )
+            )
+
+            val onPinDrop: () -> Unit = {
+                //val proj = camera.projection
+
+                println("on pin drop triggered")
+
+                if (pin.position == null) {
+
+                    // val centerDp = with(density) {
+                    // DpOffset((mapSize.width / 2f).toDp(), (mapSize.height / 2f).toDp())
+                    //val pos = proj.positionFromScreenLocation(centerDp)
+                    val camerapos = camera.position
+                    val pos = Position(
+                        latitude = camerapos.target.latitude, longitude = camerapos.target.longitude
+                    )
+                    pin = PinState(active = true, position = pos)
+
+
+                } else {
+
+
+                    pin = pin.copy(active = true, position = pin.position)
+
+                }
+
+
+            }
+
+            val onCenterPin: () -> Unit = {
+                println("on centre pin dropped")
+
+                val camerapos = camera.position
+                val pos = Position(
+                    latitude = camerapos.target.latitude, longitude = camerapos.target.longitude
+                )
+
+                pin = PinState(active = true, position = pos)
+
+            }
+
+
 
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -300,29 +365,29 @@ class MainActivity : ComponentActivity() {
             }
 
 
-
-
-
             val styleUri =
                 if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json"
                 else "https://maps.catenarymaps.org/light-style.json"
 
             var searchQuery by remember { mutableStateOf("") }
+
             var isSearchFocused by remember { mutableStateOf(false) }
 
             CatenaryComposeTheme {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    val density = LocalDensity.current
                     val screenHeightPx = with(density) { maxHeight.toPx() }
 
                     // ✅ Tablet/wide layout breakpoint
                     val isWideLayout = maxWidth >= 600.dp
                     val contentWidthFraction = if (isWideLayout) 0.5f else 1f
-                    val searchAlignment = if (isWideLayout) Alignment.TopStart else Alignment.TopCenter
-                    val sheetAlignment = if (isWideLayout) Alignment.BottomStart else Alignment.BottomCenter
+                    val searchAlignment =
+                        if (isWideLayout) Alignment.TopStart else Alignment.TopCenter
+                    val sheetAlignment =
+                        if (isWideLayout) Alignment.BottomStart else Alignment.BottomCenter
 
                     val configuration = LocalConfiguration.current
-                    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+                    val isLandscape =
+                        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val anchors = DraggableAnchors<SheetSnapPoint> {
                         SheetSnapPoint.Collapsed at screenHeightPx - with(density) { 64.dp.toPx() }
@@ -349,14 +414,6 @@ class MainActivity : ComponentActivity() {
                     // State for layers panel visibility
                     var showLayersPanel by remember { mutableStateOf(false) }
 
-                    // Camera
-                    val camera = rememberCameraState(
-                        firstPosition = CameraPosition(
-                            target = Position(-118.250, 34.050),
-                            zoom = 6.0,
-                            padding = PaddingValues(0.dp, 0.dp, 0.dp, 0.dp)
-                        )
-                    )
 
                     // Track map size
                     var mapSize by remember { mutableStateOf(IntSize.Zero) }
@@ -364,8 +421,7 @@ class MainActivity : ComponentActivity() {
                     // 1) Helper: are we half or more?
                     val sheetHalfOrMore by remember {
                         derivedStateOf {
-                            draggableState.currentValue == SheetSnapPoint.PartiallyExpanded ||
-                                    draggableState.currentValue == SheetSnapPoint.Expanded
+                            draggableState.currentValue == SheetSnapPoint.PartiallyExpanded || draggableState.currentValue == SheetSnapPoint.Expanded
                         }
                     }
 
@@ -380,8 +436,9 @@ class MainActivity : ComponentActivity() {
                             contentWidthFraction == 1f && sheetHalfOrMore -> PaddingValues(bottom = halfHeightDp)
 
                             // Rule B: 0.5 content width + (search focused OR bottom sheet half or more)
-                            contentWidthFraction == 0.5f && (isSearchFocused || sheetHalfOrMore) ->
-                                PaddingValues(start = halfWidthDp)
+                            contentWidthFraction == 0.5f && (isSearchFocused || sheetHalfOrMore) -> PaddingValues(
+                                start = halfWidthDp
+                            )
 
                             else -> PaddingValues(0.dp)
                         }
@@ -419,8 +476,7 @@ class MainActivity : ComponentActivity() {
                                 isCompassEnabled = false,
                                 isScaleBarEnabled = false,
 
-                                ),
-                            renderOptions = RenderOptions(
+                                ), renderOptions = RenderOptions(
 
                             )
                         ),
@@ -453,17 +509,14 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
-                        }
-                    ) {
+                        }) {
                         // Source + layers
                         val chateausSource = rememberGeoJsonSource(
                             data = GeoJsonData.Uri("https://birch.catenarymaps.org/getchateaus")
                         )
 
                         FillLayer(
-                            id = "chateaus_calc",
-                            source = chateausSource,
-                            opacity = const(0.0f)
+                            id = "chateaus_calc", source = chateausSource, opacity = const(0.0f)
                         )
 
                         AddShapes()
@@ -500,31 +553,67 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        // draggable pin section
+
+
+                        val pinSource = rememberGeoJsonSource(
+                            data = GeoJsonData.Features(FeatureCollection(emptyList()))
+                        )
+
+                        DisposableEffect(pinSource) {
+                            println("Create new reference to pin")
+
+                            pinSourceRef.value = pinSource
+                            onDispose {
+                                // break the strong reference so the old map/style can be GC’d
+                                if (pinSourceRef.value === pinSource) {
+                                    pinSourceRef.value = null
+                                }
+                            }
+                        }
+
+                        DraggablePinLayers(pin = pin, pinSource = pinSource)
+
 
                     }
 
+
+
+                    DraggablePinOverlay(
+                        camera = camera,
+                        mapSize = mapSize,
+                        pin = pin,
+                        onActivatePin = { pin = pin.copy(active = true) },
+
+                        onDragEndCommit = { newPos ->
+                            // Update Compose state
+                            pin = pin.copy(position = newPos)
+                            // Also update your map source (inside MaplibreMap scope) via your existing plumbing.
+                            // e.g.
+
+
+                            pinSourceRef.value?.setData(GeoJsonData.Features(Point(newPos)))
+                        })
+
+
                     // Main Draggable Bottom Sheet
-                    val sheetModifier = Modifier
-                        .fillMaxWidth(contentWidthFraction)
-                        .align(Alignment.BottomStart)
+                    val sheetModifier =
+                        Modifier
+                            .fillMaxWidth(contentWidthFraction)
+                            .align(Alignment.BottomStart)
 
                     Surface(
                         modifier = sheetModifier
                             .offset {
                                 IntOffset(
-                                    x = 0,
-                                    y = draggableState
-                                        .requireOffset()
-                                        .roundToInt()
+                                    x = 0, y = draggableState.requireOffset().roundToInt()
                                 )
                             }
                             .anchoredDraggable(
-                                state = draggableState,
-                                orientation = Orientation.Vertical
+                                state = draggableState, orientation = Orientation.Vertical
                             ),
                         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                        shadowElevation = 8.dp
-                    ) {
+                        shadowElevation = 8.dp) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -548,19 +637,53 @@ class MainActivity : ComponentActivity() {
                             if (CatenaryStack.size == 0) {
 
                                 NearbyDepartures(
-                                    userLocation = currentLocation,           // TODO: pass (lat to Pair(lat,lon)) when GPS wired
-                                    pickedLocation = null,         // TODO: pass when “pin” mode wired
+                                    userLocation = currentLocation,
+                                    pickedLocation = pickedPair,
+                                    //usePickedLocation = usePickedLocation,
+                                    pin = pin,
                                     usePickedLocation = false,
-                                    darkMode = isSystemInDarkTheme()
-                                )
+                                    darkMode = isSystemInDarkTheme(),
+                                    onMyLocation = {
+                                        // Mimic JS “my_location_press()”: exit pin mode
+                                        pin = pin.copy(active = false, position = null)
+                                        pinSourceRef.value?.setData(
+                                            GeoJsonData.Features(FeatureCollection(emptyList()))
+                                        )
+                                    },
+                                    onPinDrop = {
+                                        onPinDrop()
+                                        pin.position?.let { pos ->
+                                            pinSourceRef.value?.setData(
+                                                GeoJsonData.Features(
+                                                    Point(
+                                                        pos
+                                                    )
+                                                )
+                                            )
+                                        }
+                                    },
+                                    onCenterPin = {
+                                        onCenterPin()
+                                        pin.position?.let { pos ->
+                                            pinSourceRef.value?.setData(
+                                                GeoJsonData.Features(
+                                                    Point(
+                                                        pos
+                                                    )
+                                                )
+                                            )
+                                        }
+                                    })
 
                             }
                         }
                     }
 
 
-                    val layerButtonColor = if (isSystemInDarkTheme()) Color.DarkGray else Color.White
-                    val layerButtonContentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
+                    val layerButtonColor =
+                        if (isSystemInDarkTheme()) Color.DarkGray else Color.White
+                    val layerButtonContentColor =
+                        if (isSystemInDarkTheme()) Color.White else Color.Black
 
 
                     var searchBarBottomPx by remember { mutableStateOf(0) }
@@ -582,13 +705,11 @@ class MainActivity : ComponentActivity() {
                                     val bottom = coords.positionInRoot().y + coords.size.height
                                     // keep if you still need this; otherwise it can be removed
                                     // searchBarBottomPx = bottom.toInt()
-                                }
-                            ) {
+                                }) {
                                 SearchBarCatenary(
                                     searchQuery = searchQuery,
                                     onValueChange = { searchQuery = it },
-                                    onFocusChange = { isFocused -> isSearchFocused = isFocused }
-                                )
+                                    onFocusChange = { isFocused -> isSearchFocused = isFocused })
                             }
                         }
                     }
@@ -631,7 +752,7 @@ class MainActivity : ComponentActivity() {
                         enter = slideInVertically(initialOffsetY = { -it / 2 }),
                         exit = slideOutVertically(targetOffsetY = { -it / 2 }),
 
-                    ) {
+                        ) {
                         val overlayBase = if (contentWidthFraction < 1f) {
                             Modifier
                                 .fillMaxHeight()
@@ -644,10 +765,7 @@ class MainActivity : ComponentActivity() {
                             modifier = overlayBase
                                 .offset { IntOffset(x = 0, y = 0) }
 
-                                .shadow(8.dp),
-                            tonalElevation = 6.dp,
-                            shadowElevation = 8.dp
-                        ) {
+                                .shadow(8.dp), tonalElevation = 6.dp, shadowElevation = 8.dp) {
                             // Your results go here
                             Box(
                                 Modifier
@@ -686,13 +804,19 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     Text("Layers", style = MaterialTheme.typography.headlineSmall)
                                     IconButton(onClick = { showLayersPanel = false }) {
-                                        Icon(Icons.Filled.Close, contentDescription = "Close Layers")
+                                        Icon(
+                                            Icons.Filled.Close, contentDescription = "Close Layers"
+                                        )
                                     }
                                 }
 
-                                LayerTabs(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+                                LayerTabs(
+                                    selectedTab = selectedTab, onTabSelected = { selectedTab = it })
 
-                                if (selectedTab in listOf("intercityrail", "localrail", "bus", "other")) {
+                                if (selectedTab in listOf(
+                                        "intercityrail", "localrail", "bus", "other"
+                                    )
+                                ) {
                                     // First row of buttons: shapes/labels/Pairs/etc.
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -701,27 +825,34 @@ class MainActivity : ComponentActivity() {
                                         // use LayerToggleButton composables here
 
 
-                                        val currentSettings = layerSettings.value[selectedTab] as? LayerCategorySettings
+                                        val currentSettings =
+                                            layerSettings.value[selectedTab] as? LayerCategorySettings
                                         currentSettings?.let { settings ->
-                                            LayerToggleButton(
-                                                name = "Shapes",
-                                                icon = { Icon(Icons.Default.Route, contentDescription = null) },
-                                                isActive = settings.shapes,
-                                                onToggle = {
-                                                    val updated = settings.copy(shapes = !settings.shapes)
-                                                    layerSettings.value = layerSettings.value.toMutableMap().apply { put(selectedTab, updated) }
-                                                }
-                                            )
+                                            LayerToggleButton(name = "Shapes", icon = {
+                                                Icon(
+                                                    Icons.Default.Route,
+                                                    contentDescription = null
+                                                )
+                                            }, isActive = settings.shapes, onToggle = {
+                                                val updated =
+                                                    settings.copy(shapes = !settings.shapes)
+                                                layerSettings.value =
+                                                    layerSettings.value.toMutableMap()
+                                                        .apply { put(selectedTab, updated) }
+                                            })
 
-                                            LayerToggleButton(
-                                                name = "Shape Labels",
-                                                icon = { Icon(Icons.Default.Route, contentDescription = null) },
-                                                isActive = settings.labelshapes,
-                                                onToggle = {
-                                                    val updated = settings.copy(labelshapes = !settings.labelshapes)
-                                                    layerSettings.value = layerSettings.value.toMutableMap().apply { put(selectedTab, updated) }
-                                                }
-                                            )
+                                            LayerToggleButton(name = "Shape Labels", icon = {
+                                                Icon(
+                                                    Icons.Default.Route,
+                                                    contentDescription = null
+                                                )
+                                            }, isActive = settings.labelshapes, onToggle = {
+                                                val updated =
+                                                    settings.copy(labelshapes = !settings.labelshapes)
+                                                layerSettings.value =
+                                                    layerSettings.value.toMutableMap()
+                                                        .apply { put(selectedTab, updated) }
+                                            })
                                             // Repeat for labels, Pairs, vehicles etc.
                                         }
 
@@ -750,8 +881,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LayerTabs(
-    selectedTab: String,
-    onTabSelected: (String) -> Unit
+    selectedTab: String, onTabSelected: (String) -> Unit
 ) {
     val tabs = listOf("intercityrail", "localrail", "bus", "other")
 
@@ -770,8 +900,7 @@ fun LayerTabs(
                         else MaterialTheme.colorScheme.surfaceVariant
                     )
                     .padding(vertical = 8.dp, horizontal = 12.dp)
-                    .clickable { onTabSelected(tab) }
-            ) {
+                    .clickable { onTabSelected(tab) }) {
                 Text(
                     text = tab.replaceFirstChar { it.uppercase() },
                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -779,13 +908,6 @@ fun LayerTabs(
             }
         }
     }
-}
-
-@Composable
-fun NearbyDepartures(
-
-) {
-    // Nearby Departures goes here
 }
 
 @Composable
@@ -818,16 +940,10 @@ fun AddStops() {
             15 to const(2.dp)
         ),
         radius = interpolate(
-            type = linear(),
-            input = zoom(),
-            11 to const(0.9.dp),
-            13 to const(2.dp)
+            type = linear(), input = zoom(), 11 to const(0.9.dp), 13 to const(2.dp)
         ),
         strokeOpacity = interpolate(
-            type = linear(),
-            input = zoom(),
-            11 to const(0.2f),
-            14 to const(0.5f)
+            type = linear(), input = zoom(), 11 to const(0.2f), 14 to const(0.5f)
         ),
         visible = (layerSettings.value["bus"] as LayerCategorySettings).stops
     )
@@ -838,18 +954,13 @@ fun AddStops() {
         sourceLayer = "data",
         minZoom = 15f,
         textSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            14 to const(0.5f).em,
-            16 to const(0.7f).em
+            type = linear(), input = zoom(), 14 to const(0.5f).em, 16 to const(0.7f).em
         ),
         textField = get("displayname").cast(),
         textFont = const(listOf("Barlow-Medium")),
         visible = (layerSettings.value["bus"] as LayerCategorySettings).labelstops,
         textColor = if (isSystemInDarkTheme()) const(Color.White) else const(Color.Black)
     )
-
-
 
 
 }
@@ -874,7 +985,6 @@ fun AddShapes() {
     // BUS
 
 
-
 // BUS
     var colorBusLine: org.maplibre.compose.expressions.ast.Expression<ColorValue> =
         const("#").plus(get("color").cast()).convertToColor()
@@ -891,7 +1001,7 @@ fun AddShapes() {
         width = interpolate(
             type = linear(),
             input = zoom(),
-            7  to const(0.5.dp),
+            7 to const(0.5.dp),
             10 to const(0.7.dp),
             12 to const(1.0.dp),
             14 to const(2.6.dp),
@@ -899,15 +1009,15 @@ fun AddShapes() {
         opacity = interpolate(
             type = linear(),
             input = zoom(),
-            7  to const(0.08f),
-            8  to const(0.10f),
+            7 to const(0.08f),
+            8 to const(0.10f),
             11 to const(0.30f),
         ),
         minZoom = 8f,
         visible = bus.shapes
     )
 
-    var busTextSize:  Expression<TextUnitValue> = interpolate(
+    var busTextSize: Expression<TextUnitValue> = interpolate(
         type = linear(),
         input = zoom(),
         10 to const(0.3125f).em,
@@ -937,20 +1047,20 @@ fun AddShapes() {
         textFont = const(listOf("Barlow-Regular")),
         textSize = busTextSize,
         textIgnorePlacement = const(false),
-        textAllowOverlap   = const(false),
+        textAllowOverlap = const(false),
 
-        textColor     = colorBusLineText,
+        textColor = colorBusLineText,
         textHaloColor = colorBusLine,
         textHaloWidth = const(2.dp),
-        textHaloBlur  = const(0.dp),
+        textHaloBlur = const(0.dp),
         minZoom = 11f,
         visible = bus.labelshapes
     )
 
     // Pull per-category settings
-    val otherSettings       = layerSettings.value["other"] as LayerCategorySettings
-    val intercitySettings   = layerSettings.value["intercityrail"] as LayerCategorySettings
-    val localRailSettings   = layerSettings.value["localrail"] as LayerCategorySettings
+    val otherSettings = layerSettings.value["other"] as LayerCategorySettings
+    val intercitySettings = layerSettings.value["intercityrail"] as LayerCategorySettings
+    val localRailSettings = layerSettings.value["localrail"] as LayerCategorySettings
 
 // Common color expressions (same style as your bus code)
     val colorLine: org.maplibre.compose.expressions.ast.Expression<ColorValue> =
@@ -974,8 +1084,8 @@ fun AddShapes() {
         width = interpolate(
             type = linear(),
             input = zoom(),
-            7  to const(2.dp),
-            9  to const(3.dp),
+            7 to const(2.dp),
+            9 to const(3.dp),
         ),
         opacity = const(1f),
         minZoom = 1f,
@@ -983,10 +1093,8 @@ fun AddShapes() {
         // filter: ! (chateau=='schweiz' && stop_to_stop_generated==true)  && (route_type==6 || route_type==7)
         filter = all(
             all(
-                cast_chateau.eq(const("schweiz")),
-                get_stop_to_stop_generated.eq(const(true))
-            ).not(),
-            any(
+                cast_chateau.eq(const("schweiz")), get_stop_to_stop_generated.eq(const(true))
+            ).not(), any(
                 get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)),
                 get("route_type").cast<NumberValue<EquatableValue>>().eq(const(7))
             )
@@ -1000,20 +1108,18 @@ fun AddShapes() {
         sourceLayer = "data",
         placement = const(SymbolPlacement.Line),
         textField = coalesce(get("route_label").cast(), const("")),
-        textFont  = const(listOf("Barlow-Regular")),
-        textSize  = interpolate(
-            type = linear(),
-            input = zoom(),
-            3  to const(0.4375f).em, // 7px
-            9  to const(0.5625f).em, // 9px
+        textFont = const(listOf("Barlow-Regular")),
+        textSize = interpolate(
+            type = linear(), input = zoom(), 3 to const(0.4375f).em, // 7px
+            9 to const(0.5625f).em, // 9px
             13 to const(0.6875f).em  //11px
         ),
         textIgnorePlacement = const(false),
-        textAllowOverlap    = const(false),
-        textColor     = colorText,
+        textAllowOverlap = const(false),
+        textColor = colorText,
         textHaloColor = colorLine,
         textHaloWidth = const(2.dp),
-        textHaloBlur  = const(1.dp),
+        textHaloBlur = const(1.dp),
         minZoom = 3f,
         visible = otherSettings.labelshapes,
         // filter: (route_type in 4,6,7) && !(schweiz && stop_to_stop_generated)
@@ -1022,10 +1128,13 @@ fun AddShapes() {
                 get("route_type").cast<NumberValue<EquatableValue>>().eq(const(4)),
                 get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)),
                 get("route_type").cast<NumberValue<EquatableValue>>().eq(const(7))
-            ),
-            all(
+            ), all(
                 get("chateau").cast<StringValue>().eq(const("schweiz")),
-                (get("stop_to_stop_generated").cast<BooleanValue>().convertToBoolean()).eq(const(true))
+                (get("stop_to_stop_generated").cast<BooleanValue>().convertToBoolean()).eq(
+                    const(
+                        true
+                    )
+                )
             ).not()
         )
     )
@@ -1040,16 +1149,13 @@ fun AddShapes() {
         width = interpolate(
             type = linear(),
             input = zoom(),
-            6  to const(0.5.dp),
-            7  to const(1.0.dp),
+            6 to const(0.5.dp),
+            7 to const(1.0.dp),
             10 to const(1.5.dp),
             14 to const(3.0.dp),
         ),
         opacity = interpolate(
-            type = linear(),
-            input = zoom(),
-            6 to const(0.8f),
-            7 to const(0.9f)
+            type = linear(), input = zoom(), 6 to const(0.8f), 7 to const(0.9f)
         ),
         minZoom = 3f,
         visible = otherSettings.shapes,
@@ -1066,13 +1172,10 @@ fun AddShapes() {
 
 // shapes
 
-    val line_opacity_intercity:  Expression<NumberValue<Number>> = switch(
-        input = get("stop_to_stop_generated").cast<BooleanValue>().asString(),
-        case(
-            label = "true",
-            output = const(0.2f)
-        ),
-        fallback = const(0.9f)
+    val line_opacity_intercity: Expression<NumberValue<Number>> = switch(
+        input = get("stop_to_stop_generated").cast<BooleanValue>().asString(), case(
+            label = "true", output = const(0.2f)
+        ), fallback = const(0.9f)
     )
 
     LineLayer(
@@ -1083,10 +1186,10 @@ fun AddShapes() {
         width = interpolate(
             type = linear(),
             input = zoom(),
-            3  to const(0.4.dp),
-            5  to const(0.7.dp),
-            7  to const(1.0.dp),
-            9  to const(2.0.dp),
+            3 to const(0.4.dp),
+            5 to const(0.7.dp),
+            7 to const(1.0.dp),
+            9 to const(2.0.dp),
             11 to const(2.5.dp),
         ),
         opacity = line_opacity_intercity,
@@ -1105,32 +1208,27 @@ fun AddShapes() {
         sourceLayer = "data",
         placement = const(SymbolPlacement.Line),
         textField = get("route_label").cast<StringValue>(), // your JS toggles debug; you can replicate if needed
-        textFont  = step(
-            input = zoom(),
-            const(listOf("Barlow-Semibold")),
-            7.0 to const(listOf("Barlow-Bold"))
+        textFont = step(
+            input = zoom(), const(listOf("Barlow-Semibold")), 7.0 to const(listOf("Barlow-Bold"))
         ),
         textSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            3  to const(0.375f).em,  // 6px
-            6  to const(0.4375f).em, // 7px
-            9  to const(0.5625f).em, // 9px
+            type = linear(), input = zoom(), 3 to const(0.375f).em,  // 6px
+            6 to const(0.4375f).em, // 7px
+            9 to const(0.5625f).em, // 9px
             13 to const(0.6875f).em  // 11px
         ),
         textIgnorePlacement = const(false),
-        textAllowOverlap    = const(false),
-        textColor     = colorText,
+        textAllowOverlap = const(false),
+        textColor = colorText,
         textHaloColor = colorLine,
         textHaloWidth = const(1.dp),
-        textHaloBlur  = const(1.dp),
+        textHaloBlur = const(1.dp),
         minZoom = 5.5f,
         visible = intercitySettings.labelshapes,
         filter = all(
             any(get("route_type").cast<NumberValue<EquatableValue>>().eq(const(2))),
         )
     )
-
 
 
     /* =========================
@@ -1148,9 +1246,9 @@ fun AddShapes() {
         width = interpolate(
             type = linear(),
             input = zoom(),
-            6  to const(0.5.dp),
-            7  to const(1.0.dp),
-            9  to const(2.0.dp),
+            6 to const(0.5.dp),
+            7 to const(1.0.dp),
+            9 to const(2.0.dp),
         ),
         opacity = const(1f),
         minZoom = 5f,
@@ -1162,10 +1260,9 @@ fun AddShapes() {
             ),
 
             all(
-                const("nyct").eq( get("chateau").cast()),
+                const("nyct").eq(get("chateau").cast()),
                 const(true).eq(get("stop_to_stop_generated").cast())
-            )
-                .not()
+            ).not()
         )
     )
 
@@ -1176,22 +1273,20 @@ fun AddShapes() {
         sourceLayer = "data",
         placement = const(SymbolPlacement.Line),
         textField = coalesce(get("route_label").cast(), const("")),
-        textFont  = const(listOf("Barlow-Bold")),
-        textSize  = interpolate(
-            type = linear(),
-            input = zoom(),
-            3  to const(0.4375f).em, // 7px
-            9  to const(0.5625f).em, // 9px
+        textFont = const(listOf("Barlow-Bold")),
+        textSize = interpolate(
+            type = linear(), input = zoom(), 3 to const(0.4375f).em, // 7px
+            9 to const(0.5625f).em, // 9px
             13 to const(0.6875f).em  // 11px
         ),
         textIgnorePlacement = const(false),
-        textAllowOverlap    = const(false),
-        textPitchAlignment  =  const(TextPitchAlignment.Viewport),
+        textAllowOverlap = const(false),
+        textPitchAlignment = const(TextPitchAlignment.Viewport),
         // text color: if color == '000000' use white else '#'+text_color
         textColor = colorText,
         textHaloColor = colorLine,
         textHaloWidth = const(1.dp),
-        textHaloBlur  = const(1.dp),
+        textHaloBlur = const(1.dp),
         minZoom = 6f,
         visible = localRailSettings.labelshapes,
         filter = all(
@@ -1203,27 +1298,22 @@ fun AddShapes() {
     )
 
 
-
     /* =========================
        TRAM (localcityrailshapes, route_type 0 or 5)
        ========================= */
 
 // shapes
 
-    val tram_filter:  Expression<BooleanValue> = all(
+    val tram_filter: Expression<BooleanValue> = all(
         any(
-            const(0).eq(get("route_type").cast()),
-            const(5).eq(get("route_type").cast())
+            const(0).eq(get("route_type").cast()), const(5).eq(get("route_type").cast())
         ),
 
 
         all(
-            const("nyct").eq( get("chateau").cast()),
+            const("nyct").eq(get("chateau").cast()),
             const(true).eq(get("stop_to_stop_generated").cast())
         ).not(),
-
-
-
 
 
         )
@@ -1237,16 +1327,15 @@ fun AddShapes() {
         width = interpolate(
             type = linear(),
             input = zoom(),
-            6  to const(0.5.dp),
-            7  to const(1.0.dp),
-            9  to const(2.0.dp),
+            6 to const(0.5.dp),
+            7 to const(1.0.dp),
+            9 to const(2.0.dp),
         ),
         opacity = const(1f),
         minZoom = 5f,
         visible = localRailSettings.shapes,
         filter = tram_filter
     )
-
 
 
 // labelshapes
@@ -1256,73 +1345,62 @@ fun AddShapes() {
         sourceLayer = "data",
         placement = const(SymbolPlacement.Line),
         textField = coalesce(get("route_label").cast(), const("")),
-        textFont  = step(
-            input = zoom(),
-            const(listOf("Barlow-Regular")),
-            12.0 to const(listOf("Barlow-Medium"))
+        textFont = step(
+            input = zoom(), const(listOf("Barlow-Regular")), 12.0 to const(listOf("Barlow-Medium"))
         ),
-        textSize  = interpolate(
-            type = linear(),
-            input = zoom(),
-            3  to const(0.4375f).em, // 7px
-            9  to const(0.5625f).em, // 9px
+        textSize = interpolate(
+            type = linear(), input = zoom(), 3 to const(0.4375f).em, // 7px
+            9 to const(0.5625f).em, // 9px
             13 to const(0.6875f).em  // 11px
         ),
         textIgnorePlacement = const(false),
-        textAllowOverlap    = const(false),
-        textPitchAlignment  = const(TextPitchAlignment.Viewport),
-        textColor     = colorText,
+        textAllowOverlap = const(false),
+        textPitchAlignment = const(TextPitchAlignment.Viewport),
+        textColor = colorText,
         textHaloColor = colorLine,
         textHaloWidth = const(1.dp),
-        textHaloBlur  = const(1.dp),
+        textHaloBlur = const(1.dp),
         minZoom = 6f,
         visible = localRailSettings.labelshapes,
-        filter =  tram_filter
+        filter = tram_filter
     )
 
 
 }
+
 @Composable
 fun LayerToggleButton(
-    name: String,
-    icon: @Composable () -> Unit,
-    isActive: Boolean,
-    onToggle: () -> Unit
+    name: String, icon: @Composable () -> Unit, isActive: Boolean, onToggle: () -> Unit
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(4.dp)
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)
     ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(4.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                else MaterialTheme.colorScheme.surfaceVariant
-            )
-            .clickable { onToggle() }
-            .padding(8.dp)
-    )
-    {
-        icon()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .padding(4.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(
+                    if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    else MaterialTheme.colorScheme.surfaceVariant
+                )
+                .clickable { onToggle() }
+                .padding(8.dp)) {
+            icon()
 
-    }
+        }
 
-    Text(
-        text = name,
-        style = MaterialTheme.typography.bodySmall,
-        color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-    )
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        )
 
 
     }
 }
 
 private fun visibilityOf(isOn: Boolean) = isOn
-
 
 
 @Preview
@@ -1333,9 +1411,7 @@ fun SearchBarPreview() {
 
 
     SearchBarCatenary(
-        searchQuery = searchQuery,
-        onValueChange = { searchQuery = it }
-    )
+        searchQuery = searchQuery, onValueChange = { searchQuery = it })
 }
 
 
@@ -1366,8 +1442,7 @@ fun SearchBarCatenary(
             onValueChange = onValueChange,
             singleLine = true,
             textStyle = LocalTextStyle.current.copy(
-                fontSize = 3.5.em,
-                baselineShift = BaselineShift(1f)
+                fontSize = 3.5.em, baselineShift = BaselineShift(1f)
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -1397,8 +1472,7 @@ fun SearchBarCatenary(
                         contentScale = ContentScale.Fit
                     )
                 }
-            }
-        )
+            })
     }
 
 
