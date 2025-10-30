@@ -490,6 +490,7 @@ fun NearbyDepartures(
                     { it.routeId }
                 )
             )
+
             SortMode.DISTANCE -> filtered.sortedWith(
                 compareBy(
                     {

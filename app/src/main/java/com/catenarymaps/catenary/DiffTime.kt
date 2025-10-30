@@ -108,8 +108,8 @@ fun DiffTimer(
 
     Row {
         if (showBrackets) {
-                Text("[", fontSize = bracketSize)
-                        Spacer(Modifier.width(2.dp))
+            Text("[", fontSize = bracketSize)
+            Spacer(Modifier.width(2.dp))
         }
 
         if (signText.isNotEmpty()) {
@@ -131,7 +131,8 @@ fun DiffTimer(
             Spacer(Modifier.width(6.dp))
         }
 
-        val showM = (h as Int) > 0 || ((m as Int) > 0 || (!showSeconds && (m as Int) >= 0 && diff != 0.0))
+        val showM =
+            (h as Int) > 0 || ((m as Int) > 0 || (!showSeconds && (m as Int) >= 0 && diff != 0.0))
         if (showM) {
             Text("$m", fontSize = numSize)
             Spacer(Modifier.width(2.dp))

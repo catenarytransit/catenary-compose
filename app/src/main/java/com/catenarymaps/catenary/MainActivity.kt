@@ -271,10 +271,10 @@ class MainActivity : ComponentActivity() {
             }
 
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    location?.let {
-                        onSuccess(it.latitude, it.longitude)
-                    }
+                location?.let {
+                    onSuccess(it.latitude, it.longitude)
                 }
+            }
         }
 
         // Optional: handle permission result
@@ -404,8 +404,6 @@ class MainActivity : ComponentActivity() {
                 pin = PinState(active = true, position = pos)
 
             }
-
-
 
 
             // Launch location fetch once
