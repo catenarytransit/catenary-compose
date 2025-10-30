@@ -115,6 +115,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
 import io.github.dellisd.spatialk.geojson.FeatureCollection
 import org.maplibre.compose.sources.GeoJsonSource
+import com.google.android.gms.location.LocationAvailability
+import org.maplibre.compose.expressions.dsl.convertToColor
+import org.maplibre.compose.expressions.dsl.Feature.get
+import org.maplibre.compose.expressions.dsl.plus
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 object LayersPerCategory {
     object Bus {
@@ -296,6 +302,7 @@ class MainActivity : ComponentActivity() {
             val density = LocalDensity.current
             var pin by remember { mutableStateOf(PinState(active = false, position = null)) }
 
+            val searchViewModel: SearchViewModel = viewModel()
 
             val usePickedLocation = pin.active && pin.position != null
             val pickedPair: Pair<Double, Double>? =
@@ -425,6 +432,9 @@ class MainActivity : ComponentActivity() {
             CatenaryComposeTheme {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     val screenHeightPx = with(density) { maxHeight.toPx() }
+
+                    val scope = rememberCoroutineScope()
+                    val focusManager = LocalFocusManager.current
 
                     // ✅ Tablet/wide layout breakpoint
                     val isWideLayout = maxWidth >= 600.dp
@@ -752,12 +762,21 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier.onGloballyPositioned { coords ->
                                     val bottom = coords.positionInRoot().y + coords.size.height
-                                    // keep if you still need this; otherwise it can be removed
-                                    // searchBarBottomPx = bottom.toInt()
+                                    // searchBarBottomPx = bottom.toInt() // (keep if needed)
                                 }) {
+
+                                // === UPDATE SearchBarCatenary call ===
                                 SearchBarCatenary(
                                     searchQuery = searchQuery,
-                                    onValueChange = { searchQuery = it },
+                                    onValueChange = { newQuery ->
+                                        searchQuery = newQuery
+                                        // This line should now resolve (Error 1)
+                                        searchViewModel.onSearchQueryChanged(
+                                            query = newQuery,
+                                            userLocation = currentLocation,
+                                            mapCenter = camera.position.target
+                                        )
+                                    },
                                     onFocusChange = { isFocused -> isSearchFocused = isFocused })
                             }
                         }
@@ -800,8 +819,7 @@ class MainActivity : ComponentActivity() {
                             .zIndex(2f), // below the bar (z=3), above the map/sheet
                         enter = slideInVertically(initialOffsetY = { -it / 2 }),
                         exit = slideOutVertically(targetOffsetY = { -it / 2 }),
-
-                        ) {
+                    ) {
                         val overlayBase = if (contentWidthFraction < 1f) {
                             Modifier
                                 .fillMaxHeight()
@@ -810,18 +828,41 @@ class MainActivity : ComponentActivity() {
                             Modifier.fillMaxSize()
                         }
 
-                        Surface(
-                            modifier = overlayBase
-                                .offset { IntOffset(x = 0, y = 0) }
+                        SearchResultsOverlay(
+                            modifier = overlayBase,
+                            viewModel = searchViewModel, // This should now resolve (Error 2)
+                            currentLocation = currentLocation,
+                            onNominatimClick = { result ->
+                                val pos = Position(result.lon.toDouble(), result.lat.toDouble())
 
-                                .shadow(8.dp), tonalElevation = 6.dp, shadowElevation = 8.dp) {
-                            // Your results go here
-                            Box(
-                                Modifier
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.surface)
-                            )
+                                // === FIX for Error 3 ===
+                                scope.launch {
+                                    camera.animateTo(
+                                        camera.position.copy(
+                                            target = pos,
+                                            zoom = 14.0
+                                        )
+                                    )
+                                }
+                                // === FIX for Error 4 ===
+                                focusManager.clearFocus() // This should now resolve
+                            },
+                            onStopClick = { ranking, stopInfo ->
+                                val pos = Position(stopInfo.point.x, stopInfo.point.y)
+
+                                // === FIX for Error 5 ===
+                                scope.launch {
+                                    camera.animateTo(
+                                        camera.position.copy(
+                                            target = pos,
+                                            zoom = 16.0
+                                        )
+                                    )
+                                }
+                                // === FIX for Error 6 ===
+                                focusManager.clearFocus() // This should now resolve
                         }
+                        )
                     }
 
                     // Layers Panel
