@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "102800714402",
+    "project_id": "catenary-android",
+    "storage_bucket": "catenary-android.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102800714402:android:6d2415236f0598043845fb",
+        "android_client_info": {
+          "package_name": "com.catenarymaps.catenary"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC83sKJFn4GdeSU6Qu87gdePKjMKfh1hi4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
