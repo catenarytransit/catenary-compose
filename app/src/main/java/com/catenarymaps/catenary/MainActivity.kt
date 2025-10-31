@@ -138,6 +138,10 @@ import org.maplibre.compose.expressions.dsl.asString
 import org.maplibre.compose.expressions.dsl.case
 import org.maplibre.compose.expressions.dsl.convertToBoolean
 import org.maplibre.compose.expressions.dsl.not
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import kotlinx.coroutines.launch
 
 private const val PREFS_NAME = "catenary_prefs"
 private const val K_LAT = "camera_lat"
@@ -353,9 +357,11 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+
             val pinSourceRef = remember { mutableStateOf<GeoJsonSource?>(null) }
             val density = LocalDensity.current
             var pin by remember { mutableStateOf(PinState(active = false, position = null)) }
+
 
             val searchViewModel: SearchViewModel = viewModel()
 
@@ -425,6 +431,7 @@ class MainActivity : ComponentActivity() {
                             val loc = result.lastLocation ?: return
                             currentLocation = loc.latitude to loc.longitude
                             // If you want to follow the user, you can animate the camera here (optional):
+
                             // camera.animateTo(camera.position.copy(target = Position(loc.longitude, loc.latitude)))
                         }
                     }
@@ -481,6 +488,10 @@ class MainActivity : ComponentActivity() {
             }
 
 
+            val scope = rememberCoroutineScope()
+            val geoLock = rememberGeoLockController()
+            val snackbars = remember { SnackbarHostState() }
+
             // Launch location fetch once
             LaunchedEffect(Unit) {
                 fetchLocation { lat, lon ->
@@ -505,6 +516,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            LaunchedEffect(currentLocation, geoLock.isActive()) {
+                val loc = currentLocation ?: return@LaunchedEffect
+                if (geoLock.isActive()) {
+                    teleportCamera(camera, geoLock, lat = loc.first, lon = loc.second)
+                }
+            }
+
 
             val styleUri =
                 if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json"
@@ -514,11 +532,15 @@ class MainActivity : ComponentActivity() {
 
             var isSearchFocused by remember { mutableStateOf(false) }
 
+            var lastPosByLock by remember { mutableStateOf<CameraPosition?>(null) }
+
+            val deactivateGeoLock: () -> Unit = { geoLock.deactivate() }
+
             CatenaryComposeTheme {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     val screenHeightPx = with(density) { maxHeight.toPx() }
 
-                    val scope = rememberCoroutineScope()
+
                     val focusManager = LocalFocusManager.current
 
                     // ✅ Tablet/wide layout breakpoint
@@ -640,13 +662,21 @@ class MainActivity : ComponentActivity() {
 
                         },
                         // 3) Use onFrame to detect camera idle -> covers move end & zoom end
+
                         onFrame = {
                             val now = SystemClock.uptimeMillis()
                             val pos = camera.position
 
+
                             if (lastCameraPos == null || lastCameraPos != pos) {
                                 lastCameraPos = pos
                                 lastMoveAt = now
+
+                                // Only drop the lock if this wasn't an internal move we initiated.
+                                if (!geoLock.isInternalMove() && geoLock.isActive()) {
+                                    geoLock.deactivate()
+                                }
+                                if (geoLock.isActive()) lastPosByLock = pos
                             }
 
                             if (now - lastMoveAt >= idleDebounceMs) {
@@ -911,6 +941,66 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    //Floating geolocation button
+
+                    // Sizing we’ll use
+                    val fabSize = 56.dp
+                    val fabMargin = 16.dp
+
+// Drawer geometry
+                    val sheetOffsetPx =
+                        draggableState.requireOffset()            // top Y of the bottom sheet
+                    val fabYAboveSheet =
+                        with(density) { (sheetOffsetPx - fabSize.toPx() - fabMargin.toPx()).roundToInt() }
+                    val fabBottomMarginWhenFull =
+                        with(density) { (maxHeight.toPx() - sheetOffsetPx + fabMargin.toPx()).roundToInt() }
+
+                    val fabModifier =
+                        if (contentWidthFraction == 1f) {
+                            // Full-width sheet -> float *above* the drawer and move with it
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .offset {
+                                    IntOffset(x = -with(density) {
+                                        fabMargin.toPx().roundToInt()
+                                    }, y = fabYAboveSheet.coerceAtLeast(0))
+                                }
+                                .zIndex(4f)
+                        } else {
+                            // Half-width sheet -> keep it in the bottom-right corner (not over the drawer)
+                            Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 16.dp, bottom = 16.dp)
+                                .zIndex(4f)
+                        }
+
+                    FloatingActionButton(
+                        onClick = {
+                            val loc = currentLocation
+                            if (loc == null) {
+                                scope.launch { snackbars.showSnackbar("Location unavailable") }
+                                return@FloatingActionButton
+                            }
+                            // Activate lock and teleport *now*
+                            geoLock.activate()
+                            scope.launch {
+                                teleportCamera(
+                                    camera = camera,
+                                    controller = geoLock,
+                                    lat = loc.first,
+                                    lon = loc.second,
+                                    zoom = 16.0 // pick your desired snap zoom
+                                )
+                            }
+                            // scope.launch { snackbars.showSnackbar("Following your location") }
+                        },
+                        modifier = fabModifier,
+                        shape = CircleShape,
+                        containerColor = if (geoLock.isActive()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                        contentColor = if (geoLock.isActive()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    ) {
+                        Icon(Icons.Filled.MyLocation, contentDescription = "My Location")
+                    }
 
                     // The results overlay that shows when the searchbar is focused.
 // On tablets (contentWidthFraction < 1f) it covers the left pane,
@@ -936,6 +1026,8 @@ class MainActivity : ComponentActivity() {
                             viewModel = searchViewModel, // This should now resolve (Error 2)
                             currentLocation = currentLocation,
                             onNominatimClick = { result ->
+                                geoLock.deactivate()
+
                                 val pos = Position(result.lon.toDouble(), result.lat.toDouble())
 
                                 // === FIX for Error 3 ===
@@ -951,6 +1043,8 @@ class MainActivity : ComponentActivity() {
                                 focusManager.clearFocus() // This should now resolve
                             },
                             onStopClick = { ranking, stopInfo ->
+                                geoLock.deactivate()
+
                                 val pos = Position(stopInfo.point.x, stopInfo.point.y)
 
                                 // === FIX for Error 5 ===
@@ -1064,6 +1158,11 @@ class MainActivity : ComponentActivity() {
 
 
                     }
+
+                    SnackbarHost(
+                        hostState = snackbars,
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
                 }
             }
         }
