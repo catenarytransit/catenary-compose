@@ -69,9 +69,9 @@ import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.layers.*;
 import org.maplibre.compose.sources.rememberVectorSource
-import org.maplibre.compose.expressions.dsl.*
 import org.maplibre.compose.expressions.value.*;
 import org.maplibre.compose.expressions.ast.*;
+import org.maplibre.compose.expressions.dsl.em;
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.LocalTextStyle
@@ -88,6 +88,17 @@ import android.os.Looper
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
+import org.maplibre.compose.expressions.dsl.all
+import org.maplibre.compose.expressions.dsl.any
+import org.maplibre.compose.expressions.dsl.coalesce
+import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.eq
+import org.maplibre.compose.expressions.dsl.interpolate
+import org.maplibre.compose.expressions.dsl.linear
+import org.maplibre.compose.expressions.dsl.step
+import org.maplibre.compose.expressions.dsl.switch
+import org.maplibre.compose.expressions.dsl.zoom
+import org.maplibre.compose.expressions.dsl.contains as exprContains
 import com.google.android.gms.location.Priority
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -111,6 +122,7 @@ import org.maplibre.compose.expressions.dsl.plus
 import org.maplibre.compose.expressions.value.TextUnitValue
 import org.maplibre.compose.map.RenderOptions
 import kotlin.time.Duration
+import android.content.SharedPreferences
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
 import io.github.dellisd.spatialk.geojson.FeatureCollection
@@ -121,6 +133,53 @@ import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.dsl.plus
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import org.maplibre.android.style.expressions.Expression.interpolate
+import org.maplibre.compose.expressions.dsl.asString
+import org.maplibre.compose.expressions.dsl.case
+import org.maplibre.compose.expressions.dsl.convertToBoolean
+import org.maplibre.compose.expressions.dsl.not
+
+private const val PREFS_NAME = "catenary_prefs"
+private const val K_LAT = "camera_lat"
+private const val K_LON = "camera_lon"
+private const val K_ZOOM = "camera_zoom"
+private const val K_BEAR = "camera_bearing"
+private const val K_TILT = "camera_tilt"
+
+private fun SharedPreferences.putDouble(key: String, value: Double) =
+    edit().putLong(key, java.lang.Double.doubleToRawLongBits(value)).apply()
+
+private fun SharedPreferences.getDouble(key: String, default: Double = Double.NaN): Double {
+    if (!contains(key)) return default
+    return java.lang.Double.longBitsToDouble(getLong(key, 0L))
+}
+
+private data class SavedCamera(
+    val lat: Double,
+    val lon: Double,
+    val zoom: Double,
+    val bearing: Double,
+    val tilt: Double
+)
+
+private fun SharedPreferences.readSavedCamera(): SavedCamera? {
+    if (!contains(K_LAT) || !contains(K_LON) || !contains(K_ZOOM)) return null
+    return SavedCamera(
+        lat = getDouble(K_LAT),
+        lon = getDouble(K_LON),
+        zoom = getDouble(K_ZOOM),
+        bearing = getDouble(K_BEAR).takeIf { !it.isNaN() } ?: 0.0,
+        tilt = getDouble(K_TILT).takeIf { !it.isNaN() } ?: 0.0
+    )
+}
+
+private fun SharedPreferences.writeCamera(pos: CameraPosition) {
+    putDouble(K_LAT, pos.target.latitude)
+    putDouble(K_LON, pos.target.longitude)
+    putDouble(K_ZOOM, pos.zoom)
+    putDouble(K_BEAR, pos.bearing)
+    putDouble(K_TILT, pos.tilt)
+}
 
 object LayersPerCategory {
     object Bus {
@@ -311,14 +370,27 @@ class MainActivity : ComponentActivity() {
                 pin = pin.copy(active = false, position = null)
             }
 
+            val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            val saved = prefs.readSavedCamera()
+
             // Camera
-            val camera = rememberCameraState(
-                firstPosition = CameraPosition(
-                    target = Position(-118.250, 34.050),
-                    zoom = 6.0,
-                    padding = PaddingValues(0.dp, 0.dp, 0.dp, 0.dp)
+            // If there's a saved camera, start there. Otherwise, start somewhere neutral;
+// we'll jump to the user's location at zoom=13 as soon as we get it.
+            val initialCamera = saved?.let {
+                CameraPosition(
+                    target = Position(it.lon, it.lat),
+                    zoom = it.zoom,
+                    bearing = it.bearing,
+                    tilt = it.tilt,
+                    padding = PaddingValues(0.dp)
                 )
+            } ?: CameraPosition(
+                target = Position(-118.250, 34.050), // temporary fallback until we get location
+                zoom = 6.0,
+                padding = PaddingValues(0.dp)
             )
+
+            val camera = rememberCameraState(firstPosition = initialCamera)
 
 
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -413,6 +485,23 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 fetchLocation { lat, lon ->
                     currentLocation = lat to lon
+                }
+            }
+
+            var didInitialFollow by remember { mutableStateOf(false) }
+            val hadSavedView = remember { saved != null }
+
+            LaunchedEffect(currentLocation) {
+                // Only auto-center if there was NO saved camera view
+                if (!hadSavedView && !didInitialFollow && currentLocation != null) {
+                    val (lat, lon) = currentLocation!!
+                    camera.animateTo(
+                        camera.position.copy(
+                            target = Position(lon, lat),
+                            zoom = 13.0   // 👈 requested default zoom
+                        )
+                    )
+                    didInitialFollow = true
                 }
             }
 
@@ -518,6 +607,12 @@ class MainActivity : ComponentActivity() {
                     var lastQueriedPos by remember { mutableStateOf<CameraPosition?>(null) }
                     val idleDebounceMs = 250L
 
+                    var lastSavedPos by remember { mutableStateOf<CameraPosition?>(null) }
+                    var lastSavedAt by remember { mutableStateOf(0L) }
+                    val saveThrottleMs = 1500L
+                    val prefsMemo = remember { getSharedPreferences(PREFS_NAME, MODE_PRIVATE) }
+
+
                     MaplibreMap(
                         modifier = Modifier
                             .fillMaxSize()
@@ -554,16 +649,29 @@ class MainActivity : ComponentActivity() {
                                 lastMoveAt = now
                             }
 
-                            // If camera hasn't changed for idleDebounceMs, it's "idle"
                             if (now - lastMoveAt >= idleDebounceMs) {
-                                // Only query if we haven't queried this position yet
                                 if (lastQueriedPos != pos) {
                                     if (camera.projection != null && mapSize != IntSize.Zero) {
                                         queryVisibleChateaus(camera, mapSize)
                                         lastQueriedPos = pos
                                     }
                                 }
+
+                                // 👇 Persist the camera view while idle (throttled)
+                                if ((now - lastSavedAt) >= saveThrottleMs &&
+                                    (lastSavedPos == null || lastSavedPos != pos)
+                                ) {
+                                    prefsMemo.writeCamera(pos)
+                                    lastSavedPos = pos
+                                    lastSavedAt = now
+                                    Log.d(
+                                        TAG,
+                                        "Saved camera: lat=${pos.target.latitude}, lon=${pos.target.longitude}, zoom=${pos.zoom}"
+                                    )
+                                }
                             }
+
+
                         }) {
                         // Source + layers
                         val chateausSource = rememberGeoJsonSource(
