@@ -783,10 +783,9 @@ class MainActivity : ComponentActivity() {
                     }
 
                     AnimatedVisibility(
-                        visible = !(sheetIsExpanded && contentWidthFraction == 1f),
+                        visible = !(sheetIsExpanded && contentWidthFraction == 1f) && !(isSearchFocused && contentWidthFraction == 1f),
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
                             .padding(
                                 top = if (contentWidthFraction == 1.0f) 72.dp else 16.dp,
                                 end = 16.dp
