@@ -228,10 +228,6 @@ val easeOutSpec: AnimationSpec<Float> = tween(
 
 var CatenaryStack: ArrayDeque<CatenaryStackEnum> = ArrayDeque(listOf())
 
-enum class CatenaryStackEnum {
-
-}
-
 enum class SheetSnapPoint { Collapsed, PartiallyExpanded, Expanded }
 
 private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {

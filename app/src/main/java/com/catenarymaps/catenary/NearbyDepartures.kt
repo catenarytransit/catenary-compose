@@ -43,6 +43,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.ResponseBody
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.Straighten
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -609,7 +612,7 @@ private fun TopRow(
                         if (!currentPickModeIsPin) MaterialTheme.colorScheme.primary.copy(0.2f) else Color.Transparent,
                         RoundedCornerShape(8.dp)
                     )
-            ) { Icon(Icons.Default.MyLocation, contentDescription = "My location") }
+            ) { Icon(Icons.Default.NearMe, contentDescription = "My location") }
 
             Row(
                 modifier = Modifier
@@ -663,7 +666,7 @@ private fun TopRow(
                     ) else Color.Transparent
                 ),
                 contentPadding = PaddingValues(horizontal = 10.dp)
-            ) { Text("A–Z") }
+            ) { Icon(Icons.Default.SortByAlpha, contentDescription = "Sort by Alpha") }
 
             TextButton(
                 onClick = { onSortChange(SortMode.DISTANCE) },
@@ -673,7 +676,7 @@ private fun TopRow(
                     ) else Color.Transparent
                 ),
                 contentPadding = PaddingValues(horizontal = 10.dp)
-            ) { Text("Distance") }
+            ) { Icon(Icons.Default.Straighten, contentDescription = "Sort by Distance") }
         }
     }
 }
