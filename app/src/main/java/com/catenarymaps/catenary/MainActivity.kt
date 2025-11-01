@@ -17,12 +17,14 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import android.Manifest
 import android.content.pm.PackageManager
+import io.ktor.client.plugins.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import org.maplibre.compose.expressions.dsl.image
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -149,6 +151,46 @@ import org.maplibre.compose.expressions.dsl.any
 import org.maplibre.compose.expressions.dsl.eq
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.offset
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import io.github.dellisd.spatialk.geojson.Feature
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineScope
+import java.lang.Math.abs
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import org.maplibre.android.style.expressions.Expression.has
+import org.maplibre.compose.expressions.dsl.get
+import org.maplibre.compose.expressions.dsl.neq
+import org.maplibre.compose.sources.GeoJsonOptions
+import java.math.BigInteger
+import kotlin.math.absoluteValue
+import kotlin.math.floor
+import kotlin.math.pow
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 private const val PREFS_NAME = "catenary_prefs"
 private const val K_LAT = "camera_lat"
@@ -192,12 +234,17 @@ private fun SharedPreferences.writeCamera(pos: CameraPosition) {
     putDouble(K_TILT, pos.tilt)
 }
 
+// ⬇️ REPLACE your old LayersPerCategory with this one
 object LayersPerCategory {
     object Bus {
         const val Shapes = "bus-shapes"
         const val LabelShapes = "bus-labelshapes"
         const val Stops = "bus-stops"
         const val LabelStops = "bus-labelstops"
+        const val Livedots = "bus-livedots"
+        const val Labeldots = "bus-labeldots"
+        const val Pointing = "bus-pointing"
+        const val PointingShell = "bus-pointingshell"
     }
 
     object Other {
@@ -206,6 +253,10 @@ object LayersPerCategory {
         const val FerryShapes = "ferryshapes"
         const val Stops = "other-stops"
         const val LabelStops = "other-labelstops"
+        const val Livedots = "other-livedots"
+        const val Labeldots = "other-labeldots"
+        const val Pointing = "other-pointing"
+        const val PointingShell = "other-pointingshell"
     }
 
     object IntercityRail {
@@ -213,6 +264,10 @@ object LayersPerCategory {
         const val LabelShapes = "intercityrail-labelshapes"
         const val Stops = "intercityrail-stops"
         const val LabelStops = "intercityrail-labelstops"
+        const val Livedots = "intercityrail-livedots"
+        const val Labeldots = "intercityrail-labeldots"
+        const val Pointing = "intercityrail-pointing"
+        const val PointingShell = "intercityrail-pointingshell"
     }
 
     object Metro {
@@ -220,6 +275,10 @@ object LayersPerCategory {
         const val LabelShapes = "metro-labelshapes"
         const val Stops = "metro-stops"
         const val LabelStops = "metro-labelstops"
+        const val Livedots = "metro-livedots"
+        const val Labeldots = "metro-labeldots"
+        const val Pointing = "metro-pointing"
+        const val PointingShell = "metro-pointingshell"
     }
 
     object Tram {
@@ -227,6 +286,10 @@ object LayersPerCategory {
         const val LabelShapes = "tram-labelshapes"
         const val Stops = "tram-stops"
         const val LabelStops = "tram-labelstops"
+        const val Livedots = "tram-livedots"
+        const val Labeldots = "tram-labeldots"
+        const val Pointing = "tram-pointing"
+        const val PointingShell = "tram-pointingshell"
     }
 }
 
@@ -323,14 +386,272 @@ private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {
         rect = rect, layerIds = setOf("chateaus_calc")
     )
 
-    val names = features.map { f -> f.properties["chateau"]?.toString() ?: "Unknown" }
+    val names = features.map { f ->
+        f.properties["chateau"]?.toString()?.trimStart('"')?.trimEnd('"') ?: "Unknown"
+    }
     visibleChateaus = names
     Log.d(TAG, "Visible chateaus (${names.size}): ${names.joinToString(limit = 100)}")
+}
+
+@Serializable
+data class VehiclePositionData(
+    val latitude: Double, val longitude: Double, val bearing: Float?, val speed: Float?
+)
+
+@Serializable
+data class VehicleDescriptor(
+    val id: String?, val label: String?
+)
+
+@Serializable
+data class TripDescriptor(
+    val trip_id: String?,
+    val route_id: String?,
+    val trip_headsign: String?,
+    val trip_short_name: String?,
+    val start_time: String?,
+    val start_date: String?,
+    val delay: Int?
+)
+
+@Serializable
+data class VehiclePosition(
+    val position: VehiclePositionData?,
+    val vehicle: VehicleDescriptor?,
+    val trip: TripDescriptor?,
+    val route_type: Int,
+    val timestamp: Long?,
+    val occupancy_status: String?
+)
+
+@Serializable
+data class RouteCacheEntry(
+    val route_colour: String,
+    val route_text_colour: String,
+    val route_short_name: String?,
+    val route_long_name: String?
+)
+
+@Serializable
+data class CategoryData(
+    val vehicle_positions: Map<String, VehiclePosition>?,
+    val vehicle_route_cache: Map<String, RouteCacheEntry>?,
+    val last_updated_time_ms: Long,
+    val hash_of_routes: ULong
+)
+
+@Serializable
+data class ChateauData(
+    val categories: Map<String, CategoryData?>
+)
+
+@Serializable
+data class BulkRealtimeResponse(
+    val chateaus: Map<String, ChateauData>
+)
+
+@Serializable
+data class CategoryParams(
+    @EncodeDefault var hash_of_routes: ULong = ULong.MIN_VALUE,
+    @EncodeDefault var last_updated_time_ms: Long = 0
+)
+
+@Serializable
+data class ChateauFetchParams(
+    val category_params: Map<String, CategoryParams>
+)
+
+@Serializable
+data class BulkRealtimeRequest(
+    val categories: List<String>, val chateaus: Map<String, ChateauFetchParams>
+)
+
+// Ktor HTTP Client (initialize once)
+val ktorClient = HttpClient() {
+    install(ContentNegotiation) {
+        json(Json {
+            ignoreUnknownKeys = true
+            prettyPrint = true
+            isLenient = true
+            encodeDefaults = true
+        })
+    }
 }
 
 class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    // Realtime Data State Holders
+    var realtimeVehicleLocations =
+        mutableStateOf<Map<String, Map<String, Map<String, VehiclePosition>>>>(emptyMap())
+
+    // ChateauID -> Category -> RouteID -> Cache
+    var realtimeVehicleRouteCache =
+        mutableStateOf<Map<String, Map<String, Map<String, RouteCacheEntry>>>>(emptyMap())
+
+    // ChateauID -> Category -> Timestamp
+    var realtimeVehicleLocationsLastUpdated =
+        mutableStateOf<Map<String, Map<String, Long>>>(emptyMap())
+
+    // ChateauID -> Category -> Hash
+    var realtimeVehicleRouteCacheHash =
+        mutableStateOf<Map<String, Map<String, ULong>>>(emptyMap())
+
+    private fun fetchRealtimeData(
+        scope: CoroutineScope,
+        zoom: Double,
+        showZombieBuses: Boolean, // Pass state
+        settings: Map<String, Any>
+    ) {
+        scope.launch {
+            val categoriesToRequest = mutableListOf<String>()
+
+            // Logic from fetch_realtime_vehicle_locations.ts
+            val busThreshold = 7.5 // Using mobile threshold
+            if ((settings["bus"] as LayerCategorySettings).visiblerealtimedots && zoom >= busThreshold) {
+                categoriesToRequest.add("bus")
+            }
+            if ((settings["intercityrail"] as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
+                categoriesToRequest.add("rail")
+            }
+            if ((settings["localrail"] as LayerCategorySettings).visiblerealtimedots && zoom >= 4) {
+                categoriesToRequest.add("metro")
+            }
+            if ((settings["other"] as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
+                categoriesToRequest.add("other")
+            }
+
+
+            if (categoriesToRequest.isEmpty() || visibleChateaus.isEmpty()) {
+                // Don't fetch if no categories are visible or no chateaus are in view
+                return@launch
+            }
+
+            // Build chateaus_to_fetch object
+            val chateausToFetch = mutableMapOf<String, ChateauFetchParams>()
+            val lastUpdatedMap = realtimeVehicleLocationsLastUpdated.value
+            val hashCacheMap = realtimeVehicleRouteCacheHash.value
+
+            visibleChateaus.forEach { chateauId ->
+                //println("Chateau id $chateauId")
+                val categoryParams = mutableMapOf<String, CategoryParams>()
+                val cats = listOf("bus", "rail", "metro", "other")
+
+                cats.forEach { cat ->
+                    val lastUpdated = lastUpdatedMap[chateauId]?.get(cat) ?: 0L
+                    val hash = hashCacheMap[chateauId]?.get(cat) ?: ULong.MIN_VALUE
+                    categoryParams[cat] = CategoryParams(
+                        hash_of_routes = hash,
+                        last_updated_time_ms = lastUpdated
+                    )
+
+                    //println("last updated for $cat in $chateauId is $lastUpdated")
+                }
+                chateausToFetch[chateauId] = ChateauFetchParams(category_params = categoryParams)
+            }
+
+            val requestBody = BulkRealtimeRequest(
+                categories = categoriesToRequest, chateaus = chateausToFetch
+            )
+
+            val bodyText = Json.encodeToString(requestBody)
+
+            println(bodyText)
+
+            try {
+
+                // You must run this inside a coroutine scope (e.g., in a suspend function)
+                try {
+                    val rawresponse: String =
+                        ktorClient.post("https://birch.catenarymaps.org/bulk_realtime_fetch_v1") {
+                            contentType(ContentType.Application.Json)
+                            setBody(requestBody)
+                        }.body()
+
+                    println("Bulk Fetch: $rawresponse")
+
+                    val json_for_this = Json {
+                        ignoreUnknownKeys = true
+                        prettyPrint = true
+                        isLenient = true
+                        encodeDefaults = true
+                    }
+                    val response = json_for_this.decodeFromString<BulkRealtimeResponse>(rawresponse)
+
+                    println("Recieved live dots")
+
+                    // Process the response (porting process_realtime_vehicle_locations_v2)
+                    val newLocations = realtimeVehicleLocations.value.toMutableMap()
+                    val newRouteCache = realtimeVehicleRouteCache.value.toMutableMap()
+                    val newLastUpdated = realtimeVehicleLocationsLastUpdated.value.toMutableMap()
+                    val newHashCache = realtimeVehicleRouteCacheHash.value.toMutableMap()
+
+                    response.chateaus.forEach { (chateauId, chateauData) ->
+                        println("Processing Chateau $chateauId")
+                        chateauData.categories.forEach { (category, categoryData) ->
+                            if (categoryData != null) {
+                                // Update Locations
+                                if (categoryData.vehicle_positions != null) {
+                                    val chateauLocations =
+                                        newLocations.getOrPut(category) { mutableMapOf() }
+                                            .toMutableMap()
+                                    chateauLocations[chateauId] = categoryData.vehicle_positions
+                                    newLocations[category] = chateauLocations
+                                    println("set value for new vehicle locations for $category with $chateauId and length ${categoryData.vehicle_positions.size}")
+                                }
+                                // Update Route Cache
+                                if (categoryData.vehicle_route_cache != null) {
+                                    val chateauCache =
+                                        newRouteCache.getOrPut(chateauId) { mutableMapOf() }
+                                            .toMutableMap()
+                                    chateauCache[category] = categoryData.vehicle_route_cache
+                                    newRouteCache[chateauId] = chateauCache
+                                }
+                                // Update Last Updated Time
+                                val chateauLastUpdated =
+                                    newLastUpdated.getOrPut(chateauId) { mutableMapOf() }
+                                        .toMutableMap()
+                                chateauLastUpdated[category] = categoryData.last_updated_time_ms
+                                newLastUpdated[chateauId] = chateauLastUpdated
+
+                                // Update Hash
+                                val chateauHash =
+                                    newHashCache.getOrPut(chateauId) { mutableMapOf() }
+                                        .toMutableMap()
+                                chateauHash[category] = categoryData.hash_of_routes
+                                newHashCache[chateauId] = chateauHash
+                            }
+                        }
+                    }
+
+                    // Atomically update the state variables
+                    println("set value for new vehicle locations")
+                    realtimeVehicleLocations.value = newLocations
+                    realtimeVehicleRouteCache.value = newRouteCache
+                    realtimeVehicleLocationsLastUpdated.value = newLastUpdated
+                    realtimeVehicleRouteCacheHash.value = newHashCache
+
+                } catch (e: ClientRequestException) {
+                    // This block catches 4xx errors, including your 400 Bad Request
+                    val errorBody: String = e.response.body()
+                    println("Failed to fetch realtime data (Client Error ${e.response.status}): $errorBody")
+
+                } catch (e: ServerResponseException) {
+                    // This block catches 5xx server errors
+                    val errorBody: String = e.response.body()
+                    println("Failed to fetch realtime data (Server Error ${e.response.status}): $errorBody")
+
+                } catch (e: Exception) {
+                    // This catches other errors (network connection, DNS, etc.)
+                    println("An unexpected error occurred: ${e.message}")
+                }
+
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to fetch realtime data: ${e.message}")
+            }
+        }
+    }
 
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -372,6 +693,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+
             val pinSourceRef = remember { mutableStateOf<GeoJsonSource?>(null) }
             val density = LocalDensity.current
             var pin by remember { mutableStateOf(PinState(active = false, position = null)) }
@@ -411,6 +733,28 @@ class MainActivity : ComponentActivity() {
             )
 
             val camera = rememberCameraState(firstPosition = initialCamera)
+
+            // State for settings from JS
+            var showZombieBuses by remember { mutableStateOf(false) }
+            var usUnits by remember { mutableStateOf(false) }
+            val isDark = isSystemInDarkTheme()
+
+
+            // Realtime Fetcher Logic
+            val rtScope = rememberCoroutineScope()
+
+            // Periodic fetcher (e.g., every 5 seconds)
+            LaunchedEffect(Unit) {
+                while (true) {
+                    delay(5_000L) // 5 second refresh interval
+                    fetchRealtimeData(
+                        rtScope,
+                        camera.position.zoom,
+                        showZombieBuses, // Pass the state
+                        layerSettings.value
+                    )
+                }
+            }
 
 
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -648,6 +992,10 @@ class MainActivity : ComponentActivity() {
                     val saveThrottleMs = 1500L
                     val prefsMemo = remember { getSharedPreferences(PREFS_NAME, MODE_PRIVATE) }
 
+                    var lastFetchedAt by remember { mutableStateOf(0L) }
+                    val fetchDebounceMs = 500L // Don't fetch more than once per 500ms on move
+
+
 
                     MaplibreMap(
                         modifier = Modifier
@@ -698,6 +1046,16 @@ class MainActivity : ComponentActivity() {
                                     if (camera.projection != null && mapSize != IntSize.Zero) {
                                         queryVisibleChateaus(camera, mapSize)
                                         lastQueriedPos = pos
+
+                                        if (now - lastFetchedAt >= fetchDebounceMs) {
+                                            fetchRealtimeData(
+                                                rtScope,
+                                                pos.zoom,
+                                                showZombieBuses, // Pass the state
+                                                layerSettings.value
+                                            )
+                                            lastFetchedAt = now
+                                        }
                                     }
                                 }
 
@@ -717,6 +1075,27 @@ class MainActivity : ComponentActivity() {
 
 
                         }) {
+                        val busDotsSrc = rememberGeoJsonSource(
+                            data = GeoJsonData.Features(
+                                FeatureCollection(emptyList())
+                            ),
+                        )
+                        val metroDotsSrc = rememberGeoJsonSource(
+                            data = GeoJsonData.Features(
+                                FeatureCollection(emptyList())
+                            )
+                        )
+                        val railDotsSrc = rememberGeoJsonSource(
+                            data = GeoJsonData.Features(
+                                FeatureCollection(emptyList())
+                            )
+                        )
+                        val otherDotsSrc = rememberGeoJsonSource(
+                            data = GeoJsonData.Features(
+                                FeatureCollection(emptyList())
+                            )
+                        )
+
                         // Source + layers
                         val chateausSource = rememberGeoJsonSource(
                             data = GeoJsonData.Uri("https://birch.catenarymaps.org/getchateaus")
@@ -729,6 +1108,132 @@ class MainActivity : ComponentActivity() {
                         AddShapes()
 
                         AddStops()
+
+                        val locations = realtimeVehicleLocations.value
+                        val cache = realtimeVehicleRouteCache.value
+
+
+                        AddLiveDots(
+                            isDark = isDark,
+                            usUnits = usUnits,
+                            showZombieBuses = showZombieBuses,
+                            layerSettings = layerSettings.value,
+                            // ✅ Pass the values themselves
+                            vehicleLocations = locations,
+                            routeCache = cache,
+                            busDotsSrc = busDotsSrc,
+                            metroDotsSrc = metroDotsSrc,
+                            railDotsSrc = railDotsSrc,
+                            otherDotsSrc = otherDotsSrc
+                        )
+
+                        // Layers for BUS
+                        LiveDotLayers(
+                            category = "bus",
+                            source = busDotsSrc,                // <- persistent source
+                            settings = (layerSettings.value["bus"] as LayerCategorySettings).labelrealtimedots,
+                            isVisible = (layerSettings.value["bus"] as LayerCategorySettings).visiblerealtimedots,
+                            baseFilter = if (showZombieBuses) all() else all(
+                                org.maplibre.compose.expressions.dsl.feature.has("trip_id"),
+                                get("trip_id").cast<StringValue>().neq(const(""))
+                            ),
+                            bearingFilter = all(
+                                get("has_bearing").cast<BooleanValue>().eq(const(true)),
+                                if (showZombieBuses) all() else all(
+                                    org.maplibre.compose.expressions.dsl.feature.has("trip_id"),
+                                    get("trip_id").cast<StringValue>().neq(const(""))
+                                )
+                            ),
+                            usUnits = usUnits,
+                            isDark = isDark,
+                            layerIdPrefix = LayersPerCategory.Bus
+                        )
+
+// Layers for METRO/TRAM share the metro source but are filtered
+                        LiveDotLayers(
+                            category = "metro",
+                            source = metroDotsSrc,
+                            settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
+                            isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
+                            baseFilter = all(
+                                any(rtEq(1), rtEq(12)), if (showZombieBuses) all() else all(
+                                    org.maplibre.compose.expressions.dsl.feature.has("trip_id"),
+                                    get("trip_id").cast<StringValue>().neq(const(""))
+                                )
+                            ),
+                            bearingFilter = all(
+                                any(rtEq(1), rtEq(12)),
+                                get("has_bearing").cast<BooleanValue>().eq(const(true))
+                            ),
+                            usUnits = usUnits,
+                            isDark = isDark,
+                            layerIdPrefix = LayersPerCategory.Metro
+                        )
+
+                        LiveDotLayers(
+                            category = "tram",
+                            source = metroDotsSrc,  // re-uses metro source, different filter via layerIdPrefix branch
+                            settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
+                            isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
+                            baseFilter = all(
+                                any(rtEq(0), rtEq(5)), if (showZombieBuses) all() else all(
+                                    org.maplibre.compose.expressions.dsl.feature.has("trip_id"),
+                                    get("trip_id").cast<StringValue>().neq(const(""))
+                                )
+                            ),
+                            bearingFilter = all(
+                                any(rtEq(0), rtEq(5)),
+                                get("has_bearing").cast<BooleanValue>().eq(const(true))
+                            ),
+                            usUnits = usUnits,
+                            isDark = isDark,
+                            layerIdPrefix = LayersPerCategory.Tram
+                        )
+
+// Layers for INTERCITY
+                        LiveDotLayers(
+                            category = "intercityrail",
+                            source = railDotsSrc,
+                            settings = (layerSettings.value["intercityrail"] as LayerCategorySettings).labelrealtimedots,
+                            isVisible = (layerSettings.value["intercityrail"] as LayerCategorySettings).visiblerealtimedots,
+                            baseFilter = all(
+                                isIntercity(), if (showZombieBuses) all() else all(
+                                    org.maplibre.compose.expressions.dsl.feature.has("trip_id"),
+                                    get("trip_id").cast<StringValue>().neq(const(""))
+                                )
+                            ),
+                            bearingFilter = all(
+                                isIntercity(),
+                                get("has_bearing").cast<BooleanValue>().eq(const(true))
+                            ),
+                            usUnits = usUnits,
+                            isDark = isDark,
+                            layerIdPrefix = LayersPerCategory.IntercityRail
+                        )
+
+// Layers for OTHER
+                        LiveDotLayers(
+                            category = "other",
+                            source = otherDotsSrc,
+                            settings = (layerSettings.value["other"] as LayerCategorySettings).labelrealtimedots,
+                            isVisible = (layerSettings.value["other"] as LayerCategorySettings).visiblerealtimedots,
+                            baseFilter = if (showZombieBuses) all() else all(
+                                org.maplibre.compose.expressions.dsl.feature.has("trip_id"),
+                                get("trip_id").cast<StringValue>().neq(const(""))
+                            ),
+                            bearingFilter = all(
+                                get("has_bearing").cast<BooleanValue>().eq(const(true)),
+                                if (showZombieBuses) all() else all(
+                                    org.maplibre.compose.expressions.dsl.feature.has("trip_id"),
+                                    get("trip_id").cast<StringValue>().neq(const(""))
+                                )
+                            ),
+                            usUnits = usUnits,
+                            isDark = isDark,
+                            layerIdPrefix = LayersPerCategory.Other
+                        )
+
+
 
                         // Show a dot for the user's current location
                         if (currentLocation != null) {
@@ -1079,18 +1584,24 @@ class MainActivity : ComponentActivity() {
                     // Layers Panel
                     AnimatedVisibility(
                         visible = showLayersPanel,
-                        modifier = Modifier.align(Alignment.BottomCenter),
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .zIndex(5f), // Ensure it's on top
                         enter = slideInVertically(initialOffsetY = { it }),
                         exit = slideOutVertically(targetOffsetY = { it })
                     ) {
 
+                        // UPDATED Layers Panel with "More" tab
                         var selectedTab by remember { mutableStateOf("intercityrail") }
+                        val tabs =
+                            listOf("intercityrail", "localrail", "bus", "other", "more")
 
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 100.dp, max = 300.dp),
-                            shadowElevation = 8.dp
+                                .heightIn(min = 100.dp, max = 450.dp), // Increased max height
+                            shadowElevation = 8.dp,
+                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -1111,66 +1622,190 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
-                                LayerTabs(
-                                    selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+                                // Tab Row
+                                TabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
+                                    tabs.forEachIndexed { index, title ->
+                                        Tab(
+                                            selected = selectedTab == title,
+                                            onClick = { selectedTab = title },
+                                            text = {
+                                                Text(
+                                                    text = title.replaceFirstChar { it.uppercase() },
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
 
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Content for Vehicle Tabs
                                 if (selectedTab in listOf(
                                         "intercityrail", "localrail", "bus", "other"
                                     )
                                 ) {
-                                    // First row of buttons: shapes/labels/Pairs/etc.
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceEvenly
-                                    ) {
-                                        // use LayerToggleButton composables here
+                                    val currentSettings =
+                                        layerSettings.value[selectedTab] as? LayerCategorySettings
+                                    currentSettings?.let { settings ->
 
-
-                                        val currentSettings =
-                                            layerSettings.value[selectedTab] as? LayerCategorySettings
-                                        currentSettings?.let { settings ->
-                                            LayerToggleButton(name = "Shapes", icon = {
-                                                Icon(
-                                                    Icons.Default.Route,
-                                                    contentDescription = null
-                                                )
-                                            }, isActive = settings.shapes, onToggle = {
-                                                val updated =
-                                                    settings.copy(shapes = !settings.shapes)
-                                                layerSettings.value =
-                                                    layerSettings.value.toMutableMap()
-                                                        .apply { put(selectedTab, updated) }
-                                            })
-
-                                            LayerToggleButton(name = "Shape Labels", icon = {
-                                                Icon(
-                                                    Icons.Default.Route,
-                                                    contentDescription = null
-                                                )
-                                            }, isActive = settings.labelshapes, onToggle = {
-                                                val updated =
-                                                    settings.copy(labelshapes = !settings.labelshapes)
-                                                layerSettings.value =
-                                                    layerSettings.value.toMutableMap()
-                                                        .apply { put(selectedTab, updated) }
-                                            })
-                                            // Repeat for labels, Pairs, vehicles etc.
+                                        // Row 1: Shapes, Labels, Stops, Stop Labels
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                        ) {
+                                            LayerToggleButton(
+                                                name = "Shapes",
+                                                icon = { Icon(Icons.Default.Route, null) },
+                                                isActive = settings.shapes,
+                                                onToggle = {
+                                                    val updated =
+                                                        settings.copy(shapes = !settings.shapes)
+                                                    layerSettings.value =
+                                                        layerSettings.value.toMutableMap().apply {
+                                                            put(selectedTab, updated)
+                                                        }
+                                                }
+                                            )
+                                            LayerToggleButton(
+                                                name = "Shape Labels",
+                                                icon = {
+                                                    Icon(
+                                                        Icons.Default.Place,
+                                                        null
+                                                    )
+                                                }, // Placeholder
+                                                isActive = settings.labelshapes,
+                                                onToggle = {
+                                                    val updated =
+                                                        settings.copy(labelshapes = !settings.labelshapes)
+                                                    layerSettings.value =
+                                                        layerSettings.value.toMutableMap().apply {
+                                                            put(selectedTab, updated)
+                                                        }
+                                                }
+                                            )
+                                            LayerToggleButton(
+                                                name = "Stops",
+                                                icon = {
+                                                    Icon(
+                                                        Icons.Default.Place,
+                                                        null
+                                                    )
+                                                }, // Placeholder
+                                                isActive = settings.stops,
+                                                onToggle = {
+                                                    val updated =
+                                                        settings.copy(stops = !settings.stops)
+                                                    layerSettings.value =
+                                                        layerSettings.value.toMutableMap().apply {
+                                                            put(selectedTab, updated)
+                                                        }
+                                                }
+                                            )
+                                            LayerToggleButton(
+                                                name = "Stop Labels",
+                                                icon = {
+                                                    Icon(
+                                                        Icons.Default.Place,
+                                                        null
+                                                    )
+                                                }, // Placeholder
+                                                isActive = settings.labelstops,
+                                                onToggle = {
+                                                    val updated =
+                                                        settings.copy(labelstops = !settings.labelstops)
+                                                    layerSettings.value =
+                                                        layerSettings.value.toMutableMap().apply {
+                                                            put(selectedTab, updated)
+                                                        }
+                                                }
+                                            )
                                         }
 
-                                    }
+                                        Spacer(modifier = Modifier.height(8.dp))
 
-                                    // Second row: route/trip/vehicle/headsign/speed/occupancy/delay
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceEvenly
-                                    ) {
-                                        // more LayerToggleButton composables here
+                                        // Row 2: Live Dots Toggle
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                        ) {
+                                            LayerToggleButton(
+                                                name = "Vehicles",
+                                                icon = {
+                                                    Icon(
+                                                        Icons.Default.Info,
+                                                        null
+                                                    )
+                                                }, // Placeholder
+                                                isActive = settings.visiblerealtimedots,
+                                                onToggle = {
+                                                    val updated =
+                                                        settings.copy(visiblerealtimedots = !settings.visiblerealtimedots)
+                                                    layerSettings.value =
+                                                        layerSettings.value.toMutableMap().apply {
+                                                            put(selectedTab, updated)
+                                                        }
+                                                }
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            "Vehicle Labels",
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        // Row 3: Label Toggles
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                        ) {
+                                            // TODO: Add toggles for settings.labelrealtimedots
+                                            // e.g., Route, Trip, Vehicle, Headsign
+                                        }
                                     }
+                                }
+
+                                // Content for "More" Tab
+                                if (selectedTab == "more") {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { showZombieBuses = !showZombieBuses }
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        Checkbox(
+                                            checked = showZombieBuses,
+                                            onCheckedChange = { showZombieBuses = it })
+                                        Text(
+                                            "Show vehicles without trip info",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { usUnits = !usUnits }
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        Checkbox(
+                                            checked = usUnits,
+                                            onCheckedChange = { usUnits = it })
+                                        Text(
+                                            "Use US Units (mph)",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    // TODO: Add toggles for Foamermode, etc.
                                 }
                             }
                         }
-
-
                     }
 
                     SnackbarHost(
@@ -2132,3 +2767,558 @@ fun SearchBarCatenary(
 
 }
 
+@Composable
+fun AddLiveDots(
+    isDark: Boolean,
+    usUnits: Boolean,
+    showZombieBuses: Boolean,
+    layerSettings: Map<String, Any>,
+    vehicleLocations: Map<String, Map<String, Map<String, VehiclePosition>>>,
+    routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>,
+    busDotsSrc: GeoJsonSource,
+    metroDotsSrc: GeoJsonSource,
+    railDotsSrc: GeoJsonSource,
+    otherDotsSrc: GeoJsonSource
+) {
+    // Only regenerate feature collections when the server data/cache changes
+    LaunchedEffect(vehicleLocations, routeCache) {
+        // BUS
+        run {
+            val features = rerenderCategoryLiveDots(
+                category = "bus",
+                isDark = isDark,   // optional (see tip below)
+                usUnits = usUnits,  // optional (see tip below)
+                vehicleLocations = vehicleLocations,
+                routeCache = routeCache
+            )
+            busDotsSrc.setData(GeoJsonData.Features(FeatureCollection(features)))
+        }
+
+        // METRO (includes TRAM features; they’re split by layer filter)
+        run {
+            val features = rerenderCategoryLiveDots(
+                category = "metro",
+                isDark = isDark,
+                usUnits = usUnits,
+                vehicleLocations = vehicleLocations,
+                routeCache = routeCache
+            )
+            metroDotsSrc.setData(GeoJsonData.Features(FeatureCollection(features)))
+        }
+
+        // INTERCITY
+        run {
+            val features = rerenderCategoryLiveDots(
+                category = "rail",
+                isDark = isDark,
+                usUnits = usUnits,
+                vehicleLocations = vehicleLocations,
+                routeCache = routeCache
+            )
+            railDotsSrc.setData(GeoJsonData.Features(FeatureCollection(features)))
+        }
+
+        // OTHER
+        run {
+            val features = rerenderCategoryLiveDots(
+                category = "other",
+                isDark = isDark,
+                usUnits = usUnits,
+                vehicleLocations = vehicleLocations,
+                routeCache = routeCache
+            )
+            otherDotsSrc.setData(GeoJsonData.Features(FeatureCollection(features)))
+        }
+    }
+}
+
+@Composable
+private fun LiveDotLayers(
+    category: String,
+    source: GeoJsonSource,
+    settings: LabelSettings,
+    isVisible: Boolean,
+    baseFilter: Expression<BooleanValue>,
+    bearingFilter: Expression<BooleanValue>,
+    usUnits: Boolean,
+    isDark: Boolean,
+    layerIdPrefix: Any = LayersPerCategory.Bus // Default, will be overridden
+) {
+    val (idDots, idLabels, idPointing, idPointingShell) = when (layerIdPrefix) {
+        is LayersPerCategory.Bus -> listOf(
+            LayersPerCategory.Bus.Livedots,
+            LayersPerCategory.Bus.Labeldots,
+            LayersPerCategory.Bus.Pointing,
+            LayersPerCategory.Bus.PointingShell
+        )
+
+        is LayersPerCategory.Metro -> listOf(
+            LayersPerCategory.Metro.Livedots,
+            LayersPerCategory.Metro.Labeldots,
+            LayersPerCategory.Metro.Pointing,
+            LayersPerCategory.Metro.PointingShell
+        )
+
+        is LayersPerCategory.Tram -> listOf(
+            LayersPerCategory.Tram.Livedots,
+            LayersPerCategory.Tram.Labeldots,
+            LayersPerCategory.Tram.Pointing,
+            LayersPerCategory.Tram.PointingShell
+        )
+
+        is LayersPerCategory.IntercityRail -> listOf(
+            LayersPerCategory.IntercityRail.Livedots,
+            LayersPerCategory.IntercityRail.Labeldots,
+            LayersPerCategory.IntercityRail.Pointing,
+            LayersPerCategory.IntercityRail.PointingShell
+        )
+
+        is LayersPerCategory.Other -> listOf(
+            LayersPerCategory.Other.Livedots,
+            LayersPerCategory.Other.Labeldots,
+            LayersPerCategory.Other.Pointing,
+            LayersPerCategory.Other.PointingShell
+        )
+
+        else -> return // Should not happen
+    }
+
+    val contrastColorProp = if (isDark) "contrastdarkmode" else "contrastlightmode"
+    val contrastBearingColorProp = if (isDark) "contrastdarkmodebearing" else "contrastlightmode"
+    val vehicleColor = get(contrastColorProp).cast<ColorValue>()
+    val bearingColor = get(contrastBearingColorProp).cast<ColorValue>()
+    val textColor = get("text_color").cast<ColorValue>()
+
+    val dotRadius = interpolate(
+        type = linear(),
+        input = zoom(),
+        6 to const(2.dp),
+        10 to const(3.dp),
+        14 to const(5.dp),
+        18 to const(8.dp)
+    )
+
+    // Live Dot
+    CircleLayer(
+        id = idDots,
+        source = source,
+        color = vehicleColor,
+        radius = dotRadius,
+        strokeColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
+        strokeWidth = const(1.5.dp),
+        filter = baseFilter,
+        visible = isVisible,
+
+
+        )
+
+    // Bearing Pointer Shell (Outline)
+    SymbolLayer(
+        id = idPointingShell,
+        source = source,
+        iconImage = image(painterResource(R.drawable.pointing_shell)),
+        iconColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
+        iconSize = interpolate(
+            type = linear(),
+            input = zoom(),
+            10 to const(0.7f),
+            14 to const(1.0f),
+            18 to const(1.2f)
+        ),
+        iconRotate = get("bearing").cast<FloatValue>(),
+        iconRotationAlignment = const(IconRotationAlignment.Map),
+        iconAllowOverlap = const(true),
+        iconIgnorePlacement = const(true),
+        filter = bearingFilter,
+        visible = isVisible
+    )
+
+    // Bearing Pointer
+    SymbolLayer(
+        id = idPointing,
+        source = source,
+        iconImage = image(
+            painterResource(R.drawable.pointing50percent),
+            drawAsSdf = true
+        ),
+        iconOpacity = const(0.2f),
+        iconColor = bearingColor,
+        iconSize = interpolate(
+            type = linear(),
+            input = zoom(),
+            10 to const(0.5f),
+            14 to const(0.8f),
+            18 to const(1.0f)
+        ),
+        iconRotate = get("bearing").cast<FloatValue>(),
+        iconRotationAlignment = const(IconRotationAlignment.Map),
+        iconAllowOverlap = const(true),
+        iconIgnorePlacement = const(true),
+        filter = bearingFilter,
+        visible = isVisible
+    )
+
+    // Label
+    SymbolLayer(
+        id = idLabels,
+        source = source,
+        textField = interpretLabelsToExpression(settings, usUnits),
+        textFont = const(listOf("Barlow-SemiBold")),
+        textSize = if (category == "bus" && settings.headsign) {
+            // Special case from bus_label_with_headsign
+            interpolate(
+                type = linear(),
+                input = zoom(),
+                9 to const(0.5f).em,
+                14 to const(0.75f).em
+            )
+        } else {
+            // Default (bus_label_no_headsign)
+            interpolate(
+                type = linear(),
+                input = zoom(),
+                9 to const(0.625f).em,
+                14 to const(0.8125f).em
+            )
+        },
+        textColor = vehicleColor,
+        textHaloColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
+        textHaloWidth = const(1.dp),
+        textOffset = offset(0.em, 2.em),
+        textAllowOverlap = const(false),
+        textIgnorePlacement = const(false),
+
+        //textOffset = const(1.em),
+        filter = baseFilter,
+        visible = isVisible
+    )
+}
+
+private fun interpretLabelsToExpression(
+    settings: LabelSettings, usUnits: Boolean
+): Expression<StringValue> {
+    val parts = mutableListOf<Expression<StringValue>>()
+    val newline = const("\n")
+    val empty = const("")
+
+    // ✅ FIXED: Added .cast<StringValue>() to all get() calls
+    if (settings.route) {
+        parts.add(coalesce(get("maptag").cast<StringValue>(), empty))
+    }
+    if (settings.trip) {
+        if (parts.isNotEmpty()) parts.add(const(" "))
+        parts.add(coalesce(get("tripIdLabel").cast<StringValue>(), empty))
+    }
+    if (settings.vehicle) {
+        if (parts.isNotEmpty()) parts.add(const(" "))
+        parts.add(coalesce(get("vehicleIdLabel").cast<StringValue>(), empty))
+    }
+
+    // Add newline if any of the first row are present and any of the second row are present
+    val secondRow = mutableListOf<Expression<StringValue>>()
+    if (settings.headsign) {
+        secondRow.add(coalesce(get("headsign").cast<StringValue>(), empty))
+    }
+    if (settings.speed) {
+        if (secondRow.isNotEmpty()) secondRow.add(const(" "))
+        secondRow.add(coalesce(get("speed").cast<StringValue>(), empty))
+    }
+    if (settings.occupancy) {
+        if (secondRow.isNotEmpty()) secondRow.add(const(" "))
+        secondRow.add(coalesce(get("crowd_symbol").cast<StringValue>(), empty))
+    }
+    if (settings.delay) {
+        if (secondRow.isNotEmpty()) secondRow.add(const(" "))
+        secondRow.add(coalesce(get("delay_label").cast<StringValue>(), empty))
+    }
+
+    if (parts.isNotEmpty() && secondRow.isNotEmpty()) {
+        parts.add(newline)
+        parts.addAll(secondRow)
+    } else if (secondRow.isNotEmpty()) {
+        parts.addAll(secondRow)
+    }
+
+    if (parts.isEmpty()) return const("")
+
+    var finalExpression: Expression<StringValue> = parts.first()
+    if (parts.size > 1) {
+        for (i in 1 until parts.size) {
+            finalExpression = finalExpression.plus(parts[i])
+        }
+    }
+    return finalExpression
+}
+
+private fun rerenderCategoryLiveDots(
+    category: String,
+    isDark: Boolean,
+    usUnits: Boolean,
+    vehicleLocations: Map<String, Map<String, Map<String, VehiclePosition>>>,
+    routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>
+): List<Feature> {
+    val categoryLocations = vehicleLocations[category] ?: return emptyList()
+
+    return categoryLocations.flatMap { (chateauId, chateauVehiclesList) ->
+        chateauVehiclesList.mapNotNull { (rtId, vehicleData) ->
+            if (vehicleData.position == null) {
+                return@mapNotNull null
+            }
+
+            // Filter out known bad data points
+            val lat = vehicleData.position.latitude
+            val lon = vehicleData.position.longitude
+            if ((lat == 34.099503 && lon == -117.29602) || (lat == 34.250793 && lon == -119.205025) || (lat == 34.05573 && lon == -118.23351)) {
+                return@mapNotNull null
+            }
+
+            var vehicleLabel = vehicleData.vehicle?.label ?: vehicleData.vehicle?.id ?: ""
+            if (chateauId == "new-south-wales" && vehicleLabel.contains(" to ")) {
+                vehicleLabel = vehicleData.vehicle?.id ?: ""
+            }
+            vehicleLabel = vehicleLabel.replace("ineo-tram:", "").replace("ineo-bus:", "")
+
+            var color = "#aaaaaa"
+            var textColor = "#000000"
+            var tripIdLabel = ""
+            var tripShortName: String? = null
+            var headsign = ""
+
+            vehicleData.trip?.let { trip ->
+                tripIdLabel = trip.trip_short_name ?: ""
+                tripShortName = trip.trip_short_name
+                if (tripIdLabel.isEmpty() && chateauId == "metra") {
+                    tripIdLabel =
+                        trip.trip_id?.split('_')?.getOrNull(1)?.filter { it.isDigit() } ?: ""
+                }
+                headsign = trip.trip_headsign ?: ""
+                if (headsign == headsign.uppercase()) {
+                    headsign =
+                        headsign.lowercase().replaceFirstChar { it.titlecase() } // Basic title case
+                }
+                if (chateauId == "new-south-wales") {
+                    headsign = headsign.replace(" Station", "")
+                }
+            }
+            if (headsign.contains("Line  - ") && chateauId == "metro~losangeles") {
+                headsign = headsign.split("-").getOrNull(1)?.trim() ?: ""
+            }
+
+            val routeId = vehicleData.trip?.route_id
+            var maptag = ""
+            var routeShortName: String? = null
+            var routeLongName: String? = null
+
+            val chateauRouteCache = routeCache[chateauId]?.get(category)
+            if (chateauRouteCache != null && routeId != null) {
+                val route = chateauRouteCache[routeId]
+                if (route != null) {
+                    routeLongName = route.route_long_name
+                    routeShortName = route.route_short_name
+                    maptag = if (!route.route_short_name.isNullOrEmpty()) {
+                        route.route_short_name
+                    } else {
+                        route.route_long_name ?: ""
+                    }
+                    color = route.route_colour
+                    textColor = route.route_text_colour
+                }
+            }
+
+            // Agency-specific tag mapping
+            maptag = when (maptag) {
+                "Metro E Line" -> "E"
+                "Metro A Line" -> "A"
+                "Metro B Line" -> "B"
+                "Metro C Line" -> "C"
+                "Metro D Line" -> "D"
+                "Metro L Line" -> "L"
+                "Metro K Line" -> "K"
+                "Metrolink Ventura County Line" -> "Ventura"
+                "Metrolink Antelope Valley Line" -> "Antelope"
+                "Metrolink San Bernardino Line" -> "SB"
+                "Metrolink Riverside Line" -> "Riverside"
+                "Metrolink Orange County Line" -> "Orange"
+                "Metrolink 91/Perris Valley Line" -> "91/Perris"
+                "Metrolink Inland Empire-Orange County Line" -> "IE-OC"
+                else -> maptag
+            }
+
+            // Color processing
+            val (contrastColor, contrastBearingColor) = processColor(color, isDark)
+
+            // Speed string
+            val speedStr = vehicleData.position.speed?.let {
+                val speed = it * if (usUnits) 2.23694 else 3.6
+                "%.1f %s".format(speed, if (usUnits) "mph" else "km/h")
+            } ?: ""
+
+            // Occupancy symbol
+            val crowdSymbol = occupancy_to_symbol(vehicleData.occupancy_status)
+
+            // Delay label
+            val delayLabel = vehicleData.trip?.delay?.let {
+                val prefix = if (it < 0) "-" else "+"
+                val absDelay = abs(it)
+                val minutes = floor(absDelay / 60.0)
+                val hours = floor(minutes / 60.0)
+                val remMinutes = minutes % 60
+                "%s%s%.0fm".format(
+                    prefix,
+                    if (hours > 0) "%.0fh".format(hours) else "",
+                    remMinutes
+                )
+            } ?: ""
+
+            // Build GeoJSON properties
+            val properties = buildMap<String, JsonElement> {
+                put("vehicleIdLabel", JsonPrimitive(vehicleLabel))
+                put("speed", JsonPrimitive(speedStr))
+                put("color", JsonPrimitive(color))
+                put("chateau", JsonPrimitive(chateauId))
+                put("route_type", JsonPrimitive(vehicleData.route_type))
+                put("tripIdLabel", JsonPrimitive(tripIdLabel))
+                vehicleData.position.bearing?.let { put("bearing", JsonPrimitive(it)) }
+                put("has_bearing", JsonPrimitive(vehicleData.position.bearing != null))
+                put(
+                    "maptag", JsonPrimitive(
+                        fixRouteName(chateauId, maptag, routeId)
+                            .replace(" Branch", "")
+                            .replace(" Line", "")
+                            .replace("Counterclockwise", "ACW") // TODO: i18n
+                            .replace("Clockwise", "CW")
+                    )
+                )
+                tripShortName?.let { put("trip_short_name", JsonPrimitive(it)) }
+                routeShortName?.let { put("route_short_name", JsonPrimitive(it)) }
+                routeLongName?.let { put("route_long_name", JsonPrimitive(it)) }
+
+                // Add contrast colors based on theme
+                if (isDark) {
+                    put("contrastdarkmode", JsonPrimitive(contrastColor))
+                    put("contrastdarkmodebearing", JsonPrimitive(contrastBearingColor))
+                } else {
+                    put("contrastlightmode", JsonPrimitive(contrastColor))
+                }
+
+                routeId?.let { put("routeId", JsonPrimitive(it)) }
+                put(
+                    "headsign", JsonPrimitive(
+                        fixHeadsignText(headsign, maptag)
+                            .replace("Counterclockwise", "ACW") // TODO: i18n
+                            .replace("Clockwise", "CW")
+                    )
+                )
+                vehicleData.timestamp?.let { put("timestamp", JsonPrimitive(it)) }
+                put("rtid", JsonPrimitive(rtId))
+                put("text_color", JsonPrimitive(textColor))
+                vehicleData.trip?.trip_id?.let { put("trip_id", JsonPrimitive(it)) }
+                vehicleData.trip?.start_time?.let { put("start_time", JsonPrimitive(it)) }
+                vehicleData.trip?.start_date?.let { put("start_date", JsonPrimitive(it)) }
+                put("crowd_symbol", JsonPrimitive(crowdSymbol))
+                vehicleData.occupancy_status?.let { put("occupancy_status", JsonPrimitive(it)) }
+                put("delay_label", JsonPrimitive(delayLabel))
+                vehicleData.trip?.delay?.let { put("delay", JsonPrimitive(it)) }
+
+                //println("hashcode = ${"$chateauId:$rtId".hashCode().absoluteValue}")
+
+                put("id", JsonPrimitive("$chateauId:$rtId".hashCode().absoluteValue))
+            }
+
+            val point = Point(Position(lon, lat))
+            // This will now work correctly
+            //val featureId = "${category}:${chateauId}:${rtId}"
+            Feature(
+                id = "$chateauId:$rtId".hashCode().absoluteValue.toString(),
+                geometry = point,
+                properties = properties
+            )
+        }
+    }
+}
+
+// Color, String, etc. Helpers
+
+private fun processColor(hexColor: String, isDark: Boolean): Pair<String, String> {
+    val (r, g, b) = hexToRgb(hexColor) ?: return Pair(hexColor, hexColor)
+
+    if (isDark) {
+        val (h, s, l) = rgbToHsl(r, g, b)
+        var newL = l
+        val blueOffset = if (b > 40) 30 * (b / 255.0) else 0.0
+        if (l < 60) {
+            newL = l + 10 + (25 * ((100 - s) / 100) + blueOffset)
+            if (newL > 60) {
+                newL = 60.0 + blueOffset
+            }
+        }
+        if (l < 60) {
+            newL = minOf(sqrt(l * 25.0) + 40, 100.0)
+            // s = minOf(100.0, s + 20) // This was in JS, but newL logic seems to override
+        }
+
+        val (newR, newG, newB) = hslToRgb(h, s, newL)
+        val (bearR, bearG, bearB) = hslToRgb(h, s, (newL + l) / 2.0)
+
+        val contrastColor = "#%02x%02x%02x".format(newR, newG, newB)
+        val bearingColor = "#%02x%02x%02x".format(bearR, bearG, bearB)
+        return Pair(contrastColor, bearingColor)
+    } else {
+        // Light mode processing
+        val gamma = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+        if (gamma > 0.55) {
+            val (adjR, adjG, adjB) = adjustGamma(r, g, b, 0.55)
+            val contrastColor = "#%02x%02x%02x".format(adjR, adjG, adjB)
+            return Pair(contrastColor, contrastColor)
+        }
+        return Pair(hexColor, hexColor)
+    }
+}
+
+private fun adjustGamma(r: Int, g: Int, b: Int, targetGamma: Double): Triple<Int, Int, Int> {
+    // Simplified version of adjustGamma
+    val factor = targetGamma / ((0.299 * r + 0.587 * g + 0.114 * b) / 255.0)
+    return Triple(
+        (r * factor).roundToInt().coerceIn(0, 255),
+        (g * factor).roundToInt().coerceIn(0, 255),
+        (b * factor).roundToInt().coerceIn(0, 255)
+    )
+}
+
+private fun hueToRgb(p: Double, q: Double, t: Double): Double {
+    var tN = t
+    if (tN < 0.0) tN += 1.0
+    if (tN > 1.0) tN -= 1.0
+    if (tN < 1.0 / 6.0) return p + (q - p) * 6.0 * tN
+    if (tN < 1.0 / 2.0) return q
+    if (tN < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - tN) * 6.0
+    return p
+}
+
+private fun fixRouteName(chateauId: String, maptag: String, routeId: String?): String {
+    if (chateauId == "mtr" && maptag == "Disneyland Resort") return "DRL"
+    if (chateauId == "nyct" && routeId != null) {
+        if (routeId.contains("GS")) return "S"
+    }
+    return maptag
+}
+
+private fun fixHeadsignText(headsign: String, maptag: String): String {
+    if (maptag == "J" || maptag == "Z") {
+        if (headsign.contains("Broad St")) return "Broad St"
+    }
+    return headsign
+}
+
+private fun occupancy_to_symbol(status: String?): String {
+    return when (status) {
+        "EMPTY" -> " " // "🚶"
+        "MANY_SEATS_AVAILABLE" -> " " // "🚶"
+        "FEW_SEATS_AVAILABLE" -> "👥"
+        "STANDING_ROOM_ONLY" -> "👨‍👩‍👧‍👦"
+        "CRUSHED_STANDING_ROOM_ONLY" -> " crammed "
+        "FULL" -> " full "
+        "NOT_ACCEPTING_PASSENGERS" -> "❌"
+        else -> ""
+    }
+}
