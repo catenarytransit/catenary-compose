@@ -125,7 +125,7 @@ fun DraggablePinOverlay(
         Modifier
             .offset(x = hitTopLeft.x, y = hitTopLeft.y)
             .size(hitSize)
-            .background(color = Color.Blue.copy(alpha = 0.5f))
+            .background(color = Color.Transparent)
             .pointerInput(Unit) {
                 detectDragGestures(onDragStart = {
                     if (!pin.active) onActivatePin()

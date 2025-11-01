@@ -3,6 +3,7 @@ package com.catenarymaps.catenary
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Bundle
+import java.util.concurrent.atomic.AtomicBoolean
 import android.os.SystemClock
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -479,6 +480,8 @@ val ktorClient = HttpClient() {
 class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    private val isFetchingRealtimeData = AtomicBoolean(false)
+
     // Realtime Data State Holders
     var realtimeVehicleLocations =
         mutableStateOf<Map<String, Map<String, Map<String, VehiclePosition>>>>(emptyMap())
@@ -501,11 +504,16 @@ class MainActivity : ComponentActivity() {
         showZombieBuses: Boolean, // Pass state
         settings: Map<String, Any>
     ) {
+        if (!isFetchingRealtimeData.compareAndSet(false, true)) {
+            Log.d(TAG, "Skipping fetch, another one is already in progress.")
+            return
+        }
+
         scope.launch {
+            try {
             val categoriesToRequest = mutableListOf<String>()
 
-            // Logic from fetch_realtime_vehicle_locations.ts
-            val busThreshold = 7.5 // Using mobile threshold
+                val busThreshold = 8
             if ((settings["bus"] as LayerCategorySettings).visiblerealtimedots && zoom >= busThreshold) {
                 categoriesToRequest.add("bus")
             }
@@ -531,6 +539,12 @@ class MainActivity : ComponentActivity() {
             val hashCacheMap = realtimeVehicleRouteCacheHash.value
 
             visibleChateaus.forEach { chateauId ->
+                if (chateauId == "bus~dft~gov~uk") {
+                    if (visibleChateaus.contains("sncf") || visibleChateaus.contains("île~de~france~mobilités")) {
+                        return@forEach
+                    }
+                }
+
                 //println("Chateau id $chateauId")
                 val categoryParams = mutableMapOf<String, CategoryParams>()
                 val cats = listOf("bus", "rail", "metro", "other")
@@ -552,10 +566,6 @@ class MainActivity : ComponentActivity() {
                 categories = categoriesToRequest, chateaus = chateausToFetch
             )
 
-            val bodyText = Json.encodeToString(requestBody)
-
-            println(bodyText)
-
             try {
 
                 // You must run this inside a coroutine scope (e.g., in a suspend function)
@@ -566,7 +576,7 @@ class MainActivity : ComponentActivity() {
                             setBody(requestBody)
                         }.body()
 
-                    println("Bulk Fetch: $rawresponse")
+                    // println("Bulk Fetch: $rawresponse")
 
                     val json_for_this = Json {
                         ignoreUnknownKeys = true
@@ -585,7 +595,7 @@ class MainActivity : ComponentActivity() {
                     val newHashCache = realtimeVehicleRouteCacheHash.value.toMutableMap()
 
                     response.chateaus.forEach { (chateauId, chateauData) ->
-                        println("Processing Chateau $chateauId")
+                        // println("Processing Chateau $chateauId")
                         chateauData.categories.forEach { (category, categoryData) ->
                             if (categoryData != null) {
                                 // Update Locations
@@ -595,7 +605,7 @@ class MainActivity : ComponentActivity() {
                                             .toMutableMap()
                                     chateauLocations[chateauId] = categoryData.vehicle_positions
                                     newLocations[category] = chateauLocations
-                                    println("set value for new vehicle locations for $category with $chateauId and length ${categoryData.vehicle_positions.size}")
+                                    //   println("set value for new vehicle locations for $category with $chateauId and length ${categoryData.vehicle_positions.size}")
                                 }
                                 // Update Route Cache
                                 if (categoryData.vehicle_route_cache != null) {
@@ -648,6 +658,9 @@ class MainActivity : ComponentActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to fetch realtime data: ${e.message}")
             }
+            } finally {
+                isFetchingRealtimeData.set(false)
+            }
         }
     }
 
@@ -686,6 +699,45 @@ class MainActivity : ComponentActivity() {
 
 
                 }
+            }
+        }
+
+        fun pruneStaleChateauData() {
+            // Get a snapshot of the currently visible chateaus
+            val visibleSet = visibleChateaus.toSet()
+            Log.d(TAG, "Pruning data. Keeping ${visibleSet.size} chateaus.")
+
+            // Prune maps keyed by ChateauID
+            val currentCache = realtimeVehicleRouteCache.value
+            if (currentCache.keys.any { it !in visibleSet }) {
+                realtimeVehicleRouteCache.value = currentCache.filterKeys { it in visibleSet }
+            }
+
+            val currentLastUpdated = realtimeVehicleLocationsLastUpdated.value
+            if (currentLastUpdated.keys.any { it !in visibleSet }) {
+                realtimeVehicleLocationsLastUpdated.value =
+                    currentLastUpdated.filterKeys { it in visibleSet }
+            }
+
+            val currentHash = realtimeVehicleRouteCacheHash.value
+            if (currentHash.keys.any { it !in visibleSet }) {
+                realtimeVehicleRouteCacheHash.value = currentHash.filterKeys { it in visibleSet }
+            }
+
+            // Prune the 'realtimeVehicleLocations' map (which is keyed by Category first)
+            val currentLocations = realtimeVehicleLocations.value
+            var locationsModified = false
+            val newLocations = currentLocations.toMutableMap()
+
+            currentLocations.forEach { (category, chateauMap) ->
+                if (chateauMap.keys.any { it !in visibleSet }) {
+                    newLocations[category] = chateauMap.filterKeys { it in visibleSet }
+                    locationsModified = true
+                }
+            }
+
+            if (locationsModified) {
+                realtimeVehicleLocations.value = newLocations
             }
         }
 
@@ -751,6 +803,13 @@ class MainActivity : ComponentActivity() {
                         showZombieBuses, // Pass the state
                         layerSettings.value
                     )
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                while (true) {
+                    delay(3_000L) // 3 second prune interval
+                    pruneStaleChateauData()
                 }
             }
 

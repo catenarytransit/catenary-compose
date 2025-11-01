@@ -3,6 +3,7 @@ package com.catenarymaps.catenary
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import org.maplibre.compose.expressions.ast.Expression
+import org.maplibre.compose.expressions.dsl.Condition
 import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.dsl.all
 import org.maplibre.compose.expressions.dsl.any
@@ -32,6 +33,8 @@ import org.maplibre.compose.expressions.value.TextUnitValue
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.sources.rememberVectorSource
+import org.maplibre.compose.expressions.dsl.Case
+import org.maplibre.compose.expressions.dsl.condition
 
 val SHAPES_SOURCES = mapOf(
     "intercityrailshapes" to "https://birch1.catenarymaps.org/shapes_intercity_rail",
@@ -88,7 +91,7 @@ fun AddShapes() {
             8 to const(0.10f),
             11 to const(0.30f),
         ),
-        minZoom = 8f,
+        minZoom = 9f,
         visible = bus.shapes
     )
 
@@ -162,7 +165,15 @@ fun AddShapes() {
             7 to const(2.dp),
             9 to const(3.dp),
         ),
-        opacity = const(1f),
+        opacity = switch(
+            conditions = arrayOf(
+                condition(
+                    get_stop_to_stop_generated.eq(const(true)),
+                    const(0.2f)
+                )
+            ),
+            fallback = const(1f)
+        ),
         minZoom = 1f,
         visible = otherSettings.shapes,
         // filter: ! (chateau=='schweiz' && stop_to_stop_generated==true)  && (route_type==6 || route_type==7)
@@ -248,8 +259,9 @@ fun AddShapes() {
 // shapes
 
     val line_opacity_intercity: Expression<NumberValue<Number>> = switch(
-        input = get("stop_to_stop_generated").cast<BooleanValue>().asString(), case(
-            label = "true", output = const(0.2f)
+        condition(
+            get("stop_to_stop_generated").cast<BooleanValue>(),
+            output = const(0.2f)
         ), fallback = const(0.9f)
     )
 
