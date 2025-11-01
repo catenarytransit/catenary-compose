@@ -7,6 +7,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 data class Rgb(val r: Int, val g: Int, val b: Int)
 data class Hsl(var h: Double, var s: Double, var l: Double) // h: 0–360, s/l: 0–100
@@ -182,4 +183,61 @@ fun darkenColour(color: Color): Color {
     val b = (color.blue * 255f).roundToInt()
     val out = darkenColour((a shl 24) or (r shl 16) or (g shl 8) or b)
     return Color(out)
+}
+
+
+fun processColor(hexColor: String, isDark: Boolean): Pair<String, String> {
+    val (r, g, b) = hexToRgb(hexColor) ?: return Pair(hexColor, hexColor)
+
+    if (isDark) {
+        val (h, s, l) = rgbToHsl(r, g, b)
+        var newL = l
+        val blueOffset = if (b > 40) 30 * (b / 255.0) else 0.0
+        if (l < 60) {
+            newL = l + 10 + (25 * ((100 - s) / 100) + blueOffset)
+            if (newL > 60) {
+                newL = 60.0 + blueOffset
+            }
+        }
+        if (l < 60) {
+            newL = minOf(sqrt(l * 25.0) + 40, 100.0)
+            // s = minOf(100.0, s + 20) // This was in JS, but newL logic seems to override
+        }
+
+        val (newR, newG, newB) = hslToRgb(h, s, newL)
+        val (bearR, bearG, bearB) = hslToRgb(h, s, (newL + l) / 2.0)
+
+        val contrastColor = "#%02x%02x%02x".format(newR, newG, newB)
+        val bearingColor = "#%02x%02x%02x".format(bearR, bearG, bearB)
+        return Pair(contrastColor, bearingColor)
+    } else {
+        // Light mode processing
+        val gamma = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+        if (gamma > 0.55) {
+            val (adjR, adjG, adjB) = adjustGamma(r, g, b, 0.55)
+            val contrastColor = "#%02x%02x%02x".format(adjR, adjG, adjB)
+            return Pair(contrastColor, contrastColor)
+        }
+        return Pair(hexColor, hexColor)
+    }
+}
+
+fun adjustGamma(r: Int, g: Int, b: Int, targetGamma: Double): Triple<Int, Int, Int> {
+    // Simplified version of adjustGamma
+    val factor = targetGamma / ((0.299 * r + 0.587 * g + 0.114 * b) / 255.0)
+    return Triple(
+        (r * factor).roundToInt().coerceIn(0, 255),
+        (g * factor).roundToInt().coerceIn(0, 255),
+        (b * factor).roundToInt().coerceIn(0, 255)
+    )
+}
+
+fun hueToRgb(p: Double, q: Double, t: Double): Double {
+    var tN = t
+    if (tN < 0.0) tN += 1.0
+    if (tN > 1.0) tN -= 1.0
+    if (tN < 1.0 / 6.0) return p + (q - p) * 6.0 * tN
+    if (tN < 1.0 / 2.0) return q
+    if (tN < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - tN) * 6.0
+    return p
 }
