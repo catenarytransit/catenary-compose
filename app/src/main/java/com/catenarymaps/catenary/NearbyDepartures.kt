@@ -198,126 +198,7 @@ private fun peekString(body: ResponseBody?, limit: Long = 200_000): String {
     }
 }
 
-private fun logJsonTopLevelShape(raw: String) {
-    try {
-        val elem: JsonElement = json.parseToJsonElement(raw)
-        when (elem) {
-            is JsonObject -> {
-                val keys = elem.keys.joinToString(", ")
-                Log.d(NEARBY_TAG, "Top-level keys: [$keys]")
-                // Log a couple of nested shapes if present
-                elem["debug"]?.let { Log.d(NEARBY_TAG, "debug: ${it}") }
-                elem["departures"]?.let { Log.d(NEARBY_TAG, "departures: ${it::class.simpleName}") }
-                elem["stop"]?.let { Log.d(NEARBY_TAG, "stop: ${it::class.simpleName}") }
 
-                elem["departures"]?.let {
-                    val depsEl = elem["departures"]
-                    if (depsEl is JsonArray && depsEl.isNotEmpty()) {
-                        val firstRouteEl = depsEl.first()
-                        if (firstRouteEl is JsonObject) {
-                            val directionsEl = firstRouteEl["directions"]
-                            Log.d(
-                                NEARBY_TAG,
-                                "first departures[0].directions type = ${directionsEl?.let { it::class.simpleName }}"
-                            )
-
-                            if (directionsEl is JsonObject) {
-                                val firstDirEntry = directionsEl.entries.firstOrNull()
-                                if (firstDirEntry == null) {
-                                    Log.w(NEARBY_TAG, "directions is empty")
-                                } else {
-                                    val (dirKey, dirVal) = firstDirEntry
-                                    when (dirVal) {
-                                        is JsonObject -> {
-                                            // Try decoding as your DirectionGroup {headsign, direction_id, trips}
-                                            runCatching {
-                                                json.decodeFromJsonElement(
-                                                    DirectionGroup.serializer(),
-                                                    dirVal
-                                                )
-                                            }.onSuccess { dg ->
-                                                Log.d(
-                                                    NEARBY_TAG,
-                                                    "Decoded DirectionGroup OK (key=$dirKey): headsign='${dg.headsign}',  trips=${dg.trips.size}"
-                                                )
-                                            }.onFailure { e ->
-                                                Log.e(
-                                                    NEARBY_TAG,
-                                                    "Failed to decode DirectionGroup (key=$dirKey) as object: ${e.message}"
-                                                )
-                                                // Optional: log a small preview
-                                                Log.e(
-                                                    NEARBY_TAG,
-                                                    "dirVal preview: ${dirVal.toString().take(600)}"
-                                                )
-                                            }
-                                        }
-
-                                        is JsonArray -> {
-                                            // Legacy shape: array of trips. Decode trips to confirm.
-                                            runCatching {
-                                                json.decodeFromJsonElement(
-                                                    ListSerializer(TripEntry.serializer()),
-                                                    dirVal
-                                                )
-                                            }.onSuccess { trips ->
-                                                Log.d(
-                                                    NEARBY_TAG,
-                                                    "directions[$dirKey] is an ARRAY of trips (legacy). trips=${trips.size}"
-                                                )
-                                                // If you want, synthesize a DirectionGroup-like view for downstream:
-                                                // val synthetic = DirectionGroup(headsign = dirKey, trips = trips, directionId = dirKey)
-                                            }.onFailure { e ->
-                                                Log.e(
-                                                    NEARBY_TAG,
-                                                    "Failed to decode trips array at directions[$dirKey]: ${e.message}"
-                                                )
-                                                Log.e(
-                                                    NEARBY_TAG,
-                                                    "dirVal preview: ${dirVal.toString().take(600)}"
-                                                )
-                                            }
-                                        }
-
-                                        else -> {
-                                            Log.w(
-                                                NEARBY_TAG,
-                                                "directions[$dirKey] unexpected JSON type: ${dirVal::class.simpleName}"
-                                            )
-                                            Log.w(
-                                                NEARBY_TAG,
-                                                "dirVal preview: ${dirVal.toString().take(600)}"
-                                            )
-                                        }
-                                    }
-                                }
-                            } else {
-                                Log.w(
-                                    NEARBY_TAG,
-                                    "departures[0].directions is not an object: ${directionsEl?.let { it::class.simpleName }}"
-                                )
-                            }
-                        } else {
-                            Log.w(
-                                NEARBY_TAG,
-                                "departures[0] is not an object: ${firstRouteEl::class.simpleName}"
-                            )
-                        }
-                    } else {
-                        Log.w(
-                            NEARBY_TAG,
-                            "departures is not a non-empty array (type=${depsEl?.let { it::class.simpleName }})"
-                        )
-                    }
-                }
-            }
-
-            else -> Log.d(NEARBY_TAG, "Top-level is not an object: ${elem::class.simpleName}")
-        }
-    } catch (e: Throwable) {
-        Log.e(NEARBY_TAG, "parseToJsonElement failed: ${e.message}")
-    }
-}
 
 private fun logSerializationError(e: SerializationException, raw: String) {
     // kotlinx.serialization exceptions usually include a path like at path: $.foo[0].bar
@@ -325,8 +206,7 @@ private fun logSerializationError(e: SerializationException, raw: String) {
     // Log first 2k chars so we don’t spam Logcat
     val head = raw.take(2000)
     Log.e(NEARBY_TAG, "Body head (2k):\n$head")
-    // Try to log the top level shape to see where we differ from NearbyResponse
-    logJsonTopLevelShape(raw)
+
 }
 
 private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
@@ -361,7 +241,6 @@ private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
                 }
 
                 Log.d(NEARBY_TAG, "Body length: ${rawBody.length} chars")
-                logJsonTopLevelShape(rawBody)
 
                 try {
                     val parsed = json.decodeFromString(NearbyResponse.serializer(), rawBody)
