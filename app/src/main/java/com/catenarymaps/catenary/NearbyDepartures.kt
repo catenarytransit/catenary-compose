@@ -511,7 +511,7 @@ fun NearbyDepartures(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 12.dp)
-            .padding(bottom = 20.dp)
+            .padding(bottom = 12.dp)
     ) {
         TopRow(
             currentPickModeIsPin = usePickedLocation,
@@ -595,7 +595,7 @@ private fun TopRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp),
+            .padding(top = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -696,7 +696,7 @@ private fun FilterRow(
         FilterChip("Bus", filters.bus) { onChange(filters.copy(bus = !filters.bus)) }
         FilterChip("Other", filters.other) { onChange(filters.copy(other = !filters.other)) }
     }
-    Spacer(Modifier.height(8.dp))
+    Spacer(Modifier.height(4.dp))
 }
 
 @Composable

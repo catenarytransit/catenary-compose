@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import org.maplibre.compose.expressions.dsl.asList
 import androidx.compose.foundation.clickable
 import org.maplibre.compose.expressions.dsl.image
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -125,6 +126,7 @@ import org.maplibre.compose.expressions.value.TextUnitValue
 import org.maplibre.compose.map.RenderOptions
 import kotlin.time.Duration
 import android.content.SharedPreferences
+import androidx.compose.foundation.border
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
 import io.github.dellisd.spatialk.geojson.FeatureCollection
@@ -160,6 +162,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.dellisd.spatialk.geojson.Feature
@@ -187,6 +190,7 @@ import org.maplibre.compose.expressions.dsl.get
 import org.maplibre.compose.expressions.dsl.neq
 import org.maplibre.compose.sources.GeoJsonOptions
 import java.math.BigInteger
+import java.util.Arrays.asList
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.pow
@@ -1653,7 +1657,16 @@ class MainActivity : ComponentActivity() {
                                         ) {
                                             LayerToggleButton(
                                                 name = "Shapes",
-                                                icon = { Icon(Icons.Default.Route, null) },
+                                                padding = 0.dp,
+                                                icon = {
+                                                    Image(
+                                                        painter = painterResource(id = R.drawable.routesicon),
+                                                        contentDescription = "Shape",
+                                                        modifier = Modifier
+                                                            .height(48.dp),
+                                                        contentScale = ContentScale.Fit
+                                                    )
+                                                },
                                                 isActive = settings.shapes,
                                                 onToggle = {
                                                     val updated =
@@ -1666,10 +1679,14 @@ class MainActivity : ComponentActivity() {
                                             )
                                             LayerToggleButton(
                                                 name = "Shape Labels",
+                                                padding = 0.dp,
                                                 icon = {
-                                                    Icon(
-                                                        Icons.Default.Place,
-                                                        null
+                                                    Image(
+                                                        painter = painterResource(id = R.drawable.labelsicon),
+                                                        contentDescription = "Shape Label",
+                                                        modifier = Modifier
+                                                            .height(48.dp),
+                                                        contentScale = ContentScale.Fit
                                                     )
                                                 }, // Placeholder
                                                 isActive = settings.labelshapes,
@@ -1684,12 +1701,16 @@ class MainActivity : ComponentActivity() {
                                             )
                                             LayerToggleButton(
                                                 name = "Stops",
+                                                padding = 0.dp,
                                                 icon = {
-                                                    Icon(
-                                                        Icons.Default.Place,
-                                                        null
+                                                    Image(
+                                                        painter = painterResource(id = R.drawable.stopsicon),
+                                                        contentDescription = "Stops",
+                                                        modifier = Modifier
+                                                            .height(48.dp),
+                                                        contentScale = ContentScale.Fit
                                                     )
-                                                }, // Placeholder
+                                                },
                                                 isActive = settings.stops,
                                                 onToggle = {
                                                     val updated =
@@ -1702,12 +1723,16 @@ class MainActivity : ComponentActivity() {
                                             )
                                             LayerToggleButton(
                                                 name = "Stop Labels",
+                                                padding = 0.dp,
                                                 icon = {
-                                                    Icon(
-                                                        Icons.Default.Place,
-                                                        null
+                                                    Image(
+                                                        painter = painterResource(id = if (isDark) R.drawable.dark_stop_name else R.drawable.light_stop_name),
+                                                        contentDescription = "Stops Label",
+                                                        modifier = Modifier
+                                                            .height(48.dp),
+                                                        contentScale = ContentScale.Fit
                                                     )
-                                                }, // Placeholder
+                                                },
                                                 isActive = settings.labelstops,
                                                 onToggle = {
                                                     val updated =
@@ -1718,23 +1743,19 @@ class MainActivity : ComponentActivity() {
                                                         }
                                                 }
                                             )
-                                        }
 
-                                        Spacer(modifier = Modifier.height(8.dp))
-
-                                        // Row 2: Live Dots Toggle
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceEvenly
-                                        ) {
                                             LayerToggleButton(
                                                 name = "Vehicles",
+                                                padding = 0.dp,
                                                 icon = {
-                                                    Icon(
-                                                        Icons.Default.Info,
-                                                        null
+                                                    Image(
+                                                        painter = painterResource(id = R.drawable.vehiclesicon),
+                                                        contentDescription = "Stops Label",
+                                                        modifier = Modifier
+                                                            .height(48.dp),
+                                                        contentScale = ContentScale.Fit
                                                     )
-                                                }, // Placeholder
+                                                },
                                                 isActive = settings.visiblerealtimedots,
                                                 onToggle = {
                                                     val updated =
@@ -1746,6 +1767,12 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                         }
+
+
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+
 
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
@@ -2251,33 +2278,43 @@ fun AddStops() {
 
 @Composable
 fun LayerToggleButton(
-    name: String, icon: @Composable () -> Unit, isActive: Boolean, onToggle: () -> Unit
+    name: String,
+    icon: @Composable () -> Unit,
+    isActive: Boolean,
+    onToggle: () -> Unit,
+    padding: Dp = 4.dp,
+    activeBorderWidth: Dp = 2.dp // Parameter for "thick" border
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding()
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .padding(4.dp)
+                .padding(4.dp) // This provides spacing between the box and the text
+                .border( // --- CHANGE 1: Added border ---
+                    width = activeBorderWidth,
+                    color = if (isActive) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    shape = RoundedCornerShape(8.dp)
+                )
                 .clip(RoundedCornerShape(8.dp))
                 .background(
-                    if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    else MaterialTheme.colorScheme.surfaceVariant
+                    // --- CHANGE 2: Removed active state from background ---
+                    MaterialTheme.colorScheme.surfaceVariant
                 )
                 .clickable { onToggle() }
-                .padding(8.dp)) {
+                .padding(padding) // This is the inner padding for the icon
+        ) {
             icon()
-
         }
 
         Text(
             text = name,
             style = MaterialTheme.typography.bodySmall,
-            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            // --- CHANGE 3: Removed active state from text color ---
+            color = MaterialTheme.colorScheme.onSurface
         )
-
-
     }
 }
 
@@ -2483,16 +2520,405 @@ private fun LiveDotLayers(
     val contrastBearingColorProp = if (isDark) "contrastdarkmodebearing" else "contrastlightmode"
     val vehicleColor = get(contrastColorProp).cast<ColorValue>()
     val bearingColor = get(contrastBearingColorProp).cast<ColorValue>()
-    val textColor = get("text_color").cast<ColorValue>()
 
-    val dotRadius = interpolate(
-        type = linear(),
-        input = zoom(),
-        6 to const(2.dp),
-        10 to const(3.dp),
-        14 to const(5.dp),
-        18 to const(8.dp)
-    )
+    // --- Start of Category-Specific Sizing ---
+
+    val dotRadius: Expression<DpValue>
+    val dotStrokeWidth: Expression<DpValue>
+    val dotOpacity: Expression<FloatValue>
+    val dotStrokeOpacity: Expression<FloatValue>
+    val bearingIconSize: Expression<FloatValue>
+    val bearingIconOffset: Expression<DpOffsetValue>
+    val bearingShellOpacity: Expression<FloatValue>
+    val bearingFilledOpacity: Expression<FloatValue>
+    val labelTextSize: Expression<TextUnitValue>
+    val labelTextFont: Expression<ListValue<StringValue>>
+    val labelRadialOffset: Expression<TextUnitValue>
+    val labelVariableAnchor: Expression<ListValue<SymbolAnchor>> // ✅ Corrected type
+    val labelIgnorePlacementZoom: Double
+    val labelTextOpacity: Expression<FloatValue>
+
+    when (category) {
+        "bus" -> {
+            dotRadius = interpolate(
+                type = linear(),
+                input = zoom(),
+                7.0 to const(1.2.dp),
+                8.0 to const(1.6.dp),
+                9.0 to const(1.7.dp),
+                10.0 to const(2.0.dp),
+                16.0 to const(6.0.dp)
+            )
+            dotStrokeWidth =
+                interpolate(linear(), zoom(), 9.0 to const(0.3.dp), 15.0 to const(0.6.dp))
+            dotOpacity = const(0.5f)
+            dotStrokeOpacity = interpolate(
+                linear(),
+                zoom(),
+                7.9 to const(0.0f),
+                8.0 to const(0.3f),
+                9.0 to const(0.5f),
+                13.0 to const(0.9f)
+            )
+            bearingIconSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                8.0 to const(0.1f),
+                9.0 to const(0.13f),
+                12.0 to const(0.19f),
+                15.0 to const(0.3f)
+            )
+            bearingIconOffset = interpolate(
+                type = linear(),
+                input = zoom(),
+                9.0 to offset(0.dp, (-50).dp),
+                10.0 to offset(0.dp, (-45).dp),
+                12.0 to offset(0.dp, (-45).dp),
+                13.0 to offset(0.dp, (-50).dp),
+                15.0 to offset(0.dp, (-48).dp)
+            )
+            bearingShellOpacity = interpolate(
+                linear(),
+                zoom(),
+                9.0 to const(0.1f),
+                10.0 to const(0.2f),
+                12.0 to const(0.2f),
+                15.0 to const(0.5f)
+            )
+            bearingFilledOpacity = const(0.4f)
+            labelTextSize = if (settings.headsign) {
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9.0 to const(0.25f.em),
+                    11.0 to const(0.3125f.em),
+                    13.0 to const(0.5625f.em),
+                    15.0 to const(0.6875f.em)
+                )
+            } else {
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9.0 to const(0.3125f.em),
+                    11.0 to const(0.4375f.em),
+                    13.0 to const(0.625f.em),
+                    15.0 to const(0.8125f.em)
+                )
+            }
+            labelTextFont =
+                step(
+                    zoom(),
+                    const(listOf("Barlow-Medium")),
+                    11.0 to const(listOf("Barlow-SemiBold"))
+                )
+            labelRadialOffset = const(0.2f.em)
+            // ✅ Corrected value
+            labelIgnorePlacementZoom = 10.5
+            labelTextOpacity = interpolate(
+                linear(),
+                zoom(),
+                7.9 to const(0.0f),
+                8.0 to const(0.9f),
+                11.0 to const(0.95f),
+                12.0 to const(1.0f)
+            )
+        }
+
+        "metro" -> {
+            dotRadius = interpolate(
+                type = linear(),
+                input = zoom(),
+                6.0 to const(3.0.dp),
+                8.0 to const(3.0.dp),
+                10.0 to const(4.0.dp),
+                11.0 to const(6.0.dp),
+                16.0 to const(12.0.dp)
+            )
+            dotStrokeWidth =
+                interpolate(linear(), zoom(), 8.0 to const(0.8.dp), 10.0 to const(1.2.dp))
+            dotOpacity = interpolate(linear(), zoom(), 7.0 to const(0.5f), 9.0 to const(0.7f))
+            dotStrokeOpacity = const(1.0f)
+            bearingIconSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                4.0 to const(0.1f),
+                6.0 to const(0.1f),
+                8.0 to const(0.15f),
+                9.0 to const(0.18f),
+                11.0 to const(0.2f),
+                12.0 to const(0.25f),
+                15.0 to const(0.5f)
+            )
+            bearingIconOffset = interpolate(
+                type = linear(),
+                input = zoom(),
+                9.0 to offset(0.dp, (-80).dp),
+                13.0 to offset(0.dp, (-60).dp),
+                15.0 to offset(0.dp, (-60).dp)
+            )
+            bearingShellOpacity = interpolate(
+                linear(),
+                zoom(),
+                9.8 to const(0.3f),
+                11.0 to const(0.4f),
+                11.5 to const(0.8f)
+            )
+            bearingFilledOpacity = const(0.6f)
+            labelTextSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                6.0 to const(0.3125f.em),
+                9.0 to const(0.4375f.em),
+                10.0 to const(0.5625f.em),
+                11.0 to const(0.6875f.em),
+                13.0 to const(0.75f.em)
+            )
+            labelTextFont = const(listOf("Barlow-Medium"))
+            labelRadialOffset = const(0.2f.em)
+            labelIgnorePlacementZoom = 9.5
+            labelTextOpacity = interpolate(
+                linear(),
+                zoom(),
+                2.0 to const(0.0f),
+                2.5 to const(0.8f),
+                10.0 to const(1.0f)
+            )
+        }
+
+        "tram" -> {
+            dotRadius = interpolate(
+                type = linear(),
+                input = zoom(),
+                6.0 to const(1.8.dp),
+                8.0 to const(2.3.dp),
+                10.0 to const(4.0.dp),
+                11.0 to const(4.5.dp),
+                13.0 to const(6.0.dp),
+                15.0 to const(6.0.dp),
+                16.0 to const(10.0.dp)
+            )
+            dotStrokeWidth = interpolate(
+                linear(),
+                zoom(),
+                8.0 to const(0.5.dp),
+                9.0 to const(0.6.dp),
+                10.0 to const(1.0.dp)
+            )
+            dotOpacity = interpolate(linear(), zoom(), 7.0 to const(0.5f), 9.0 to const(0.7f))
+            dotStrokeOpacity = const(1.0f)
+            bearingIconSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                6.0 to const(0.09f),
+                8.0 to const(0.11f),
+                9.0 to const(0.14f),
+                11.0 to const(0.15f),
+                12.0 to const(0.3f),
+                15.0 to const(0.4f)
+            )
+            bearingIconOffset = interpolate(
+                type = linear(),
+                input = zoom(),
+                9.0 to offset(0.dp, (-80).dp),
+                13.0 to offset(0.dp, (-45).dp),
+                15.0 to offset(0.dp, (-50).dp)
+            )
+            bearingShellOpacity = interpolate(
+                linear(),
+                zoom(),
+                6.0 to const(0.1f),
+                9.8 to const(0.3f),
+                11.0 to const(0.3f),
+                11.5 to const(0.4f),
+                12.0 to const(0.5f)
+            )
+            bearingFilledOpacity = interpolate(
+                linear(),
+                zoom(),
+                6.0 to const(0.2f),
+                9.0 to const(0.4f),
+                11.0 to const(0.5f),
+                13.0 to const(0.6f)
+            )
+            labelTextSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                6.0 to const(0.25f.em),
+                9.0 to const(0.375f.em),
+                10.0 to const(0.4375f.em),
+                11.0 to const(0.5625f.em),
+                13.0 to const(0.625f.em),
+                15.0 to const(0.875f.em)
+            )
+            labelTextFont = const(listOf("Barlow-Medium"))
+            labelRadialOffset = const(0.2f.em)
+            labelIgnorePlacementZoom = 9.5
+            labelTextOpacity = interpolate(
+                linear(),
+                zoom(),
+                2.0 to const(0.0f),
+                2.5 to const(0.8f),
+                10.0 to const(1.0f)
+            )
+        }
+
+        "intercityrail" -> {
+            dotRadius = interpolate(
+                type = linear(),
+                input = zoom(),
+                1.0 to const(1.0.dp),
+                3.0 to const(2.5.dp),
+                6.0 to const(2.8.dp),
+                8.0 to const(4.0.dp),
+                11.0 to const(6.0.dp),
+                16.0 to const(10.0.dp)
+            )
+            dotStrokeWidth = interpolate(
+                linear(),
+                zoom(),
+                3.0 to const(0.6.dp),
+                5.0 to const(0.7.dp),
+                7.0 to const(0.8.dp)
+            )
+            dotOpacity = interpolate(
+                linear(),
+                zoom(),
+                4.0 to const(0.4f),
+                7.0 to const(0.6f),
+                11.0 to const(0.7f)
+            )
+            dotStrokeOpacity = const(1.0f)
+            bearingIconSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                4.0 to const(0.1f),
+                6.0 to const(0.1f),
+                8.0 to const(0.15f),
+                9.0 to const(0.18f),
+                11.0 to const(0.2f),
+                12.0 to const(0.25f),
+                15.0 to const(0.5f)
+            )
+            bearingIconOffset = interpolate(
+                type = linear(),
+                input = zoom(),
+                9.0 to offset(0.dp, (-80).dp),
+                13.0 to offset(0.dp, (-60).dp),
+                15.0 to offset(0.dp, (-60).dp)
+            )
+            bearingShellOpacity =
+                interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
+            bearingFilledOpacity = const(1.0f)
+            labelTextSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                6.0 to const(0.5f.em),
+                9.0 to const(0.5f.em),
+                11.0 to const(0.875f.em),
+                13.0 to const(0.9375f.em)
+            )
+            labelTextFont = const(listOf("Barlow-Medium"))
+            labelRadialOffset = const(0.2f.em)
+            labelIgnorePlacementZoom = 9.5
+            labelTextOpacity = interpolate(
+                linear(),
+                zoom(),
+                2.0 to const(0.0f),
+                2.5 to const(0.8f),
+                10.0 to const(1.0f)
+            )
+        }
+
+        "other" -> {
+            dotRadius = interpolate(
+                type = linear(),
+                input = zoom(),
+                8.0 to const(5.0.dp),
+                10.0 to const(6.0.dp),
+                16.0 to const(10.0.dp)
+            )
+            dotStrokeWidth = const(1.0.dp)
+            dotOpacity = const(0.5f)
+            dotStrokeOpacity = const(1.0f)
+            bearingIconSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                4.0 to const(0.1f),
+                6.0 to const(0.1f),
+                8.0 to const(0.15f),
+                9.0 to const(0.18f),
+                11.0 to const(0.2f),
+                12.0 to const(0.25f),
+                15.0 to const(0.5f)
+            )
+            bearingIconOffset = interpolate(
+                type = linear(),
+                input = zoom(),
+                9.0 to offset(0.dp, (-80).dp),
+                13.0 to offset(0.dp, (-60).dp),
+                15.0 to offset(0.dp, (-60).dp)
+            )
+            bearingShellOpacity =
+                interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
+            bearingFilledOpacity = const(0.6f)
+            labelTextSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                9.0 to const(0.53125f.em),
+                11.0 to const(0.8125f.em),
+                13.0 to const(1.0f.em)
+            )
+            labelTextFont =
+                step(zoom(), const(listOf("Barlow-Regular")), 9.0 to const(listOf("Barlow-Bold")))
+            labelRadialOffset = const(0.2f.em)
+            labelIgnorePlacementZoom = 9.5
+            labelTextOpacity = interpolate(
+                linear(),
+                zoom(),
+                2.0 to const(0.0f),
+                2.5 to const(0.8f),
+                10.0 to const(1.0f)
+            )
+        }
+
+        else -> {
+            // Fallback to your original generic values
+            dotRadius = interpolate(
+                type = linear(),
+                input = zoom(),
+                6 to const(2.dp),
+                10 to const(3.dp),
+                14 to const(5.dp),
+                18 to const(8.dp)
+            )
+            dotStrokeWidth = const(1.5.dp)
+            dotOpacity = const(1.0f)
+            dotStrokeOpacity = const(1.0f)
+            bearingIconSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                10 to const(0.7f),
+                14 to const(1.0f),
+                18 to const(1.2f)
+            )
+            bearingIconOffset = offset(0.dp, (-30).dp) // A reasonable guess in dp
+            bearingShellOpacity = const(1.0f)
+            bearingFilledOpacity = const(0.2f)
+            labelTextSize = interpolate(
+                type = linear(),
+                input = zoom(),
+                9 to const(0.625f.em),
+                14 to const(0.8125f.em)
+            )
+            labelTextFont = const(listOf("Barlow-SemiBold"))
+            labelRadialOffset = const(0.2f.em)
+            labelIgnorePlacementZoom = 9.5
+            labelTextOpacity = const(1.0f)
+        }
+    }
+
+    // --- End of Category-Specific Sizing ---
+
 
     // Live Dot
     CircleLayer(
@@ -2501,12 +2927,12 @@ private fun LiveDotLayers(
         color = vehicleColor,
         radius = dotRadius,
         strokeColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
-        strokeWidth = const(1.5.dp),
+        strokeWidth = dotStrokeWidth,
+        opacity = dotOpacity,
+        strokeOpacity = dotStrokeOpacity,
         filter = baseFilter,
         visible = isVisible,
-
-
-        )
+    )
 
     // Bearing Pointer Shell (Outline)
     SymbolLayer(
@@ -2514,17 +2940,13 @@ private fun LiveDotLayers(
         source = source,
         iconImage = image(painterResource(R.drawable.pointing_shell)),
         iconColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
-        iconSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            10 to const(0.7f),
-            14 to const(1.0f),
-            18 to const(1.2f)
-        ),
+        iconSize = bearingIconSize,
         iconRotate = get("bearing").cast<FloatValue>(),
         iconRotationAlignment = const(IconRotationAlignment.Map),
         iconAllowOverlap = const(true),
         iconIgnorePlacement = const(true),
+        iconOffset = bearingIconOffset,
+        iconOpacity = bearingShellOpacity,
         filter = bearingFilter,
         visible = isVisible
     )
@@ -2537,19 +2959,14 @@ private fun LiveDotLayers(
             painterResource(R.drawable.pointing50percent),
             drawAsSdf = true
         ),
-        iconOpacity = const(0.2f),
+        iconOpacity = bearingFilledOpacity,
         iconColor = bearingColor,
-        iconSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            10 to const(0.5f),
-            14 to const(0.8f),
-            18 to const(1.0f)
-        ),
+        iconSize = bearingIconSize,
         iconRotate = get("bearing").cast<FloatValue>(),
         iconRotationAlignment = const(IconRotationAlignment.Map),
         iconAllowOverlap = const(true),
         iconIgnorePlacement = const(true),
+        iconOffset = bearingIconOffset,
         filter = bearingFilter,
         visible = isVisible
     )
@@ -2559,37 +2976,26 @@ private fun LiveDotLayers(
         id = idLabels,
         source = source,
         textField = interpretLabelsToExpression(settings, usUnits),
-        textFont = const(listOf("Barlow-SemiBold")),
-        textSize = if (category == "bus" && settings.headsign) {
-            // Special case from bus_label_with_headsign
-            interpolate(
-                type = linear(),
-                input = zoom(),
-                9 to const(0.5f).em,
-                14 to const(0.75f).em
-            )
-        } else {
-            // Default (bus_label_no_headsign)
-            interpolate(
-                type = linear(),
-                input = zoom(),
-                9 to const(0.625f).em,
-                14 to const(0.8125f).em
-            )
-        },
+        textFont = labelTextFont,
+        textSize = labelTextSize,
         textColor = vehicleColor,
-        textHaloColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
-        textHaloWidth = const(1.dp),
-        textOffset = offset(0.em, 2.em),
+        textHaloColor = if (isDark) const(Color(0xFF1E293B)) else const(Color(0xFFEDEDED)), // JS: #1d1d1d vs #ededed
+        textHaloWidth = if (isDark) const(2.4.dp) else const(1.0.dp), // JS: 2.4 vs 1
+        textHaloBlur = const(1.0.dp), // JS: 1
+        textRadialOffset = labelRadialOffset,
         textAllowOverlap = const(false),
-        textIgnorePlacement = const(false),
-
-        //textOffset = const(1.em),
+        textIgnorePlacement = step(
+            zoom(),
+            const(false),
+            labelIgnorePlacementZoom to const(true)
+        ),
+        textOpacity = labelTextOpacity,
         filter = baseFilter,
-        visible = isVisible
+        visible = isVisible,
+        textAnchor = const(SymbolAnchor.Left),
+        textJustify = const(TextJustify.Left)
     )
 }
-
 // Color, String, etc. Helpers
 
 fun fixRouteName(chateauId: String, maptag: String, routeId: String?): String {

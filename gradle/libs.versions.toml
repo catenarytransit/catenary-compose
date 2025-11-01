@@ -23,6 +23,7 @@ materialIconsExtended = "1.7.8"
 okhttp = "5.2.1"
 playServicesLocation = "21.3.0"
 units = "0.5.0"
+uiUnit = "1.9.4"
 
 [libraries]
 android-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "androidSdk" }
@@ -58,6 +59,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 turf = { module = "org.maplibre.spatialk:turf", version.ref = "geojson" }
 units = { module = "org.maplibre.spatialk:units", version.ref = "units" }
+androidx-compose-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.ref = "uiUnit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
