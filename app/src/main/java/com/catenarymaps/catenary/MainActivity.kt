@@ -711,7 +711,7 @@ class MainActivity : ComponentActivity() {
 
             // Camera
             // If there's a saved camera, start there. Otherwise, start somewhere neutral;
-// we'll jump to the user's location at zoom=13 as soon as we get it.
+// we'll jump to the user's location at zoom=13 as soon as get it.
             val initialCamera = saved?.let {
                 CameraPosition(
                     target = Position(it.lon, it.lat),
@@ -721,7 +721,7 @@ class MainActivity : ComponentActivity() {
                     padding = PaddingValues(0.dp)
                 )
             } ?: CameraPosition(
-                target = Position(-118.250, 34.050), // temporary fallback until we get location
+                target = Position(-118.250, 34.050), // temporary fallback until get location
                 zoom = 6.0,
                 padding = PaddingValues(0.dp)
             )
@@ -1444,8 +1444,8 @@ class MainActivity : ComponentActivity() {
                             onClick = { showLayersPanel = !showLayersPanel },
                             modifier = Modifier.size(36.dp),
                             shape = CircleShape,
-                            containerColor = layerButtonColor,
-                            contentColor = layerButtonContentColor
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
                         ) {
                             Icon(
                                 Icons.Filled.Layers,
@@ -1594,7 +1594,7 @@ class MainActivity : ComponentActivity() {
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 100.dp, max = 450.dp), // Increased max height
+                                .heightIn(min = 100.dp, max = 700.dp),
                             shadowElevation = 8.dp,
                             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                         ) {
@@ -2363,7 +2363,7 @@ fun SearchBarCatenary(
 fun AddLiveDots(
     isDark: Boolean,
     usUnits: Boolean,
-    showZombieBuses: Boolean,
+    showZombieBuses: Boolean, // (not used here, but keep signature if you need it later)
     layerSettings: Map<String, Any>,
     vehicleLocations: Map<String, Map<String, Map<String, VehiclePosition>>>,
     routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>,
@@ -2372,55 +2372,59 @@ fun AddLiveDots(
     railDotsSrc: GeoJsonSource,
     otherDotsSrc: GeoJsonSource
 ) {
-    // Only regenerate feature collections when the server data/cache changes
-    LaunchedEffect(vehicleLocations, routeCache) {
-        // BUS
-        run {
-            val features = rerenderCategoryLiveDots(
-                category = "bus",
-                isDark = isDark,   // optional (see tip below)
-                usUnits = usUnits,  // optional (see tip below)
-                vehicleLocations = vehicleLocations,
-                routeCache = routeCache
-            )
-            busDotsSrc.setData(GeoJsonData.Features(FeatureCollection(features)))
+    // remember previous references per category to detect changes cheaply.
+    // If the fetcher did not touch a category, its inner maps keep the same reference.
+    val prevVehicleRefs = remember { mutableStateMapOf<String, Any?>() }
+    val prevRouteRefs = remember { mutableStateMapOf<String, List<Any?>>() }
+
+    // Build a stable list of route-cache *references* for a category across chateaus.
+    fun routeRefsFor(category: String): List<Any?> {
+        // Sort keys to keep order stable across runs.
+        val chateauIds = routeCache.keys.sorted()
+        return chateauIds.map { cid -> routeCache[cid]?.get(category) }
+    }
+
+    fun categoryChanged(category: String): Boolean {
+        val currVehRef = vehicleLocations[category]
+        val currRouteRefs = routeRefsFor(category)
+
+        val prevVehRef = prevVehicleRefs[category]
+        val prevRouteRefList = prevRouteRefs[category]
+
+        val vehChanged = (prevVehRef !== currVehRef)
+
+        val routesChanged = when {
+            prevRouteRefList == null -> true
+            prevRouteRefList.size != currRouteRefs.size -> true
+            else -> prevRouteRefList.zip(currRouteRefs).any { (a, b) -> a !== b }
         }
 
-        // METRO (includes TRAM features; they’re split by layer filter)
-        run {
-            val features = rerenderCategoryLiveDots(
-                category = "metro",
-                isDark = isDark,
-                usUnits = usUnits,
-                vehicleLocations = vehicleLocations,
-                routeCache = routeCache
-            )
-            metroDotsSrc.setData(GeoJsonData.Features(FeatureCollection(features)))
-        }
+        return vehChanged || routesChanged
+    }
 
-        // INTERCITY
-        run {
-            val features = rerenderCategoryLiveDots(
-                category = "rail",
-                isDark = isDark,
-                usUnits = usUnits,
-                vehicleLocations = vehicleLocations,
-                routeCache = routeCache
-            )
-            railDotsSrc.setData(GeoJsonData.Features(FeatureCollection(features)))
-        }
+    suspend fun updateIfChanged(category: String, sink: GeoJsonSource) {
+        if (!categoryChanged(category)) return
 
-        // OTHER
-        run {
-            val features = rerenderCategoryLiveDots(
-                category = "other",
-                isDark = isDark,
-                usUnits = usUnits,
-                vehicleLocations = vehicleLocations,
-                routeCache = routeCache
-            )
-            otherDotsSrc.setData(GeoJsonData.Features(FeatureCollection(features)))
-        }
+        val features = rerenderCategoryLiveDots(
+            category = category,
+            isDark = isDark,
+            usUnits = usUnits,
+            vehicleLocations = vehicleLocations,
+            routeCache = routeCache
+        )
+        sink.setData(GeoJsonData.Features(FeatureCollection(features)))
+
+        // Stamp current references so future comparisons are accurate
+        prevVehicleRefs[category] = vehicleLocations[category]
+        prevRouteRefs[category] = routeRefsFor(category)
+    }
+
+    // Re-check when backing data *or* styling inputs that affect rendering change.
+    LaunchedEffect(vehicleLocations, routeCache, isDark, usUnits) {
+        updateIfChanged("bus", busDotsSrc)
+        updateIfChanged("metro", metroDotsSrc)
+        updateIfChanged("rail", railDotsSrc)
+        updateIfChanged("other", otherDotsSrc)
     }
 }
 
@@ -2584,62 +2588,6 @@ private fun LiveDotLayers(
         filter = baseFilter,
         visible = isVisible
     )
-}
-
-private fun interpretLabelsToExpression(
-    settings: LabelSettings, usUnits: Boolean
-): Expression<StringValue> {
-    val parts = mutableListOf<Expression<StringValue>>()
-    val newline = const("\n")
-    val empty = const("")
-
-    // ✅ FIXED: Added .cast<StringValue>() to all get() calls
-    if (settings.route) {
-        parts.add(coalesce(get("maptag").cast<StringValue>(), empty))
-    }
-    if (settings.trip) {
-        if (parts.isNotEmpty()) parts.add(const(" "))
-        parts.add(coalesce(get("tripIdLabel").cast<StringValue>(), empty))
-    }
-    if (settings.vehicle) {
-        if (parts.isNotEmpty()) parts.add(const(" "))
-        parts.add(coalesce(get("vehicleIdLabel").cast<StringValue>(), empty))
-    }
-
-    // Add newline if any of the first row are present and any of the second row are present
-    val secondRow = mutableListOf<Expression<StringValue>>()
-    if (settings.headsign) {
-        secondRow.add(coalesce(get("headsign").cast<StringValue>(), empty))
-    }
-    if (settings.speed) {
-        if (secondRow.isNotEmpty()) secondRow.add(const(" "))
-        secondRow.add(coalesce(get("speed").cast<StringValue>(), empty))
-    }
-    if (settings.occupancy) {
-        if (secondRow.isNotEmpty()) secondRow.add(const(" "))
-        secondRow.add(coalesce(get("crowd_symbol").cast<StringValue>(), empty))
-    }
-    if (settings.delay) {
-        if (secondRow.isNotEmpty()) secondRow.add(const(" "))
-        secondRow.add(coalesce(get("delay_label").cast<StringValue>(), empty))
-    }
-
-    if (parts.isNotEmpty() && secondRow.isNotEmpty()) {
-        parts.add(newline)
-        parts.addAll(secondRow)
-    } else if (secondRow.isNotEmpty()) {
-        parts.addAll(secondRow)
-    }
-
-    if (parts.isEmpty()) return const("")
-
-    var finalExpression: Expression<StringValue> = parts.first()
-    if (parts.size > 1) {
-        for (i in 1 until parts.size) {
-            finalExpression = finalExpression.plus(parts[i])
-        }
-    }
-    return finalExpression
 }
 
 // Color, String, etc. Helpers
