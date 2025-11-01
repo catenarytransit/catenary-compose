@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CatenaryCompose"
+rootProject.name = "Catenary"
 include(":app")
  
