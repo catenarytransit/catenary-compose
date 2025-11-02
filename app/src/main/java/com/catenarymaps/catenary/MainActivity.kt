@@ -9,6 +9,11 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.EaseOutCirc
@@ -74,6 +79,9 @@ import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.layers.*;
 import org.maplibre.compose.sources.rememberVectorSource
@@ -139,6 +147,13 @@ import androidx.compose.material3.TabRow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
+import com.datadog.android.Datadog
+import com.datadog.android.DatadogSite
+import com.datadog.android.compose.enableComposeActionTracking
+import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.Rum
+import com.datadog.android.rum.RumConfiguration
+import com.google.android.gms.analytics.GoogleAnalytics
 import io.github.dellisd.spatialk.geojson.Feature
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -166,6 +181,9 @@ private const val K_LON = "camera_lon"
 private const val K_ZOOM = "camera_zoom"
 private const val K_BEAR = "camera_bearing"
 private const val K_TILT = "camera_tilt"
+
+private const val K_DATADOG_CONSENT = "datadog_consent"
+private const val K_GA_CONSENT = "ga_consent"
 
 private fun SharedPreferences.putDouble(key: String, value: Double) =
     edit().putLong(key, java.lang.Double.doubleToRawLongBits(value)).apply()
@@ -632,6 +650,46 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // === 1. GET PREFERENCES ===
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+
+        // === 2. READ SAVED CONSENT ===
+        val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, false)
+        val trackingConsent =
+            if (initialDatadogConsent) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
+
+        val initialGaConsent = prefs.getBoolean(K_GA_CONSENT, true)
+
+        val initialOptOut = !initialGaConsent
+        try {
+            GoogleAnalytics.getInstance(this).appOptOut = initialOptOut
+            Log.d(TAG, "Initial Google Analytics opt-out state set to: $initialOptOut")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set initial GA opt-out: ${e.message}")
+        }
+
+        // === 3. INITIALIZE DATADOG ===
+        val applicationId = "5201846b-e68a-4388-a47c-a9508e3f3dc2"
+        val clientToken = "pub6a98d8da258f8b43df56ceb1c6203a16"
+        val environmentName = "prod"
+        val appVariantName = "catenary"
+
+        val configuration = com.datadog.android.core.configuration.Configuration.Builder(
+            clientToken = clientToken,
+            env = environmentName,
+            variant = appVariantName
+        )
+            .useSite(DatadogSite.US1)
+            .build()
+        // Initialize with the saved consent state
+        Datadog.initialize(this, configuration, trackingConsent)
+
+        val rumConfiguration = RumConfiguration.Builder(applicationId)
+            .trackUserInteractions()
+            .enableComposeActionTracking()
+            .build()
+        Rum.enable(rumConfiguration)
+
         fun fetchLocation(onSuccess: (Double, Double) -> Unit) {
             // Check permission
             if (ContextCompat.checkSelfPermission(
@@ -720,6 +778,57 @@ class MainActivity : ComponentActivity() {
                 pin.position?.let { it.latitude to it.longitude }
 
             var mapSize by remember { mutableStateOf(IntSize.Zero) }
+
+            val (datadogConsent, setDatadogConsent) = remember {
+                mutableStateOf(
+                    initialDatadogConsent
+                )
+            }
+
+            // vvv RENAME THIS from onConsentChanged to onDatadogConsentChanged vvv
+            val onDatadogConsentChanged: (Boolean) -> Unit = { isChecked ->
+                // Update the UI state
+                setDatadogConsent(isChecked)
+
+                // Update Datadog SDK
+                val newConsent =
+                    if (isChecked) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
+                Datadog.setTrackingConsent(newConsent)
+
+                // Save to SharedPreferences
+                prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()
+            }
+
+            // vvv ADD THIS NEW STATE AND HANDLER FOR GA vvv
+            val (gaConsent, setGaConsent) = remember { mutableStateOf(initialGaConsent) }
+            val onGaConsentChanged: (Boolean) -> Unit = { isChecked ->
+                // Update the UI state
+                setGaConsent(isChecked)
+
+                // Save to SharedPreferences
+                prefs.edit().putBoolean(K_GA_CONSENT, isChecked).apply()
+
+                val optOut = !isChecked
+                try {
+                    GoogleAnalytics.getInstance(this).appOptOut = optOut
+                    Log.d(TAG, "Google Analytics consent set to: $isChecked (appOptOut: $optOut)")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to set GA opt-out on toggle: ${e.message}")
+                }
+            }
+
+            val onConsentChanged: (Boolean) -> Unit = { isChecked ->
+                // Update the UI state
+                setDatadogConsent(isChecked)
+
+                // Update Datadog SDK
+                val newConsent =
+                    if (isChecked) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
+                Datadog.setTrackingConsent(newConsent)
+
+                // Save to SharedPreferences
+                prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()
+            }
 
 // Button actions (same behavior as your JS app)
             val onMyLocation: () -> Unit = {
@@ -1531,6 +1640,14 @@ class MainActivity : ComponentActivity() {
                                             // TODO: Create a proper @Composable for MapSelectionScreen
                                             // and render currentScreen.arrayofoptions in a LazyColumn
                                         }
+                                        is CatenaryStackEnum.SettingsStack -> {
+                                            SettingsScreen(
+                                                datadogConsent = datadogConsent,
+                                                onDatadogConsentChanged = onDatadogConsentChanged,
+                                                gaConsent = gaConsent,
+                                                onGaConsentChanged = onGaConsentChanged
+                                            )
+                                        }
                                         // TODO: Add 'when' branches for other stack types
                                         // (SingleTrip, RouteStack, etc.)
                                         else -> {
@@ -1586,7 +1703,18 @@ class MainActivity : ComponentActivity() {
                                             mapCenter = camera.position.target
                                         )
                                     },
-                                    onFocusChange = { isFocused -> isSearchFocused = isFocused })
+                                    onFocusChange = { isFocused -> isSearchFocused = isFocused },
+                                    onSettingsClick = {
+                                        val newStack = ArrayDeque(catenaryStack)
+                                        newStack.addLast(CatenaryStackEnum.SettingsStack())
+                                        catenaryStack = newStack
+
+                                        // Open the sheet to see the settings
+                                        scope.launch {
+                                            draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                        }
+                                        focusManager.clearFocus()
+                                    })
                             }
                         }
                     }
@@ -1762,6 +1890,13 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Column(
                                 modifier = Modifier
+                                    .windowInsetsPadding(
+                                        WindowInsets(
+                                            bottom = WindowInsets.safeContent.getBottom(
+                                                density
+                                            )
+                                        )
+                                    )
                                     .fillMaxWidth()
                                     .padding(16.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -1925,12 +2060,6 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                         }
-
-
-
-                                        Spacer(modifier = Modifier.height(8.dp))
-
-
 
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
@@ -2668,7 +2797,8 @@ fun SearchBarPreview() {
 fun SearchBarCatenary(
     searchQuery: String = "",
     onValueChange: (String) -> Unit = {},
-    onFocusChange: (Boolean) -> Unit = {}
+    onFocusChange: (Boolean) -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
@@ -2720,6 +2850,16 @@ fun SearchBarCatenary(
                             .padding(start = 4.dp),
                         contentScale = ContentScale.Fit
                     )
+                }
+            },
+            trailingIcon = {
+                if (searchQuery.isEmpty() && !isFocused) {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
                 }
             })
     }
@@ -3374,5 +3514,87 @@ fun VehicleLabelToggleButton(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+@Composable
+fun SettingsScreen(
+    datadogConsent: Boolean,
+    onDatadogConsentChanged: (Boolean) -> Unit,
+    gaConsent: Boolean,
+    onGaConsentChanged: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = "Settings",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // --- Datadog Section ---
+        Text(
+            text = "Datadog Analytics",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = "Enables intensive, detailed tracking to help developers find and fix bugs.",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (datadogConsent) {
+            // Show Disable button if consent is GRANTED
+            Button(
+                onClick = { onDatadogConsentChanged(false) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Disable Datadog Tracking")
+            }
+        } else {
+            // Show Enable button if consent is NOT_GRANTED
+            OutlinedButton(
+                onClick = { onDatadogConsentChanged(true) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Enable Datadog Tracking")
+            }
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+        // --- Google Analytics Section ---
+        Text(
+            text = "Google Analytics",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = "Enables basic analytics about feature usage.",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (gaConsent) {
+            // Show Disable button if consent is GRANTED (default)
+            Button(
+                onClick = { onGaConsentChanged(false) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Disable Google Analytics")
+            }
+        } else {
+            // Show Enable button if consent is NOT_GRANTED
+            OutlinedButton(
+                onClick = { onGaConsentChanged(true) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Enable Google Analytics")
+            }
+        }
     }
 }

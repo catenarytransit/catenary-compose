@@ -2,6 +2,9 @@
 agp = "8.13.0"
 androidSdk = "12.0.0"
 appcompat = "1.7.1"
+ddSdkAndroidGradlePlugin = "1.21.0"
+ddSdkAndroidRum = "<latest_version>"
+ddSdkAndroidRumVersion = "3.2.0"
 firebaseBom = "34.5.0"
 geojson = "0.5.0"
 kotlin = "2.2.20"
@@ -24,6 +27,7 @@ okhttp = "5.2.1"
 playServicesLocation = "21.3.0"
 units = "0.5.0"
 uiUnit = "1.9.4"
+playServicesAnalyticsImpl = "18.2.0"
 
 [libraries]
 android-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "androidSdk" }
@@ -32,6 +36,10 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
+dd-sdk-android-compose = { module = "com.datadoghq:dd-sdk-android-compose", version.ref = "ddSdkAndroidRumVersion" }
+dd-sdk-android-gradle-plugin = { module = "com.datadoghq:dd-sdk-android-gradle-plugin", version.ref = "ddSdkAndroidGradlePlugin" }
+dd-sdk-android-rum = { module = "com.datadoghq:dd-sdk-android-rum", version.ref = "ddSdkAndroidRum" }
+dd-sdk-android-rum-v320 = { module = "com.datadoghq:dd-sdk-android-rum", version.ref = "ddSdkAndroidRumVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 geojson = { module = "org.maplibre.spatialk:geojson", version.ref = "geojson" }
@@ -60,6 +68,7 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 turf = { module = "org.maplibre.spatialk:turf", version.ref = "geojson" }
 units = { module = "org.maplibre.spatialk:units", version.ref = "units" }
 androidx-compose-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.ref = "uiUnit" }
+play-services-analytics-impl = { group = "com.google.android.gms", name = "play-services-analytics-impl", version.ref = "playServicesAnalyticsImpl" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

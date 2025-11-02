@@ -1,10 +1,20 @@
+import com.datadog.gradle.plugin.InstrumentationMode
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
     id("com.google.gms.google-services") version "4.4.4" apply true
+    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.21.0" apply true
 }
+
+buildscript {
+    dependencies {
+        classpath(libs.dd.sdk.android.gradle.plugin)
+    }
+}
+
 
 android {
     namespace = "com.catenarymaps.catenary"
@@ -14,8 +24,8 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 109
-        versionName = "2.0.7alpha"
+        versionCode = 110
+        versionName = "2.0.8alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -53,6 +63,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.play.services.location)
     implementation(libs.androidx.compose.ui.unit)
+    implementation(libs.play.services.analytics.impl)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -76,4 +87,15 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.dd.sdk.android.rum)
+    implementation(libs.dd.sdk.android.compose)
 }
+
+datadog {
+    // Other configurations that you may set before.
+    //(...)
+
+    // Jetpack Compose instrumentation mode option.
+    composeInstrumentation = InstrumentationMode.AUTO
+}
+
