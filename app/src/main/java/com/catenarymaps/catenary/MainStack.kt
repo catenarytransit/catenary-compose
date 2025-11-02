@@ -77,7 +77,7 @@ sealed interface MapSelectionSelector {
 
     data class VehicleMapSelector(
         val chateau_id: String,
-        val vehicle_id: String,
+        val vehicle_id: String?,
         val route_id: String?,
         val headsign: String,
         val triplabel: String,

@@ -24,7 +24,6 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import org.maplibre.compose.expressions.dsl.asList
 import androidx.compose.foundation.clickable
 import org.maplibre.compose.expressions.dsl.image
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -41,7 +40,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Layers
-import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -77,14 +75,10 @@ import org.maplibre.compose.expressions.value.*;
 import org.maplibre.compose.expressions.ast.*;
 import org.maplibre.compose.expressions.dsl.em;
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
@@ -95,77 +89,46 @@ import com.google.android.gms.location.LocationResult
 import org.maplibre.compose.expressions.dsl.all
 import org.maplibre.compose.expressions.dsl.any
 import org.maplibre.compose.expressions.dsl.coalesce
-import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.eq
 import org.maplibre.compose.expressions.dsl.interpolate
 import org.maplibre.compose.expressions.dsl.linear
 import org.maplibre.compose.expressions.dsl.step
-import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.compose.expressions.dsl.zoom
-import org.maplibre.compose.expressions.dsl.contains as exprContains
 import com.google.android.gms.location.Priority
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.BaselineShift
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.zIndex
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import io.github.dellisd.spatialk.geojson.Point
-import org.maplibre.compose.expressions.dsl.convertToColor
 import org.maplibre.compose.expressions.dsl.Feature.get
-import org.maplibre.compose.expressions.value.InterpolatableValue
-import org.maplibre.compose.expressions.value.InterpolationValue
 import org.maplibre.compose.expressions.value.ColorValue
 import org.maplibre.compose.expressions.dsl.plus
 import org.maplibre.compose.expressions.value.TextUnitValue
 import org.maplibre.compose.map.RenderOptions
-import kotlin.time.Duration
 import android.content.SharedPreferences
 import androidx.compose.foundation.border
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.DpOffset
+import androidx.compose.foundation.gestures.animateTo
 import io.github.dellisd.spatialk.geojson.FeatureCollection
 import org.maplibre.compose.sources.GeoJsonSource
-import com.google.android.gms.location.LocationAvailability
-import org.maplibre.compose.expressions.dsl.convertToColor
-import org.maplibre.compose.expressions.dsl.Feature.get
-import org.maplibre.compose.expressions.dsl.plus
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import org.maplibre.android.style.expressions.Expression.interpolate
-import org.maplibre.compose.expressions.dsl.asString
-import org.maplibre.compose.expressions.dsl.case
-import org.maplibre.compose.expressions.dsl.convertToBoolean
-import org.maplibre.compose.expressions.dsl.not
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import kotlinx.coroutines.launch
 import org.maplibre.compose.expressions.value.EquatableValue
 import org.maplibre.compose.expressions.value.NumberValue
-import org.maplibre.compose.expressions.dsl.Feature.get
-import org.maplibre.compose.expressions.dsl.any
-import org.maplibre.compose.expressions.dsl.eq
-import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.offset
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import io.github.dellisd.spatialk.geojson.Feature
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -177,26 +140,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
-import java.lang.Math.abs
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
-import org.maplibre.android.style.expressions.Expression.has
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.jsonPrimitive
 import org.maplibre.compose.expressions.dsl.feature
-import org.maplibre.compose.expressions.dsl.get
 import org.maplibre.compose.expressions.dsl.neq
-import org.maplibre.compose.sources.GeoJsonOptions
-import java.math.BigInteger
-import java.util.Arrays.asList
-import kotlin.math.absoluteValue
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
+import org.maplibre.compose.util.ClickResult
 
 private const val PREFS_NAME = "catenary_prefs"
 private const val K_LAT = "camera_lat"
@@ -365,8 +317,6 @@ val easeOutSpec: AnimationSpec<Float> = tween(
     durationMillis = 300, delayMillis = 0, easing = EaseOutCirc
 )
 
-var CatenaryStack: ArrayDeque<CatenaryStackEnum> = ArrayDeque(listOf())
-
 enum class SheetSnapPoint { Collapsed, PartiallyExpanded, Expanded }
 
 private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {
@@ -511,153 +461,156 @@ class MainActivity : ComponentActivity() {
 
         scope.launch {
             try {
-            val categoriesToRequest = mutableListOf<String>()
+                val categoriesToRequest = mutableListOf<String>()
 
                 val busThreshold = 8
-            if ((settings["bus"] as LayerCategorySettings).visiblerealtimedots && zoom >= busThreshold) {
-                categoriesToRequest.add("bus")
-            }
-            if ((settings["intercityrail"] as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
-                categoriesToRequest.add("rail")
-            }
-            if ((settings["localrail"] as LayerCategorySettings).visiblerealtimedots && zoom >= 4) {
-                categoriesToRequest.add("metro")
-            }
-            if ((settings["other"] as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
-                categoriesToRequest.add("other")
-            }
-
-
-            if (categoriesToRequest.isEmpty() || visibleChateaus.isEmpty()) {
-                // Don't fetch if no categories are visible or no chateaus are in view
-                return@launch
-            }
-
-            // Build chateaus_to_fetch object
-            val chateausToFetch = mutableMapOf<String, ChateauFetchParams>()
-            val lastUpdatedMap = realtimeVehicleLocationsLastUpdated.value
-            val hashCacheMap = realtimeVehicleRouteCacheHash.value
-
-            visibleChateaus.forEach { chateauId ->
-                if (chateauId == "bus~dft~gov~uk") {
-                    if (visibleChateaus.contains("sncf") || visibleChateaus.contains("île~de~france~mobilités")) {
-                        return@forEach
-                    }
+                if ((settings["bus"] as LayerCategorySettings).visiblerealtimedots && zoom >= busThreshold) {
+                    categoriesToRequest.add("bus")
+                }
+                if ((settings["intercityrail"] as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
+                    categoriesToRequest.add("rail")
+                }
+                if ((settings["localrail"] as LayerCategorySettings).visiblerealtimedots && zoom >= 4) {
+                    categoriesToRequest.add("metro")
+                }
+                if ((settings["other"] as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
+                    categoriesToRequest.add("other")
                 }
 
-                //println("Chateau id $chateauId")
-                val categoryParams = mutableMapOf<String, CategoryParams>()
-                val cats = listOf("bus", "rail", "metro", "other")
 
-                cats.forEach { cat ->
-                    val lastUpdated = lastUpdatedMap[chateauId]?.get(cat) ?: 0L
-                    val hash = hashCacheMap[chateauId]?.get(cat) ?: ULong.MIN_VALUE
-                    categoryParams[cat] = CategoryParams(
-                        hash_of_routes = hash,
-                        last_updated_time_ms = lastUpdated
-                    )
-
-                    //println("last updated for $cat in $chateauId is $lastUpdated")
+                if (categoriesToRequest.isEmpty() || visibleChateaus.isEmpty()) {
+                    // Don't fetch if no categories are visible or no chateaus are in view
+                    return@launch
                 }
-                chateausToFetch[chateauId] = ChateauFetchParams(category_params = categoryParams)
-            }
 
-            val requestBody = BulkRealtimeRequest(
-                categories = categoriesToRequest, chateaus = chateausToFetch
-            )
+                // Build chateaus_to_fetch object
+                val chateausToFetch = mutableMapOf<String, ChateauFetchParams>()
+                val lastUpdatedMap = realtimeVehicleLocationsLastUpdated.value
+                val hashCacheMap = realtimeVehicleRouteCacheHash.value
 
-            try {
-
-                // You must run this inside a coroutine scope (e.g., in a suspend function)
-                try {
-                    val rawresponse: String =
-                        ktorClient.post("https://birch.catenarymaps.org/bulk_realtime_fetch_v1") {
-                            contentType(ContentType.Application.Json)
-                            setBody(requestBody)
-                        }.body()
-
-                    // println("Bulk Fetch: $rawresponse")
-
-                    val json_for_this = Json {
-                        ignoreUnknownKeys = true
-                        prettyPrint = true
-                        isLenient = true
-                        encodeDefaults = true
-                    }
-                    val response = json_for_this.decodeFromString<BulkRealtimeResponse>(rawresponse)
-
-                    println("Recieved live dots")
-
-                    // Process the response (porting process_realtime_vehicle_locations_v2)
-                    val newLocations = realtimeVehicleLocations.value.toMutableMap()
-                    val newRouteCache = realtimeVehicleRouteCache.value.toMutableMap()
-                    val newLastUpdated = realtimeVehicleLocationsLastUpdated.value.toMutableMap()
-                    val newHashCache = realtimeVehicleRouteCacheHash.value.toMutableMap()
-
-                    response.chateaus.forEach { (chateauId, chateauData) ->
-                        // println("Processing Chateau $chateauId")
-                        chateauData.categories.forEach { (category, categoryData) ->
-                            if (categoryData != null) {
-                                // Update Locations
-                                if (categoryData.vehicle_positions != null) {
-                                    val chateauLocations =
-                                        newLocations.getOrPut(category) { mutableMapOf() }
-                                            .toMutableMap()
-                                    chateauLocations[chateauId] = categoryData.vehicle_positions
-                                    newLocations[category] = chateauLocations
-                                    //   println("set value for new vehicle locations for $category with $chateauId and length ${categoryData.vehicle_positions.size}")
-                                }
-                                // Update Route Cache
-                                if (categoryData.vehicle_route_cache != null) {
-                                    val chateauCache =
-                                        newRouteCache.getOrPut(chateauId) { mutableMapOf() }
-                                            .toMutableMap()
-                                    chateauCache[category] = categoryData.vehicle_route_cache
-                                    newRouteCache[chateauId] = chateauCache
-                                }
-                                // Update Last Updated Time
-                                val chateauLastUpdated =
-                                    newLastUpdated.getOrPut(chateauId) { mutableMapOf() }
-                                        .toMutableMap()
-                                chateauLastUpdated[category] = categoryData.last_updated_time_ms
-                                newLastUpdated[chateauId] = chateauLastUpdated
-
-                                // Update Hash
-                                val chateauHash =
-                                    newHashCache.getOrPut(chateauId) { mutableMapOf() }
-                                        .toMutableMap()
-                                chateauHash[category] = categoryData.hash_of_routes
-                                newHashCache[chateauId] = chateauHash
-                            }
+                visibleChateaus.forEach { chateauId ->
+                    if (chateauId == "bus~dft~gov~uk") {
+                        if (visibleChateaus.contains("sncf") || visibleChateaus.contains("île~de~france~mobilités")) {
+                            return@forEach
                         }
                     }
 
-                    // Atomically update the state variables
-                    println("set value for new vehicle locations")
-                    realtimeVehicleLocations.value = newLocations
-                    realtimeVehicleRouteCache.value = newRouteCache
-                    realtimeVehicleLocationsLastUpdated.value = newLastUpdated
-                    realtimeVehicleRouteCacheHash.value = newHashCache
+                    //println("Chateau id $chateauId")
+                    val categoryParams = mutableMapOf<String, CategoryParams>()
+                    val cats = listOf("bus", "rail", "metro", "other")
 
-                } catch (e: ClientRequestException) {
-                    // This block catches 4xx errors, including your 400 Bad Request
-                    val errorBody: String = e.response.body()
-                    println("Failed to fetch realtime data (Client Error ${e.response.status}): $errorBody")
+                    cats.forEach { cat ->
+                        val lastUpdated = lastUpdatedMap[chateauId]?.get(cat) ?: 0L
+                        val hash = hashCacheMap[chateauId]?.get(cat) ?: ULong.MIN_VALUE
+                        categoryParams[cat] = CategoryParams(
+                            hash_of_routes = hash,
+                            last_updated_time_ms = lastUpdated
+                        )
 
-                } catch (e: ServerResponseException) {
-                    // This block catches 5xx server errors
-                    val errorBody: String = e.response.body()
-                    println("Failed to fetch realtime data (Server Error ${e.response.status}): $errorBody")
-
-                } catch (e: Exception) {
-                    // This catches other errors (network connection, DNS, etc.)
-                    println("An unexpected error occurred: ${e.message}")
+                        //println("last updated for $cat in $chateauId is $lastUpdated")
+                    }
+                    chateausToFetch[chateauId] =
+                        ChateauFetchParams(category_params = categoryParams)
                 }
 
+                val requestBody = BulkRealtimeRequest(
+                    categories = categoriesToRequest, chateaus = chateausToFetch
+                )
 
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to fetch realtime data: ${e.message}")
-            }
+                try {
+
+                    // You must run this inside a coroutine scope (e.g., in a suspend function)
+                    try {
+                        val rawresponse: String =
+                            ktorClient.post("https://birch.catenarymaps.org/bulk_realtime_fetch_v1") {
+                                contentType(ContentType.Application.Json)
+                                setBody(requestBody)
+                            }.body()
+
+                        // println("Bulk Fetch: $rawresponse")
+
+                        val json_for_this = Json {
+                            ignoreUnknownKeys = true
+                            prettyPrint = true
+                            isLenient = true
+                            encodeDefaults = true
+                        }
+                        val response =
+                            json_for_this.decodeFromString<BulkRealtimeResponse>(rawresponse)
+
+                        println("Recieved live dots")
+
+                        // Process the response (porting process_realtime_vehicle_locations_v2)
+                        val newLocations = realtimeVehicleLocations.value.toMutableMap()
+                        val newRouteCache = realtimeVehicleRouteCache.value.toMutableMap()
+                        val newLastUpdated =
+                            realtimeVehicleLocationsLastUpdated.value.toMutableMap()
+                        val newHashCache = realtimeVehicleRouteCacheHash.value.toMutableMap()
+
+                        response.chateaus.forEach { (chateauId, chateauData) ->
+                            // println("Processing Chateau $chateauId")
+                            chateauData.categories.forEach { (category, categoryData) ->
+                                if (categoryData != null) {
+                                    // Update Locations
+                                    if (categoryData.vehicle_positions != null) {
+                                        val chateauLocations =
+                                            newLocations.getOrPut(category) { mutableMapOf() }
+                                                .toMutableMap()
+                                        chateauLocations[chateauId] = categoryData.vehicle_positions
+                                        newLocations[category] = chateauLocations
+                                        //   println("set value for new vehicle locations for $category with $chateauId and length ${categoryData.vehicle_positions.size}")
+                                    }
+                                    // Update Route Cache
+                                    if (categoryData.vehicle_route_cache != null) {
+                                        val chateauCache =
+                                            newRouteCache.getOrPut(chateauId) { mutableMapOf() }
+                                                .toMutableMap()
+                                        chateauCache[category] = categoryData.vehicle_route_cache
+                                        newRouteCache[chateauId] = chateauCache
+                                    }
+                                    // Update Last Updated Time
+                                    val chateauLastUpdated =
+                                        newLastUpdated.getOrPut(chateauId) { mutableMapOf() }
+                                            .toMutableMap()
+                                    chateauLastUpdated[category] = categoryData.last_updated_time_ms
+                                    newLastUpdated[chateauId] = chateauLastUpdated
+
+                                    // Update Hash
+                                    val chateauHash =
+                                        newHashCache.getOrPut(chateauId) { mutableMapOf() }
+                                            .toMutableMap()
+                                    chateauHash[category] = categoryData.hash_of_routes
+                                    newHashCache[chateauId] = chateauHash
+                                }
+                            }
+                        }
+
+                        // Atomically update the state variables
+                        println("set value for new vehicle locations")
+                        realtimeVehicleLocations.value = newLocations
+                        realtimeVehicleRouteCache.value = newRouteCache
+                        realtimeVehicleLocationsLastUpdated.value = newLastUpdated
+                        realtimeVehicleRouteCacheHash.value = newHashCache
+
+                    } catch (e: ClientRequestException) {
+                        // This block catches 4xx errors, including your 400 Bad Request
+                        val errorBody: String = e.response.body()
+                        println("Failed to fetch realtime data (Client Error ${e.response.status}): $errorBody")
+
+                    } catch (e: ServerResponseException) {
+                        // This block catches 5xx server errors
+                        val errorBody: String = e.response.body()
+                        println("Failed to fetch realtime data (Server Error ${e.response.status}): $errorBody")
+
+                    } catch (e: Exception) {
+                        // This catches other errors (network connection, DNS, etc.)
+                        println("An unexpected error occurred: ${e.message}")
+                    }
+
+
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to fetch realtime data: ${e.message}")
+                }
             } finally {
                 isFetchingRealtimeData.set(false)
             }
@@ -748,8 +701,9 @@ class MainActivity : ComponentActivity() {
             val density = LocalDensity.current
             var pin by remember { mutableStateOf(PinState(active = false, position = null)) }
 
-
             val searchViewModel: SearchViewModel = viewModel()
+
+            var catenaryStack by remember { mutableStateOf(ArrayDeque<CatenaryStackEnum>()) }
 
             val usePickedLocation = pin.active && pin.position != null
             val pickedPair: Pair<Double, Double>? =
@@ -1052,7 +1006,49 @@ class MainActivity : ComponentActivity() {
                     var lastFetchedAt by remember { mutableStateOf(0L) }
                     val fetchDebounceMs = 500L // Don't fetch more than once per 500ms on move
 
-
+                    val vehicleLayerIds = remember {
+                        setOf(
+                            LayersPerCategory.Bus.Livedots,
+                            LayersPerCategory.Bus.Labeldots,
+                            LayersPerCategory.Other.Livedots,
+                            LayersPerCategory.Other.Labeldots,
+                            LayersPerCategory.IntercityRail.Livedots,
+                            LayersPerCategory.IntercityRail.Labeldots,
+                            LayersPerCategory.Metro.Livedots,
+                            LayersPerCategory.Metro.Labeldots,
+                            LayersPerCategory.Tram.Livedots,
+                            LayersPerCategory.Tram.Labeldots,
+                        )
+                    }
+                    val routeLayerIds = remember {
+                        setOf(
+                            LayersPerCategory.Bus.Shapes,
+                            LayersPerCategory.Bus.LabelShapes,
+                            LayersPerCategory.Other.Shapes,
+                            LayersPerCategory.Other.LabelShapes,
+                            LayersPerCategory.Other.FerryShapes,
+                            LayersPerCategory.IntercityRail.Shapes,
+                            LayersPerCategory.IntercityRail.LabelShapes,
+                            LayersPerCategory.Metro.Shapes,
+                            LayersPerCategory.Metro.LabelShapes,
+                            LayersPerCategory.Tram.Shapes,
+                            LayersPerCategory.Tram.LabelShapes
+                        )
+                    }
+                    val stopLayerIds = remember {
+                        setOf(
+                            LayersPerCategory.Bus.Stops,
+                            LayersPerCategory.Bus.LabelStops,
+                            LayersPerCategory.Other.Stops,
+                            LayersPerCategory.Other.LabelStops,
+                            LayersPerCategory.IntercityRail.Stops,
+                            LayersPerCategory.IntercityRail.LabelStops,
+                            LayersPerCategory.Metro.Stops,
+                            LayersPerCategory.Metro.LabelStops,
+                            LayersPerCategory.Tram.Stops,
+                            LayersPerCategory.Tram.LabelStops
+                        )
+                    }
 
                     MaplibreMap(
                         modifier = Modifier
@@ -1060,6 +1056,61 @@ class MainActivity : ComponentActivity() {
                             .onSizeChanged { newSize -> mapSize = newSize },
                         baseStyle = BaseStyle.Uri(styleUri),
                         cameraState = camera,
+                        onMapClick = { latlng, screenPos ->
+                            val projection = camera.projection ?: run {
+                                Log.w(TAG, "Map clicked, but projection is not ready.")
+                                return@MaplibreMap ClickResult.Pass
+                            }
+
+                            val clickPaddingDp = 5.dp
+                            val clickRect = DpRect(
+                                left = screenPos.x - clickPaddingDp,
+                                top = screenPos.y - clickPaddingDp,
+                                right = screenPos.x + clickPaddingDp,
+                                bottom = screenPos.y + clickPaddingDp
+                            )
+
+                            // --- Query each layer group separately ---
+                            // The returned 'Feature' is spatialk.geojson.Feature
+                            val vehicleFeatures =
+                                projection.queryRenderedFeatures(clickRect, vehicleLayerIds)
+                            val routeFeatures =
+                                projection.queryRenderedFeatures(clickRect, routeLayerIds)
+                            val stopFeatures =
+                                projection.queryRenderedFeatures(clickRect, stopLayerIds)
+
+                            if (vehicleFeatures.isEmpty() && routeFeatures.isEmpty() && stopFeatures.isEmpty()) {
+                                Log.d(TAG, "Map click detected, but no features found.")
+                                return@MaplibreMap ClickResult.Pass
+                            }
+
+                            Log.d(
+                                TAG,
+                                "Found ${vehicleFeatures.size} vehicles, ${routeFeatures.size} routes, ${stopFeatures.size} stops."
+                            )
+
+                            // --- Process each feature list ---
+                            val selectionOptions = mutableListOf<MapSelectionOption>()
+                            selectionOptions.addAll(processVehicleClicks(vehicleFeatures))
+                            selectionOptions.addAll(processRouteClicks(routeFeatures))
+                            selectionOptions.addAll(processStopClicks(stopFeatures))
+
+                            // If we found items, update the stack and open the sheet
+                            if (selectionOptions.isNotEmpty()) {
+                                val newStack = ArrayDeque(catenaryStack)
+                                newStack.addLast(
+                                    CatenaryStackEnum.MapSelectionScreen(
+                                        selectionOptions
+                                    )
+                                )
+                                catenaryStack = newStack // Update state
+
+                                scope.launch {
+                                    draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                }
+                            }
+                            ClickResult.Pass
+                        },
                         options = MapOptions(
                             ornamentOptions = OrnamentOptions(
                                 isLogoEnabled = false,
@@ -1138,6 +1189,7 @@ class MainActivity : ComponentActivity() {
                             ),
                         )
                         val metroDotsSrc = rememberGeoJsonSource(
+
                             data = GeoJsonData.Features(
                                 FeatureCollection(emptyList())
                             )
@@ -1291,7 +1343,6 @@ class MainActivity : ComponentActivity() {
                         )
 
 
-
                         // Show a dot for the user's current location
                         if (currentLocation != null) {
                             val (lat, lon) = currentLocation!!
@@ -1403,7 +1454,7 @@ class MainActivity : ComponentActivity() {
                             )
 
 
-                            if (CatenaryStack.size == 0) {
+                            if (catenaryStack.isEmpty()) {
 
                                 NearbyDepartures(
                                     userLocation = currentLocation,
@@ -1444,6 +1495,44 @@ class MainActivity : ComponentActivity() {
                                         }
                                     })
 
+                            } else {
+                                // Handle other stack states
+                                val currentScreen = catenaryStack.last()
+                                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                    // Add a simple back button
+                                    IconButton(onClick = {
+                                        val newStack = ArrayDeque(catenaryStack)
+                                        newStack.removeLastOrNull()
+                                        catenaryStack = newStack
+                                    }) {
+                                        Icon(Icons.Filled.ArrowBack, "Go back")
+                                    }
+
+                                    // Render the current stack screen
+                                    when (currentScreen) {
+                                        is CatenaryStackEnum.MapSelectionScreen -> {
+                                            // This is where you would build your list UI
+                                            // For now, we just show a summary
+                                            Text(
+                                                text = "You clicked ${currentScreen.arrayofoptions.size} items. TODO ADD THIS SCREEN",
+                                                style = MaterialTheme.typography.headlineSmall,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                            // TODO: Create a proper @Composable for MapSelectionScreen
+                                            // and render currentScreen.arrayofoptions in a LazyColumn
+                                        }
+                                        // TODO: Add 'when' branches for other stack types
+                                        // (SingleTrip, RouteStack, etc.)
+                                        else -> {
+                                            /*
+                                            Text(
+                                                text = "Clicked on something!",
+                                                modifier = Modifier.padding(16.dp)
+                                            )
+                                             */
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1635,7 +1724,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 // === FIX for Error 6 ===
                                 focusManager.clearFocus() // This should now resolve
-                        }
+                            }
                         )
                     }
 
@@ -1898,7 +1987,121 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Helper to get string property from spatialk.geojson.Feature
+    private fun io.github.dellisd.spatialk.geojson.Feature.getString(key: String): String? {
+        // Check for null primitive or string "null"
+        return this.properties[key]?.jsonPrimitive?.content?.takeIf { it != "null" }
+    }
 
+    // Helper to get int property from spatialk.geojson.Feature
+    private fun io.github.dellisd.spatialk.geojson.Feature.getInt(key: String): Int? {
+        // Properties are often stored as doubles, so get double and convert to Int
+        return this.properties[key]?.jsonPrimitive?.double?.toInt()
+    }
+
+    /**
+     * Processes a list of clicked features known to be VEHICLES.
+     */
+    private fun processVehicleClicks(features: List<io.github.dellisd.spatialk.geojson.Feature>): List<MapSelectionOption> {
+        val selectedVehiclesKeyUnique = mutableSetOf<String>()
+
+        return features.mapNotNull { f ->
+            // Use vehicleIdLabel + chateau for uniqueness
+            val key = (f.getString("vehicleIdLabel") ?: "") + (f.getString("chateau") ?: "")
+            if (key.isBlank() || !selectedVehiclesKeyUnique.add(key)) return@mapNotNull null
+
+            try {
+                MapSelectionOption(
+                    MapSelectionSelector.VehicleMapSelector(
+                        chateau_id = f.getString("chateau") ?: "",
+                        vehicle_id = f.getString("vehicleIdLabel"),
+                        route_id = f.getString("routeId"),
+                        headsign = f.getString("headsign") ?: "",
+                        triplabel = f.getString("tripIdLabel") ?: "",
+                        colour = f.getString("color") ?: "#FFFFFF",
+                        route_short_name = f.getString("route_short_name"),
+                        route_long_name = f.getString("route_long_name"),
+                        route_type = f.getInt("routeType") ?: 0,
+                        trip_short_name = f.getString("trip_short_name"),
+                        text_colour = f.getString("text_color") ?: "#000000",
+                        gtfs_id = f.getString("rt_id") ?: "", // JS maps rt_id to gtfs_id
+                        trip_id = f.getString("trip_id"),
+                        start_time = f.getString("start_time"),
+                        start_date = f.getString("start_date")
+                    )
+                )
+            } catch (e: Exception) {
+                Log.e(
+                    TAG,
+                    "Failed to parse VehicleMapSelector: ${e.message} for props ${f.properties}"
+                )
+                null
+            }
+        }
+    }
+
+    /**
+     * Processes a list of clicked features known to be ROUTES.
+     */
+    private fun processRouteClicks(features: List<io.github.dellisd.spatialk.geojson.Feature>): List<MapSelectionOption> {
+        val selectedRoutesKeyUnique = mutableSetOf<String>()
+
+        return features.mapNotNull { f ->
+            // Use chateau + route_label for uniqueness
+            val key = (f.getString("chateau") ?: "") + (f.getString("route_label") ?: "")
+            if (key.isBlank() || !selectedRoutesKeyUnique.add(key)) return@mapNotNull null
+
+            // JS: x.properties.routes.replace('{', '').replace('}', '').split(',')[0]
+            val routesProp = f.getString("routes")?.replace(Regex("[{}]"), "")
+            if (routesProp.isNullOrBlank()) return@mapNotNull null
+
+            try {
+                MapSelectionOption(
+                    MapSelectionSelector.RouteMapSelector(
+                        chateau_id = f.getString("chateau") ?: "",
+                        route_id = routesProp.split(',').first(),
+                        colour = "#${f.getString("color") ?: "FFFFFF"}",
+                        name = f.getString("route_label")
+                    )
+                )
+            } catch (e: Exception) {
+                Log.e(
+                    TAG,
+                    "Failed to parse RouteMapSelector: ${e.message} for props ${f.properties}"
+                )
+                null
+            }
+        }
+    }
+
+    /**
+     * Processes a list of clicked features known to be STOPS.
+     */
+    private fun processStopClicks(features: List<io.github.dellisd.spatialk.geojson.Feature>): List<MapSelectionOption> {
+        val selectedStopsKeyUnique = mutableSetOf<String>()
+
+        return features.mapNotNull { f ->
+            // Use chateau + gtfs_id for uniqueness
+            val key = (f.getString("chateau") ?: "") + (f.getString("gtfs_id") ?: "")
+            if (key.isBlank() || !selectedStopsKeyUnique.add(key)) return@mapNotNull null
+
+            try {
+                MapSelectionOption(
+                    MapSelectionSelector.StopMapSelector(
+                        chateau_id = f.getString("chateau") ?: "",
+                        stop_id = f.getString("gtfs_id") ?: "", // JS maps gtfs_id to stop_id
+                        stop_name = f.getString("displayname") ?: "Unknown Stop"
+                    )
+                )
+            } catch (e: Exception) {
+                Log.e(
+                    TAG,
+                    "Failed to parse StopMapSelector: ${e.message} for props ${f.properties}"
+                )
+                null
+            }
+        }
+    }
 }
 
 @Composable
