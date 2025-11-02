@@ -18,6 +18,12 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.compose.material.icons.filled.AltRoute
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.SportsScore
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Train
 import io.ktor.client.plugins.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -124,10 +130,14 @@ import org.maplibre.compose.expressions.value.EquatableValue
 import org.maplibre.compose.expressions.value.NumberValue
 import org.maplibre.compose.expressions.dsl.offset
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import io.github.dellisd.spatialk.geojson.Feature
 import io.ktor.client.HttpClient
@@ -1930,13 +1940,73 @@ class MainActivity : ComponentActivity() {
                                         Spacer(modifier = Modifier.height(8.dp))
 
                                         // Row 3: Label Toggles
+                                        val labelSettings = settings.labelrealtimedots
+                                        val updateLayer = { newLabelSettings: LabelSettings ->
+                                            val updatedCategorySettings =
+                                                settings.copy(labelrealtimedots = newLabelSettings)
+                                            layerSettings.value =
+                                                layerSettings.value.toMutableMap().apply {
+                                                    put(selectedTab, updatedCategorySettings)
+                                                }
+                                        }
+
+                                        // Row 3: Label Toggles (First row from JS)
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceEvenly
                                         ) {
-                                            // TODO: Add toggles for settings.labelrealtimedots
-                                            // e.g., Route, Trip, Vehicle, Headsign
+                                            VehicleLabelToggleButton(
+                                                name = "Route", // Corresponds to $_('showroute')
+                                                icon = Icons.Filled.Route, // Corresponds to symbol="route"
+                                                isActive = labelSettings.route,
+                                                onToggle = { updateLayer(labelSettings.copy(route = !labelSettings.route)) }
+                                            )
+                                            VehicleLabelToggleButton(
+                                                name = "Trip", // Corresponds to $_('showtrip')
+                                                icon = Icons.Filled.AltRoute, // Corresponds to symbol="mode_of_travel"
+                                                isActive = labelSettings.trip,
+                                                onToggle = { updateLayer(labelSettings.copy(trip = !labelSettings.trip)) }
+                                            )
+                                            VehicleLabelToggleButton(
+                                                name = "Vehicle", // Corresponds to $_('showvehicle')
+                                                icon = Icons.Filled.Train, // Corresponds to symbol="train"
+                                                isActive = labelSettings.vehicle,
+                                                onToggle = { updateLayer(labelSettings.copy(vehicle = !labelSettings.vehicle)) }
+                                            )
+
+                                            VehicleLabelToggleButton(
+                                                name = "Headsign", // Corresponds to $_('headsign')
+                                                icon = Icons.Filled.SportsScore, // Corresponds to symbol="sports_score"
+                                                isActive = labelSettings.headsign,
+                                                onToggle = { updateLayer(labelSettings.copy(headsign = !labelSettings.headsign)) }
+                                            )
+                                            VehicleLabelToggleButton(
+                                                name = "Speed", // Corresponds to $_('showspeed')
+                                                icon = Icons.Filled.Speed, // Corresponds to symbol="speed"
+                                                isActive = labelSettings.speed,
+                                                onToggle = { updateLayer(labelSettings.copy(speed = !labelSettings.speed)) }
+                                            )
+                                            VehicleLabelToggleButton(
+                                                name = "Occupancy", // Corresponds to $_('occupancy')
+                                                icon = Icons.Filled.Group, // Corresponds to symbol="group"
+                                                isActive = labelSettings.occupancy,
+                                                onToggle = {
+                                                    updateLayer(
+                                                        labelSettings.copy(
+                                                            occupancy = !labelSettings.occupancy
+                                                        )
+                                                    )
+                                                }
+                                            )
+                                            VehicleLabelToggleButton(
+                                                name = "Delay", // Corresponds to $_('delay')
+                                                icon = Icons.Filled.Timer, // Corresponds to symbol="timer"
+                                                isActive = labelSettings.delay,
+                                                onToggle = { updateLayer(labelSettings.copy(delay = !labelSettings.delay)) }
+                                            )
                                         }
+
+
                                     }
                                 }
 
@@ -1972,7 +2042,6 @@ class MainActivity : ComponentActivity() {
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
-                                    // TODO: Add toggles for Foamermode, etc.
                                 }
                             }
                         }
@@ -3273,4 +3342,37 @@ fun fixHeadsignText(headsign: String, maptag: String): String {
         if (headsign.contains("Broad St")) return "Broad St"
     }
     return headsign
+}
+
+@Composable
+fun VehicleLabelToggleButton(
+    name: String,
+    icon: ImageVector,
+    isActive: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.width(IntrinsicSize.Min) // Ensure column shrinks to text
+    ) {
+        FilledIconToggleButton(
+            checked = isActive,
+            onCheckedChange = { onToggle() },
+            colors = IconButtonDefaults.filledIconToggleButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        ) {
+            Icon(icon, contentDescription = name)
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }
