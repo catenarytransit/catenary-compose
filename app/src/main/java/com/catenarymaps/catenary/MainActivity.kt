@@ -66,7 +66,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
 import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
 import io.github.dellisd.spatialk.geojson.Position
 import kotlin.math.roundToInt
@@ -154,7 +153,6 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.google.android.gms.analytics.GoogleAnalytics
-import io.github.dellisd.spatialk.geojson.Feature
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
@@ -173,6 +171,7 @@ import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonPrimitive
 import org.maplibre.compose.expressions.dsl.feature
 import org.maplibre.compose.expressions.dsl.neq
+import org.maplibre.compose.sources.GeoJsonOptions
 import org.maplibre.compose.util.ClickResult
 
 private const val PREFS_NAME = "catenary_prefs"
@@ -762,6 +761,9 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
+
+
         setContent {
 
 
@@ -1302,27 +1304,43 @@ class MainActivity : ComponentActivity() {
 
 
                         }) {
-                        val busDotsSrc = rememberGeoJsonSource(
-                            data = GeoJsonData.Features(
-                                FeatureCollection(emptyList())
-                            ),
-                        )
-                        val metroDotsSrc = rememberGeoJsonSource(
+                        val busDotsSrc = remember {
+                            mutableStateOf<GeoJsonSource>(
+                                GeoJsonSource(
+                                    "bus_dots",
+                                    GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
+                            )
+                        }
 
-                            data = GeoJsonData.Features(
-                                FeatureCollection(emptyList())
+                        val metroDotsSrc = remember {
+                            mutableStateOf<GeoJsonSource>(
+                                GeoJsonSource(
+                                    "metro_dots",
+                                    GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
                             )
-                        )
-                        val railDotsSrc = rememberGeoJsonSource(
-                            data = GeoJsonData.Features(
-                                FeatureCollection(emptyList())
+                        }
+                        val railDotsSrc = remember {
+                            mutableStateOf<GeoJsonSource>(
+                                GeoJsonSource(
+                                    "rail_dots",
+                                    GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
                             )
-                        )
-                        val otherDotsSrc = rememberGeoJsonSource(
-                            data = GeoJsonData.Features(
-                                FeatureCollection(emptyList())
+                        }
+                        val otherDotsSrc = remember {
+                            mutableStateOf<GeoJsonSource>(
+                                GeoJsonSource(
+                                    "other_dots",
+                                    GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
                             )
-                        )
+                        }
 
                         // Source + layers
                         val chateausSource = rememberGeoJsonSource(
@@ -1358,7 +1376,7 @@ class MainActivity : ComponentActivity() {
                         // Layers for BUS
                         LiveDotLayers(
                             category = "bus",
-                            source = busDotsSrc,                // <- persistent source
+                            source = busDotsSrc.value,                // <- persistent source
                             settings = (layerSettings.value["bus"] as LayerCategorySettings).labelrealtimedots,
                             isVisible = (layerSettings.value["bus"] as LayerCategorySettings).visiblerealtimedots,
                             baseFilter = if (showZombieBuses) all() else all(
@@ -1380,7 +1398,7 @@ class MainActivity : ComponentActivity() {
 // Layers for METRO/TRAM share the metro source but are filtered
                         LiveDotLayers(
                             category = "metro",
-                            source = metroDotsSrc,
+                            source = metroDotsSrc.value,
                             settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
                             isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
                             baseFilter = all(
@@ -1400,7 +1418,7 @@ class MainActivity : ComponentActivity() {
 
                         LiveDotLayers(
                             category = "tram",
-                            source = metroDotsSrc,  // re-uses metro source, different filter via layerIdPrefix branch
+                            source = metroDotsSrc.value,  // re-uses metro source, different filter via layerIdPrefix branch
                             settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
                             isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
                             baseFilter = all(
@@ -1421,7 +1439,7 @@ class MainActivity : ComponentActivity() {
 // Layers for INTERCITY
                         LiveDotLayers(
                             category = "intercityrail",
-                            source = railDotsSrc,
+                            source = railDotsSrc.value,
                             settings = (layerSettings.value["intercityrail"] as LayerCategorySettings).labelrealtimedots,
                             isVisible = (layerSettings.value["intercityrail"] as LayerCategorySettings).visiblerealtimedots,
                             baseFilter = all(
@@ -1442,7 +1460,7 @@ class MainActivity : ComponentActivity() {
 // Layers for OTHER
                         LiveDotLayers(
                             category = "other",
-                            source = otherDotsSrc,
+                            source = otherDotsSrc.value,
                             settings = (layerSettings.value["other"] as LayerCategorySettings).labelrealtimedots,
                             isVisible = (layerSettings.value["other"] as LayerCategorySettings).visiblerealtimedots,
                             baseFilter = if (showZombieBuses) all() else all(
@@ -2875,10 +2893,10 @@ fun AddLiveDots(
     layerSettings: Map<String, Any>,
     vehicleLocations: Map<String, Map<String, Map<String, VehiclePosition>>>,
     routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>,
-    busDotsSrc: GeoJsonSource,
-    metroDotsSrc: GeoJsonSource,
-    railDotsSrc: GeoJsonSource,
-    otherDotsSrc: GeoJsonSource
+    busDotsSrc: MutableState<GeoJsonSource>,
+    metroDotsSrc: MutableState<GeoJsonSource>,
+    railDotsSrc: MutableState<GeoJsonSource>,
+    otherDotsSrc: MutableState<GeoJsonSource>,
 ) {
     // remember previous references per category to detect changes cheaply.
     // If the fetcher did not touch a category, its inner maps keep the same reference.
@@ -2910,7 +2928,7 @@ fun AddLiveDots(
         return vehChanged || routesChanged
     }
 
-    suspend fun updateIfChanged(category: String, sink: GeoJsonSource) {
+    suspend fun updateIfChanged(category: String, sink: MutableState<GeoJsonSource>) {
         if (!categoryChanged(category)) return
 
         val features = rerenderCategoryLiveDots(
@@ -2920,7 +2938,7 @@ fun AddLiveDots(
             vehicleLocations = vehicleLocations,
             routeCache = routeCache
         )
-        sink.setData(GeoJsonData.Features(FeatureCollection(features)))
+        sink.value.setData(GeoJsonData.Features(FeatureCollection(features)))
 
         // Stamp current references so future comparisons are accurate
         prevVehicleRefs[category] = vehicleLocations[category]
