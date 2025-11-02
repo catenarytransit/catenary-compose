@@ -121,6 +121,7 @@ import io.github.dellisd.spatialk.geojson.Point
 import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.value.ColorValue
 import org.maplibre.compose.expressions.dsl.plus
+import org.maplibre.compose.expressions.dsl.contains as dslcontains
 import org.maplibre.compose.expressions.value.TextUnitValue
 import org.maplibre.compose.map.RenderOptions
 import android.content.SharedPreferences
@@ -169,8 +170,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonPrimitive
+import org.checkerframework.checker.units.qual.min
 import org.maplibre.compose.expressions.dsl.feature
 import org.maplibre.compose.expressions.dsl.neq
+import org.maplibre.compose.expressions.dsl.not
 import org.maplibre.compose.sources.GeoJsonOptions
 import org.maplibre.compose.util.ClickResult
 
@@ -2420,10 +2423,28 @@ fun AddStops() {
 
     // route_type filters
     val rtEq = { v: Int ->
-        get("route_type").cast<NumberValue<EquatableValue>>().eq(const(v))
+        (any(
+            get("route_types").cast<VectorValue<EquatableValue>>().dslcontains(const(v))
+        ))
     }
-    val isMetro = any(rtEq(1), rtEq(12))
-    val isTram = any(rtEq(0), rtEq(5))
+
+    val childrenRtEq = { v: Int ->
+        (any(
+            get("children_route_types").cast<VectorValue<EquatableValue>>().dslcontains(const(v))
+        ))
+    }
+
+    val isMetro = all(
+        any(
+            (rtEq(1)),
+            childrenRtEq(1),
+        ),
+        (rtEq(12))
+    )
+    val isTram = all(
+        any(any(rtEq(0), childrenRtEq(0)), rtEq(5)),
+        isMetro().not()
+    )
     val isIntercity = rtEq(2)
 
     // String pieces for label fields
@@ -3026,6 +3047,9 @@ private fun LiveDotLayers(
     val labelVariableAnchor: Expression<ListValue<SymbolAnchor>> // ✅ Corrected type
     val labelIgnorePlacementZoom: Double
     val labelTextOpacity: Expression<FloatValue>
+    var minLayerDotsZoom: Float = 0.0F
+    var minLabelDotsZoom: Float = 0.0F
+    var minBearingZoom: Float = 0.0F
 
     when (category) {
         "bus" -> {
@@ -3052,19 +3076,19 @@ private fun LiveDotLayers(
             bearingIconSize = interpolate(
                 type = linear(),
                 input = zoom(),
-                8.0 to const(0.1f),
-                9.0 to const(0.13f),
-                12.0 to const(0.19f),
-                15.0 to const(0.3f)
+                8.0 to const(0.3f),
+                9.0 to const(0.4f),
+                12.0 to const(0.5f),
+                15.0 to const(0.6f)
             )
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-50).dp),
-                10.0 to offset(0.dp, (-45).dp),
-                12.0 to offset(0.dp, (-45).dp),
-                13.0 to offset(0.dp, (-50).dp),
-                15.0 to offset(0.dp, (-48).dp)
+                9.0 to offset(0.dp, (-10).dp),
+                10.0 to offset(0.dp, (-8).dp),
+                12.0 to offset(0.dp, (-7).dp),
+                13.0 to offset(0.dp, (-6).dp),
+                15.0 to offset(0.dp, (-5).dp)
             )
             bearingShellOpacity = interpolate(
                 linear(),
@@ -3111,6 +3135,9 @@ private fun LiveDotLayers(
                 11.0 to const(0.95f),
                 12.0 to const(1.0f)
             )
+            minLayerDotsZoom = 9F
+            minLabelDotsZoom = 10F
+            minBearingZoom = 11F
         }
 
         "metro" -> {
@@ -3130,20 +3157,22 @@ private fun LiveDotLayers(
             bearingIconSize = interpolate(
                 type = linear(),
                 input = zoom(),
-                4.0 to const(0.1f),
-                6.0 to const(0.1f),
-                8.0 to const(0.15f),
-                9.0 to const(0.18f),
-                11.0 to const(0.2f),
-                12.0 to const(0.25f),
-                15.0 to const(0.5f)
+                4.0 to const(0.4f),
+                6.0 to const(0.5f),
+                8.0 to const(0.55f),
+                9.0 to const(0.6f),
+                11.0 to const(0.7f),
+                12.0 to const(0.8f),
+                15.0 to const(0.9f)
             )
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-80).dp),
-                13.0 to offset(0.dp, (-60).dp),
-                15.0 to offset(0.dp, (-60).dp)
+                9.0 to offset(0.dp, (-10).dp),
+                10.0 to offset(0.dp, (-8).dp),
+                12.0 to offset(0.dp, (-7).dp),
+                13.0 to offset(0.dp, (-6).dp),
+                15.0 to offset(0.dp, (-5).dp)
             )
             bearingShellOpacity = interpolate(
                 linear(),
@@ -3198,19 +3227,22 @@ private fun LiveDotLayers(
             bearingIconSize = interpolate(
                 type = linear(),
                 input = zoom(),
-                6.0 to const(0.09f),
-                8.0 to const(0.11f),
-                9.0 to const(0.14f),
-                11.0 to const(0.15f),
-                12.0 to const(0.3f),
-                15.0 to const(0.4f)
+                4.0 to const(0.2f),
+                6.0 to const(0.3f),
+                8.0 to const(0.4f),
+                9.0 to const(0.5f),
+                11.0 to const(0.6f),
+                12.0 to const(0.7f),
+                15.0 to const(0.8f)
             )
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-80).dp),
-                13.0 to offset(0.dp, (-45).dp),
-                15.0 to offset(0.dp, (-50).dp)
+                9.0 to offset(0.dp, (-10).dp),
+                10.0 to offset(0.dp, (-8).dp),
+                12.0 to offset(0.dp, (-7).dp),
+                13.0 to offset(0.dp, (-6).dp),
+                15.0 to offset(0.dp, (-5).dp)
             )
             bearingShellOpacity = interpolate(
                 linear(),
@@ -3280,20 +3312,22 @@ private fun LiveDotLayers(
             bearingIconSize = interpolate(
                 type = linear(),
                 input = zoom(),
-                4.0 to const(0.1f),
-                6.0 to const(0.1f),
-                8.0 to const(0.15f),
-                9.0 to const(0.18f),
-                11.0 to const(0.2f),
-                12.0 to const(0.25f),
-                15.0 to const(0.5f)
+                4.0 to const(0.4f),
+                6.0 to const(0.5f),
+                8.0 to const(0.55f),
+                9.0 to const(0.6f),
+                11.0 to const(0.7f),
+                12.0 to const(0.8f),
+                15.0 to const(0.9f)
             )
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-80).dp),
-                13.0 to offset(0.dp, (-60).dp),
-                15.0 to offset(0.dp, (-60).dp)
+                9.0 to offset(0.dp, (-10).dp),
+                10.0 to offset(0.dp, (-8).dp),
+                12.0 to offset(0.dp, (-7).dp),
+                13.0 to offset(0.dp, (-6).dp),
+                15.0 to offset(0.dp, (-5).dp)
             )
             bearingShellOpacity =
                 interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
@@ -3343,9 +3377,9 @@ private fun LiveDotLayers(
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-80).dp),
-                13.0 to offset(0.dp, (-60).dp),
-                15.0 to offset(0.dp, (-60).dp)
+                9.0 to offset(0.dp, (-20).dp),
+                13.0 to offset(0.dp, (-20).dp),
+                15.0 to offset(0.dp, (-20).dp)
             )
             bearingShellOpacity =
                 interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
@@ -3390,7 +3424,7 @@ private fun LiveDotLayers(
                 14 to const(1.0f),
                 18 to const(1.2f)
             )
-            bearingIconOffset = offset(0.dp, (-30).dp) // A reasonable guess in dp
+            bearingIconOffset = offset(0.dp, (-20).dp) // A reasonable guess in dp
             bearingShellOpacity = const(1.0f)
             bearingFilledOpacity = const(0.2f)
             labelTextSize = interpolate(
@@ -3421,6 +3455,7 @@ private fun LiveDotLayers(
         strokeOpacity = dotStrokeOpacity,
         filter = baseFilter,
         visible = isVisible,
+        minZoom = minLayerDotsZoom
     )
 
     // Bearing Pointer Shell (Outline)
@@ -3437,7 +3472,8 @@ private fun LiveDotLayers(
         iconOffset = bearingIconOffset,
         iconOpacity = bearingShellOpacity,
         filter = bearingFilter,
-        visible = isVisible
+        visible = isVisible,
+        minZoom = minBearingZoom
     )
 
     // Bearing Pointer
@@ -3457,7 +3493,8 @@ private fun LiveDotLayers(
         iconIgnorePlacement = const(true),
         iconOffset = bearingIconOffset,
         filter = bearingFilter,
-        visible = isVisible
+        visible = isVisible,
+        minZoom = minBearingZoom
     )
 
     // Label
@@ -3482,7 +3519,8 @@ private fun LiveDotLayers(
         filter = baseFilter,
         visible = isVisible,
         textAnchor = const(SymbolAnchor.Left),
-        textJustify = const(TextJustify.Left)
+        textJustify = const(TextJustify.Left),
+        minZoom = minLabelDotsZoom
     )
 }
 // Color, String, etc. Helpers

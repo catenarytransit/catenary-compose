@@ -79,8 +79,8 @@ fun AddShapes() {
         width = interpolate(
             type = linear(),
             input = zoom(),
-            7 to const(0.5.dp),
-            10 to const(0.7.dp),
+            7 to const(0.4.dp),
+            10 to const(0.6.dp),
             12 to const(1.0.dp),
             14 to const(2.6.dp),
         ),
