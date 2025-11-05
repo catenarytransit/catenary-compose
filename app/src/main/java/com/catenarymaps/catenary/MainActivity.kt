@@ -142,10 +142,14 @@ import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import com.datadog.android.Datadog
@@ -155,6 +159,9 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.google.android.gms.analytics.GoogleAnalytics
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.UpdateAvailability
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
@@ -459,6 +466,7 @@ val ktorClient = HttpClient() {
 }
 
 class MainActivity : ComponentActivity() {
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val isFetchingRealtimeData = AtomicBoolean(false)
@@ -653,10 +661,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // === 1. GET PREFERENCES ===
+
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
-        // === 2. READ SAVED CONSENT ===
         val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, false)
         val trackingConsent =
             if (initialDatadogConsent) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
@@ -671,7 +678,6 @@ class MainActivity : ComponentActivity() {
             Log.e(TAG, "Failed to set initial GA opt-out: ${e.message}")
         }
 
-        // === 3. INITIALIZE DATADOG ===
         val applicationId = "5201846b-e68a-4388-a47c-a9508e3f3dc2"
         val clientToken = "pub6a98d8da258f8b43df56ceb1c6203a16"
         val environmentName = "prod"
@@ -769,6 +775,14 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
+
+            val scope = rememberCoroutineScope()
+            val snackbars = remember { SnackbarHostState() }
+
+            val appUpdateManager =
+                remember { AppUpdateManagerFactory.create(this.applicationContext) }
+
+
             var stopsToHide by remember { mutableStateOf(emptySet<String>()) }
 
             val transitShapeSourceRef =
@@ -988,9 +1002,7 @@ class MainActivity : ComponentActivity() {
             }
 
 
-            val scope = rememberCoroutineScope()
             val geoLock = rememberGeoLockController()
-            val snackbars = remember { SnackbarHostState() }
 
             // Launch location fetch once
             LaunchedEffect(Unit) {
@@ -1038,6 +1050,25 @@ class MainActivity : ComponentActivity() {
 
             CatenaryComposeTheme {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    // Remember the AppUpdateManager to pass to the snackbar action
+
+                    CheckForAppUpdate(
+                        onFlexibleUpdateDownloaded = {
+                            // Show a snackbar when the update is ready
+                            scope.launch {
+                                val result = snackbars.showSnackbar(
+                                    message = "An update has just been downloaded.",
+                                    actionLabel = "RESTART",
+                                    duration = SnackbarDuration.Indefinite
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    // User clicked "RESTART", complete the update
+                                    appUpdateManager.completeUpdate()
+                                }
+                            }
+                        }
+                    )
+
                     val screenHeightPx = with(density) { maxHeight.toPx() }
 
 
