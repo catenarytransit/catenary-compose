@@ -1,5 +1,6 @@
 [versions]
 agp = "8.13.0"
+androidMapsUtils = "3.19.1"
 androidSdk = "12.0.1"
 appcompat = "1.7.1"
 ddSdkAndroidGradlePlugin = "1.21.0"
@@ -22,14 +23,18 @@ lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
 composeBom = "2025.10.01"
 maplibreAndroidSdk = "12.0.1"
+mapsUtilsKtx = "5.2.1"
 materialIconsExtended = "1.7.8"
 okhttp = "5.2.1"
 playServicesLocation = "21.3.0"
+playServicesMaps = "19.2.0"
+polyline = "0.2.0"
 units = "0.5.0"
 uiUnit = "1.9.4"
 playServicesAnalyticsImpl = "18.2.0"
 
 [libraries]
+android-maps-utils = { module = "com.google.maps.android:android-maps-utils", version.ref = "androidMapsUtils" }
 android-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "androidSdk" }
 android-sdk-v1201 = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibreAndroidSdk" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -63,8 +68,11 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorSerializationKotlinxJson" }
 maplibre-compose = { module = "org.maplibre.compose:maplibre-compose", version = "0.11.1" }
+maps-utils-ktx = { module = "com.google.maps.android:maps-utils-ktx", version.ref = "mapsUtilsKtx" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+polyline = { module = "com.mapbox.common:polyline", version.ref = "polyline" }
 turf = { module = "org.maplibre.spatialk:turf", version.ref = "geojson" }
 units = { module = "org.maplibre.spatialk:units", version.ref = "units" }
 androidx-compose-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.ref = "uiUnit" }

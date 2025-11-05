@@ -43,6 +43,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.ResponseBody
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Straighten
@@ -98,7 +100,7 @@ private data class DirectionGroup(
 )
 
 @Serializable
-private data class TripEntry(
+data class TripEntry(
     @SerialName("stop_id") val stopId: String,
     @SerialName("trip_id") val tripId: String,
     val tz: String? = null,
@@ -107,7 +109,18 @@ private data class TripEntry(
     val deleted: Boolean? = null,
     @SerialName("trip_short_name") val tripShortName: String? = null,
     @SerialName("departure_realtime") val departureRealtime: Long? = null,
-    @SerialName("departure_schedule") val departureSchedule: Long? = null
+    @SerialName("departure_schedule") val departureSchedule: Long? = null,
+    @SerialName("gtfs_schedule_start_day") val startDay: String? = null,
+    @SerialName("gtfs_frequency_start_time") val startTime: String? = null
+)
+
+data class TripClickResponse(
+    val tripId: String? = null,
+    val stopId: String? = null,
+    val chateauId: String? = null,
+    val routeId: String? = null,
+    val routeType: Int? = null,
+    val startDay: String? = null
 )
 
 /* -------------------------------- Utilities ------------------------------- */
@@ -138,9 +151,11 @@ private fun flattenDirections(
 
     // Build final map with trips sorted ascending by departure
     return merged.mapValues { (headsign, trips) ->
-        val sortedTrips = trips.sortedBy { t ->
-            t.departureRealtime ?: t.departureSchedule ?: Long.MAX_VALUE
-        }
+        val sortedTrips = trips
+            .distinctBy { it.tripId + it.startDay + it.startTime }
+            .sortedBy { t ->
+                t.departureRealtime ?: t.departureSchedule ?: Long.MAX_VALUE
+            }
         DirectionGroup(headsign = headsign, trips = sortedTrips)
     }
 }
@@ -277,7 +292,8 @@ fun NearbyDepartures(
     darkMode: Boolean = false,
     onMyLocation: () -> Unit = {},
     onPinDrop: () -> Unit = {},
-    onCenterPin: () -> Unit = {}
+    onCenterPin: () -> Unit = {},
+    onTripClick: (TripClickResponse) -> Unit = {}
 ) {
     var filters by remember { mutableStateOf(Filters()) }
     var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
@@ -295,6 +311,7 @@ fun NearbyDepartures(
     // NEW: bump this to cancel current polling and start a fresh session
     var pollSession by remember { mutableStateOf(0) }
     fun restartPolling() {
+        println("Restart polling")
         pollSession++
     }
 
@@ -449,7 +466,7 @@ fun NearbyDepartures(
                     Text("No departures.", style = MaterialTheme.typography.bodyMedium)
                 } else {
                     sorted.forEach { route ->
-                        RouteGroupCard(route, stopsTable, darkMode)
+                        RouteGroupCard(route, stopsTable, darkMode, onTripClick)
                     }
                 }
                 Spacer(Modifier.height(64.dp))
@@ -598,7 +615,8 @@ private fun FilterChip(label: String, on: Boolean, onClick: () -> Unit) {
 private fun RouteGroupCard(
     route: RouteGroup,
     stopsTable: Map<String, Map<String, StopEntry>>,
-    darkMode: Boolean
+    darkMode: Boolean,
+    onTripClick: (TripClickResponse) -> Unit
 ) {
     val bg = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (darkMode) 0.5f else 1f)
     val textCol = normalizeHex(route.textColor) ?: MaterialTheme.colorScheme.onSurface
@@ -655,19 +673,24 @@ private fun RouteGroupCard(
                     modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
                 )
 
-                Row(
+                LazyRow(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    visibleTrips.forEach { trip ->
+                    items(
+                        items = visibleTrips,
+                        // Providing a stable key is crucial for performance and state preservation
+                        key = { it.tripId + it.startDay + it.startTime }
+                    ) { trip ->
                         TripPill(
                             trip = trip,
                             chateauId = route.chateauId,
+                            routeId = route.routeId,
                             stopsTable = stopsTable,
                             lineCol = lineCol,
-                            textCol = textCol
+                            textCol = textCol,
+                            onTripClick = onTripClick
                         )
                     }
                 }
@@ -679,9 +702,11 @@ private fun RouteGroupCard(
 private fun TripPill(
     trip: TripEntry,
     chateauId: String,
+    routeId: String,
     stopsTable: Map<String, Map<String, StopEntry>>,
     lineCol: Color,
-    textCol: Color
+    textCol: Color,
+    onTripClick: (TripClickResponse) -> Unit
 ) {
     val nowSec = System.currentTimeMillis() / 1000
     val dep = trip.departureRealtime ?: trip.departureSchedule ?: 0L
@@ -690,7 +715,19 @@ private fun TripPill(
     val tz = stop?.timezone ?: trip.tz
 
     Surface(
-        onClick = { /* TODO push SingleTrip(...) later */ },
+        onClick = {
+
+            onTripClick(
+                TripClickResponse(
+                    tripId = trip.tripId,
+                    stopId = trip.stopId,
+                    chateauId = chateauId,
+                    routeId = routeId,
+                    startDay = if (trip.startDay != null) trip.startDay.replace("-", "") else null
+                )
+            )
+
+        },
         shape = RoundedCornerShape(6.dp),
         tonalElevation = 0.dp,
         color = MaterialTheme.colorScheme.surface

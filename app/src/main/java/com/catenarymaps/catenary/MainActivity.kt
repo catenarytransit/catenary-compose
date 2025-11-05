@@ -769,9 +769,15 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
+            var stopsToHide by remember { mutableStateOf(emptySet<String>()) }
 
+            val transitShapeSourceRef =
+                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
+            val transitShapeDetourSourceRef =
+                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
+            val stopsContextSourceRef =
+                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
 
-            val pinSourceRef = remember { mutableStateOf<GeoJsonSource?>(null) }
             val density = LocalDensity.current
             var pin by remember { mutableStateOf(PinState(active = false, position = null)) }
 
@@ -1346,6 +1352,73 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        val transitShapeSource = remember {
+                            mutableStateOf(
+                                GeoJsonSource(
+                                    id = "transit_shape_context",
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
+                            )
+                        }
+                        val transitShapeDetourSource = remember {
+                            mutableStateOf(
+                                GeoJsonSource(
+                                    id = "transit_shape_context_detour",
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
+                            )
+                        }
+
+                        val transitShapeForStopSource = remember {
+                            mutableStateOf(
+                                GeoJsonSource(
+                                    id = "transit_shape_context_for_stop",
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
+                            )
+                        }
+                        val stopsContextSource = remember {
+                            mutableStateOf(
+                                GeoJsonSource(
+                                    id = "stops_context",
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
+                            )
+                        }
+
+                        DisposableEffect(stopsContextSource) {
+                            stopsContextSourceRef.value = stopsContextSource
+                            onDispose {
+                                if (stopsContextSourceRef.value === stopsContextSource) {
+                                    stopsContextSourceRef.value = null
+                                }
+                            }
+                        }
+
+                        DisposableEffect(transitShapeSource) {
+                            transitShapeSourceRef.value = transitShapeSource
+                            onDispose {
+                                if (transitShapeSourceRef.value === transitShapeSource) {
+                                    transitShapeSourceRef.value = null
+                                }
+                            }
+                        }
+
+                        DisposableEffect(transitShapeDetourSource) {
+                            transitShapeDetourSourceRef.value = transitShapeDetourSource
+                            onDispose {
+                                if (transitShapeDetourSourceRef.value === transitShapeDetourSource) {
+                                    transitShapeDetourSourceRef.value = null
+                                }
+                            }
+                        }
+
+
+
                         // Source + layers
                         val chateausSource = rememberGeoJsonSource(
                             data = GeoJsonData.Uri("https://birch.catenarymaps.org/getchateaus")
@@ -1359,16 +1432,257 @@ class MainActivity : ComponentActivity() {
 
                         AddStops()
 
+                        // --- Detour Line ---
+                        LineLayer(
+                            id = "contextlinebackingdetour",
+                            source = transitShapeDetourSource.value,
+                            color = const(Color(0xFFFB9CAC)),
+                            width = interpolate(
+                                linear(),
+                                zoom(),
+                                7.0 to const(3.dp),
+                                14.0 to const(6.dp)
+                            ),
+                            opacity = const(0.5f),
+                            minZoom = 3f
+                        )
+                        LineLayer(
+                            id = "contextlinedetour",
+                            source = transitShapeDetourSource.value,
+                            color = get("color").cast(),
+                            width = interpolate(
+                                linear(),
+                                zoom(),
+                                7.0 to const(3.2.dp),
+                                14.0 to const(5.dp)
+                            ),
+                            dasharray = const(listOf(1f, 2f)),
+                            opacity = const(0.9f),
+                            minZoom = 3f
+                        )
+
+// --- Main Trip Shape Line ---
+                        LineLayer(
+                            id = "contextlinebacking",
+                            source = transitShapeSource.value,
+                            color = if (isDark) const(Color(0xFF111133)) else const(Color.White), // Themable
+                            width = interpolate(
+                                linear(),
+                                zoom(),
+                                7.0 to const(4.dp),
+                                14.0 to const(8.dp)
+                            ),
+                            opacity = const(0.9f),
+                            minZoom = 3f
+                        )
+                        LineLayer(
+                            id = "contextline",
+                            source = transitShapeSource.value,
+                            color = get("color").cast(),
+                            width = interpolate(
+                                linear(),
+                                zoom(),
+                                7.0 to const(3.5.dp),
+                                14.0 to const(6.dp)
+                            ),
+                            minZoom = 3f
+                        )
+
+// --- Shape for Stop (if needed) ---
+                        LineLayer(
+                            id = "contextlinebackingforstop",
+                            source = transitShapeForStopSource.value,
+                            color = if (isDark) const(Color(0xFF111133)) else const(Color.White),
+                            width = interpolate(
+                                linear(),
+                                zoom(),
+                                7.0 to const(4.dp),
+                                11.0 to const(5.dp),
+                                14.0 to const(7.dp)
+                            ),
+                            opacity = const(0.8f),
+                            minZoom = 3f
+                        )
+                        LineLayer(
+                            id = "contextlineforstop",
+                            source = transitShapeForStopSource.value,
+                            color = get("color").cast(),
+                            width = interpolate(
+                                linear(),
+                                zoom(),
+                                7.0 to const(2.8.dp),
+                                11.0 to const(4.dp),
+                                14.0 to const(5.dp)
+                            ),
+                            minZoom = 3f
+                        )
+
+                        // --- Context Stops (from stops_context source) ---
+
+                        // TODO: load the 'cancelledstops' image into the map style
+                        // Bus Stops
+                        CircleLayer(
+                            id = "contextbusstops",
+                            source = stopsContextSource.value,
+                            color = const(Color.White),
+                            radius = interpolate(
+                                linear(),
+                                zoom(),
+                                8.0 to const(1.dp),
+                                10.0 to const(2.dp),
+                                13.0 to const(4.dp)
+                            ),
+                            strokeColor = const(Color(0xFF1A1A1A)),
+                            strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                            strokeOpacity = const(0.9f),
+                            opacity = interpolate(
+                                linear(),
+                                zoom(),
+                                11.0 to const(0.7f),
+                                12.0 to const(1.0f)
+                            ),
+                            filter = all(
+                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
+                                    .eq(const(3)),
+                                (get("cancelled").cast<BooleanValue>().neq(const(true))
+                                        )
+                            ),
+                            minZoom = 9.5f
+                        )
+                        SymbolLayer(
+                            id = "contextbusstops_label",
+                            source = stopsContextSource.value,
+                            textField = get("label").cast(),
+                            textSize = interpolate(
+                                linear(),
+                                zoom(),
+                                11.0 to const(0.625f.em),
+                                14.0 to const(0.8125f.em)
+                            ), // 10px -> 13px
+                            textFont = step(
+                                zoom(),
+                                const(listOf("Barlow-Regular")),
+                                13.0 to const(listOf("Barlow-Medium"))
+                            ),
+                            textColor = if (isDark) const(Color.White) else const(Color(0xFF1A1A1A)),
+                            textHaloColor = if (isDark) const(Color(0xFF1A1A1A)) else const(
+                                Color(
+                                    0xFFDADADA
+                                )
+                            ),
+                            textHaloWidth = const(1.dp),
+                            textRadialOffset = const(0.3f.em),
+                            filter = get("stop_route_type").cast<NumberValue<EquatableValue>>()
+                                .eq(const(3)),
+                            minZoom = 12.5f
+                        )
+
+// Metro Stops
+                        CircleLayer(
+                            id = "contextmetrostops",
+                            source = stopsContextSource.value,
+                            color = const(Color.White),
+                            radius = interpolate(
+                                linear(),
+                                zoom(),
+                                8.0 to const(1.3.dp),
+                                10.0 to const(3.dp),
+                                13.0 to const(5.dp)
+                            ),
+                            strokeColor = const(Color(0xFF1A1A1A)),
+                            strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                            filter = all(
+                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
+                                    .neq(const(3)),
+                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
+                                    .neq(const(2))
+                            ),
+                            minZoom = 6f
+                        )
+                        SymbolLayer(
+                            id = "contextmetrostops_label",
+                            source = stopsContextSource.value,
+                            textField = get("label").cast(),
+                            textSize = interpolate(
+                                linear(),
+                                zoom(),
+                                6.0 to const(0.28125f.em),
+                                8.0 to const(0.5625f.em),
+                                9.0 to const(0.75f.em)
+                            ), // 4.5px -> 9px -> 12px
+                            textFont = const(listOf("Barlow-Medium")),
+                            textColor = if (isDark) const(Color.White) else const(Color(0xFF1A1A1A)),
+                            textHaloColor = if (isDark) const(Color(0xFF1A1A1A)) else const(
+                                Color(
+                                    0xFFDADADA
+                                )
+                            ),
+                            textHaloWidth = const(1.dp),
+                            textRadialOffset = const(0.2f.em),
+                            filter = all(
+                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
+                                    .neq(const(3)),
+                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
+                                    .neq(const(2))
+                            ),
+                            minZoom = 9f
+                        )
+
+// Rail Stops
+                        CircleLayer(
+                            id = "contextrailstops",
+                            source = stopsContextSource.value,
+                            color = const(Color.White),
+                            radius = interpolate(
+                                linear(),
+                                zoom(),
+                                8.0 to const(3.dp),
+                                10.0 to const(4.dp),
+                                13.0 to const(5.dp)
+                            ),
+                            strokeColor = const(Color(0xFF1A1A1A)),
+                            strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                            filter = get("stop_route_type").cast<NumberValue<EquatableValue>>()
+                                .eq(const(2)),
+                            minZoom = 4f
+                        )
+                        SymbolLayer(
+                            id = "contextrailstops_label",
+                            source = stopsContextSource.value,
+                            textField = get("label").cast(),
+                            textSize = interpolate(
+                                linear(),
+                                zoom(),
+                                4.0 to const(0.5625f.em),
+                                6.0 to const(0.625f.em),
+                                10.0 to const(0.875f.em)
+                            ), // 9px -> 10px -> 14px
+                            textFont = step(
+                                zoom(),
+                                const(listOf("Barlow-Regular")),
+                                6.0 to const(listOf("Barlow-Medium"))
+                            ),
+                            textColor = if (isDark) const(Color.White) else const(Color(0xFF1A1A1A)),
+                            textHaloColor = if (isDark) const(Color(0xFF1A1A1A)) else const(
+                                Color(
+                                    0xFFDADADA
+                                )
+                            ),
+                            textHaloWidth = const(1.dp),
+                            textRadialOffset = const(0.2f.em),
+                            filter = get("stop_route_type").cast<NumberValue<EquatableValue>>()
+                                .eq(const(2)),
+                            minZoom = 3f
+                        )
+
                         val locations = realtimeVehicleLocations.value
                         val cache = realtimeVehicleRouteCache.value
-
 
                         AddLiveDots(
                             isDark = isDark,
                             usUnits = usUnits,
                             showZombieBuses = showZombieBuses,
                             layerSettings = layerSettings.value,
-                            // ✅ Pass the values themselves
                             vehicleLocations = locations,
                             routeCache = cache,
                             busDotsSrc = busDotsSrc,
@@ -1517,26 +1831,11 @@ class MainActivity : ComponentActivity() {
                         // draggable pin section
 
 
-                        val pinSource = rememberGeoJsonSource(
-                            data = GeoJsonData.Features(FeatureCollection(emptyList()))
-                        )
-
-                        DisposableEffect(pinSource) {
-                            println("Create new reference to pin")
-
-                            pinSourceRef.value = pinSource
-                            onDispose {
-                                // break the strong reference so the old map/style can be GC’d
-                                if (pinSourceRef.value === pinSource) {
-                                    pinSourceRef.value = null
-                                }
-                            }
-                        }
-
-                        DraggablePinLayers(pin = pin, pinSource = pinSource)
+                        DraggablePinLayers(pin = pin)
 
 
                     }
+
 
 
 
@@ -1549,11 +1848,6 @@ class MainActivity : ComponentActivity() {
                         onDragEndCommit = { newPos ->
                             // Update Compose state
                             pin = pin.copy(position = newPos, active = true)
-                            // Also update your map source (inside MaplibreMap scope) via your existing plumbing.
-                            // e.g.
-
-
-                            // pinSourceRef.value?.setData(GeoJsonData.Features(Point(newPos)))
                         })
 
 
@@ -1607,34 +1901,33 @@ class MainActivity : ComponentActivity() {
                                     onMyLocation = {
                                         // Mimic JS “my_location_press()”: exit pin mode
                                         pin = pin.copy(active = false)
-                                        pinSourceRef.value?.setData(
-                                            GeoJsonData.Features(FeatureCollection(emptyList()))
-                                        )
                                     },
                                     onPinDrop = {
                                         onPinDrop()
-                                        pin.position?.let { pos ->
-                                            pinSourceRef.value?.setData(
-                                                GeoJsonData.Features(
-                                                    Point(
-                                                        pos
-                                                    )
-                                                )
-                                            )
-                                        }
                                     },
                                     onCenterPin = {
                                         onCenterPin()
-                                        pin.position?.let { pos ->
-                                            pinSourceRef.value?.setData(
-                                                GeoJsonData.Features(
-                                                    Point(
-                                                        pos
-                                                    )
-                                                )
+                                    },
+                                    onTripClick = {
+                                        val newStack = ArrayDeque(catenaryStack)
+                                        newStack.addLast(
+
+
+                                            CatenaryStackEnum.SingleTrip(
+                                                chateau_id = it.chateauId!!,
+                                                trip_id = it.tripId!!,
+                                                route_id = it.routeId,
+                                                start_date = it.startDay,
+                                                start_time = null,
+                                                vehicle_id = null,
+                                                route_type = it.routeType
                                             )
-                                        }
-                                    })
+                                        )
+
+                                        catenaryStack = newStack
+
+                                    }
+                                )
 
                             } else {
                                 // Handle other stack states
@@ -1651,6 +1944,38 @@ class MainActivity : ComponentActivity() {
 
                                     // Render the current stack screen
                                     when (currentScreen) {
+                                        is CatenaryStackEnum.SingleTrip -> {
+                                            if (transitShapeSourceRef.value != null
+                                                && transitShapeDetourSourceRef.value != null &&
+                                                stopsContextSourceRef.value != null
+                                            ) {
+
+                                                SingleTripInfoScreen(
+                                                    tripSelected = currentScreen,
+                                                    onStopClick = { stopStack ->
+                                                        val newStack = ArrayDeque(catenaryStack)
+                                                        newStack.addLast(stopStack)
+                                                        catenaryStack = newStack
+                                                    },
+                                                    onBlockClick = { blockStack ->
+                                                        val newStack = ArrayDeque(catenaryStack)
+                                                        newStack.addLast(blockStack)
+                                                        catenaryStack = newStack
+                                                    },
+
+                                                    // --- Pass the .value of the sources ---
+                                                    transitShapeSource = transitShapeSourceRef.value!!,
+                                                    transitShapeDetourSource = transitShapeDetourSourceRef.value!!,
+                                                    stopsContextSource = stopsContextSourceRef.value!!,
+
+                                                    // Pass the state setter
+                                                    onSetStopsToHide = { newSet ->
+                                                        stopsToHide = newSet
+                                                    }
+                                                )
+                                            }
+
+                                        }
                                         is CatenaryStackEnum.MapSelectionScreen -> {
                                             // This is where you would build your list UI
                                             // For now, we just show a summary

@@ -1,0 +1,100 @@
+package com.catenarymaps.catenary
+
+import kotlinx.serialization.Serializable
+
+// --- Data classes for get_trip_information ---
+
+@Serializable
+data class TripStoptime(
+    val name: String,
+    val stop_id: String,
+    val longitude: Double,
+    val latitude: Double,
+    val timezone: String? = null,
+    val scheduled_arrival_time_unix_seconds: Long? = null,
+    val scheduled_departure_time_unix_seconds: Long? = null,
+    val interpolated_stoptime_unix_seconds: Long? = null,
+    val rt_arrival: RtTime? = null,
+    val rt_departure: RtTime? = null,
+    val rt_platform_string: String? = null,
+    val schedule_relationship: Int? = null, // 1 means cancelled
+    val code: String? = null,
+    val timepoint: Boolean? = null,
+    val replaced_stop: Boolean? = null,
+    val gtfs_stop_sequence: Int? = null,
+    val show_both_departure_and_arrival: Boolean = false // You'll set this manually
+)
+
+@Serializable
+data class RtTime(
+    val time: Long? = null
+)
+
+@Serializable
+data class TripVehicle(
+    val id: String? = null,
+    val label: String? = null
+)
+
+@Serializable
+data class TripAlert(
+    val informed_entity: List<AlertEntity>
+    // Add other alert properties as needed
+)
+
+@Serializable
+data class AlertEntity(
+    val stop_id: String? = null
+    // Add other entity properties as needed
+)
+
+@Serializable
+data class TripDataResponse(
+    val color: String? = null,
+    val text_color: String? = null,
+    val route_id: String? = null,
+    val vehicle: TripVehicle? = null,
+    val trip_headsign: String? = null,
+    val trip_short_name: String? = null,
+    val route_short_name: String? = null,
+    val route_long_name: String? = null,
+    val route_type: Int? = null,
+    val block_id: String? = null,
+    val service_date: String? = null,
+    val trip_id: String? = null,
+    val shape_polyline: String? = null,
+    val old_shape_polyline: String? = null,
+    val rt_shape: Boolean? = null,
+    val tz: String? = null,
+    val stoptimes: List<TripStoptime> = emptyList(),
+    val alert_id_to_alert: Map<String, TripAlert> = emptyMap()
+)
+
+// --- Data class for get_trip_information_rt_update ---
+
+@Serializable
+data class TripRtUpdateResponse(
+    val found_data: Boolean,
+    val data: TripRtUpdateData? = null
+)
+
+@Serializable
+data class TripRtUpdateData(
+    val stoptimes: List<TripStoptime> = emptyList()
+)
+
+// --- Data class for get_vehicle_information_from_label ---
+
+@Serializable
+data class VehicleInfoResponse(
+    val data: VehicleInfoData? = null
+)
+
+@Serializable
+data class VehicleInfoData(
+    val timestamp: Long? = null,
+    val position: VehiclePositionData? = null, // Re-use from MainActivity
+    val occupancy_status: String? = null,
+    val occupancy_percentage: Int? = null
+    // Add other vehicle properties as needed (e.g., from VehicleInfo.svelte)
+)

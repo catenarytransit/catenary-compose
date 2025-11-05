@@ -1,6 +1,7 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -9,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -24,19 +27,13 @@ import org.maplibre.compose.expressions.dsl.image
 import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.GeoJsonSource
-import org.maplibre.compose.sources.rememberGeoJsonSource
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
+import org.maplibre.compose.sources.GeoJsonOptions
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 
 data class PinState(
     val active: Boolean = false, val position: Position? = null
@@ -45,17 +42,22 @@ data class PinState(
 /* ----------------------- Map content (inside MaplibreMap) ----------------------- */
 
 @Composable
-fun DraggablePinLayers(pin: PinState, pinSource: GeoJsonSource) {
-
-
-    LaunchedEffect(pin.active, pin.position) {
-        if (pin.active && pin.position != null) {
-            pinSource.setData(GeoJsonData.Features(Point(pin.position)))
-        } else {
-            pinSource.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
-        }
+fun DraggablePinLayers(pin: PinState) {
+    val pinSource = remember {
+        GeoJsonSource(
+            id = "pin",
+            data = GeoJsonData.Features(FeatureCollection(emptyList())),
+            GeoJsonOptions()
+        )
     }
 
+    LaunchedEffect(pin.position) {
+        pinSource.setData(
+            GeoJsonData.Features(
+                Point(pin.position ?: Position(0.0, 0.0))
+            )
+        )
+    }
 
     val pinIcon = painterResource(id = R.drawable.map_marker_1)
 
@@ -103,9 +105,10 @@ fun DraggablePinOverlay(
         }
     }
 
-
     // Drag state in PX (to keep the movement buttery-smooth)
     var dragPx by remember { mutableStateOf(Offset.Zero) }
+
+    var dragActive by remember { mutableStateOf(false) }
 
     // Visual offsets
     val dragDp: DpOffset = with(density) { DpOffset(dragPx.x.toDp(), dragPx.y.toDp()) }
@@ -120,6 +123,22 @@ fun DraggablePinOverlay(
     val halfHit = hitSize / 2
     val hitTopLeft = DpOffset(visualCenter.x - halfHit, visualCenter.y - halfHit)
 
+    if (dragActive) {
+        Box(
+            Modifier
+                .offset(x = visualCenter.x - markerSize / 2, y = visualCenter.y - markerSize / 2)
+                .size(markerSize)
+        ) {
+            Box(
+                Modifier
+                    .clip(CircleShape)
+                    .background(Color(0x8e51ff).copy(alpha = 0.8f))
+                    .size(markerSize * 1.5f) // Make it a bit bigger than the marker
+                    .align(Alignment.Center)
+            )
+        }
+    }
+
     // 2) Small hitbox centered on the marker that handles drag
     Box(
         Modifier
@@ -128,11 +147,12 @@ fun DraggablePinOverlay(
             .background(color = Color.Transparent)
             .pointerInput(Unit) {
                 detectDragGestures(onDragStart = {
-                    if (!pin.active) onActivatePin()
+                    // if (!pin.active) onActivatePin()
                     dragPx = Offset.Zero // reset local drag delta
                 }, onDrag = { change, dragAmount ->
                     // accumulate pixel delta locally; no projection here
                     dragPx += dragAmount
+                    dragActive = true
                 }, onDragEnd = {
                     // Project once at the end: cached center + total drag
                     val finalDp = with(density) {
@@ -141,8 +161,10 @@ fun DraggablePinOverlay(
 
                     val newGeo = projection.positionFromScreenLocation(finalDp)
                     dragPx = Offset.Zero
+                    dragActive = false
                     onDragEndCommit(newGeo)
                 }, onDragCancel = {
+                    dragActive = false
                     dragPx = Offset.Zero
                 })
             })

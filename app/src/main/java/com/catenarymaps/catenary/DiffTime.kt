@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
@@ -106,48 +107,38 @@ fun DiffTimer(
     val unitSize = if (large) 14.sp else 12.sp
     val bracketSize = if (large) 18.sp else 14.sp
 
-    Row {
+    Row(modifier = Modifier, verticalAlignment = Alignment.Bottom) {
         if (showBrackets) {
             Text("[", fontSize = bracketSize)
-            Spacer(Modifier.width(2.dp))
         }
 
         if (signText.isNotEmpty()) {
             Text(signText, fontSize = numSize, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(2.dp))
         }
 
         if ((d as Int) > 0) {
             Text("$d", fontSize = numSize)
-            Spacer(Modifier.width(2.dp))
             Text(dayMarking(locale), fontSize = unitSize)
-            Spacer(Modifier.width(6.dp))
         }
 
         if ((h as Int) > 0) {
             Text("$h", fontSize = numSize)
-            Spacer(Modifier.width(2.dp))
             Text(hourMarking(locale), fontSize = unitSize)
-            Spacer(Modifier.width(6.dp))
         }
 
         val showM =
             (h as Int) > 0 || ((m as Int) > 0 || (!showSeconds && (m as Int) >= 0 && diff != 0.0))
         if (showM) {
             Text("$m", fontSize = numSize)
-            Spacer(Modifier.width(2.dp))
             Text(minMarking(locale), fontSize = unitSize)
-            if (showSeconds) Spacer(Modifier.width(6.dp))
         }
 
         if (showSeconds) {
             Text((s as Double).toInt().toString(), fontSize = numSize)
-            Spacer(Modifier.width(2.dp))
             Text(secMarking(locale), fontSize = unitSize)
         }
 
         if (showBrackets) {
-            Spacer(Modifier.width(2.dp))
             Text("]", fontSize = bracketSize)
         }
     }
