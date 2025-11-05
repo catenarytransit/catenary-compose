@@ -3052,7 +3052,7 @@ private fun LiveDotLayers(
     val labelTextSize: Expression<TextUnitValue>
     val labelTextFont: Expression<ListValue<StringValue>>
     val labelRadialOffset: Expression<TextUnitValue>
-    val labelVariableAnchor: Expression<ListValue<SymbolAnchor>> // ✅ Corrected type
+    val labelVariableAnchor: Expression<ListValue<SymbolAnchor>>
     val labelIgnorePlacementZoom: Double
     val labelTextOpacity: Expression<FloatValue>
     var minLayerDotsZoom: Float = 0.0F
