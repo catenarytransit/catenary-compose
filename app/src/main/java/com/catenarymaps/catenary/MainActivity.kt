@@ -3564,7 +3564,7 @@ fun VehicleLabelToggleButton(
             checked = isActive,
             onCheckedChange = { onToggle() },
             colors = IconButtonDefaults.filledIconToggleButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                containerColor = MaterialTheme.colorScheme.surface,
                 checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             )
