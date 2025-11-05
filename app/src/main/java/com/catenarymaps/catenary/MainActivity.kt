@@ -875,7 +875,7 @@ class MainActivity : ComponentActivity() {
             // Periodic fetcher (e.g., every 5 seconds)
             LaunchedEffect(Unit) {
                 while (true) {
-                    delay(5_000L) // 5 second refresh interval
+                    delay(1_000L) // 1 second refresh interval
                     fetchRealtimeData(
                         rtScope,
                         camera.position.zoom,
@@ -887,7 +887,7 @@ class MainActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 while (true) {
-                    delay(3_000L) // 3 second prune interval
+                    delay(2_000L) // 2 second prune interval
                     pruneStaleChateauData()
                 }
             }
@@ -3578,87 +3578,5 @@ fun VehicleLabelToggleButton(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-    }
-}
-
-@Composable
-fun SettingsScreen(
-    datadogConsent: Boolean,
-    onDatadogConsentChanged: (Boolean) -> Unit,
-    gaConsent: Boolean,
-    onGaConsentChanged: (Boolean) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    ) {
-        Text(
-            text = stringResource(id = R.string.settings),
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        // --- Datadog Section ---
-        Text(
-            text = "Datadog Analytics",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(
-            text = "Enables intensive, detailed tracking to help developers find and fix bugs.",
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (datadogConsent) {
-            // Show Disable button if consent is GRANTED
-            Button(
-                onClick = { onDatadogConsentChanged(false) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Disable Datadog Tracking")
-            }
-        } else {
-            // Show Enable button if consent is NOT_GRANTED
-            OutlinedButton(
-                onClick = { onDatadogConsentChanged(true) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Enable Datadog Tracking")
-            }
-        }
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-        // --- Google Analytics Section ---
-        Text(
-            text = "Google Analytics",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(
-            text = "Enables basic analytics about feature usage.",
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (gaConsent) {
-            // Show Disable button if consent is GRANTED (default)
-            Button(
-                onClick = { onGaConsentChanged(false) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Disable Google Analytics")
-            }
-        } else {
-            // Show Enable button if consent is NOT_GRANTED
-            OutlinedButton(
-                onClick = { onGaConsentChanged(true) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Enable Google Analytics")
-            }
-        }
     }
 }

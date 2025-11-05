@@ -1,0 +1,99 @@
+package com.catenarymaps.catenary
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+
+
+@Composable
+fun SettingsScreen(
+    datadogConsent: Boolean,
+    onDatadogConsentChanged: (Boolean) -> Unit,
+    gaConsent: Boolean,
+    onGaConsentChanged: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = stringResource(id = R.string.settings),
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // --- Datadog Section ---
+        Text(
+            text = "Datadog Analytics",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = "Enables intensive, detailed tracking to help developers find and fix bugs.",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (datadogConsent) {
+            // Show Disable button if consent is GRANTED
+            Button(
+                onClick = { onDatadogConsentChanged(false) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Disable Datadog Tracking")
+            }
+        } else {
+            // Show Enable button if consent is NOT_GRANTED
+            OutlinedButton(
+                onClick = { onDatadogConsentChanged(true) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Enable Datadog Tracking")
+            }
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+        // --- Google Analytics Section ---
+        Text(
+            text = "Google Analytics",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = "Enables basic analytics about feature usage.",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (gaConsent) {
+            // Show Disable button if consent is GRANTED (default)
+            Button(
+                onClick = { onGaConsentChanged(false) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Disable Google Analytics")
+            }
+        } else {
+            // Show Enable button if consent is NOT_GRANTED
+            OutlinedButton(
+                onClick = { onGaConsentChanged(true) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Enable Google Analytics")
+            }
+        }
+    }
+}
