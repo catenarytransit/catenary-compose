@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Caténaire</string>
+    <string name="platform">Quai</string>
+    <string name="layers">Couches</string>
+    <string name="occupancy">Occupation</string>
+    <string name="headsign">Girouette</string>
+    <string name="alert_cause_unknown_cause">Cause inconnue</string>
+    <string name="hidepreviousstops">Masquer les arrêts précédents</string>
+    <string name="settings">Paramètres</string>
+    <string name="trip">Voyage</string>
+    <string name="fleet">Flotte</string>
+    <string name="lastupdated">Dernière mise à jour</string>
+    <string name="now">Maintenant</string>
+    <string name="speed">Vitesse</string>
+    <string name="searchhere">Rechercher ici</string>
 </resources>

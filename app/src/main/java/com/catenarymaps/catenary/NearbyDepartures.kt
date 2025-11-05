@@ -565,7 +565,7 @@ private fun FilterRow(
     filters: Filters,
     onChange: (Filters) -> Unit
 ) {
-    Spacer(Modifier.height(8.dp))
+    Spacer(Modifier.height(2.dp))
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -575,7 +575,7 @@ private fun FilterRow(
         FilterChip("Bus", filters.bus) { onChange(filters.copy(bus = !filters.bus)) }
         FilterChip("Other", filters.other) { onChange(filters.copy(other = !filters.other)) }
     }
-    Spacer(Modifier.height(4.dp))
+    Spacer(Modifier.height(2.dp))
 }
 
 @Composable

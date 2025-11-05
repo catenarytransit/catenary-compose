@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="alert_cause_unknown_cause">알 수 없는 원인</string>
+    <string name="hidepreviousstops">이전 정류장 숨기기</string>
+    <string name="trip">여행</string>
+    <string name="fleet">함대</string>
+    <string name="occupancy">승차</string>
+    <string name="headsign">행선안내판</string>
+    <string name="lastupdated">마지막 업데이트</string>
+    <string name="platform">승강장</string>
+    <string name="layers">레이어</string>
+    <string name="now">지금</string>
+    <string name="settings">설정</string>
+    <string name="speed">속도</string>
+    <string name="searchhere">여기서 검색</string>
+</resources>

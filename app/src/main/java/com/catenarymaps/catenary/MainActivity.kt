@@ -146,6 +146,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
@@ -1927,7 +1928,10 @@ class MainActivity : ComponentActivity() {
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Layers", style = MaterialTheme.typography.headlineSmall)
+                                    Text(
+                                        stringResource(id = R.string.layers),
+                                        style = MaterialTheme.typography.headlineSmall
+                                    )
                                     IconButton(onClick = { showLayersPanel = false }) {
                                         Icon(
                                             Icons.Filled.Close, contentDescription = "Close Layers"
@@ -2112,7 +2116,7 @@ class MainActivity : ComponentActivity() {
                                                 onToggle = { updateLayer(labelSettings.copy(route = !labelSettings.route)) }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = "Trip", // Corresponds to $_('showtrip')
+                                                name = stringResource(id = R.string.trip), // Corresponds to $_('showtrip')
                                                 icon = Icons.Filled.AltRoute, // Corresponds to symbol="mode_of_travel"
                                                 isActive = labelSettings.trip,
                                                 onToggle = { updateLayer(labelSettings.copy(trip = !labelSettings.trip)) }
@@ -2131,13 +2135,13 @@ class MainActivity : ComponentActivity() {
                                                 onToggle = { updateLayer(labelSettings.copy(headsign = !labelSettings.headsign)) }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = "Speed", // Corresponds to $_('showspeed')
+                                                name = stringResource(id = R.string.speed),
                                                 icon = Icons.Filled.Speed, // Corresponds to symbol="speed"
                                                 isActive = labelSettings.speed,
                                                 onToggle = { updateLayer(labelSettings.copy(speed = !labelSettings.speed)) }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = "Occupancy", // Corresponds to $_('occupancy')
+                                                name = stringResource(id = R.string.occupancy),
                                                 icon = Icons.Filled.Group, // Corresponds to symbol="group"
                                                 isActive = labelSettings.occupancy,
                                                 onToggle = {
@@ -2873,7 +2877,11 @@ fun SearchBarCatenary(
                 },
             shape = RoundedCornerShape(100.dp),
             placeholder = {
-                Text("Search here", fontSize = 3.5.em, overflow = TextOverflow.Visible)
+                Text(
+                    stringResource(id = R.string.searchhere),
+                    fontSize = 3.5.em,
+                    overflow = TextOverflow.Visible
+                )
             },
             leadingIcon = {
                 if (isFocused) {
@@ -3586,7 +3594,7 @@ fun SettingsScreen(
             .padding(vertical = 8.dp)
     ) {
         Text(
-            text = "Settings",
+            text = stringResource(id = R.string.settings),
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp)
         )

@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Catenary</string>
-    <string name="platform">Platform</string>
-    <string name="layers">Layers</string>
     <string name="occupancy">Occupancy</string>
     <string name="headsign">Headsign</string>
+    <string name="platform">Platform</string>
+    <string name="layers">Layers</string>
     <string name="alert_cause_unknown_cause">Unknown cause</string>
     <string name="hidepreviousstops">Hide previous stops</string>
     <string name="settings">Settings</string>
