@@ -14,4 +14,7 @@
     <string name="settings">설정</string>
     <string name="speed">속도</string>
     <string name="searchhere">여기서 검색</string>
+    <string name="early">조기</string>
+    <string name="late">늦은</string>
+    <string name="ontime">정시에</string>
 </resources>

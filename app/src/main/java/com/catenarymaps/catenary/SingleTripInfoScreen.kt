@@ -4,11 +4,13 @@ package com.catenarymaps.catenary
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -31,8 +33,35 @@ import io.github.dellisd.spatialk.geojson.Feature
 import io.github.dellisd.spatialk.geojson.Point
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.maps.android.PolyUtil.decode as decodePolyutil
+import kotlinx.serialization.json.buildJsonObject
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
+import androidx.compose.ui.platform.LocalDensity
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun SingleTripInfoScreen(
     tripSelected: CatenaryStackEnum.SingleTrip,
     onStopClick: (CatenaryStackEnum.StopStack) -> Unit,
@@ -168,9 +197,11 @@ fun SingleTripInfoScreen(
             .padding(horizontal = 16.dp)
     ) {
         if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            )
         } else if (error != null) {
             Text("Error: $error", color = MaterialTheme.colorScheme.error)
         } else if (tripData != null) {
@@ -208,15 +239,33 @@ fun SingleTripInfoScreen(
             }
 
             // Stop List
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            val lazyListState = rememberLazyListState()
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(
+                        WindowInsets(
+                            bottom = WindowInsets.safeDrawing.getBottom(
+                                density = LocalDensity.current
+                            )
+                        )
+                    ),
+                state = lazyListState
+            ) {
                 itemsIndexed(stopTimes) { i, stopTime ->
                     if (showPreviousStops || i > lastInactiveStopIdx) {
+                        // Calculate new state variables
+                        val isInactive = i <= lastInactiveStopIdx
+                        val isPreviousInactive = i - 1 == lastInactiveStopIdx
+
                         StopListItem(
                             stopTime = stopTime,
                             tripColorStr = data.color ?: "#808080",
                             isFirst = i == 0,
                             isLast = i == stopTimes.lastIndex,
-                            isInactive = i <= lastInactiveStopIdx,
+                            isInactive = isInactive,
+                            isPreviousInactive = isPreviousInactive, // <-- ADD THIS
+                            showPreviousStops = showPreviousStops,   // <-- ADD THIS
                             onStopClick = {
                                 onStopClick(
                                     CatenaryStackEnum.StopStack(
@@ -240,6 +289,8 @@ fun StopListItem(
     isFirst: Boolean,
     isLast: Boolean,
     isInactive: Boolean,
+    isPreviousInactive: Boolean,
+    showPreviousStops: Boolean,
     onStopClick: () -> Unit
 ) {
     val tripColor = try {
@@ -247,25 +298,28 @@ fun StopListItem(
     } catch (e: Exception) {
         Color.Gray
     }
-    val inactiveColor = Color.Gray
 
     Row(
         modifier = Modifier
+            .height(IntrinsicSize.Min) // Ensure Row has a minimum height for fillMaxHeight to work
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 0.dp),
+        verticalAlignment = Alignment.Top // Align items to the top
     ) {
         // 1. Progress Bar (port of the logic)
         TripProgressIndicator(
-            color = if (isInactive) inactiveColor else tripColor,
+            color = tripColor,
             isFirst = isFirst,
             isLast = isLast,
             isInactive = isInactive,
+            isPreviousInactive = isPreviousInactive, // <-- ADD THIS
+            showPreviousStops = showPreviousStops,   // <-- ADD THIS
             modifier = Modifier
                 .width(10.dp)
                 .fillMaxHeight()
         )
 
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(8.dp))
 
         // 2. Stop Info
         Column {
@@ -276,7 +330,6 @@ fun StopListItem(
                 modifier = Modifier.clickable(onClick = onStopClick)
             )
 
-            // TODO: Port your StopTimeNumber.svelte component here
             StopTimeNumber(
                 tripTimezone = stopTime.raw.timezone,
                 stopTime = stopTime,
@@ -301,46 +354,69 @@ fun TripProgressIndicator(
     isFirst: Boolean,
     isLast: Boolean,
     isInactive: Boolean,
+    isPreviousInactive: Boolean, // <-- ADDED
+    showPreviousStops: Boolean,  // <-- ADDED
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier.fillMaxHeight()) {
-        val w = size.width
-        val h = size.height
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+        val hCenter = canvasHeight / 2
+        val wCenter = canvasWidth / 2
 
-        val circleColor = if (isInactive) color else Color.White
+        val boxWidth = canvasWidth / 2
+
+        print("Trip Progress Indicator w: $boxWidth h: $hCenter")
+
+        val circleColor = if (isInactive) Color.Gray else Color.White
         val strokeColor = if (isInactive) Color.DarkGray else color
 
-        // Top line
+        // This is the logic from the JS app. It's the color used for the line segment
+        // *above* an inactive stop when previous stops are shown.
+        // Faded if showing previous stops, transparent if not
+        val fadedColor = if (showPreviousStops) color.copy(alpha = 0.4f) else Color.Transparent
+
+        // Top box
         if (!isFirst) {
-            drawLine(
-                color = color,
-                start = Offset(w / 2, 0f),
-                end = Offset(w / 2, h / 2),
-                strokeWidth = w / 2
-            )
+            if (isPreviousInactive) {
+                // This is the "in-between" stop. Draw gradient.
+                drawRect(
+                    brush = Brush.verticalGradient(colors = listOf(fadedColor, color)),
+                    topLeft = Offset(wCenter - boxWidth / 2, 0f),
+                    size = androidx.compose.ui.geometry.Size(boxWidth, hCenter)
+                )
+            } else {
+                // This is a normal solid box
+                drawRect(
+                    // If this stop is inactive, use the faded color for the line above it.
+                    // Otherwise, use the regular color.
+                    color = if (isInactive) fadedColor else color,
+                    topLeft = Offset(wCenter - boxWidth / 2, 0f),
+                    size = androidx.compose.ui.geometry.Size(boxWidth, hCenter)
+                )
+            }
         }
 
-        // Bottom line
+        // Bottom box
         if (!isLast) {
-            drawLine(
-                color = color,
-                start = Offset(w / 2, h / 2),
-                end = Offset(w / 2, h),
-                strokeWidth = w / 2
+            drawRect(
+                color = if (isInactive) fadedColor else color,
+                topLeft = Offset(wCenter - boxWidth / 2, hCenter),
+                size = androidx.compose.ui.geometry.Size(boxWidth, canvasHeight - hCenter)
             )
         }
 
         // Center circle
         drawCircle(
             color = circleColor,
-            radius = w / 2,
+            radius = canvasWidth / 2,
             center = center
         )
         drawCircle(
             color = strokeColor,
-            radius = w / 2,
+            radius = canvasWidth / 2,
             center = center,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = w / 4)
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = canvasWidth / 4)
         )
     }
 }
@@ -479,7 +555,7 @@ private fun TimeRow(
         // Middle: delay chip (uses DiffTimer for signed offset)
         if (rt != null && scheduled != null) {
             Spacer(Modifier.width(6.dp))
-            DelayChip(diffSecs = rt - scheduled, showSeconds = showSeconds, muted = isInactive)
+            DelayDiff(diff = rt - scheduled, show_seconds = showSeconds)
         }
 
         // Right: label + clocks (uses FormattedTimeText)
@@ -498,27 +574,18 @@ private fun TimeRow(
                         Text("🎯", modifier = Modifier.padding(end = 4.dp))
                     }
                     if (scheduled != null && rt != scheduled) {
-                        // strike-through scheduled
-                        Text(
-                            text = "",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textDecoration = TextDecoration.LineThrough
-                        )
-                        // Render scheduled time
-                        FormattedTimeText(
-                            timezone = tz,
-                            timeSeconds = scheduled,
-                            showSeconds = showSeconds
-                        )
+                        Box { // Use Box to apply decoration to the child
+                            FormattedTimeText(
+                                timezone = tz,
+                                timeSeconds = scheduled,
+                                showSeconds = showSeconds,
+                                textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textDecoration = TextDecoration.LineThrough
+                            )
+                        }
                         Spacer(Modifier.width(8.dp))
                     }
                     // RT time highlighted
-                    Text(
-                        text = "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
                     FormattedTimeText(
                         timezone = tz,
                         timeSeconds = rt,
@@ -565,7 +632,7 @@ private fun UnifiedTimeRow(
         // Middle: delay chip
         if (rt != null && scheduled != null) {
             Spacer(Modifier.width(6.dp))
-            DelayChip(diffSecs = rt - scheduled, showSeconds = showSeconds, muted = isInactive)
+            DelayDiff(diff = rt - scheduled, show_seconds = showSeconds)
         }
 
         // Right: clocks
@@ -576,24 +643,18 @@ private fun UnifiedTimeRow(
                     Text("🎯", modifier = Modifier.padding(end = 4.dp))
                 }
                 if (scheduled != null && rt != scheduled) {
-                    Text(
-                        text = "",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textDecoration = TextDecoration.LineThrough
-                    )
-                    FormattedTimeText(
-                        timezone = tz,
-                        timeSeconds = scheduled,
-                        showSeconds = showSeconds
-                    )
+                    Box { // Use Box to apply decoration to the child
+                        FormattedTimeText(
+                            timezone = tz,
+                            timeSeconds = scheduled,
+                            showSeconds = showSeconds,
+                            textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textDecoration = TextDecoration.LineThrough
+
+                        )
+                    }
                     Spacer(Modifier.width(8.dp))
                 }
-                Text(
-                    text = "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
                 FormattedTimeText(
                     timezone = tz,
                     timeSeconds = rt,

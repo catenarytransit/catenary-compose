@@ -14,4 +14,7 @@
     <string name="now">Maintenant</string>
     <string name="speed">Vitesse</string>
     <string name="searchhere">Rechercher ici</string>
+    <string name="early">En avance</string>
+    <string name="late">En retard</string>
+    <string name="ontime">À l\'heure</string>
 </resources>

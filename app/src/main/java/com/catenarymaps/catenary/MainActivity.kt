@@ -184,6 +184,37 @@ import org.maplibre.compose.expressions.dsl.neq
 import org.maplibre.compose.expressions.dsl.not
 import org.maplibre.compose.sources.GeoJsonOptions
 import org.maplibre.compose.util.ClickResult
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DirectionsBus
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+
+fun parseColor(colorString: String?, default: Color = Color.Black): Color {
+    return try {
+        val cleanColor = colorString?.removePrefix("#") ?: ""
+        Color(android.graphics.Color.parseColor("#$cleanColor"))
+    } catch (e: Exception) {
+        default
+    }
+}
 
 private const val PREFS_NAME = "catenary_prefs"
 private const val K_LAT = "camera_lat"
@@ -203,6 +234,32 @@ private fun SharedPreferences.getDouble(key: String, default: Double = Double.Na
     if (!contains(key)) return default
     return java.lang.Double.longBitsToDouble(getLong(key, 0L))
 }
+
+@Serializable
+data class StopPreviewRequest(
+    val chateaus: Map<String, List<String>>
+)
+
+@Serializable
+data class StopPreviewResponse(
+    @EncodeDefault val stops: Map<String, Map<String, StopPreviewDetail>> = emptyMap(),
+    @EncodeDefault val routes: Map<String, Map<String, RoutePreviewDetail>> = emptyMap()
+)
+
+@Serializable
+data class StopPreviewDetail(
+    val level_id: String? = null,
+    val platform_code: String? = null,
+    @EncodeDefault val routes: List<String> = emptyList()
+)
+
+@Serializable
+data class RoutePreviewDetail(
+    val color: String,
+    val text_color: String,
+    val short_name: String? = null,
+    val long_name: String? = null
+)
 
 private data class SavedCamera(
     val lat: Double,
@@ -2094,15 +2151,14 @@ class MainActivity : ComponentActivity() {
 
                                         }
                                         is CatenaryStackEnum.MapSelectionScreen -> {
-                                            // This is where you would build your list UI
-                                            // For now, we just show a summary
-                                            Text(
-                                                text = "You clicked ${currentScreen.arrayofoptions.size} items. TODO ADD THIS SCREEN",
-                                                style = MaterialTheme.typography.headlineSmall,
-                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            MapSelectionScreen(
+                                                screenData = currentScreen,
+                                                onStackPush = { newScreenData ->
+                                                    val newStack = ArrayDeque(catenaryStack)
+                                                    newStack.addLast(newScreenData)
+                                                    catenaryStack = newStack
+                                                }
                                             )
-                                            // TODO: Create a proper @Composable for MapSelectionScreen
-                                            // and render currentScreen.arrayofoptions in a LazyColumn
                                         }
                                         is CatenaryStackEnum.SettingsStack -> {
                                             SettingsScreen(
