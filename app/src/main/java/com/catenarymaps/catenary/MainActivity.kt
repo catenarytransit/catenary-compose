@@ -408,7 +408,7 @@ data class VehiclePosition(
     val trip: TripDescriptor?,
     val route_type: Int,
     val timestamp: Long?,
-    val occupancy_status: String?
+    val occupancy_status: Int?
 )
 
 @Serializable

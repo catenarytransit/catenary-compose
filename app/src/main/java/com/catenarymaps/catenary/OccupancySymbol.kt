@@ -1,14 +1,15 @@
 package com.catenarymaps.catenary
 
-fun occupancy_to_symbol(status: String?): String {
+fun occupancy_to_symbol(status: Int?): String {
     return when (status) {
-        "EMPTY" -> " " // "🚶"
-        "MANY_SEATS_AVAILABLE" -> " " // "🚶"
-        "FEW_SEATS_AVAILABLE" -> "👥"
-        "STANDING_ROOM_ONLY" -> "👨‍👩‍👧‍👦"
-        "CRUSHED_STANDING_ROOM_ONLY" -> " crammed "
-        "FULL" -> " full "
-        "NOT_ACCEPTING_PASSENGERS" -> "❌"
+        0 -> "∅"
+        1 -> "▢"
+        2 -> "▣"
+        3 -> "╬"
+        4 -> "╬☹╬"
+        5 -> "■"
+        6 -> "✗"
+        8 -> "✗"
         else -> ""
     }
 }

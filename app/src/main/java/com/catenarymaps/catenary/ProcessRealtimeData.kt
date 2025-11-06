@@ -112,8 +112,12 @@ fun rerenderCategoryLiveDots(
                 "%.1f %s".format(speed, if (usUnits) "mph" else "km/h")
             } ?: ""
 
+            println(vehicleData.toString())
+
             // Occupancy symbol
             val crowdSymbol = occupancy_to_symbol(vehicleData.occupancy_status)
+
+            println("Crowd symbol made ${crowdSymbol}")
 
             // Delay label
             val delayLabel = vehicleData.trip?.delay?.let {
