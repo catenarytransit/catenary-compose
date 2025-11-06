@@ -2709,7 +2709,15 @@ class MainActivity : ComponentActivity() {
 
                     SnackbarHost(
                         hostState = snackbars,
-                        modifier = Modifier.align(Alignment.BottomCenter)
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .windowInsetsPadding(
+                                WindowInsets(
+                                    bottom = WindowInsets.safeContent.getBottom(
+                                        density
+                                    )
+                                )
+                            )
                     )
                 }
             }
