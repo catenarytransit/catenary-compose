@@ -62,6 +62,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.analytics.GoogleAnalytics
 import com.google.android.gms.analytics.HitBuilders
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 
 @Composable
 fun VehicleSelectionItem(
@@ -281,10 +283,11 @@ fun MapSelectionScreen(
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         try {
-            val analytics = GoogleAnalytics.getInstance(context)
-            val tracker = analytics.newTracker("")
-            tracker.setScreenName("MapSelectionScreen")
-            tracker.send(HitBuilders.ScreenViewBuilder().build())
+            val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+                param(FirebaseAnalytics.Param.SCREEN_NAME, "MapSelectionScreen")
+                //param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
+            }
         } catch (e: Exception) {
             // Log the error or handle it gracefully
             android.util.Log.e("GA", "Failed to log screen view", e)

@@ -159,6 +159,7 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.google.android.gms.analytics.GoogleAnalytics
+import com.google.android.gms.analytics.Tracker
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
@@ -205,6 +206,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.launch
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
@@ -591,6 +593,9 @@ val ktorClient = HttpClient() {
 
 class MainActivity : ComponentActivity() {
 
+
+    //private var tracker: Tracker? = null
+
     private val layerSettings = mutableStateOf(AllLayerSettings())
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -782,11 +787,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+
+        val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
 
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
@@ -801,7 +809,15 @@ class MainActivity : ComponentActivity() {
 
         val initialOptOut = !initialGaConsent
         try {
-            GoogleAnalytics.getInstance(this).appOptOut = initialOptOut
+
+            firebaseAnalytics.setConsent(
+                mapOf(
+                    FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to if (initialGaConsent) FirebaseAnalytics.ConsentStatus.GRANTED else FirebaseAnalytics.ConsentStatus.DENIED,
+                    FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
+                    FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
+                    FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED
+                )
+            )
             Log.d(TAG, "Initial Google Analytics opt-out state set to: $initialOptOut")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to set initial GA opt-out: ${e.message}")
@@ -976,6 +992,16 @@ class MainActivity : ComponentActivity() {
                 val optOut = !isChecked
                 try {
                     GoogleAnalytics.getInstance(this).appOptOut = optOut
+
+                    firebaseAnalytics.setConsent(
+                        mapOf(
+                            FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to if (isChecked) FirebaseAnalytics.ConsentStatus.GRANTED else FirebaseAnalytics.ConsentStatus.DENIED,
+                            FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
+                            FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
+                            FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED
+                        )
+                    )
+
                     Log.d(TAG, "Google Analytics consent set to: $isChecked (appOptOut: $optOut)")
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to set GA opt-out on toggle: ${e.message}")
@@ -1075,6 +1101,7 @@ class MainActivity : ComponentActivity() {
                     val request = LocationRequest.Builder(
                         Priority.PRIORITY_HIGH_ACCURACY, /* intervalMillis = */ 5_000L
                     )
+
                         .setMinUpdateIntervalMillis(2_000L)
                         .setMinUpdateDistanceMeters(5f)
                         .build()
@@ -4165,3 +4192,4 @@ fun VehicleLabelToggleButton(
         )
     }
 }
+
