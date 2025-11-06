@@ -44,7 +44,9 @@ val SHAPES_SOURCES = mapOf(
 )
 
 @Composable
-fun AddShapes() {
+fun AddShapes(
+    layerSettings: AllLayerSettings
+) {
     val busShapesSource = rememberVectorSource(
         uri = SHAPES_SOURCES.getValue("busshapes")
     )
@@ -58,7 +60,7 @@ fun AddShapes() {
         uri = SHAPES_SOURCES.getValue("localcityrailshapes")
     )
 
-    val bus = layerSettings.value["bus"] as LayerCategorySettings
+    val bus = layerSettings.bus as LayerCategorySettings
 
     // BUS
 
@@ -136,9 +138,9 @@ fun AddShapes() {
     )
 
     // Pull per-category settings
-    val otherSettings = layerSettings.value["other"] as LayerCategorySettings
-    val intercitySettings = layerSettings.value["intercityrail"] as LayerCategorySettings
-    val localRailSettings = layerSettings.value["localrail"] as LayerCategorySettings
+    val otherSettings = layerSettings.other as LayerCategorySettings
+    val intercitySettings = layerSettings.intercityrail as LayerCategorySettings
+    val localRailSettings = layerSettings.localrail as LayerCategorySettings
 
 // Common color expressions (same style as your bus code)
     val colorLine: org.maplibre.compose.expressions.ast.Expression<ColorValue> =

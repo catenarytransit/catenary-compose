@@ -289,8 +289,56 @@ object LayersPerCategory {
     }
 }
 
+@Serializable
+// Top-level data structure for all layer settings
+data class AllLayerSettings(
+    var bus: LayerCategorySettings = LayerCategorySettings(),
+    var localrail: LayerCategorySettings = LayerCategorySettings(),
+    var intercityrail: LayerCategorySettings = LayerCategorySettings(
+        labelrealtimedots = LabelSettings(
+            trip = true
+        )
+    ),
+    var other: LayerCategorySettings = LayerCategorySettings(),
+    var more: MoreSettings = MoreSettings()
+) {
+    // Helper to get a category by string key, useful for abstracting UI
+    operator fun get(key: String): Any? {
+        return when (key) {
+            "bus" -> bus
+            "localrail" -> localrail
+            "intercityrail" -> intercityrail
+            "other" -> other
+            "more" -> more
+            else -> null
+        }
+    }
 
 
+}
+
+// Read helper
+fun AllLayerSettings.category(tab: String): LayerCategorySettings? = when (tab) {
+    "bus" -> bus
+    "localrail" -> localrail
+    "intercityrail" -> intercityrail
+    "other" -> other
+    else -> null
+}
+
+// Write helper
+fun AllLayerSettings.updateCategory(
+    tab: String,
+    transform: (LayerCategorySettings) -> LayerCategorySettings
+): AllLayerSettings = when (tab) {
+    "bus" -> copy(bus = transform(bus))
+    "localrail" -> copy(localrail = transform(localrail))
+    "intercityrail" -> copy(intercityrail = transform(intercityrail))
+    "other" -> copy(other = transform(other))
+    else -> this
+}
+
+@Serializable
 // Label settings (route/trip/vehicle/etc.)
 data class LabelSettings(
     var route: Boolean = true,
@@ -303,6 +351,7 @@ data class LabelSettings(
     var delay: Boolean = true
 )
 
+@Serializable
 // Main category settings (bus/localrail/intercityrail/other)
 data class LayerCategorySettings(
     var visiblerealtimedots: Boolean = true,
@@ -313,6 +362,7 @@ data class LayerCategorySettings(
     var labelrealtimedots: LabelSettings = LabelSettings()
 )
 
+@Serializable
 // Extra "more" settings
 data class FoamermodeSettings(
     var infra: Boolean = false,
@@ -323,6 +373,7 @@ data class FoamermodeSettings(
     var dummy: Boolean = true
 )
 
+@Serializable
 data class MoreSettings(
     var foamermode: FoamermodeSettings = FoamermodeSettings(),
     var showstationentrances: Boolean = true,
@@ -331,125 +382,31 @@ data class MoreSettings(
     var showcoords: Boolean = false
 )
 
+
 // Layer Settings Persistence
 private const val K_LAYER_SETTINGS = "layer_settings_v1"
 
-private fun SharedPreferences.writeLayerSettings(settings: Map<String, Any>) {
-    val editor = edit()
-    val categories = listOf("bus", "localrail", "intercityrail", "other")
-
-    categories.forEach { category ->
-        val catSettings = settings[category] as? LayerCategorySettings
-        if (catSettings != null) {
-            editor.putBoolean(
-                "${K_LAYER_SETTINGS}_${category}_visiblerealtimedots",
-                catSettings.visiblerealtimedots
-            )
-            editor.putBoolean(
-                "${K_LAYER_SETTINGS}_${category}_labelshapes",
-                catSettings.labelshapes
-            )
-            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_stops", catSettings.stops)
-            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_shapes", catSettings.shapes)
-            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_labelstops", catSettings.labelstops)
-
-            val labelSettings = catSettings.labelrealtimedots
-            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_label_route", labelSettings.route)
-            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_label_trip", labelSettings.trip)
-            editor.putBoolean(
-                "${K_LAYER_SETTINGS}_${category}_label_vehicle",
-                labelSettings.vehicle
-            )
-            editor.putBoolean(
-                "${K_LAYER_SETTINGS}_${category}_label_headsign",
-                labelSettings.headsign
-            )
-            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_label_speed", labelSettings.speed)
-            editor.putBoolean(
-                "${K_LAYER_SETTINGS}_${category}_label_occupancy",
-                labelSettings.occupancy
-            )
-            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_label_delay", labelSettings.delay)
-        }
+private fun SharedPreferences.writeLayerSettings(settings: AllLayerSettings) {
+    val json = Json { ignoreUnknownKeys = true }
+    try {
+        val settingsJson = json.encodeToString(AllLayerSettings.serializer(), settings)
+        edit().putString(K_LAYER_SETTINGS, settingsJson).apply()
+    } catch (e: Exception) {
+        Log.e("LayerSettings", "Failed to serialize and save layer settings", e)
     }
-    // Note: 'more' settings are not saved for now as they are ephemeral (showZombieBuses, etc)
-    editor.apply()
     Log.d("LayerSettings", "Saved layer settings to SharedPreferences.")
 }
 
-private fun SharedPreferences.readLayerSettings(): Map<String, Any>? {
-    // Check if any key exists to prevent loading defaults over nothing
-    if (!contains("${K_LAYER_SETTINGS}_bus_visiblerealtimedots")) {
-        Log.d("LayerSettings", "No saved layer settings found.")
-        return null
-    }
-
-    Log.d("LayerSettings", "Loading layer settings from SharedPreferences.")
-    val settings = mutableMapOf<String, Any>()
-    val categories = listOf("bus", "localrail", "intercityrail", "other")
-
-    try {
-        categories.forEach { category ->
-            val catSettings = LayerCategorySettings(
-                visiblerealtimedots = getBoolean(
-                    "${K_LAYER_SETTINGS}_${category}_visiblerealtimedots",
-                    true
-                ),
-                labelshapes = getBoolean("${K_LAYER_SETTINGS}_${category}_labelshapes", true),
-                stops = getBoolean("${K_LAYER_SETTINGS}_${category}_stops", true),
-                shapes = getBoolean("${K_LAYER_SETTINGS}_${category}_shapes", true),
-                labelstops = getBoolean("${K_LAYER_SETTINGS}_${category}_labelstops", true),
-                labelrealtimedots = LabelSettings(
-                    route = getBoolean("${K_LAYER_SETTINGS}_${category}_label_route", true),
-                    trip = getBoolean(
-                        "${K_LAYER_SETTINGS}_${category}_label_trip",
-                        category == "intercityrail"
-                    ), // Special default
-                    vehicle = getBoolean("${K_LAYER_SETTINGS}_${category}_label_vehicle", false),
-                    headsign = getBoolean("${K_LAYER_SETTINGS}_${category}_label_headsign", false),
-                    speed = getBoolean("${K_LAYER_SETTINGS}_${category}_label_speed", false),
-                    occupancy = getBoolean("${K_LAYER_SETTINGS}_${category}_label_occupancy", true),
-                    delay = getBoolean("${K_LAYER_SETTINGS}_${category}_label_delay", true)
-                )
-            )
-            settings[category] = catSettings
-        }
-
-        // Always add default 'more' settings as they aren't persisted
-        settings["more"] = MoreSettings()
-
-        // Handle special defaults that might not be in the saved data if it's old
-        val defaultIntercityLabelSettings =
-            (settings["intercityrail"] as LayerCategorySettings).labelrealtimedots
-        if (!contains("${K_LAYER_SETTINGS}_intercityrail_label_trip")) {
-            (settings["intercityrail"] as LayerCategorySettings).labelrealtimedots =
-                defaultIntercityLabelSettings.copy(trip = true)
-        }
-        if (!contains("${K_LAYER_SETTINGS}_bus_label_route")) {
-            (settings["bus"] as LayerCategorySettings).labelrealtimedots =
-                (settings["bus"] as LayerCategorySettings).labelrealtimedots.copy(route = true)
-            (settings["localrail"] as LayerCategorySettings).labelrealtimedots =
-                (settings["localrail"] as LayerCategorySettings).labelrealtimedots.copy(route = true)
-            (settings["other"] as LayerCategorySettings).labelrealtimedots =
-                (settings["other"] as LayerCategorySettings).labelrealtimedots.copy(route = true)
-        }
-
-        return settings
+private fun SharedPreferences.readLayerSettings(): AllLayerSettings? {
+    val json = Json { ignoreUnknownKeys = true }
+    val settingsJson = getString(K_LAYER_SETTINGS, null) ?: return null
+    return try {
+        json.decodeFromString<AllLayerSettings>(settingsJson)
     } catch (e: Exception) {
-        Log.e("LayerSettings", "Failed to read layer settings, falling back to default.", e)
-        return null // Fallback to default if there's any error
+        Log.e("LayerSettings", "Failed to deserialize layer settings", e)
+        null
     }
 }
-
-val layerSettings = mutableStateOf(
-    mapOf(
-        "bus" to LayerCategorySettings(),
-        "localrail" to LayerCategorySettings(),
-        "intercityrail" to LayerCategorySettings(labelrealtimedots = LabelSettings(trip = true)),
-        "other" to LayerCategorySettings(),
-        "more" to MoreSettings()
-    )
-)
 
 val STOP_SOURCES = mapOf(
     "busstops" to "https://birch6.catenarymaps.org/busstops",
@@ -577,6 +534,8 @@ val ktorClient = HttpClient() {
 
 class MainActivity : ComponentActivity() {
 
+    private val layerSettings = mutableStateOf(AllLayerSettings())
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val isFetchingRealtimeData = AtomicBoolean(false)
@@ -601,7 +560,7 @@ class MainActivity : ComponentActivity() {
         scope: CoroutineScope,
         zoom: Double,
         showZombieBuses: Boolean, // Pass state
-        settings: Map<String, Any>
+        settings: AllLayerSettings
     ) {
         if (!isFetchingRealtimeData.compareAndSet(false, true)) {
             Log.d(TAG, "Skipping fetch, another one is already in progress.")
@@ -613,16 +572,16 @@ class MainActivity : ComponentActivity() {
                 val categoriesToRequest = mutableListOf<String>()
 
                 val busThreshold = 8
-                if ((settings["bus"] as LayerCategorySettings).visiblerealtimedots && zoom >= busThreshold) {
+                if ((settings.bus as LayerCategorySettings).visiblerealtimedots && zoom >= busThreshold) {
                     categoriesToRequest.add("bus")
                 }
-                if ((settings["intercityrail"] as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
+                if ((settings.intercityrail as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
                     categoriesToRequest.add("rail")
                 }
-                if ((settings["localrail"] as LayerCategorySettings).visiblerealtimedots && zoom >= 4) {
+                if ((settings.localrail as LayerCategorySettings).visiblerealtimedots && zoom >= 4) {
                     categoriesToRequest.add("metro")
                 }
-                if ((settings["other"] as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
+                if ((settings.other as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
                     categoriesToRequest.add("other")
                 }
 
@@ -775,13 +734,7 @@ class MainActivity : ComponentActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
         // --- Load Layer Settings ---
-        val initialLayerSettings = prefs.readLayerSettings() ?: mapOf(
-            "bus" to LayerCategorySettings(),
-            "localrail" to LayerCategorySettings(),
-            "intercityrail" to LayerCategorySettings(labelrealtimedots = LabelSettings(trip = true)),
-            "other" to LayerCategorySettings(),
-            "more" to MoreSettings()
-        )
+        val initialLayerSettings = prefs.readLayerSettings() ?: AllLayerSettings()
 
         val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, false)
         val trackingConsent =
@@ -1588,9 +1541,13 @@ class MainActivity : ComponentActivity() {
                             id = "chateaus_calc", source = chateausSource, opacity = const(0.0f)
                         )
 
-                        AddShapes()
+                        AddShapes(
+                            layerSettings = layerSettings.value
+                        )
 
-                        AddStops()
+                        AddStops(
+                            layerSettings = layerSettings.value
+                        )
 
                         // --- Detour Line ---
                         LineLayer(
@@ -1855,8 +1812,8 @@ class MainActivity : ComponentActivity() {
                         LiveDotLayers(
                             category = "bus",
                             source = busDotsSrc.value,                // <- persistent source
-                            settings = (layerSettings.value["bus"] as LayerCategorySettings).labelrealtimedots,
-                            isVisible = (layerSettings.value["bus"] as LayerCategorySettings).visiblerealtimedots,
+                            settings = layerSettings.value.bus.labelrealtimedots,
+                            isVisible = layerSettings.value.bus.visiblerealtimedots,
                             baseFilter = if (showZombieBuses) all() else all(
                                 feature.has("trip_id"),
                                 get("trip_id").cast<StringValue>().neq(const(""))
@@ -1877,8 +1834,8 @@ class MainActivity : ComponentActivity() {
                         LiveDotLayers(
                             category = "metro",
                             source = metroDotsSrc.value,
-                            settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
-                            isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
+                            settings = layerSettings.value.localrail.labelrealtimedots,
+                            isVisible = layerSettings.value.localrail.visiblerealtimedots,
                             baseFilter = all(
                                 any(rtEq(1), rtEq(12)), if (showZombieBuses) all() else all(
                                     feature.has("trip_id"),
@@ -1897,8 +1854,8 @@ class MainActivity : ComponentActivity() {
                         LiveDotLayers(
                             category = "tram",
                             source = metroDotsSrc.value,  // re-uses metro source, different filter via layerIdPrefix branch
-                            settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
-                            isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
+                            settings = layerSettings.value.localrail.labelrealtimedots,
+                            isVisible = layerSettings.value.localrail.visiblerealtimedots,
                             baseFilter = all(
                                 any(rtEq(0), rtEq(5)), if (showZombieBuses) all() else all(
                                     feature.has("trip_id"),
@@ -2449,8 +2406,7 @@ class MainActivity : ComponentActivity() {
                                         "intercityrail", "localrail", "bus", "other"
                                     )
                                 ) {
-                                    val currentSettings =
-                                        layerSettings.value[selectedTab] as? LayerCategorySettings
+                                    val currentSettings = layerSettings.value.category(selectedTab)
                                     currentSettings?.let { settings ->
 
                                         // Row 1: Shapes, Labels, Stops, Stop Labels
@@ -2472,12 +2428,11 @@ class MainActivity : ComponentActivity() {
                                                 },
                                                 isActive = settings.shapes,
                                                 onToggle = {
-                                                    val updated =
-                                                        settings.copy(shapes = !settings.shapes)
                                                     layerSettings.value =
-                                                        layerSettings.value.toMutableMap().apply {
-                                                            put(selectedTab, updated)
-
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(shapes = !cat.shapes)
                                                         }
                                                 }
                                             )
@@ -2495,12 +2450,11 @@ class MainActivity : ComponentActivity() {
                                                 }, // Placeholder
                                                 isActive = settings.labelshapes,
                                                 onToggle = {
-                                                    val updated =
-                                                        settings.copy(labelshapes = !settings.labelshapes)
                                                     layerSettings.value =
-                                                        layerSettings.value.toMutableMap().apply {
-                                                            put(selectedTab, updated)
-
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(labelshapes = !cat.labelshapes)
                                                         }
                                                 }
                                             )
@@ -2518,14 +2472,14 @@ class MainActivity : ComponentActivity() {
                                                 },
                                                 isActive = settings.stops,
                                                 onToggle = {
-                                                    val updated =
-                                                        settings.copy(stops = !settings.stops)
                                                     layerSettings.value =
-                                                        layerSettings.value.toMutableMap().apply {
-                                                            put(selectedTab, updated)
-
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(stops = !cat.stops)
                                                         }
                                                 }
+
                                             )
                                             LayerToggleButton(
                                                 name = "Stop Labels",
@@ -2541,12 +2495,11 @@ class MainActivity : ComponentActivity() {
                                                 },
                                                 isActive = settings.labelstops,
                                                 onToggle = {
-                                                    val updated =
-                                                        settings.copy(labelstops = !settings.labelstops)
                                                     layerSettings.value =
-                                                        layerSettings.value.toMutableMap().apply {
-                                                            put(selectedTab, updated)
-
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(labelstops = !cat.labelstops)
                                                         }
                                                 }
                                             )
@@ -2565,12 +2518,11 @@ class MainActivity : ComponentActivity() {
                                                 },
                                                 isActive = settings.visiblerealtimedots,
                                                 onToggle = {
-                                                    val updated =
-                                                        settings.copy(visiblerealtimedots = !settings.visiblerealtimedots)
                                                     layerSettings.value =
-                                                        layerSettings.value.toMutableMap().apply {
-                                                            put(selectedTab, updated)
-
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(visiblerealtimedots = !cat.visiblerealtimedots)
                                                         }
                                                 }
                                             )
@@ -2585,15 +2537,6 @@ class MainActivity : ComponentActivity() {
 
                                         // Row 3: Label Toggles
                                         val labelSettings = settings.labelrealtimedots
-                                        val updateLayer = { newLabelSettings: LabelSettings ->
-                                            val updatedCategorySettings =
-                                                settings.copy(labelrealtimedots = newLabelSettings)
-                                            layerSettings.value =
-                                                layerSettings.value.toMutableMap().apply {
-                                                    put(selectedTab, updatedCategorySettings)
-
-                                                }
-                                        }
 
                                         // Row 3: Label Toggles (First row from JS)
                                         Row(
@@ -2604,50 +2547,122 @@ class MainActivity : ComponentActivity() {
                                                 name = "Route", // Corresponds to $_('showroute')
                                                 icon = Icons.Filled.Route, // Corresponds to symbol="route"
                                                 isActive = labelSettings.route,
-                                                onToggle = { updateLayer(labelSettings.copy(route = !labelSettings.route)) }
+                                                onToggle = {
+                                                    layerSettings.value =
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(
+                                                                labelrealtimedots = cat.labelrealtimedots.copy(
+                                                                    route = !cat.labelrealtimedots.route
+                                                                )
+                                                            )
+                                                        }
+                                                }
                                             )
                                             VehicleLabelToggleButton(
                                                 name = stringResource(id = R.string.trip), // Corresponds to $_('showtrip')
                                                 icon = Icons.Filled.AltRoute, // Corresponds to symbol="mode_of_travel"
                                                 isActive = labelSettings.trip,
-                                                onToggle = { updateLayer(labelSettings.copy(trip = !labelSettings.trip)) }
+                                                onToggle = {
+                                                    layerSettings.value =
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(
+                                                                labelrealtimedots = cat.labelrealtimedots.copy(
+                                                                    trip = !cat.labelrealtimedots.trip
+                                                                )
+                                                            )
+                                                        }
+                                                }
                                             )
                                             VehicleLabelToggleButton(
                                                 name = "Vehicle", // Corresponds to $_('showvehicle')
                                                 icon = Icons.Filled.Train, // Corresponds to symbol="train"
                                                 isActive = labelSettings.vehicle,
-                                                onToggle = { updateLayer(labelSettings.copy(vehicle = !labelSettings.vehicle)) }
+                                                onToggle = {
+                                                    layerSettings.value =
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(
+                                                                labelrealtimedots = cat.labelrealtimedots.copy(
+                                                                    vehicle = !cat.labelrealtimedots.vehicle
+                                                                )
+                                                            )
+                                                        }
+                                                }
+
                                             )
 
                                             VehicleLabelToggleButton(
                                                 name = "Headsign", // Corresponds to $_('headsign')
                                                 icon = Icons.Filled.SportsScore, // Corresponds to symbol="sports_score"
                                                 isActive = labelSettings.headsign,
-                                                onToggle = { updateLayer(labelSettings.copy(headsign = !labelSettings.headsign)) }
+                                                onToggle = {
+                                                    layerSettings.value =
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(
+                                                                labelrealtimedots = cat.labelrealtimedots.copy(
+                                                                    headsign = !cat.labelrealtimedots.headsign
+                                                                )
+                                                            )
+                                                        }
+                                                }
                                             )
                                             VehicleLabelToggleButton(
                                                 name = stringResource(id = R.string.speed),
                                                 icon = Icons.Filled.Speed, // Corresponds to symbol="speed"
                                                 isActive = labelSettings.speed,
-                                                onToggle = { updateLayer(labelSettings.copy(speed = !labelSettings.speed)) }
+                                                onToggle = {
+                                                    layerSettings.value =
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(
+                                                                labelrealtimedots = cat.labelrealtimedots.copy(
+                                                                    speed = !cat.labelrealtimedots.speed
+                                                                )
+                                                            )
+                                                        }
+                                                }
                                             )
                                             VehicleLabelToggleButton(
                                                 name = stringResource(id = R.string.occupancy),
                                                 icon = Icons.Filled.Group, // Corresponds to symbol="group"
                                                 isActive = labelSettings.occupancy,
                                                 onToggle = {
-                                                    updateLayer(
-                                                        labelSettings.copy(
-                                                            occupancy = !labelSettings.occupancy
-                                                        )
-                                                    )
+                                                    layerSettings.value =
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(
+                                                                labelrealtimedots = cat.labelrealtimedots.copy(
+                                                                    occupancy = !cat.labelrealtimedots.occupancy
+                                                                )
+                                                            )
+                                                        }
                                                 }
                                             )
                                             VehicleLabelToggleButton(
                                                 name = "Delay", // Corresponds to $_('delay')
                                                 icon = Icons.Filled.Timer, // Corresponds to symbol="timer"
                                                 isActive = labelSettings.delay,
-                                                onToggle = { updateLayer(labelSettings.copy(delay = !labelSettings.delay)) }
+                                                onToggle = {
+                                                    layerSettings.value =
+                                                        layerSettings.value.updateCategory(
+                                                            selectedTab
+                                                        ) { cat ->
+                                                            cat.copy(
+                                                                labelrealtimedots = cat.labelrealtimedots.copy(
+                                                                    delay = !cat.labelrealtimedots.delay
+                                                                )
+                                                            )
+                                                        }
+                                                }
                                             )
                                         }
 
@@ -2885,8 +2900,10 @@ private fun isIntercity() =
     rtEq(2)
 
 @Composable
-fun AddStops() {
-    val dark = isSystemInDarkTheme()
+fun AddStops(
+    layerSettings: AllLayerSettings,
+) {
+    val isDark = isSystemInDarkTheme()
     val cfg = LocalConfiguration.current
     val isTablet = (cfg.screenWidthDp >= 768)
 
@@ -2901,12 +2918,11 @@ fun AddStops() {
     val barlowBold = const(listOf("Barlow-Bold"))
 
     // Colors (inside/outside dot)
-    val circleInside = if (dark) Color(0xFF1C2636) else Color(0xFFFFFFFF)
-    val circleOutside = if (dark) Color(0xFFFFFFFF) else Color(0xFF1C2636)
+    val circleInside = if (isDark) Color(0xFF1C2636) else Color(0xFFFFFFFF)
+    val circleOutside = if (isDark) Color(0xFFFFFFFF) else Color(0xFF1C2636)
 
     // JS: bus_stop_stop_color(darkMode) -> step(zoom, ...)
-    val busStrokeColorExpr: Expression<ColorValue> =
-        if (dark) {
+    val busStrokeColorExpr: Expression<ColorValue> = if (isDark) {
             step(
                 input = zoom(),
                 const(Color(0xFFE0E0E0)),
@@ -2978,8 +2994,8 @@ fun AddStops() {
             15.0 to const(0.6f)
         ),
         opacity = const(0.1f),
-        minZoom = if (isTablet) 13f else 11.5f,
-        visible = (layerSettings.value["bus"] as LayerCategorySettings).stops
+        minZoom = 13f,
+        visible = (layerSettings.bus as LayerCategorySettings).stops
     )
 
     SymbolLayer(
@@ -2997,11 +3013,11 @@ fun AddStops() {
         ),
         // radial 0.5 => y offset +0.5em
         textOffset = offset(0.em, 0.5.em),
-        textColor = if (dark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (dark) const(Color(0xFF0F172A)) else const(Color.White),
+        textColor = if (isDark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
+        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
         textHaloWidth = const(0.4.dp),
-        minZoom = if (isTablet) 14.7f else 13.7f,
-        visible = (layerSettings.value["bus"] as LayerCategorySettings).labelstops
+        minZoom = 14.7f,
+        visible = (layerSettings.bus as LayerCategorySettings).labelstops
     )
 
     /* ============================================================
@@ -3040,7 +3056,7 @@ fun AddStops() {
         ),
         minZoom = 9f,
         filter = isMetro,
-        visible = (layerSettings.value["localrail"] as LayerCategorySettings).stops
+        visible = (layerSettings.localrail as LayerCategorySettings).stops
     )
 
     SymbolLayer(
@@ -3068,12 +3084,12 @@ fun AddStops() {
             barlowRegular,
             12.0 to barlowMedium
         ),
-        textColor = if (dark) const(Color.White) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (dark) const(Color(0xFF0F172A)) else const(Color.White),
-        textHaloWidth = const(1.dp),
+        textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+        textHaloWidth = const(1.dp), // was 1.dp
         minZoom = 11f,
         filter = isMetro,
-        visible = (layerSettings.value["localrail"] as LayerCategorySettings).labelstops
+        visible = (layerSettings.localrail as LayerCategorySettings).labelstops
     )
 
     /* ============================================================
@@ -3107,7 +3123,7 @@ fun AddStops() {
         opacity = const(0.8f),
         minZoom = 9f,
         filter = isTram,
-        visible = (layerSettings.value["localrail"] as LayerCategorySettings).stops
+        visible = (layerSettings.localrail as LayerCategorySettings).stops
     )
 
     SymbolLayer(
@@ -3136,12 +3152,12 @@ fun AddStops() {
             barlowRegular,
             12.0 to barlowMedium
         ),
-        textColor = if (dark) const(Color.White) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (dark) const(Color(0xFF0F172A)) else const(Color.White),
-        textHaloWidth = const(1.dp),
+        textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
+        textHaloWidth = const(1.dp), // was 1.dp
         minZoom = 12f,
         filter = isTram,
-        visible = (layerSettings.value["localrail"] as LayerCategorySettings).labelstops
+        visible = (layerSettings.localrail as LayerCategorySettings).labelstops
     )
 
     /* ============================================================
@@ -3187,7 +3203,7 @@ fun AddStops() {
         ),
         minZoom = 7.5f,
         filter = isIntercity,
-        visible = (layerSettings.value["intercityrail"] as LayerCategorySettings).stops
+        visible = (layerSettings.intercityrail as LayerCategorySettings).stops
     )
 
     SymbolLayer(
@@ -3203,12 +3219,12 @@ fun AddStops() {
             barlowRegular,
             8.5 to barlowMedium
         ),
-        textColor = if (dark) const(Color.White) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (dark) const(Color(0xFF0F172A)) else const(Color.White),
-        textHaloWidth = const(1.dp),
+        textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+        textHaloWidth = const(1.dp), // was 1.dp
         minZoom = 8f,
         filter = isIntercity,
-        visible = (layerSettings.value["intercityrail"] as LayerCategorySettings).labelstops
+        visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
     )
 
     /* ============================================================
@@ -3244,7 +3260,7 @@ fun AddStops() {
             16 to const(0.8f)
         ),
         minZoom = 9f,
-        visible = (layerSettings.value["other"] as LayerCategorySettings).stops
+        visible = (layerSettings.other as LayerCategorySettings).stops
     )
 
     SymbolLayer(
@@ -3262,11 +3278,11 @@ fun AddStops() {
         // radial 1 => y offset +1em
         textOffset = offset(0.em, 1.em),
         textFont = barlowBold,
-        textColor = if (dark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (dark) const(Color(0xFF0F172A)) else const(Color.White),
+        textColor = if (isDark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
+        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
         textHaloWidth = const(1.dp),
         minZoom = 9f,
-        visible = (layerSettings.value["other"] as LayerCategorySettings).labelstops
+        visible = (layerSettings.other as LayerCategorySettings).labelstops
     )
 }
 
@@ -3410,7 +3426,7 @@ fun AddLiveDots(
     isDark: Boolean,
     usUnits: Boolean,
     showZombieBuses: Boolean, // (not used here, but keep signature if you need it later)
-    layerSettings: Map<String, Any>,
+    layerSettings: AllLayerSettings,
     vehicleLocations: Map<String, Map<String, Map<String, VehiclePosition>>>,
     routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>,
     busDotsSrc: MutableState<GeoJsonSource>,
