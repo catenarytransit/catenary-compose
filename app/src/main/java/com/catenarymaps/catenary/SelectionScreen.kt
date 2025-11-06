@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -57,6 +58,10 @@ import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.launch
+
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.analytics.GoogleAnalytics
+import com.google.android.gms.analytics.HitBuilders
 
 @Composable
 fun VehicleSelectionItem(
@@ -273,6 +278,19 @@ fun MapSelectionScreen(
     screenData: CatenaryStackEnum.MapSelectionScreen,
     onStackPush: (CatenaryStackEnum) -> Unit
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        try {
+            val analytics = GoogleAnalytics.getInstance(context)
+            val tracker = analytics.newTracker("")
+            tracker.setScreenName("MapSelectionScreen")
+            tracker.send(HitBuilders.ScreenViewBuilder().build())
+        } catch (e: Exception) {
+            // Log the error or handle it gracefully
+            android.util.Log.e("GA", "Failed to log screen view", e)
+        }
+    }
+
     // Stop preview state
     var stopPreviewData by remember { mutableStateOf<StopPreviewResponse?>(null) }
     val scope = rememberCoroutineScope()
@@ -317,6 +335,7 @@ fun MapSelectionScreen(
         modifier = Modifier
             .fillMaxWidth()
             .scrollable(state = lazyListState, orientation = Orientation.Vertical)
+            // .windowInsetsBottomHeight(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current)))
             .windowInsetsPadding(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current))),
         state = lazyListState,
         verticalArrangement = Arrangement.spacedBy(2.dp),

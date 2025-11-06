@@ -2046,7 +2046,21 @@ class MainActivity : ComponentActivity() {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(maxHeight),
+
+                                .padding( // This padding ensures content doesn't get clipped at the bottom
+                                    bottom = with(LocalDensity.current) {
+
+
+                                        ((
+                                                draggableState.requireOffset()
+                                                )).toDp().coerceAtLeast(0.dp).coerceAtMost(
+                                                with(LocalDensity.current) {
+                                                    maxHeight.times(0.9f)
+                                                }
+                                            )
+                                    }
+                                ),
+
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(

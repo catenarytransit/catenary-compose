@@ -52,6 +52,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +60,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.analytics.GoogleAnalytics
+import com.google.android.gms.analytics.HitBuilders
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,6 +78,19 @@ fun SingleTripInfoScreen(
     // --- State to control other map layers ---
     onSetStopsToHide: (Set<String>) -> Unit
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        try {
+            val analytics = GoogleAnalytics.getInstance(context)
+            val tracker = analytics.newTracker("")
+            tracker.setScreenName("SingleTripInfoScreen")
+            tracker.send(HitBuilders.ScreenViewBuilder().build())
+        } catch (e: Exception) {
+            // Log the error or handle it gracefully
+            android.util.Log.e("GA", "Failed to log screen view", e)
+        }
+    }
+
     val viewModel: SingleTripViewModel = viewModel(
         key = "${tripSelected.chateau_id}-${tripSelected.trip_id}-${tripSelected.start_time}-${tripSelected.start_date}",
         factory = SingleTripViewModel.factory(
@@ -243,6 +261,7 @@ fun SingleTripInfoScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
+                    //.windowInsetsBottomHeight(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current)))
                     .windowInsetsPadding(
                         WindowInsets(
                             bottom = WindowInsets.safeDrawing.getBottom(

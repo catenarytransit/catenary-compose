@@ -52,6 +52,11 @@ import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.analytics.GoogleAnalytics
+import com.google.android.gms.analytics.HitBuilders
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
@@ -298,6 +303,19 @@ fun NearbyDepartures(
     onCenterPin: () -> Unit = {},
     onTripClick: (TripClickResponse) -> Unit = {}
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        try {
+            val analytics = GoogleAnalytics.getInstance(context)
+            val tracker = analytics.newTracker("")
+            tracker.setScreenName("NearbyDeparturesScreen")
+            tracker.send(HitBuilders.ScreenViewBuilder().build())
+        } catch (e: Exception) {
+            // Log the error or handle it gracefully
+            android.util.Log.e("GA", "Failed to log screen view", e)
+        }
+    }
+
     var filters by remember { mutableStateOf(Filters()) }
     var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
     var loading by remember { mutableStateOf(false) }
@@ -463,6 +481,14 @@ fun NearbyDepartures(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(listScroll)
+                    //.windowInsetsBottomHeight(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current)))
+                    .windowInsetsPadding(
+                        WindowInsets(
+                            bottom = WindowInsets.safeDrawing.getBottom(
+                                density = LocalDensity.current
+                            )
+                        )
+                    ),
             ) {
                 if (sorted.isEmpty() && firstLoadComplete && !loading) {
                     Spacer(Modifier.height(16.dp))
