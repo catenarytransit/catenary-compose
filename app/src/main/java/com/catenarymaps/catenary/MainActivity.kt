@@ -196,7 +196,8 @@ private const val K_DATADOG_CONSENT = "datadog_consent"
 private const val K_GA_CONSENT = "ga_consent"
 
 private fun SharedPreferences.putDouble(key: String, value: Double) =
-    edit().putLong(key, java.lang.Double.doubleToRawLongBits(value)).apply()
+    edit().putLong(key, java.lang.Double.doubleToRawLongBits(value))
+        .apply()
 
 private fun SharedPreferences.getDouble(key: String, default: Double = Double.NaN): Double {
     if (!contains(key)) return default
@@ -230,7 +231,6 @@ private fun SharedPreferences.writeCamera(pos: CameraPosition) {
     putDouble(K_TILT, pos.tilt)
 }
 
-// ⬇️ REPLACE your old LayersPerCategory with this one
 object LayersPerCategory {
     object Bus {
         const val Shapes = "bus-shapes"
@@ -330,6 +330,116 @@ data class MoreSettings(
     var showbikelanes: Boolean = false,
     var showcoords: Boolean = false
 )
+
+// Layer Settings Persistence
+private const val K_LAYER_SETTINGS = "layer_settings_v1"
+
+private fun SharedPreferences.writeLayerSettings(settings: Map<String, Any>) {
+    val editor = edit()
+    val categories = listOf("bus", "localrail", "intercityrail", "other")
+
+    categories.forEach { category ->
+        val catSettings = settings[category] as? LayerCategorySettings
+        if (catSettings != null) {
+            editor.putBoolean(
+                "${K_LAYER_SETTINGS}_${category}_visiblerealtimedots",
+                catSettings.visiblerealtimedots
+            )
+            editor.putBoolean(
+                "${K_LAYER_SETTINGS}_${category}_labelshapes",
+                catSettings.labelshapes
+            )
+            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_stops", catSettings.stops)
+            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_shapes", catSettings.shapes)
+            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_labelstops", catSettings.labelstops)
+
+            val labelSettings = catSettings.labelrealtimedots
+            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_label_route", labelSettings.route)
+            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_label_trip", labelSettings.trip)
+            editor.putBoolean(
+                "${K_LAYER_SETTINGS}_${category}_label_vehicle",
+                labelSettings.vehicle
+            )
+            editor.putBoolean(
+                "${K_LAYER_SETTINGS}_${category}_label_headsign",
+                labelSettings.headsign
+            )
+            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_label_speed", labelSettings.speed)
+            editor.putBoolean(
+                "${K_LAYER_SETTINGS}_${category}_label_occupancy",
+                labelSettings.occupancy
+            )
+            editor.putBoolean("${K_LAYER_SETTINGS}_${category}_label_delay", labelSettings.delay)
+        }
+    }
+    // Note: 'more' settings are not saved for now as they are ephemeral (showZombieBuses, etc)
+    editor.apply()
+    Log.d("LayerSettings", "Saved layer settings to SharedPreferences.")
+}
+
+private fun SharedPreferences.readLayerSettings(): Map<String, Any>? {
+    // Check if any key exists to prevent loading defaults over nothing
+    if (!contains("${K_LAYER_SETTINGS}_bus_visiblerealtimedots")) {
+        Log.d("LayerSettings", "No saved layer settings found.")
+        return null
+    }
+
+    Log.d("LayerSettings", "Loading layer settings from SharedPreferences.")
+    val settings = mutableMapOf<String, Any>()
+    val categories = listOf("bus", "localrail", "intercityrail", "other")
+
+    try {
+        categories.forEach { category ->
+            val catSettings = LayerCategorySettings(
+                visiblerealtimedots = getBoolean(
+                    "${K_LAYER_SETTINGS}_${category}_visiblerealtimedots",
+                    true
+                ),
+                labelshapes = getBoolean("${K_LAYER_SETTINGS}_${category}_labelshapes", true),
+                stops = getBoolean("${K_LAYER_SETTINGS}_${category}_stops", true),
+                shapes = getBoolean("${K_LAYER_SETTINGS}_${category}_shapes", true),
+                labelstops = getBoolean("${K_LAYER_SETTINGS}_${category}_labelstops", true),
+                labelrealtimedots = LabelSettings(
+                    route = getBoolean("${K_LAYER_SETTINGS}_${category}_label_route", true),
+                    trip = getBoolean(
+                        "${K_LAYER_SETTINGS}_${category}_label_trip",
+                        category == "intercityrail"
+                    ), // Special default
+                    vehicle = getBoolean("${K_LAYER_SETTINGS}_${category}_label_vehicle", false),
+                    headsign = getBoolean("${K_LAYER_SETTINGS}_${category}_label_headsign", false),
+                    speed = getBoolean("${K_LAYER_SETTINGS}_${category}_label_speed", false),
+                    occupancy = getBoolean("${K_LAYER_SETTINGS}_${category}_label_occupancy", true),
+                    delay = getBoolean("${K_LAYER_SETTINGS}_${category}_label_delay", true)
+                )
+            )
+            settings[category] = catSettings
+        }
+
+        // Always add default 'more' settings as they aren't persisted
+        settings["more"] = MoreSettings()
+
+        // Handle special defaults that might not be in the saved data if it's old
+        val defaultIntercityLabelSettings =
+            (settings["intercityrail"] as LayerCategorySettings).labelrealtimedots
+        if (!contains("${K_LAYER_SETTINGS}_intercityrail_label_trip")) {
+            (settings["intercityrail"] as LayerCategorySettings).labelrealtimedots =
+                defaultIntercityLabelSettings.copy(trip = true)
+        }
+        if (!contains("${K_LAYER_SETTINGS}_bus_label_route")) {
+            (settings["bus"] as LayerCategorySettings).labelrealtimedots =
+                (settings["bus"] as LayerCategorySettings).labelrealtimedots.copy(route = true)
+            (settings["localrail"] as LayerCategorySettings).labelrealtimedots =
+                (settings["localrail"] as LayerCategorySettings).labelrealtimedots.copy(route = true)
+            (settings["other"] as LayerCategorySettings).labelrealtimedots =
+                (settings["other"] as LayerCategorySettings).labelrealtimedots.copy(route = true)
+        }
+
+        return settings
+    } catch (e: Exception) {
+        Log.e("LayerSettings", "Failed to read layer settings, falling back to default.", e)
+        return null // Fallback to default if there's any error
+    }
+}
 
 val layerSettings = mutableStateOf(
     mapOf(
@@ -664,6 +774,15 @@ class MainActivity : ComponentActivity() {
 
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
+        // --- Load Layer Settings ---
+        val initialLayerSettings = prefs.readLayerSettings() ?: mapOf(
+            "bus" to LayerCategorySettings(),
+            "localrail" to LayerCategorySettings(),
+            "intercityrail" to LayerCategorySettings(labelrealtimedots = LabelSettings(trip = true)),
+            "other" to LayerCategorySettings(),
+            "more" to MoreSettings()
+        )
+
         val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, false)
         val trackingConsent =
             if (initialDatadogConsent) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
@@ -775,6 +894,16 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
+            // --- Moved from onCreate ---
+            // The state that will hold our layer settings. Initialize with loaded or default.
+            val layerSettings = remember { mutableStateOf(initialLayerSettings) }
+
+            // Whenever layerSettings changes, save it to SharedPreferences.
+            LaunchedEffect(layerSettings.value) {
+                prefs.writeLayerSettings(layerSettings.value)
+            }
+            // --- End of move ---
+
 
             val scope = rememberCoroutineScope()
             val snackbars = remember { SnackbarHostState() }
@@ -2348,6 +2477,7 @@ class MainActivity : ComponentActivity() {
                                                     layerSettings.value =
                                                         layerSettings.value.toMutableMap().apply {
                                                             put(selectedTab, updated)
+
                                                         }
                                                 }
                                             )
@@ -2370,6 +2500,7 @@ class MainActivity : ComponentActivity() {
                                                     layerSettings.value =
                                                         layerSettings.value.toMutableMap().apply {
                                                             put(selectedTab, updated)
+
                                                         }
                                                 }
                                             )
@@ -2392,6 +2523,7 @@ class MainActivity : ComponentActivity() {
                                                     layerSettings.value =
                                                         layerSettings.value.toMutableMap().apply {
                                                             put(selectedTab, updated)
+
                                                         }
                                                 }
                                             )
@@ -2414,6 +2546,7 @@ class MainActivity : ComponentActivity() {
                                                     layerSettings.value =
                                                         layerSettings.value.toMutableMap().apply {
                                                             put(selectedTab, updated)
+
                                                         }
                                                 }
                                             )
@@ -2437,6 +2570,7 @@ class MainActivity : ComponentActivity() {
                                                     layerSettings.value =
                                                         layerSettings.value.toMutableMap().apply {
                                                             put(selectedTab, updated)
+
                                                         }
                                                 }
                                             )
@@ -2457,6 +2591,7 @@ class MainActivity : ComponentActivity() {
                                             layerSettings.value =
                                                 layerSettings.value.toMutableMap().apply {
                                                     put(selectedTab, updatedCategorySettings)
+
                                                 }
                                         }
 
