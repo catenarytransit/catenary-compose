@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PinDrop
+import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,6 +49,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.sp
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -618,7 +621,7 @@ private fun RouteGroupCard(
     darkMode: Boolean,
     onTripClick: (TripClickResponse) -> Unit
 ) {
-    val bg = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (darkMode) 0.5f else 1f)
+    val bg = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (darkMode) 0.5f else 1f)
     val textCol = normalizeHex(route.textColor) ?: MaterialTheme.colorScheme.onSurface
     val lineCol = normalizeHex(route.color) ?: MaterialTheme.colorScheme.primary
 
@@ -676,7 +679,7 @@ private fun RouteGroupCard(
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     items(
                         items = visibleTrips,
@@ -713,6 +716,17 @@ private fun TripPill(
     val secondsLeft = dep - nowSec
     val stop = stopsTable[chateauId]?.get(trip.stopId)
     val tz = stop?.timezone ?: trip.tz
+    val isPast = secondsLeft < 0
+
+    val contentAlpha = if (isPast) {
+        0.7f
+    } else 1.0f
+
+    val hasRealtime = trip.departureRealtime != null
+    val baseColor = if (hasRealtime) Color(0x00AB9B) else LocalContentColor.current
+
+    val contentColor = baseColor.copy(alpha = contentAlpha)
+
 
     Surface(
         onClick = {
@@ -730,20 +744,22 @@ private fun TripPill(
         },
         shape = RoundedCornerShape(6.dp),
         tonalElevation = 0.dp,
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Column(
             modifier = Modifier
                 .widthIn(min = 76.dp)
+
                 .padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             if (trip.tripShortName != null && trip.tripShortName.isNotBlank()) {
                 Text(
                     trip.tripShortName,
                     modifier = Modifier
                         .clip(RoundedCornerShape(3.dp))
-                        .background(lineCol.copy(alpha = 0.15f))
+                        .background(lineCol)
                         .padding(horizontal = 4.dp, vertical = 2.dp),
                     color = textCol,
                     style = MaterialTheme.typography.labelSmall,
@@ -752,14 +768,33 @@ private fun TripPill(
             }
 
             // “in 5 min” / “now”
-            DiffTimer(
-                diff = secondsLeft.toDouble(),
-                showBrackets = false,
-                showSeconds = false,
-                large = false,
-                showDays = false,
-                showPlus = false
-            )
+            CompositionLocalProvider(LocalContentColor provides contentColor) {
+                Row() {
+                    DiffTimer(
+                        diff = secondsLeft.toDouble(),
+                        showBrackets = false,
+                        showSeconds = false,
+                        showDays = false,
+                        showPlus = false,
+                        numSize = 16.sp,
+                        unitSize = 14.sp,
+                        numberFontWeight = FontWeight.Medium,
+                        unitFontWeight = FontWeight.Medium,
+                        color = contentColor.copy(alpha = contentColor.alpha)
+                    )
+
+                    if (hasRealtime) {
+                        Icon(
+                            Icons.Default.RssFeed,
+                            modifier = Modifier.size(10.dp),
+                            contentDescription = "Realtime",
+                            tint = contentColor.copy(alpha = contentColor.alpha)
+                        )
+                    }
+                }
+
+
+            }
 
             // Wall-clock time
             if (tz != null) {
@@ -795,7 +830,9 @@ private fun TripPill(
             // Platform/Track
             trip.platform?.let {
                 Text(
-                    "Plt ${it.replace("Track", "").trim()}",
+                    "${stringResource(R.string.platform)} ${it.trim()} ${
+                        it.replace("Track", "").trim()
+                    }",
                     style = MaterialTheme.typography.labelSmall
                 )
             }

@@ -52,6 +52,6 @@ public fun FormattedTimeText(
     // Display the formatted time string in a Text composable
     Text(
         text = formattedTime,
-        modifier = modifier
+        modifier = modifier,
     )
 }

@@ -471,7 +471,6 @@ private fun TimeRow(
                 diff = (target - currentTimeSecs).toDouble(),
                 showBrackets = false,
                 showSeconds = showSeconds,
-                large = false,
                 showDays = false,
                 showPlus = false
             )
@@ -558,7 +557,6 @@ private fun UnifiedTimeRow(
                 diff = (target - currentTimeSecs).toDouble(),
                 showBrackets = false,
                 showSeconds = showSeconds,
-                large = false,
                 showDays = false,
                 showPlus = false
             )
@@ -648,7 +646,6 @@ private fun DelayChip(diffSecs: Long, showSeconds: Boolean, muted: Boolean) {
                 diff = diffSecs.toDouble(),
                 showBrackets = false,
                 showSeconds = showSeconds,
-                large = false,
                 showDays = false,
                 showPlus = true
             )

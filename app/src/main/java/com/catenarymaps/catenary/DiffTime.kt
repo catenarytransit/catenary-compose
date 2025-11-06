@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.TextUnit
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
@@ -74,9 +76,14 @@ fun DiffTimer(
     diff: Double,                 // seconds (can be negative)
     showBrackets: Boolean = true,
     showSeconds: Boolean = false,
-    large: Boolean = false,
     showDays: Boolean = false,
     showPlus: Boolean = false,
+    numSize: TextUnit = 14.sp, // if (large) 18.sp else 14.sp
+    unitSize: TextUnit = 12.sp, //if (large) 14.sp else 12.sp
+    bracketSize: TextUnit = 14.sp, // if (large) 18.sp else 14.sp
+    numberFontWeight: FontWeight = FontWeight.Normal,
+    unitFontWeight: FontWeight = FontWeight.Normal,
+    color: Color = Color.Unspecified
 ) {
     val context = LocalContext.current
     val locale = remember { currentLocale(context) }
@@ -103,43 +110,85 @@ fun DiffTimer(
         else -> ""
     }
 
-    val numSize = if (large) 18.sp else 14.sp
-    val unitSize = if (large) 14.sp else 12.sp
-    val bracketSize = if (large) 18.sp else 14.sp
 
     Row(modifier = Modifier, verticalAlignment = Alignment.Bottom) {
         if (showBrackets) {
-            Text("[", fontSize = bracketSize)
+            Text("[", fontSize = bracketSize, modifier = Modifier.alignByBaseline(), color = color)
         }
 
         if (signText.isNotEmpty()) {
-            Text(signText, fontSize = numSize, fontWeight = FontWeight.Bold)
+            Text(
+                signText, fontSize = numSize, fontWeight = FontWeight.Bold,
+                modifier = Modifier.alignByBaseline(), color = color
+            )
         }
 
         if ((d as Int) > 0) {
-            Text("$d", fontSize = numSize)
-            Text(dayMarking(locale), fontSize = unitSize)
+            Text(
+                "$d", fontSize = numSize, fontWeight = numberFontWeight,
+                modifier = Modifier.alignByBaseline(), color = color
+            )
+            Text(
+                dayMarking(locale),
+                fontSize = unitSize,
+                fontWeight = unitFontWeight,
+                modifier = Modifier.alignByBaseline(),
+                color = color
+            )
         }
 
         if ((h as Int) > 0) {
-            Text("$h", fontSize = numSize)
-            Text(hourMarking(locale), fontSize = unitSize)
+            Text(
+                "$h", modifier = Modifier.alignByBaseline(),
+                fontSize = numSize, fontWeight = numberFontWeight, color = color
+            )
+            Text(
+                hourMarking(locale),
+                fontSize = unitSize,
+                fontWeight = unitFontWeight,
+                modifier = Modifier.alignByBaseline(),
+                color = color
+            )
         }
 
         val showM =
             (h as Int) > 0 || ((m as Int) > 0 || (!showSeconds && (m as Int) >= 0 && diff != 0.0))
         if (showM) {
-            Text("$m", fontSize = numSize)
-            Text(minMarking(locale), fontSize = unitSize)
+            Text(
+                "$m",
+                modifier = Modifier.alignByBaseline(),
+                fontSize = numSize,
+                fontWeight = numberFontWeight,
+                color = color
+            )
+            Text(
+                minMarking(locale),
+                fontSize = unitSize,
+                fontWeight = unitFontWeight,
+                modifier = Modifier.alignByBaseline(),
+                color = color
+            )
         }
 
         if (showSeconds) {
-            Text((s as Double).toInt().toString(), fontSize = numSize)
-            Text(secMarking(locale), fontSize = unitSize)
+            Text(
+                (s as Double).toInt().toString(),
+                modifier = Modifier.alignByBaseline(),
+                fontSize = numSize,
+                fontWeight = numberFontWeight,
+                color = color
+            )
+            Text(
+                secMarking(locale),
+                fontSize = unitSize,
+                fontWeight = unitFontWeight,
+                modifier = Modifier.alignByBaseline(),
+                color = color
+            )
         }
 
         if (showBrackets) {
-            Text("]", fontSize = bracketSize)
+            Text("]", fontSize = bracketSize, modifier = Modifier.alignByBaseline(), color = color)
         }
     }
 }
