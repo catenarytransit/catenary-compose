@@ -2407,6 +2407,10 @@ class MainActivity : ComponentActivity() {
                                 // === FIX for Error 4 ===
                                 focusManager.clearFocus() // This should now resolve
                             },
+                            onRouteClick = { ranking, RouteInfo ->
+
+
+                            },
                             onStopClick = { ranking, stopInfo ->
                                 geoLock.deactivate()
 

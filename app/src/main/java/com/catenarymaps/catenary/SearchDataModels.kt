@@ -23,7 +23,8 @@ data class NominatimResult(
 
 @Serializable
 data class CatenarySearchResponse(
-    @SerialName("stops_section") val stopsSection: StopsSection
+    @SerialName("stops_section") val stopsSection: StopsSection,
+    @SerialName("routes_section") val routesSection: RoutesSection
 )
 
 @Serializable
@@ -35,6 +36,19 @@ data class StopsSection(
 
 @Serializable
 data class StopRanking(
+    @SerialName("gtfs_id") val gtfsId: String,
+    val chateau: String,
+    val score: Double
+)
+
+@Serializable
+data class RoutesSection(
+    val routes: Map<String, Map<String, RouteInfo>>,
+    val ranking: List<RouteRanking>
+)
+
+@Serializable
+data class RouteRanking(
     @SerialName("gtfs_id") val gtfsId: String,
     val chateau: String,
     val score: Double

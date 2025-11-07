@@ -275,7 +275,7 @@ fun SingleTripInfoScreen(
                 state = lazyListState
             ) {
                 itemsIndexed(stopTimes) { i, stopTime ->
-                    if (showPreviousStops || i > lastInactiveStopIdx) {
+                    if (showPreviousStops || i > lastInactiveStopIdx || (i == stopTimes.lastIndex && stopTimes.isNotEmpty())) {
                         // Calculate new state variables
                         val isInactive = i <= lastInactiveStopIdx
                         val isPreviousInactive = i - 1 == lastInactiveStopIdx

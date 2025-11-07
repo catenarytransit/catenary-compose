@@ -45,13 +45,15 @@ fun SearchResultsOverlay(
     viewModel: SearchViewModel,
     currentLocation: Pair<Double, Double>?,
     onNominatimClick: (NominatimResult) -> Unit,
-    onStopClick: (StopRanking, StopInfo) -> Unit
+    onStopClick: (StopRanking, StopInfo) -> Unit,
+    onRouteClick: (RouteRanking, RouteInfo) -> Unit
 ) {
     val nominatimResults by viewModel.nominatimResults.collectAsState()
     val catenaryResults by viewModel.catenaryResults.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
     val stopsSection = catenaryResults?.stopsSection
+    val routesSection = catenaryResults?.routesSection
 
     Surface(
         modifier = modifier
@@ -78,6 +80,21 @@ fun SearchResultsOverlay(
                         onClick = { onNominatimClick(item) }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                }
+
+                // --- Route Results ---
+                if (routesSection != null) {
+                    items(routesSection.ranking.take(10)) { ranking ->
+                        val routeInfo = routesSection.routes[ranking.chateau]?.get(ranking.gtfsId)
+                        if (routeInfo != null) {
+                            RouteResultItem(
+                                routeInfo = routeInfo,
+                                ranking = ranking,
+                                onClick = { onRouteClick(ranking, routeInfo) }
+                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        }
+                    }
                 }
 
                 // --- Stop Results ---
@@ -110,6 +127,8 @@ fun SearchResultsOverlay(
                         }
                     }
                 }
+
+
             }
 
             if (isLoading) {
@@ -213,6 +232,38 @@ fun StopResultItem(
             routes.forEach { route ->
                 RouteBadge(route = route)
             }
+        }
+    }
+}
+
+@Composable
+fun RouteResultItem(
+    routeInfo: RouteInfo,
+    ranking: RouteRanking,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            //horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RouteBadge(route = routeInfo)
+            if (routeInfo.longName != null) {
+                Text(
+                    text = routeInfo.longName,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
         }
     }
 }
