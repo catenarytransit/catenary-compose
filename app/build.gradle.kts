@@ -15,7 +15,6 @@ buildscript {
     }
 }
 
-
 android {
     namespace = "com.catenarymaps.catenary"
     compileSdk = 36
@@ -24,8 +23,8 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 122
-        versionName = "2.0.20"
+        versionCode = 123
+        versionName = "2.0.21"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
