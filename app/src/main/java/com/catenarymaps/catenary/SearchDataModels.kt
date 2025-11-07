@@ -31,19 +31,20 @@ data class CatenarySearchResponse(
 data class StopsSection(
     val stops: Map<String, Map<String, StopInfo>>,
     val routes: Map<String, Map<String, RouteInfo>>,
+    val agencies: Map<String, Map<String, Agency>>,
     val ranking: List<StopRanking>
 )
 
 @Serializable
 data class StopRanking(
     @SerialName("gtfs_id") val gtfsId: String,
-    val chateau: String,
-    val score: Double
+    val chateau: String, val score: Double
 )
 
 @Serializable
 data class RoutesSection(
     val routes: Map<String, Map<String, RouteInfo>>,
+    val agencies: Map<String, Map<String, Agency>>,
     val ranking: List<RouteRanking>
 )
 
@@ -74,5 +75,23 @@ data class RouteInfo(
     @SerialName("short_name") val shortName: String? = null,
     @SerialName("long_name") val longName: String? = null,
     val color: String,
-    @SerialName("text_color") val textColor: String
+    @SerialName("text_color") val textColor: String,
+    @SerialName("agency_id") val agencyId: String? = null
+)
+
+@Serializable
+data class Agency(
+    @SerialName("static_onestop_id") val staticOnestopId: String,
+    @SerialName("agency_id") val agencyId: String,
+    @SerialName("attempt_id") val attemptId: String,
+    @SerialName("agency_name") val agencyName: String,
+    @SerialName("agency_name_translations") val agencyNameTranslations: Map<String, String>? = null,
+    @SerialName("agency_url") val agencyUrl: String,
+    @SerialName("agency_url_translations") val agencyUrlTranslations: Map<String, String>? = null,
+    @SerialName("agency_timezone") val agencyTimezone: String,
+    @SerialName("agency_lang") val agencyLang: String? = null,
+    @SerialName("agency_phone") val agencyPhone: String? = null,
+    @SerialName("agency_fare_url") val agencyFareUrl: String? = null,
+    @SerialName("agency_fare_url_translations") val agencyFareUrlTranslations: Map<String, String>? = null,
+    val chateau: String
 )

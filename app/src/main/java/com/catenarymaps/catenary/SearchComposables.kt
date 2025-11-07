@@ -46,7 +46,7 @@ fun SearchResultsOverlay(
     currentLocation: Pair<Double, Double>?,
     onNominatimClick: (NominatimResult) -> Unit,
     onStopClick: (StopRanking, StopInfo) -> Unit,
-    onRouteClick: (RouteRanking, RouteInfo) -> Unit
+    onRouteClick: (RouteRanking, RouteInfo, Agency?) -> Unit
 ) {
     val nominatimResults by viewModel.nominatimResults.collectAsState()
     val catenaryResults by viewModel.catenaryResults.collectAsState()
@@ -86,11 +86,15 @@ fun SearchResultsOverlay(
                 if (routesSection != null) {
                     items(routesSection.ranking.take(10)) { ranking ->
                         val routeInfo = routesSection.routes[ranking.chateau]?.get(ranking.gtfsId)
+                        val agency = routeInfo?.agencyId?.let {
+                            routesSection.agencies[ranking.chateau]?.get(it)
+                        }
+
                         if (routeInfo != null) {
                             RouteResultItem(
                                 routeInfo = routeInfo,
-                                ranking = ranking,
-                                onClick = { onRouteClick(ranking, routeInfo) }
+                                agency = agency,
+                                onClick = { onRouteClick(ranking, routeInfo, agency) }
                             )
                             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         }
@@ -108,6 +112,11 @@ fun SearchResultsOverlay(
                                 stopsSection.routes[ranking.chateau]?.get(routeId)
                             }
 
+                            // Resolve agency names
+                            val agencyNames = routes.mapNotNull { route ->
+                                route.agencyId?.let { stopsSection.agencies[ranking.chateau]?.get(it)?.agencyName }
+                            }.distinct()
+
                             // Calculate distance
                             val distanceMetres = currentLocation?.let { (userLat, userLon) ->
                                 haversineDistance(
@@ -120,6 +129,7 @@ fun SearchResultsOverlay(
                                 stopInfo = stopInfo,
                                 ranking = ranking,
                                 routes = routes,
+                                agencyNames = agencyNames,
                                 distanceMetres = distanceMetres,
                                 onClick = { onStopClick(ranking, stopInfo) }
                             )
@@ -184,6 +194,7 @@ fun StopResultItem(
     stopInfo: StopInfo,
     ranking: StopRanking,
     routes: List<RouteInfo>,
+    agencyNames: List<String>,
     distanceMetres: Double?,
     onClick: () -> Unit
 ) {
@@ -224,6 +235,17 @@ fun StopResultItem(
             }
         }
 
+        // Agency Names
+        if (agencyNames.isNotEmpty()) {
+            Text(
+                text = agencyNames.joinToString(" • "),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
         // FlowRow for Route Badges
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -239,7 +261,7 @@ fun StopResultItem(
 @Composable
 fun RouteResultItem(
     routeInfo: RouteInfo,
-    ranking: RouteRanking,
+    agency: Agency?,
     onClick: () -> Unit
 ) {
     Column(
@@ -255,15 +277,23 @@ fun RouteResultItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             RouteBadge(route = routeInfo)
-            if (routeInfo.longName != null) {
-                Text(
-                    text = routeInfo.longName,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+            Column(modifier = Modifier.padding(start = 8.dp)) {
+                if (routeInfo.longName != null) {
+                    Text(
+                        text = routeInfo.longName,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                agency?.agencyName?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-
         }
     }
 }

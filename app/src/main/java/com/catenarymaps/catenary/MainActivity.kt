@@ -2407,7 +2407,7 @@ class MainActivity : ComponentActivity() {
                                 // === FIX for Error 4 ===
                                 focusManager.clearFocus() // This should now resolve
                             },
-                            onRouteClick = { ranking, RouteInfo ->
+                            onRouteClick = { ranking, routeInfo, agency ->
 
 
                             },
@@ -4196,4 +4196,3 @@ fun VehicleLabelToggleButton(
         )
     }
 }
-
