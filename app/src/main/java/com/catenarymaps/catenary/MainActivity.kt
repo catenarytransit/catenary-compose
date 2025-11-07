@@ -2073,7 +2073,7 @@ class MainActivity : ComponentActivity() {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-
+                                .fillMaxHeight()
                                 .padding( // This padding ensures content doesn't get clipped at the bottom
                                     bottom = with(LocalDensity.current) {
 
@@ -2208,6 +2208,19 @@ class MainActivity : ComponentActivity() {
                                                 gaConsent = gaConsent,
                                                 onGaConsentChanged = onGaConsentChanged
                                             )
+                                        }
+                                        is CatenaryStackEnum.RouteStack -> {
+                                            Text(
+                                                text = "TODO ROUTE SCREEN"
+                                            )
+                                            //RouteScreen(currentScreen)
+                                        }
+
+                                        is CatenaryStackEnum.StopStack -> {
+                                            Text(
+                                                text = "TODO STOP SCREEN"
+                                            )
+                                            //StopScreen(currentScreen)
                                         }
                                         // TODO: Add 'when' branches for other stack types
                                         // (SingleTrip, RouteStack, etc.)
@@ -2408,25 +2421,40 @@ class MainActivity : ComponentActivity() {
                                 focusManager.clearFocus() // This should now resolve
                             },
                             onRouteClick = { ranking, routeInfo, agency ->
+                                geoLock.deactivate()
 
+                                val newStack = ArrayDeque(catenaryStack)
+                                newStack.addLast(
+                                    CatenaryStackEnum.RouteStack(
+                                        chateau_id = routeInfo.chateau,
+                                        route_id = routeInfo.routeId
+                                    )
+                                )
+                                catenaryStack = newStack
 
+                                scope.launch {
+                                    draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                }
+                                focusManager.clearFocus()
                             },
-                            onStopClick = { ranking, stopInfo ->
+                            onStopClick = { chateau, gtfsId, ranking, stopInfo ->
                                 geoLock.deactivate()
 
                                 val pos = Position(stopInfo.point.x, stopInfo.point.y)
 
-                                // === FIX for Error 5 ===
-                                scope.launch {
-                                    camera.animateTo(
-                                        camera.position.copy(
-                                            target = pos,
-                                            zoom = 16.0
-                                        )
+                                val newStack = ArrayDeque(catenaryStack)
+                                newStack.addLast(
+                                    CatenaryStackEnum.StopStack(
+                                        chateau_id = chateau,
+                                        stop_id = gtfsId
                                     )
+                                )
+                                catenaryStack = newStack
+
+                                scope.launch {
+                                    draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
                                 }
-                                // === FIX for Error 6 ===
-                                focusManager.clearFocus() // This should now resolve
+                                focusManager.clearFocus()
                             }
                         )
                     }

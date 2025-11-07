@@ -61,7 +61,7 @@ data class StopInfo(
     val code: String? = null,
     val point: StopPoint,
     val routes: List<String>,
-    @SerialName("parent_station") val parentStation: String? = null
+    @SerialName("parent_station") val parentStation: String? = null,
 )
 
 @Serializable
@@ -76,7 +76,10 @@ data class RouteInfo(
     @SerialName("long_name") val longName: String? = null,
     val color: String,
     @SerialName("text_color") val textColor: String,
-    @SerialName("agency_id") val agencyId: String? = null
+    @SerialName("agency_id") val agencyId: String? = null,
+    @SerialName("route_id") val routeId: String,
+    @SerialName("route_type") val routeType: Int,
+    @SerialName("chateau") val chateau: String,
 )
 
 @Serializable

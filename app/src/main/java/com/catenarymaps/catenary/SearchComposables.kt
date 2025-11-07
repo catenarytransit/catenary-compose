@@ -45,7 +45,7 @@ fun SearchResultsOverlay(
     viewModel: SearchViewModel,
     currentLocation: Pair<Double, Double>?,
     onNominatimClick: (NominatimResult) -> Unit,
-    onStopClick: (StopRanking, StopInfo) -> Unit,
+    onStopClick: (String, String, StopRanking, StopInfo) -> Unit,
     onRouteClick: (RouteRanking, RouteInfo, Agency?) -> Unit
 ) {
     val nominatimResults by viewModel.nominatimResults.collectAsState()
@@ -131,7 +131,14 @@ fun SearchResultsOverlay(
                                 routes = routes,
                                 agencyNames = agencyNames,
                                 distanceMetres = distanceMetres,
-                                onClick = { onStopClick(ranking, stopInfo) }
+                                onClick = {
+                                    onStopClick(
+                                        ranking.chateau,
+                                        ranking.gtfsId,
+                                        ranking,
+                                        stopInfo
+                                    )
+                                }
                             )
                             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         }
