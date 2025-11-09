@@ -81,6 +81,10 @@ fun processRealtimeDataV2(
                 "other" to categories.other
             )
 
+
+            var shouldFetchRoutes = false
+            val agency_ids_to_fetch = mutableListOf<String>()
+
             categoryMap.forEach { (categoryName, categoryData) ->
                 if (categoryData != null) {
                     val zLevel = categoryData.z_level
@@ -98,7 +102,41 @@ fun processRealtimeDataV2(
                         newPrevBounds[chateauId] = chateauPrevBounds
                     }
 
+
                     if (categoryData.vehicle_positions != null) {
+
+                        //iter through all vehicles
+                        categoryData.vehicle_positions.forEach { (x, yMap) ->
+                            yMap.forEach { (y, vehicleMap) ->
+                                vehicleMap.forEach { (_, vehicleData) ->
+
+                                    val routeId = vehicleData.trip?.route_id
+                                    if (routeId != null) {
+                                        //check realtimeVehicleLocationsStoreV2
+                                        if (realtimeVehicleLocationsStoreV2.value.containsKey(
+                                                chateauId
+                                            )
+                                        ) {
+                                            if (realtimeVehicleLocationsStoreV2.value[chateauId]!!.containsKey(
+                                                    routeId
+                                                )
+                                            ) {
+
+                                            } else {
+                                                shouldFetchRoutes = true
+
+                                            }
+                                        } else {
+                                            shouldFetchRoutes = true
+
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+
+
                         val categoryLocations = newLocations.getOrPut(categoryName) { mutableMapOf() }.toMutableMap()
                         if (categoryData.replaces_all) {
                             val chateauLocations = categoryLocations.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
@@ -106,6 +144,9 @@ fun processRealtimeDataV2(
                             // Assuming kotlinx.serialization handles the string-to-int key conversion.
                             val vehiclePositionsIntKeys = categoryData.vehicle_positions.mapKeys { it.key.toInt() }
                                 .mapValues { entry -> entry.value.mapKeys { it.key.toInt() } }
+
+
+
                             chateauLocations.clear()
                             chateauLocations.putAll(vehiclePositionsIntKeys)
                             categoryLocations[chateauId] = chateauLocations
@@ -120,6 +161,13 @@ fun processRealtimeDataV2(
                             }
                             categoryLocations[chateauId] = chateauLocations
                         }
+
+                        if (shouldFetchRoutes) {
+                            if (categoryData.list_of_agency_ids != null) {
+                                agency_ids_to_fetch.addAll(categoryData.list_of_agency_ids!!.toList())
+                            }
+
+                        }
                         newLocations[categoryName] = categoryLocations
                     }
 
@@ -127,12 +175,20 @@ fun processRealtimeDataV2(
                     chateauLastUpdated[categoryName] = categoryData.last_updated_time_ms
                     newLastUpdated[chateauId] = chateauLastUpdated
 
-                    if (categoryData.list_of_agency_ids != null) {
-                        fetchRoutesOfChateauByAgency(chateauId, categoryData.list_of_agency_ids, realtimeVehicleRouteCache, ktorClient)
-                    } else {
-                        println("Refusing to fetch routes $chateauId")
-                    }
+
                 }
+
+
+            }
+
+            if (shouldFetchRoutes) {
+                fetchRoutesOfChateauByAgency(
+                    chateauId,
+                    agency_ids_to_fetch,
+                    realtimeVehicleRouteCache,
+                    ktorClient
+                )
+
             }
         }
     }
