@@ -17,4 +17,10 @@
     <string name="early">En avance</string>
     <string name="late">En retard</string>
     <string name="ontime">À l\'heure</string>
+    <string name="previous_departures">Départs précédents</string>
+    <string name="load_more">Charger plus</string>
+    <string name="arrival">Arrivée</string>
+    <string name="departure">Départ</string>
+    <string name="no_headsign">Pas de girouette</string>
+    <string name="no_departures_found">Aucun départ trouvé</string>
 </resources>

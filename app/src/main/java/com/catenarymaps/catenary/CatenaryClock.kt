@@ -22,8 +22,9 @@ public fun FormattedTimeText(
     timeSeconds: Long,
     showSeconds: Boolean = false,
     modifier: Modifier = Modifier,
-    textColor: Color = LocalContentColor.current,
-    textDecoration: TextDecoration? = LocalTextStyle.current.textDecoration,
+    color: Color = Color.Unspecified,
+    textDecoration: TextDecoration? = null,
+    style: TextStyle = LocalTextStyle.current
 ) {
     // It's generally better to perform calculations like this outside of `remember`
     // if they are complex, but for this case, we can compute the formatted time directly.
@@ -58,7 +59,8 @@ public fun FormattedTimeText(
     Text(
         text = formattedTime,
         modifier = modifier,
+        color = color,
         textDecoration = textDecoration,
-        color = textColor
+        style = style
     )
 }

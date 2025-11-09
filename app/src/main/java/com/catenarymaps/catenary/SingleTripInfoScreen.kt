@@ -601,7 +601,7 @@ private fun TimeRow(
                                 timezone = tz,
                                 timeSeconds = scheduled,
                                 showSeconds = showSeconds,
-                                textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textDecoration = TextDecoration.LineThrough
                             )
                         }
@@ -670,7 +670,7 @@ private fun UnifiedTimeRow(
                             timezone = tz,
                             timeSeconds = scheduled,
                             showSeconds = showSeconds,
-                            textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textDecoration = TextDecoration.LineThrough
 
                         )

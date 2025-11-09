@@ -200,6 +200,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DirectionsBus
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -794,6 +795,8 @@ class MainActivity : ComponentActivity() {
             val transitShapeDetourSourceRef =
                 remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
             val stopsContextSourceRef =
+                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
+            val transitShapeForStopSourceRef =
                 remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
 
             val density = LocalDensity.current
@@ -1479,6 +1482,15 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        DisposableEffect(transitShapeForStopSource) {
+                            transitShapeForStopSourceRef.value = transitShapeForStopSource
+                            onDispose {
+                                if (transitShapeForStopSourceRef.value === transitShapeForStopSource) {
+                                    transitShapeForStopSourceRef.value = null
+                                }
+                            }
+                        }
+
 
                         // Source + layers
                         val chateausSource = rememberGeoJsonSource(
@@ -2013,12 +2025,23 @@ class MainActivity : ComponentActivity() {
                                 val currentScreen = catenaryStack.last()
                                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                                     // Add a simple back button
-                                    IconButton(onClick = {
-                                        val newStack = ArrayDeque(catenaryStack)
-                                        newStack.removeLastOrNull()
-                                        catenaryStack = newStack
-                                    }) {
-                                        Icon(Icons.Filled.ArrowBack, "Go back")
+                                    Row() {
+                                        IconButton(onClick = {
+                                            val newStack = ArrayDeque(catenaryStack)
+                                            newStack.removeLastOrNull()
+                                            catenaryStack = newStack
+                                        }) {
+                                            Icon(Icons.Filled.ArrowBack, "Go back")
+                                        }
+
+                                        IconButton(
+                                            onClick = {
+                                                catenaryStack = ArrayDeque()
+                                            }
+
+                                        ) {
+                                            Icon(Icons.Filled.Home, "Home screen")
+                                        }
                                     }
 
                                     // Render the current stack screen
@@ -2084,10 +2107,29 @@ class MainActivity : ComponentActivity() {
                                         }
 
                                         is CatenaryStackEnum.StopStack -> {
-                                            Text(
-                                                text = "TODO STOP SCREEN"
-                                            )
-                                            //StopScreen(currentScreen)
+                                            // Check all 4 refs now
+                                            if (transitShapeSourceRef.value != null &&
+                                                transitShapeDetourSourceRef.value != null &&
+                                                stopsContextSourceRef.value != null &&
+                                                transitShapeForStopSourceRef.value != null // <-- Added this check
+                                            ) {
+                                                StopScreen(
+                                                    screenData = currentScreen,
+                                                    onTripClick = { tripStack ->
+                                                        val newStack = ArrayDeque(catenaryStack)
+                                                        newStack.addLast(tripStack)
+                                                        catenaryStack = newStack
+                                                    },
+                                                    // Pass the .value of the sources
+                                                    transitShapeForStopSource = transitShapeForStopSourceRef.value!!,
+                                                    stopsContextSource = stopsContextSourceRef.value!!,
+                                                    transitShapeSource = transitShapeSourceRef.value!!,
+                                                    camera = camera,
+                                                    onSetStopsToHide = { newSet ->
+                                                        stopsToHide = newSet
+                                                    }
+                                                )
+                                            }
                                         }
                                         // TODO: Add 'when' branches for other stack types
                                         // (SingleTrip, RouteStack, etc.)

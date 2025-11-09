@@ -16,4 +16,10 @@
     <string name="early">Early</string>
     <string name="late">Late</string>
     <string name="ontime">On time</string>
+    <string name="previous_departures">Previous departures</string>
+    <string name="no_departures_found">No departures found</string>
+    <string name="load_more">Load more</string>
+    <string name="arrival">Arrival</string>
+    <string name="departure">Departure</string>
+    <string name="no_headsign">No headsign</string>
 </resources>
