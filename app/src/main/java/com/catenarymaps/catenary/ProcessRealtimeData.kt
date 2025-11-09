@@ -27,38 +27,34 @@ data class AgencyFilterRequest(val agency_filter: List<String>?)
 fun fetchRoutesOfChateauByAgency(
     chateauId: String,
     agencyIdList: List<String>,
-    routeCache: MutableState<Map<String, Map<String, Map<String, RouteCacheEntry>>>>,
+    routeCache: MutableState<Map<String, Map<String, RouteCacheEntry>>>,
     ktorClient: HttpClient
 ) {
-    // In a real app, you'd manage known agencies to avoid refetching.
-    // For this example, we fetch all agencies provided.
-    if (agencyIdList.isEmpty()) return
-
+    println("Fetching routes")
     CoroutineScope(Dispatchers.IO).launch {
         try {
-            val requestBody = AgencyFilterRequest(agency_filter = agencyIdList)
+            val requestBody =
+                AgencyFilterRequest(agency_filter = if (agencyIdList.isEmpty()) null else agencyIdList)
             val newRoutes: List<RouteCacheEntry> =
                 ktorClient.post("https://birch.catenarymaps.org/getroutesofchateauwithagency/$chateauId") {
                     contentType(ContentType.Application.Json)
                     setBody(requestBody)
                 }.body()
+            println("Fetched ${newRoutes.size} routes")
 
             val currentCache = routeCache.value.toMutableMap()
             val chateauCache = currentCache.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
             newRoutes.forEach { route ->
-                // Assuming route_short_name or route_long_name can be a key.
-                // The backend response needs to be adapted to provide a route_id.
-                // For now, let's use a placeholder logic.
-                val routeId = route.route_short_name ?: route.route_long_name ?: return@forEach
-                val categoryCache = chateauCache.getOrPut(routeId) { mutableMapOf() }.toMutableMap()
-                categoryCache[routeId] = route
-                chateauCache[routeId] = categoryCache
+                val routeId = route.route_id
+                chateauCache[routeId] = route
+                // println("saving route $routeId in chateau cache $chateauId")
             }
             currentCache[chateauId] = chateauCache
             routeCache.value = currentCache
 
         } catch (e: Exception) {
             // Log error
+            println("Error fetching routes: ${e.message}")
         }
     }
 }
@@ -69,7 +65,7 @@ fun processRealtimeDataV2(
     realtimeVehicleLocationsStoreV2: MutableState<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>,
     previousTileBoundariesStore: MutableState<Map<String, Map<String, TileBounds>>>,
     realtimeVehicleLocationsLastUpdated: MutableState<Map<String, Map<String, Long>>>,
-    realtimeVehicleRouteCache: MutableState<Map<String, Map<String, Map<String, RouteCacheEntry>>>>,
+    realtimeVehicleRouteCache: MutableState<Map<String, Map<String, RouteCacheEntry>>>,
     ktorClient: HttpClient
 ) {
     val newLocations = realtimeVehicleLocationsStoreV2.value.toMutableMap()
@@ -133,6 +129,8 @@ fun processRealtimeDataV2(
 
                     if (categoryData.list_of_agency_ids != null) {
                         fetchRoutesOfChateauByAgency(chateauId, categoryData.list_of_agency_ids, realtimeVehicleRouteCache, ktorClient)
+                    } else {
+                        println("Refusing to fetch routes $chateauId")
                     }
                 }
             }
@@ -150,7 +148,7 @@ fun rerenderCategoryLiveDots(
     isDark: Boolean,
     usUnits: Boolean,
     vehicleLocationsV2: Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>,
-    routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>
+    routeCache: Map<String, Map<String, RouteCacheEntry>>
 ): List<Feature> {
     val categoryLocations = vehicleLocationsV2[category] ?: return emptyList()
 
@@ -206,19 +204,19 @@ fun rerenderCategoryLiveDots(
             var routeShortName: String? = null
             var routeLongName: String? = null
 
-            val chateauRouteCache = routeCache[chateauId]?.get(category)
+            val chateauRouteCache = routeCache[chateauId]
             if (chateauRouteCache != null && routeId != null) {
                 val route = chateauRouteCache[routeId]
                 if (route != null) {
-                    routeLongName = route.route_long_name
-                    routeShortName = route.route_short_name
-                    maptag = if (!route.route_short_name.isNullOrEmpty()) {
-                        route.route_short_name
+                    routeLongName = route.long_name
+                    routeShortName = route.short_name
+                    maptag = if (!route.short_name.isNullOrEmpty()) {
+                        route.short_name
                     } else {
-                        route.route_long_name ?: ""
+                        route.long_name ?: ""
                     }
-                    color = route.route_colour
-                    textColor = route.route_text_colour
+                    color = route.color
+                    textColor = route.text_color
                 }
             }
 

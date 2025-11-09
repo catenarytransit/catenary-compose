@@ -539,10 +539,11 @@ data class VehiclePosition(
 
 @Serializable
 data class RouteCacheEntry(
-    val route_colour: String,
-    val route_text_colour: String,
-    val route_short_name: String?,
-    val route_long_name: String?
+    val color: String,
+    val text_color: String,
+    val short_name: String?,
+    val long_name: String?,
+    val route_id: String
 )
 
 @Serializable
@@ -611,9 +612,9 @@ class MainActivity : ComponentActivity() {
     private val isFetchingRealtimeData = AtomicBoolean(false)
 
     // Realtime Data State Holders
-    // ChateauID -> Category -> RouteID -> Cache
+    // ChateauID -> RouteID -> Cache
     var realtimeVehicleRouteCache =
-        mutableStateOf<Map<String, Map<String, Map<String, RouteCacheEntry>>>>(emptyMap())
+        mutableStateOf<Map<String, Map<String, RouteCacheEntry>>>(emptyMap())
 
     // ChateauID -> Category -> Timestamp
     var realtimeVehicleLocationsLastUpdated =
@@ -3421,7 +3422,7 @@ fun AddLiveDots(
     showZombieBuses: Boolean,
     layerSettings: AllLayerSettings,
     vehicleLocationsV2: Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>,
-    routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>,
+    routeCache: Map<String, Map<String, RouteCacheEntry>>,
     busDotsSrc: MutableState<GeoJsonSource>,
     metroDotsSrc: MutableState<GeoJsonSource>,
     railDotsSrc: MutableState<GeoJsonSource>,
@@ -3430,31 +3431,27 @@ fun AddLiveDots(
     // remember previous references per category to detect changes cheaply.
     // If the fetcher did not touch a category, its inner maps keep the same reference.
     val prevVehicleRefs = remember { mutableStateMapOf<String, Any?>() }
-    val prevRouteRefs = remember { mutableStateMapOf<String, List<Any?>>() }
+    //al prevRouteRefs = remember { mutableStateMapOf<String, List<Any?>>() }
 
     // Build a stable list of route-cache *references* for a category across chateaus.
-    fun routeRefsFor(category: String): List<Any?> {
+    fun routeRefsFor(): List<Any?> {
         // Sort keys to keep order stable across runs.
         val chateauIds = routeCache.keys.sorted()
-        return chateauIds.map { cid -> routeCache[cid]?.get(category) }
+        return chateauIds.map { cid -> routeCache[cid] }
     }
 
     fun categoryChanged(category: String): Boolean {
         val currVehRef = vehicleLocationsV2[category]
-        val currRouteRefs = routeRefsFor(category)
+        //val currRouteRefs = routeRefsFor()
 
         val prevVehRef = prevVehicleRefs[category]
-        val prevRouteRefList = prevRouteRefs[category]
+        //val prevRouteRefList = prevRouteRefs[category]
 
         val vehChanged = (prevVehRef !== currVehRef)
 
-        val routesChanged = when {
-            prevRouteRefList == null -> true
-            prevRouteRefList.size != currRouteRefs.size -> true
-            else -> prevRouteRefList.zip(currRouteRefs).any { (a, b) -> a !== b }
-        }
 
-        return vehChanged || routesChanged
+
+        return vehChanged
     }
 
     suspend fun updateIfChanged(category: String, sink: MutableState<GeoJsonSource>) {
@@ -3471,7 +3468,7 @@ fun AddLiveDots(
 
         // Stamp current references so future comparisons are accurate
         prevVehicleRefs[category] = vehicleLocationsV2[category]
-        prevRouteRefs[category] = routeRefsFor(category)
+        //prevRouteRefs[category] = routeRefsFor()
     }
 
     // Re-check when backing data *or* styling inputs that affect rendering change.

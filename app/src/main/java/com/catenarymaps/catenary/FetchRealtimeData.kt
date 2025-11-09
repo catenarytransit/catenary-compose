@@ -166,7 +166,7 @@ fun fetchRealtimeData(
     visibleChateaus: List<String>,
     realtimeVehicleLocationsLastUpdated: MutableState<Map<String, Map<String, Long>>>,
     ktorClient: HttpClient,
-    realtimeVehicleRouteCache: MutableState<Map<String, Map<String, Map<String, RouteCacheEntry>>>>,
+    realtimeVehicleRouteCache: MutableState<Map<String, Map<String, RouteCacheEntry>>>,
     camera: CameraState,
     previousTileBoundariesStore: MutableState<Map<String, Map<String, TileBounds>>>,
     realtimeVehicleLocationsStoreV2: MutableState<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>
