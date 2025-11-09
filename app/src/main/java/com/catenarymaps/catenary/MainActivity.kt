@@ -543,13 +543,13 @@ data class RouteCacheEntry(
     val text_color: String,
     val short_name: String?,
     val long_name: String?,
-    val route_id: String
+    val route_id: String,
+    val agency_id: String?,
 )
 
 @Serializable
 data class CategoryData(
     val vehicle_positions: Map<String, VehiclePosition>?,
-    val vehicle_route_cache: Map<String, RouteCacheEntry>?,
     val last_updated_time_ms: Long,
     val hash_of_routes: ULong
 )
@@ -616,19 +616,21 @@ class MainActivity : ComponentActivity() {
     var realtimeVehicleRouteCache =
         mutableStateOf<Map<String, Map<String, RouteCacheEntry>>>(emptyMap())
 
+    var routeCacheAgenciesKnown = mutableStateOf<Map<String, List<String>>>(emptyMap())
+
     // ChateauID -> Category -> Timestamp
     var realtimeVehicleLocationsLastUpdated =
         mutableStateOf<Map<String, Map<String, Long>>>(emptyMap())
 
     // category -> chateau -> x -> y -> vehicle_id -> vehicle_data
     var realtimeVehicleLocationsStoreV2 =
-        mutableStateOf<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>(emptyMap())
+        mutableStateOf<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>(
+            emptyMap()
+        )
 
     // chateau -> category -> TileBounds
     var previousTileBoundariesStore =
         mutableStateOf<Map<String, Map<String, TileBounds>>>(emptyMap())
-
-
 
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -737,6 +739,9 @@ class MainActivity : ComponentActivity() {
                     currentLastUpdated.filterKeys { it in visibleSet }
             }
 
+            routeCacheAgenciesKnown.value =
+                routeCacheAgenciesKnown.value.filterKeys { it in visibleSet }
+
             // Prune the 'realtimeVehicleLocations' map (which is keyed by Category first)
             val currentLocationsV2 = realtimeVehicleLocationsStoreV2.value
             var locationsV2Modified = false
@@ -755,7 +760,8 @@ class MainActivity : ComponentActivity() {
 
             val currentTileBoundaries = previousTileBoundariesStore.value
             if (currentTileBoundaries.keys.any { it !in visibleSet }) {
-                previousTileBoundariesStore.value = currentTileBoundaries.filterKeys { it in visibleSet }
+                previousTileBoundariesStore.value =
+                    currentTileBoundaries.filterKeys { it in visibleSet }
             }
         }
 
@@ -913,6 +919,7 @@ class MainActivity : ComponentActivity() {
                         realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
                         ktorClient = ktorClient,
                         realtimeVehicleRouteCache = realtimeVehicleRouteCache,
+                        routeCacheAgenciesKnown = routeCacheAgenciesKnown,
                         camera = camera,
                         previousTileBoundariesStore = previousTileBoundariesStore,
                         realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2
@@ -1345,7 +1352,8 @@ class MainActivity : ComponentActivity() {
                                                 realtimeVehicleRouteCache = realtimeVehicleRouteCache,
                                                 camera = camera,
                                                 previousTileBoundariesStore = previousTileBoundariesStore,
-                                                realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2
+                                                realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2,
+                                                routeCacheAgenciesKnown = routeCacheAgenciesKnown
                                             )
                                             lastFetchedAt = now
                                         }
@@ -1470,7 +1478,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-
 
 
                         // Source + layers
@@ -2048,6 +2055,7 @@ class MainActivity : ComponentActivity() {
                                             }
 
                                         }
+
                                         is CatenaryStackEnum.MapSelectionScreen -> {
                                             MapSelectionScreen(
                                                 screenData = currentScreen,
@@ -2058,6 +2066,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                         }
+
                                         is CatenaryStackEnum.SettingsStack -> {
                                             SettingsScreen(
                                                 datadogConsent = datadogConsent,
@@ -2066,6 +2075,7 @@ class MainActivity : ComponentActivity() {
                                                 onGaConsentChanged = onGaConsentChanged
                                             )
                                         }
+
                                         is CatenaryStackEnum.RouteStack -> {
                                             Text(
                                                 text = "TODO ROUTE SCREEN"
@@ -2917,14 +2927,14 @@ fun AddStops(
 
     // JS: bus_stop_stop_color(darkMode) -> step(zoom, ...)
     val busStrokeColorExpr: Expression<ColorValue> = if (isDark) {
-            step(
-                input = zoom(),
-                const(Color(0xFFE0E0E0)),
-                14.0 to const(Color(0xFFDDDDDD))
-            )
-        } else {
-            const(Color(0xFF333333))
-        }
+        step(
+            input = zoom(),
+            const(Color(0xFFE0E0E0)),
+            14.0 to const(Color(0xFFDDDDDD))
+        )
+    } else {
+        const(Color(0xFF333333))
+    }
 
     // route_type filters
     val rtEq = { v: Int ->

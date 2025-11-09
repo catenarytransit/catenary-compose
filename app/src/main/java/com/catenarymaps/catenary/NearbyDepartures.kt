@@ -224,7 +224,6 @@ private fun peekString(body: ResponseBody?, limit: Long = 200_000): String {
 }
 
 
-
 private fun logSerializationError(e: SerializationException, raw: String) {
     // kotlinx.serialization exceptions usually include a path like at path: $.foo[0].bar
     Log.e(NEARBY_TAG, "JSON decode failed: ${e.message}")

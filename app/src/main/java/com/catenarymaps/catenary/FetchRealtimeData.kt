@@ -167,6 +167,7 @@ fun fetchRealtimeData(
     realtimeVehicleLocationsLastUpdated: MutableState<Map<String, Map<String, Long>>>,
     ktorClient: HttpClient,
     realtimeVehicleRouteCache: MutableState<Map<String, Map<String, RouteCacheEntry>>>,
+    routeCacheAgenciesKnown: MutableState<Map<String, List<String>>>,
     camera: CameraState,
     previousTileBoundariesStore: MutableState<Map<String, Map<String, TileBounds>>>,
     realtimeVehicleLocationsStoreV2: MutableState<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>
@@ -266,6 +267,7 @@ fun fetchRealtimeData(
                     previousTileBoundariesStore,
                     realtimeVehicleLocationsLastUpdated,
                     realtimeVehicleRouteCache,
+                    routeCacheAgenciesKnown,
                     ktorClient
                 )
 
