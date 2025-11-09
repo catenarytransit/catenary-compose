@@ -348,8 +348,9 @@ fun StopListItem(
             Text(
                 text = stopTime.raw.name, // TODO: Port fixStationName
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.clickable(onClick = onStopClick)
+                color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable(onClick = onStopClick),
+                textDecoration = TextDecoration.Underline
             )
 
             StopTimeNumber(
