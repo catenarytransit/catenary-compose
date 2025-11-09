@@ -430,7 +430,7 @@ fun StopScreen(
         ) {
             // Header
             item {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 0.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -467,7 +467,7 @@ fun StopScreen(
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.size(4.dp))
+                        Spacer(modifier = Modifier.size(0.dp))
                         Text(
                             text = stringResource(id = R.string.previous_departures),
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
@@ -481,7 +481,7 @@ fun StopScreen(
                 item {
                     Text(
                         text = stringResource(id = R.string.no_departures_found),
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(8.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -494,7 +494,7 @@ fun StopScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(MaterialTheme.colorScheme.surface)
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 text = dateHeaderFormatter.format(date),
@@ -528,7 +528,7 @@ fun StopScreen(
                                         )
                                     )
                                 }
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
                         )
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outlineVariant.copy(
