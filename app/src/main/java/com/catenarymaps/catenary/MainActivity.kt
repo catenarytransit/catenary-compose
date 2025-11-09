@@ -3441,13 +3441,15 @@ fun AddLiveDots(
     // remember previous references per category to detect changes cheaply.
     // If the fetcher did not touch a category, its inner maps keep the same reference.
     val prevVehicleRefs = remember { mutableStateMapOf<String, Any?>() }
-    //al prevRouteRefs = remember { mutableStateMapOf<String, List<Any?>>() }
 
-    // Build a stable list of route-cache *references* for a category across chateaus.
-    fun routeRefsFor(): List<Any?> {
-        // Sort keys to keep order stable across runs.
-        val chateauIds = routeCache.keys.sorted()
-        return chateauIds.map { cid -> routeCache[cid] }
+    val previousRouteStructHash = remember { mutableStateOf<Int?>(null) }
+
+    // Build a stable list of route-cache hash for a category across chateaus.
+    fun routeRefsFor(): Int {
+        return routeCache.values
+            .flatMap { it.keys }
+            .sorted()
+            .hashCode()
     }
 
     fun categoryChanged(category: String): Boolean {
@@ -3455,13 +3457,14 @@ fun AddLiveDots(
         //val currRouteRefs = routeRefsFor()
 
         val prevVehRef = prevVehicleRefs[category]
-        //val prevRouteRefList = prevRouteRefs[category]
+
 
         val vehChanged = (prevVehRef !== currVehRef)
 
+        val routeChanged = (previousRouteStructHash.value !== routeRefsFor())
 
 
-        return vehChanged
+        return vehChanged || routeChanged
     }
 
     suspend fun updateIfChanged(category: String, sink: MutableState<GeoJsonSource>) {
@@ -3478,7 +3481,7 @@ fun AddLiveDots(
 
         // Stamp current references so future comparisons are accurate
         prevVehicleRefs[category] = vehicleLocationsV2[category]
-        //prevRouteRefs[category] = routeRefsFor()
+        previousRouteStructHash.value = routeRefsFor()
     }
 
     // Re-check when backing data *or* styling inputs that affect rendering change.

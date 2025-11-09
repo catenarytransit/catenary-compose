@@ -144,11 +144,11 @@ fun processRealtimeDataV2(
                                     val routeId = vehicleData.trip?.route_id
                                     if (routeId != null) {
                                         //check realtimeVehicleLocationsStoreV2
-                                        if (realtimeVehicleLocationsStoreV2.value.containsKey(
+                                        if (realtimeVehicleRouteCache.value.containsKey(
                                                 chateauId
                                             )
                                         ) {
-                                            if (realtimeVehicleLocationsStoreV2.value[chateauId]!!.containsKey(
+                                            if (realtimeVehicleRouteCache.value[chateauId]!!.containsKey(
                                                     routeId
                                                 )
                                             ) {
@@ -158,6 +158,7 @@ fun processRealtimeDataV2(
 
                                             }
                                         } else {
+                                            //println("Instructing chateau ${chateauId} to fetch routes because no route index exists yet")
                                             shouldFetchRoutes = true
 
                                         }
