@@ -1,24 +1,162 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.runtime.MutableState
 import io.github.dellisd.spatialk.geojson.Feature
 import io.github.dellisd.spatialk.geojson.Point
 import io.github.dellisd.spatialk.geojson.Position
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import java.lang.Math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 
+@Serializable
+data class AgencyFilterRequest(val agency_filter: List<String>?)
+
+fun fetchRoutesOfChateauByAgency(
+    chateauId: String,
+    agencyIdList: List<String>,
+    routeCache: MutableState<Map<String, Map<String, Map<String, RouteCacheEntry>>>>,
+    ktorClient: HttpClient
+) {
+    // In a real app, you'd manage known agencies to avoid refetching.
+    // For this example, we fetch all agencies provided.
+    if (agencyIdList.isEmpty()) return
+
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val requestBody = AgencyFilterRequest(agency_filter = agencyIdList)
+            val newRoutes: List<RouteCacheEntry> =
+                ktorClient.post("https://birch.catenarymaps.org/getroutesofchateauwithagency/$chateauId") {
+                    contentType(ContentType.Application.Json)
+                    setBody(requestBody)
+                }.body()
+
+            val currentCache = routeCache.value.toMutableMap()
+            val chateauCache = currentCache.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
+            newRoutes.forEach { route ->
+                // Assuming route_short_name or route_long_name can be a key.
+                // The backend response needs to be adapted to provide a route_id.
+                // For now, let's use a placeholder logic.
+                val routeId = route.route_short_name ?: route.route_long_name ?: return@forEach
+                val categoryCache = chateauCache.getOrPut(routeId) { mutableMapOf() }.toMutableMap()
+                categoryCache[routeId] = route
+                chateauCache[routeId] = categoryCache
+            }
+            currentCache[chateauId] = chateauCache
+            routeCache.value = currentCache
+
+        } catch (e: Exception) {
+            // Log error
+        }
+    }
+}
+
+fun processRealtimeDataV2(
+    response: BulkRealtimeResponseV2,
+    bounds: BoundsInput,
+    realtimeVehicleLocationsStoreV2: MutableState<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>,
+    previousTileBoundariesStore: MutableState<Map<String, Map<String, TileBounds>>>,
+    realtimeVehicleLocationsLastUpdated: MutableState<Map<String, Map<String, Long>>>,
+    realtimeVehicleRouteCache: MutableState<Map<String, Map<String, Map<String, RouteCacheEntry>>>>,
+    ktorClient: HttpClient
+) {
+    val newLocations = realtimeVehicleLocationsStoreV2.value.toMutableMap()
+    val newLastUpdated = realtimeVehicleLocationsLastUpdated.value.toMutableMap()
+    val newPrevBounds = previousTileBoundariesStore.value.toMutableMap()
+
+    response.chateaus.forEach { (chateauId, chateauData) ->
+        chateauData.categories?.let { categories ->
+            val categoryMap = mapOf(
+                "bus" to categories.bus,
+                "metro" to categories.metro,
+                "rail" to categories.rail,
+                "other" to categories.other
+            )
+
+            categoryMap.forEach { (categoryName, categoryData) ->
+                if (categoryData != null) {
+                    val zLevel = categoryData.z_level
+                    val boundsForLevel = when (zLevel) {
+                        5 -> bounds.level5
+                        7 -> bounds.level7
+                        8 -> bounds.level8
+                        10 -> bounds.level10
+                        else -> null
+                    }
+
+                    if (boundsForLevel != null) {
+                        val chateauPrevBounds = newPrevBounds.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
+                        chateauPrevBounds[categoryName] = TileBounds(boundsForLevel.min_x, boundsForLevel.max_x, boundsForLevel.min_y, boundsForLevel.max_y)
+                        newPrevBounds[chateauId] = chateauPrevBounds
+                    }
+
+                    if (categoryData.vehicle_positions != null) {
+                        val categoryLocations = newLocations.getOrPut(categoryName) { mutableMapOf() }.toMutableMap()
+                        if (categoryData.replaces_all) {
+                            val chateauLocations = categoryLocations.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
+                            // The structure is Map<String, Map<String, ...>> but should be Map<Int, Map<Int, ...>>
+                            // Assuming kotlinx.serialization handles the string-to-int key conversion.
+                            val vehiclePositionsIntKeys = categoryData.vehicle_positions.mapKeys { it.key.toInt() }
+                                .mapValues { entry -> entry.value.mapKeys { it.key.toInt() } }
+                            chateauLocations.clear()
+                            chateauLocations.putAll(vehiclePositionsIntKeys)
+                            categoryLocations[chateauId] = chateauLocations
+                        } else {
+                            val chateauLocations = categoryLocations.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
+                            categoryData.vehicle_positions.forEach { (x, yMap) ->
+                                val xInt = x.toInt()
+                                val yMapIntKeys = yMap.mapKeys { it.key.toInt() }
+                                val xLocations = chateauLocations.getOrPut(xInt) { mutableMapOf() }.toMutableMap()
+                                xLocations.putAll(yMapIntKeys)
+                                chateauLocations[xInt] = xLocations
+                            }
+                            categoryLocations[chateauId] = chateauLocations
+                        }
+                        newLocations[categoryName] = categoryLocations
+                    }
+
+                    val chateauLastUpdated = newLastUpdated.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
+                    chateauLastUpdated[categoryName] = categoryData.last_updated_time_ms
+                    newLastUpdated[chateauId] = chateauLastUpdated
+
+                    if (categoryData.list_of_agency_ids != null) {
+                        fetchRoutesOfChateauByAgency(chateauId, categoryData.list_of_agency_ids, realtimeVehicleRouteCache, ktorClient)
+                    }
+                }
+            }
+        }
+    }
+
+    realtimeVehicleLocationsStoreV2.value = newLocations
+    previousTileBoundariesStore.value = newPrevBounds
+    realtimeVehicleLocationsLastUpdated.value = newLastUpdated
+}
+
+
 fun rerenderCategoryLiveDots(
     category: String,
     isDark: Boolean,
     usUnits: Boolean,
-    vehicleLocations: Map<String, Map<String, Map<String, VehiclePosition>>>,
+    vehicleLocationsV2: Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>,
     routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>
 ): List<Feature> {
-    val categoryLocations = vehicleLocations[category] ?: return emptyList()
+    val categoryLocations = vehicleLocationsV2[category] ?: return emptyList()
 
-    return categoryLocations.flatMap { (chateauId, chateauVehiclesList) ->
+    return categoryLocations.flatMap { (chateauId, gridData) ->
+        val chateauVehiclesList = gridData.values.flatMap { it.values }.flatMap { it.entries }.associate { it.key to it.value }
+
         chateauVehiclesList.mapNotNull { (rtId, vehicleData) ->
             if (vehicleData.position == null) {
                 return@mapNotNull null

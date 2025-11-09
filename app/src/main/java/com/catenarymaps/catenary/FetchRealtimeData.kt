@@ -12,10 +12,151 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.maplibre.compose.camera.CameraState
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
 
 private const val TAG = "FetchRealtimeData"
+
+@Serializable
+data class BoundsInputPerLevel(
+    val min_x: Int,
+    val max_x: Int,
+    val min_y: Int,
+    val max_y: Int
+)
+
+@Serializable
+data class BoundsInput(
+    val level5: BoundsInputPerLevel,
+    val level7: BoundsInputPerLevel,
+    val level8: BoundsInputPerLevel,
+    val level10: BoundsInputPerLevel
+)
+
+@Serializable
+data class SubCategoryAskParamsV2(
+    val last_updated_time_ms: Long,
+    val prev_user_min_x: Int? = null,
+    val prev_user_max_x: Int? = null,
+    val prev_user_min_y: Int? = null,
+    val prev_user_max_y: Int? = null
+)
+
+@Serializable
+data class CategoryAskParamsV2(
+    val bus: SubCategoryAskParamsV2? = null,
+    val metro: SubCategoryAskParamsV2? = null,
+    val rail: SubCategoryAskParamsV2? = null,
+    val other: SubCategoryAskParamsV2? = null
+)
+
+@Serializable
+data class ChateauAskParamsV2(
+    val category_params: CategoryAskParamsV2
+)
+
+@Serializable
+data class BulkRealtimeRequestV2(
+    val categories: List<String>,
+    val chateaus: Map<String, ChateauAskParamsV2>,
+    val bounds_input: BoundsInput
+)
+
+@Serializable
+data class EachCategoryPayloadV2(
+    val vehicle_positions: Map<String, Map<String, Map<String, VehiclePosition>>>? = null,
+    val last_updated_time_ms: Long,
+    val replaces_all: Boolean,
+    val z_level: Int,
+    val list_of_agency_ids: List<String>? = null
+)
+
+@Serializable
+data class PositionDataCategoryV2(
+    val metro: EachCategoryPayloadV2? = null,
+    val bus: EachCategoryPayloadV2? = null,
+    val rail: EachCategoryPayloadV2? = null,
+    val other: EachCategoryPayloadV2? = null
+)
+
+@Serializable
+data class EachChateauResponseV2(
+    val categories: PositionDataCategoryV2? = null
+)
+
+@Serializable
+data class BulkRealtimeResponseV2(
+    val chateaus: Map<String, EachChateauResponseV2>
+)
+
+data class TileBbox(val north: Int, val south: Int, val east: Int, val west: Int)
+
+fun getTileBoundaries(camera: CameraState, zoom: Int): TileBbox? {
+    val projection = camera.projection ?: return null
+    // Use queryVisibleBoundingBox as it's available on the projection
+    val visibleBounds = try {
+        projection.queryVisibleBoundingBox()
+    } catch (e: Exception) {
+        Log.e(TAG, "Could not query visible bounding box", e)
+        return null
+    }
+
+    val north = visibleBounds.northeast.latitude
+    val south = visibleBounds.southwest.latitude
+    val east = visibleBounds.northeast.longitude
+    val west = visibleBounds.southwest.longitude
+
+    val n = Math.pow(2.0, zoom.toDouble())
+
+    val latRadNorth = Math.toRadians(north)
+    val latRadSouth = Math.toRadians(south)
+
+    val xtileWest = floor((west + 180) / 360 * n).toInt()
+    val xtileEast = floor((east + 180) / 360 * n).toInt()
+
+    val ytileNorth = floor((1 - Math.log(Math.tan(latRadNorth) + 1 / Math.cos(latRadNorth)) / Math.PI) / 2 * n).toInt()
+    val ytileSouth = floor((1 - Math.log(Math.tan(latRadSouth) + 1 / Math.cos(latRadSouth)) / Math.PI) / 2 * n).toInt()
+
+    return TileBbox(ytileNorth, ytileSouth, xtileEast, xtileWest)
+}
+
+fun boundsInputCalculate(camera: CameraState): BoundsInput {
+    val levels = listOf(5, 7, 8, 10)
+    val boundsInputMap = mutableMapOf<Int, BoundsInputPerLevel>()
+
+    val currentZoom = camera.position.zoom
+
+    for (zoom in levels) {
+        val boundaries = getTileBoundaries(camera, zoom)
+        if (boundaries != null) {
+            val maxTiles = (Math.pow(2.0, zoom.toDouble()) - 1).toInt()
+            val padding = if (currentZoom > 10) 0 else 2
+
+            boundsInputMap[zoom] = BoundsInputPerLevel(
+                min_x = max(0, boundaries.west - padding),
+                max_x = min(maxTiles, boundaries.east + padding),
+                min_y = max(0, boundaries.north - padding),
+                max_y = min(maxTiles, boundaries.south + padding)
+            )
+        } else {
+            // Fallback if boundaries can't be calculated
+            boundsInputMap[zoom] = BoundsInputPerLevel(0, 0, 0, 0)
+        }
+    }
+
+    return BoundsInput(
+        level5 = boundsInputMap[5]!!,
+        level7 = boundsInputMap[7]!!,
+        level8 = boundsInputMap[8]!!,
+        level10 = boundsInputMap[10]!!
+    )
+}
+
 
 fun fetchRealtimeData(
     scope: CoroutineScope,
@@ -24,10 +165,11 @@ fun fetchRealtimeData(
     isFetchingRealtimeData: AtomicBoolean,
     visibleChateaus: List<String>,
     realtimeVehicleLocationsLastUpdated: MutableState<Map<String, Map<String, Long>>>,
-    realtimeVehicleRouteCacheHash: MutableState<Map<String, Map<String, ULong>>>,
     ktorClient: HttpClient,
-    realtimeVehicleLocations: MutableState<Map<String, Map<String, Map<String, VehiclePosition>>>>,
-    realtimeVehicleRouteCache: MutableState<Map<String, Map<String, Map<String, RouteCacheEntry>>>>
+    realtimeVehicleRouteCache: MutableState<Map<String, Map<String, Map<String, RouteCacheEntry>>>>,
+    camera: CameraState,
+    previousTileBoundariesStore: MutableState<Map<String, Map<String, TileBounds>>>,
+    realtimeVehicleLocationsStoreV2: MutableState<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>
 ) {
     if (!isFetchingRealtimeData.compareAndSet(false, true)) {
         Log.d(TAG, "Skipping fetch, another one is already in progress.")
@@ -39,149 +181,104 @@ fun fetchRealtimeData(
             val categoriesToRequest = mutableListOf<String>()
 
             val busThreshold = 8
-            if ((settings.bus as LayerCategorySettings).visiblerealtimedots && zoom >= busThreshold) {
+
+            if (settings.bus.visiblerealtimedots && zoom >= busThreshold) {
                 categoriesToRequest.add("bus")
             }
-            if ((settings.intercityrail as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
+            if (settings.intercityrail.visiblerealtimedots && zoom >= 3) {
                 categoriesToRequest.add("rail")
             }
-            if ((settings.localrail as LayerCategorySettings).visiblerealtimedots && zoom >= 4) {
+            if (settings.localrail.visiblerealtimedots && zoom >= 4) {
                 categoriesToRequest.add("metro")
             }
-            if ((settings.other as LayerCategorySettings).visiblerealtimedots && zoom >= 3) {
+            if (settings.other.visiblerealtimedots && zoom >= 3) {
                 categoriesToRequest.add("other")
             }
 
-
             if (categoriesToRequest.isEmpty() || visibleChateaus.isEmpty()) {
-                // Don't fetch if no categories are visible or no chateaus are in view
                 return@launch
             }
 
-            // Build chateaus_to_fetch object
-            val chateausToFetch = mutableMapOf<String, ChateauFetchParams>()
+            val boundsInput = boundsInputCalculate(camera)
             val lastUpdatedMap = realtimeVehicleLocationsLastUpdated.value
-            val hashCacheMap = realtimeVehicleRouteCacheHash.value
+            val previousTileBoundaries = previousTileBoundariesStore.value
 
-            visibleChateaus.forEach { chateauId ->
-                
+            val chateausToFetch = visibleChateaus.associateWith { chateauId ->
+                val busParams = SubCategoryAskParamsV2(
+                    last_updated_time_ms = lastUpdatedMap[chateauId]?.get("bus") ?: 0L,
+                    prev_user_min_x = previousTileBoundaries[chateauId]?.get("bus")?.min_x,
+                    prev_user_max_x = previousTileBoundaries[chateauId]?.get("bus")?.max_x,
+                    prev_user_min_y = previousTileBoundaries[chateauId]?.get("bus")?.min_y,
+                    prev_user_max_y = previousTileBoundaries[chateauId]?.get("bus")?.max_y
+                )
+                val metroParams = SubCategoryAskParamsV2(
+                    last_updated_time_ms = lastUpdatedMap[chateauId]?.get("metro") ?: 0L,
+                    prev_user_min_x = previousTileBoundaries[chateauId]?.get("metro")?.min_x,
+                    prev_user_max_x = previousTileBoundaries[chateauId]?.get("metro")?.max_x,
+                    prev_user_min_y = previousTileBoundaries[chateauId]?.get("metro")?.min_y,
+                    prev_user_max_y = previousTileBoundaries[chateauId]?.get("metro")?.max_y
+                )
+                val railParams = SubCategoryAskParamsV2(
+                    last_updated_time_ms = lastUpdatedMap[chateauId]?.get("rail") ?: 0L,
+                    prev_user_min_x = previousTileBoundaries[chateauId]?.get("rail")?.min_x,
+                    prev_user_max_x = previousTileBoundaries[chateauId]?.get("rail")?.max_x,
+                    prev_user_min_y = previousTileBoundaries[chateauId]?.get("rail")?.min_y,
+                    prev_user_max_y = previousTileBoundaries[chateauId]?.get("rail")?.max_y
+                )
+                val otherParams = SubCategoryAskParamsV2(
+                    last_updated_time_ms = lastUpdatedMap[chateauId]?.get("other") ?: 0L,
+                    prev_user_min_x = previousTileBoundaries[chateauId]?.get("other")?.min_x,
+                    prev_user_max_x = previousTileBoundaries[chateauId]?.get("other")?.max_x,
+                    prev_user_min_y = previousTileBoundaries[chateauId]?.get("other")?.min_y,
+                    prev_user_max_y = previousTileBoundaries[chateauId]?.get("other")?.max_y
+                )
 
-                //println("Chateau id $chateauId")
-                val categoryParams = mutableMapOf<String, CategoryParams>()
-                val cats = listOf("bus", "rail", "metro", "other")
-
-                cats.forEach { cat ->
-                    val lastUpdated = lastUpdatedMap[chateauId]?.get(cat) ?: 0L
-                    val hash = hashCacheMap[chateauId]?.get(cat) ?: ULong.MIN_VALUE
-                    categoryParams[cat] = CategoryParams(
-                        hash_of_routes = hash,
-                        last_updated_time_ms = lastUpdated
+                ChateauAskParamsV2(
+                    category_params = CategoryAskParamsV2(
+                        bus = busParams,
+                        metro = metroParams,
+                        rail = railParams,
+                        other = otherParams
                     )
-
-                    //println("last updated for $cat in $chateauId is $lastUpdated")
-                }
-                chateausToFetch[chateauId] =
-                    ChateauFetchParams(category_params = categoryParams)
+                )
             }
 
-            val requestBody = BulkRealtimeRequest(
-                categories = categoriesToRequest, chateaus = chateausToFetch
+            val requestBody = BulkRealtimeRequestV2(
+                categories = categoriesToRequest,
+                chateaus = chateausToFetch,
+                bounds_input = boundsInput
             )
 
             try {
+                val rawresponse: String =
+                    ktorClient.post("https://birch.catenarymaps.org/bulk_realtime_fetch_v2") {
+                        contentType(ContentType.Application.Json)
+                        setBody(requestBody)
+                    }.body()
 
-                // You must run this inside a coroutine scope (e.g., in a suspend function)
-                try {
-                    val rawresponse: String =
-                        ktorClient.post("https://birch.catenarymaps.org/bulk_realtime_fetch_v1") {
-                            contentType(ContentType.Application.Json)
-                            setBody(requestBody)
-                        }.body()
+                val json = Json { ignoreUnknownKeys = true }
+                val response = json.decodeFromString<BulkRealtimeResponseV2>(rawresponse)
 
-                    // println("Bulk Fetch: $rawresponse")
+                processRealtimeDataV2(
+                    response,
+                    boundsInput,
+                    realtimeVehicleLocationsStoreV2,
+                    previousTileBoundariesStore,
+                    realtimeVehicleLocationsLastUpdated,
+                    realtimeVehicleRouteCache,
+                    ktorClient
+                )
 
-                    val json_for_this = Json {
-                        ignoreUnknownKeys = true
-                        prettyPrint = true
-                        isLenient = true
-                        encodeDefaults = true
-                    }
-                    val response =
-                        json_for_this.decodeFromString<BulkRealtimeResponse>(rawresponse)
-
-                    println("Recieved live dots")
-
-                    // Process the response (porting process_realtime_vehicle_locations_v2)
-                    val newLocations = realtimeVehicleLocations.value.toMutableMap()
-                    val newRouteCache = realtimeVehicleRouteCache.value.toMutableMap()
-                    val newLastUpdated =
-                        realtimeVehicleLocationsLastUpdated.value.toMutableMap()
-                    val newHashCache = realtimeVehicleRouteCacheHash.value.toMutableMap()
-
-                    response.chateaus.forEach { (chateauId, chateauData) ->
-                        // println("Processing Chateau $chateauId")
-                        chateauData.categories.forEach { (category, categoryData) ->
-                            if (categoryData != null) {
-                                // Update Locations
-                                if (categoryData.vehicle_positions != null) {
-                                    val chateauLocations =
-                                        newLocations.getOrPut(category) { mutableMapOf() }
-                                            .toMutableMap()
-                                    chateauLocations[chateauId] = categoryData.vehicle_positions
-                                    newLocations[category] = chateauLocations
-                                    //   println("set value for new vehicle locations for $category with $chateauId and length ${categoryData.vehicle_positions.size}")
-                                }
-                                // Update Route Cache
-                                if (categoryData.vehicle_route_cache != null) {
-                                    val chateauCache =
-                                        newRouteCache.getOrPut(chateauId) { mutableMapOf() }
-                                            .toMutableMap()
-                                    chateauCache[category] = categoryData.vehicle_route_cache
-                                    newRouteCache[chateauId] = chateauCache
-                                }
-                                // Update Last Updated Time
-                                val chateauLastUpdated =
-                                    newLastUpdated.getOrPut(chateauId) { mutableMapOf() }
-                                        .toMutableMap()
-                                chateauLastUpdated[category] = categoryData.last_updated_time_ms
-                                newLastUpdated[chateauId] = chateauLastUpdated
-
-                                // Update Hash
-                                val chateauHash =
-                                    newHashCache.getOrPut(chateauId) { mutableMapOf() }
-                                        .toMutableMap()
-                                chateauHash[category] = categoryData.hash_of_routes
-                                newHashCache[chateauId] = chateauHash
-                            }
-                        }
-                    }
-
-                    // Atomically update the state variables
-                    println("set value for new vehicle locations")
-                    realtimeVehicleLocations.value = newLocations
-                    realtimeVehicleRouteCache.value = newRouteCache
-                    realtimeVehicleLocationsLastUpdated.value = newLastUpdated
-                    realtimeVehicleRouteCacheHash.value = newHashCache
-
-                } catch (e: ClientRequestException) {
-                    // This block catches 4xx errors, including your 400 Bad Request
-                    val errorBody: String = e.response.body()
-                    println("Failed to fetch realtime data (Client Error ${e.response.status}): $errorBody")
-
-                } catch (e: ServerResponseException) {
-                    // This block catches 5xx server errors
-                    val errorBody: String = e.response.body()
-                    println("Failed to fetch realtime data (Server Error ${e.response.status}): $errorBody")
-
-                } catch (e: Exception) {
-                    // This catches other errors (network connection, DNS, etc.)
-                    println("An unexpected error occurred: ${e.message}")
-                }
-
-
+            } catch (e: ClientRequestException) {
+                val errorBody: String = e.response.body()
+                Log.e(TAG, "Failed to fetch realtime data (Client Error ${e.response.status}): $errorBody")
+            } catch (e: ServerResponseException) {
+                val errorBody: String = e.response.body()
+                Log.e(TAG, "Failed to fetch realtime data (Server Error ${e.response.status}): $errorBody")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to fetch realtime data: ${e.message}")
+                Log.e(TAG, "An unexpected error occurred: ${e.message}", e)
             }
+
         } finally {
             isFetchingRealtimeData.set(false)
         }

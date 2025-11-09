@@ -564,6 +564,14 @@ data class BulkRealtimeResponse(
 )
 
 @Serializable
+data class TileBounds(
+    val min_x: Int,
+    val max_x: Int,
+    val min_y: Int,
+    val max_y: Int
+)
+
+@Serializable
 data class CategoryParams(
     @EncodeDefault var hash_of_routes: ULong = ULong.MIN_VALUE,
     @EncodeDefault var last_updated_time_ms: Long = 0
@@ -603,9 +611,6 @@ class MainActivity : ComponentActivity() {
     private val isFetchingRealtimeData = AtomicBoolean(false)
 
     // Realtime Data State Holders
-    var realtimeVehicleLocations =
-        mutableStateOf<Map<String, Map<String, Map<String, VehiclePosition>>>>(emptyMap())
-
     // ChateauID -> Category -> RouteID -> Cache
     var realtimeVehicleRouteCache =
         mutableStateOf<Map<String, Map<String, Map<String, RouteCacheEntry>>>>(emptyMap())
@@ -614,9 +619,13 @@ class MainActivity : ComponentActivity() {
     var realtimeVehicleLocationsLastUpdated =
         mutableStateOf<Map<String, Map<String, Long>>>(emptyMap())
 
-    // ChateauID -> Category -> Hash
-    var realtimeVehicleRouteCacheHash =
-        mutableStateOf<Map<String, Map<String, ULong>>>(emptyMap())
+    // category -> chateau -> x -> y -> vehicle_id -> vehicle_data
+    var realtimeVehicleLocationsStoreV2 =
+        mutableStateOf<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>(emptyMap())
+
+    // chateau -> category -> TileBounds
+    var previousTileBoundariesStore =
+        mutableStateOf<Map<String, Map<String, TileBounds>>>(emptyMap())
 
 
 
@@ -727,25 +736,25 @@ class MainActivity : ComponentActivity() {
                     currentLastUpdated.filterKeys { it in visibleSet }
             }
 
-            val currentHash = realtimeVehicleRouteCacheHash.value
-            if (currentHash.keys.any { it !in visibleSet }) {
-                realtimeVehicleRouteCacheHash.value = currentHash.filterKeys { it in visibleSet }
-            }
-
             // Prune the 'realtimeVehicleLocations' map (which is keyed by Category first)
-            val currentLocations = realtimeVehicleLocations.value
-            var locationsModified = false
-            val newLocations = currentLocations.toMutableMap()
+            val currentLocationsV2 = realtimeVehicleLocationsStoreV2.value
+            var locationsV2Modified = false
+            val newLocationsV2 = currentLocationsV2.toMutableMap()
 
-            currentLocations.forEach { (category, chateauMap) ->
+            currentLocationsV2.forEach { (category, chateauMap) ->
                 if (chateauMap.keys.any { it !in visibleSet }) {
-                    newLocations[category] = chateauMap.filterKeys { it in visibleSet }
-                    locationsModified = true
+                    newLocationsV2[category] = chateauMap.filterKeys { it in visibleSet }
+                    locationsV2Modified = true
                 }
             }
 
-            if (locationsModified) {
-                realtimeVehicleLocations.value = newLocations
+            if (locationsV2Modified) {
+                realtimeVehicleLocationsStoreV2.value = newLocationsV2
+            }
+
+            val currentTileBoundaries = previousTileBoundariesStore.value
+            if (currentTileBoundaries.keys.any { it !in visibleSet }) {
+                previousTileBoundariesStore.value = currentTileBoundaries.filterKeys { it in visibleSet }
             }
         }
 
@@ -901,10 +910,11 @@ class MainActivity : ComponentActivity() {
                         isFetchingRealtimeData = isFetchingRealtimeData,
                         visibleChateaus = visibleChateaus,
                         realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
-                        realtimeVehicleRouteCacheHash = realtimeVehicleRouteCacheHash,
                         ktorClient = ktorClient,
-                        realtimeVehicleLocations = realtimeVehicleLocations,
-                        realtimeVehicleRouteCache = realtimeVehicleRouteCache
+                        realtimeVehicleRouteCache = realtimeVehicleRouteCache,
+                        camera = camera,
+                        previousTileBoundariesStore = previousTileBoundariesStore,
+                        realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2
                     )
                 }
             }
@@ -1330,10 +1340,11 @@ class MainActivity : ComponentActivity() {
                                                 isFetchingRealtimeData = isFetchingRealtimeData,
                                                 visibleChateaus = visibleChateaus,
                                                 realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
-                                                realtimeVehicleRouteCacheHash = realtimeVehicleRouteCacheHash,
                                                 ktorClient = ktorClient,
-                                                realtimeVehicleLocations = realtimeVehicleLocations,
-                                                realtimeVehicleRouteCache = realtimeVehicleRouteCache
+                                                realtimeVehicleRouteCache = realtimeVehicleRouteCache,
+                                                camera = camera,
+                                                previousTileBoundariesStore = previousTileBoundariesStore,
+                                                realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2
                                             )
                                             lastFetchedAt = now
                                         }
@@ -1721,7 +1732,7 @@ class MainActivity : ComponentActivity() {
                             minZoom = 3f
                         )
 
-                        val locations = realtimeVehicleLocations.value
+                        val locationsV2 = realtimeVehicleLocationsStoreV2.value
                         val cache = realtimeVehicleRouteCache.value
 
                         AddLiveDots(
@@ -1729,7 +1740,7 @@ class MainActivity : ComponentActivity() {
                             usUnits = usUnits,
                             showZombieBuses = showZombieBuses,
                             layerSettings = layerSettings.value,
-                            vehicleLocations = locations,
+                            vehicleLocationsV2 = locationsV2,
                             routeCache = cache,
                             busDotsSrc = busDotsSrc,
                             metroDotsSrc = metroDotsSrc,
@@ -3407,9 +3418,9 @@ fun SearchBarCatenary(
 fun AddLiveDots(
     isDark: Boolean,
     usUnits: Boolean,
-    showZombieBuses: Boolean, // (not used here, but keep signature if you need it later)
+    showZombieBuses: Boolean,
     layerSettings: AllLayerSettings,
-    vehicleLocations: Map<String, Map<String, Map<String, VehiclePosition>>>,
+    vehicleLocationsV2: Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>,
     routeCache: Map<String, Map<String, Map<String, RouteCacheEntry>>>,
     busDotsSrc: MutableState<GeoJsonSource>,
     metroDotsSrc: MutableState<GeoJsonSource>,
@@ -3429,7 +3440,7 @@ fun AddLiveDots(
     }
 
     fun categoryChanged(category: String): Boolean {
-        val currVehRef = vehicleLocations[category]
+        val currVehRef = vehicleLocationsV2[category]
         val currRouteRefs = routeRefsFor(category)
 
         val prevVehRef = prevVehicleRefs[category]
@@ -3453,18 +3464,18 @@ fun AddLiveDots(
             category = category,
             isDark = isDark,
             usUnits = usUnits,
-            vehicleLocations = vehicleLocations,
+            vehicleLocationsV2 = vehicleLocationsV2,
             routeCache = routeCache
         )
         sink.value.setData(GeoJsonData.Features(FeatureCollection(features)))
 
         // Stamp current references so future comparisons are accurate
-        prevVehicleRefs[category] = vehicleLocations[category]
+        prevVehicleRefs[category] = vehicleLocationsV2[category]
         prevRouteRefs[category] = routeRefsFor(category)
     }
 
     // Re-check when backing data *or* styling inputs that affect rendering change.
-    LaunchedEffect(vehicleLocations, routeCache, isDark, usUnits) {
+    LaunchedEffect(vehicleLocationsV2, routeCache, isDark, usUnits) {
         updateIfChanged("bus", busDotsSrc)
         updateIfChanged("metro", metroDotsSrc)
         updateIfChanged("rail", railDotsSrc)
