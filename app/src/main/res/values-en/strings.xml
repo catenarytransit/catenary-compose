@@ -14,4 +14,7 @@
     <string name="now">Now</string>
     <string name="speed">Speed</string>
     <string name="searchhere">Search here</string>
+    <string name="early">Early</string>
+    <string name="late">Late</string>
+    <string name="ontime">On time</string>
 </resources>
