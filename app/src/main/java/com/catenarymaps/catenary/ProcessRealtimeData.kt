@@ -12,6 +12,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -240,20 +243,22 @@ fun processRealtimeDataV2(
 }
 
 
-fun rerenderCategoryLiveDots(
+suspend fun rerenderCategoryLiveDots(
     category: String,
     isDark: Boolean,
     usUnits: Boolean,
     vehicleLocationsV2: Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>,
     routeCache: Map<String, Map<String, RouteCacheEntry>>
-): List<Feature> {
-    val categoryLocations = vehicleLocationsV2[category] ?: return emptyList()
+): List<Feature> = withContext(Dispatchers.Default) {
+    val categoryLocations = vehicleLocationsV2[category] ?: return@withContext emptyList()
 
-    return categoryLocations.flatMap { (chateauId, gridData) ->
-        val chateauVehiclesList = gridData.values.flatMap { it.values }.flatMap { it.entries }
-            .associate { it.key to it.value }
+    val featureJobs = categoryLocations.map { (chateauId, gridData) ->
+        async {
+            val chateauVehiclesList = gridData.values.flatMap { it.values }.flatMap { it.entries }
+                .associate { it.key to it.value }
 
-        chateauVehiclesList.mapNotNull { (rtId, vehicleData) ->
+            chateauVehiclesList.mapNotNull { (rtId, vehicleData) ->
+
             if (vehicleData.position == null) {
                 return@mapNotNull null
             }
@@ -431,5 +436,8 @@ fun rerenderCategoryLiveDots(
                 properties = properties
             )
         }
+        }
     }
+
+    featureJobs.awaitAll().flatten()
 }
