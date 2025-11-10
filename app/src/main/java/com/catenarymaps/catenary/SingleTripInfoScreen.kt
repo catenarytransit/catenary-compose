@@ -66,6 +66,9 @@ import com.google.android.gms.analytics.GoogleAnalytics
 import com.google.android.gms.analytics.HitBuilders
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import org.maplibre.compose.expressions.ast.Expression
+import org.maplibre.compose.expressions.value.ExpressionValue
+import org.maplibre.compose.expressions.value.BooleanValue
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,8 +80,11 @@ fun SingleTripInfoScreen(
     transitShapeSource: MutableState<GeoJsonSource>,
     transitShapeDetourSource: MutableState<GeoJsonSource>,
     stopsContextSource: MutableState<GeoJsonSource>,
+    majorDotsSource: MutableState<GeoJsonSource>,
     // --- State to control other map layers ---
-    onSetStopsToHide: (Set<String>) -> Unit
+    onSetStopsToHide: (Set<String>) -> Unit,
+    // state to control the filter
+    applyFilterToLiveDots: MutableState<Expression<BooleanValue>>
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -207,6 +213,7 @@ fun SingleTripInfoScreen(
             transitShapeSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
             transitShapeDetourSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
             stopsContextSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
+            majorDotsSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
         }
     }
 

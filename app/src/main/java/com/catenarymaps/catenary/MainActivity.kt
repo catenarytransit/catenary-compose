@@ -608,6 +608,8 @@ class MainActivity : ComponentActivity() {
 
     private val layerSettings = mutableStateOf(AllLayerSettings())
 
+    val applyFilterToLiveDots = mutableStateOf<Expression<BooleanValue>>(const(true))
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val isFetchingRealtimeData = AtomicBoolean(false)
@@ -797,6 +799,8 @@ class MainActivity : ComponentActivity() {
             val stopsContextSourceRef =
                 remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
             val transitShapeForStopSourceRef =
+                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
+            val majorDotsSourceRef =
                 remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
 
             val density = LocalDensity.current
@@ -1459,11 +1463,30 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        val majorDotsSource = remember {
+                            mutableStateOf(
+                                GeoJsonSource(
+                                    id = "majordots_context",
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonOptions()
+                                )
+                            )
+                        }
+
                         DisposableEffect(stopsContextSource) {
                             stopsContextSourceRef.value = stopsContextSource
                             onDispose {
                                 if (stopsContextSourceRef.value === stopsContextSource) {
                                     stopsContextSourceRef.value = null
+                                }
+                            }
+                        }
+
+                        DisposableEffect(majorDotsSource) {
+                            majorDotsSourceRef.value = majorDotsSource
+                            onDispose {
+                                if (majorDotsSourceRef.value === majorDotsSource) {
+                                    majorDotsSourceRef.value = null
                                 }
                             }
                         }
@@ -1778,11 +1801,15 @@ class MainActivity : ComponentActivity() {
                             source = busDotsSrc.value,                // <- persistent source
                             settings = layerSettings.value.bus.labelrealtimedots,
                             isVisible = layerSettings.value.bus.visiblerealtimedots,
-                            baseFilter = if (showZombieBuses) all() else all(
+                            baseFilter = if (showZombieBuses) all(
+                                applyFilterToLiveDots.value
+                            ) else all(
                                 feature.has("trip_id"),
-                                get("trip_id").cast<StringValue>().neq(const(""))
+                                get("trip_id").cast<StringValue>().neq(const("")),
+                                applyFilterToLiveDots.value
                             ),
                             bearingFilter = all(
+                                applyFilterToLiveDots.value,
                                 get("has_bearing").cast<BooleanValue>().eq(const(true)),
                                 if (showZombieBuses) all() else all(
                                     feature.has("trip_id"),
@@ -1801,12 +1828,15 @@ class MainActivity : ComponentActivity() {
                             settings = layerSettings.value.localrail.labelrealtimedots,
                             isVisible = layerSettings.value.localrail.visiblerealtimedots,
                             baseFilter = all(
+                                applyFilterToLiveDots.value,
                                 any(rtEq(1), rtEq(12)), if (showZombieBuses) all() else all(
                                     feature.has("trip_id"),
-                                    get("trip_id").cast<StringValue>().neq(const(""))
+                                    get("trip_id").cast<StringValue>().neq(const("")),
+
                                 )
                             ),
                             bearingFilter = all(
+                                applyFilterToLiveDots.value,
                                 any(rtEq(1), rtEq(12)),
                                 get("has_bearing").cast<BooleanValue>().eq(const(true))
                             ),
@@ -1821,12 +1851,14 @@ class MainActivity : ComponentActivity() {
                             settings = layerSettings.value.localrail.labelrealtimedots,
                             isVisible = layerSettings.value.localrail.visiblerealtimedots,
                             baseFilter = all(
+                                applyFilterToLiveDots.value,
                                 any(rtEq(0), rtEq(5)), if (showZombieBuses) all() else all(
                                     feature.has("trip_id"),
                                     get("trip_id").cast<StringValue>().neq(const(""))
                                 )
                             ),
                             bearingFilter = all(
+                                applyFilterToLiveDots.value,
                                 any(rtEq(0), rtEq(5)),
                                 get("has_bearing").cast<BooleanValue>().eq(const(true))
                             ),
@@ -1842,12 +1874,14 @@ class MainActivity : ComponentActivity() {
                             settings = (layerSettings.value["intercityrail"] as LayerCategorySettings).labelrealtimedots,
                             isVisible = (layerSettings.value["intercityrail"] as LayerCategorySettings).visiblerealtimedots,
                             baseFilter = all(
+                                applyFilterToLiveDots.value,
                                 isIntercity(), if (showZombieBuses) all() else all(
                                     feature.has("trip_id"),
                                     get("trip_id").cast<StringValue>().neq(const(""))
                                 )
                             ),
                             bearingFilter = all(
+                                applyFilterToLiveDots.value,
                                 isIntercity(),
                                 get("has_bearing").cast<BooleanValue>().eq(const(true))
                             ),
@@ -1862,11 +1896,13 @@ class MainActivity : ComponentActivity() {
                             source = otherDotsSrc.value,
                             settings = (layerSettings.value["other"] as LayerCategorySettings).labelrealtimedots,
                             isVisible = (layerSettings.value["other"] as LayerCategorySettings).visiblerealtimedots,
-                            baseFilter = if (showZombieBuses) all() else all(
+                            baseFilter = if (showZombieBuses) all(applyFilterToLiveDots.value) else all(
+                                applyFilterToLiveDots.value,
                                 feature.has("trip_id"),
                                 get("trip_id").cast<StringValue>().neq(const(""))
                             ),
                             bearingFilter = all(
+                                applyFilterToLiveDots.value,
                                 get("has_bearing").cast<BooleanValue>().eq(const(true)),
                                 if (showZombieBuses) all() else all(
                                     feature.has("trip_id"),
@@ -2073,11 +2109,12 @@ class MainActivity : ComponentActivity() {
                                                     transitShapeSource = transitShapeSourceRef.value!!,
                                                     transitShapeDetourSource = transitShapeDetourSourceRef.value!!,
                                                     stopsContextSource = stopsContextSourceRef.value!!,
-
+                                                    majorDotsSource = majorDotsSourceRef.value!!,
                                                     // Pass the state setter
                                                     onSetStopsToHide = { newSet ->
                                                         stopsToHide = newSet
-                                                    }
+                                                    },
+                                                    applyFilterToLiveDots = applyFilterToLiveDots
                                                 )
                                             }
 
@@ -2134,6 +2171,15 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 )
                                             }
+                                        }
+                                        is CatenaryStackEnum.BlockStack -> {
+                                            BlockScreen(
+                                                chateau = currentScreen.chateau_id,
+                                                blockId = currentScreen.block_id,
+                                                serviceDate = currentScreen.service_date,
+                                                catenaryStack = catenaryStack,
+                                                onStackChange = { catenaryStack = it }
+                                            )
                                         }
                                         // TODO: Add 'when' branches for other stack types
                                         // (SingleTrip, RouteStack, etc.)
