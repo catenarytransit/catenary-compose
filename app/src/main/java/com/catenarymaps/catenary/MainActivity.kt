@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.AltRoute
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SportsScore
+import androidx.compose.material.icons.filled.Subway
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Train
 import io.ktor.client.plugins.*
@@ -2039,27 +2040,32 @@ class MainActivity : ComponentActivity() {
                                     onCenterPin = {
                                         onCenterPin()
                                     },
-                                    onTripClick = {
+                                    onTripClick = { r ->
                                         val newStack = ArrayDeque(catenaryStack)
                                         newStack.addLast(
-
-
                                             CatenaryStackEnum.SingleTrip(
-                                                chateau_id = it.chateauId!!,
-                                                trip_id = it.tripId!!,
-                                                route_id = it.routeId,
-                                                start_date = it.startDay,
+                                                chateau_id = r.chateauId!!,
+                                                trip_id = r.tripId,
+                                                route_id = r.routeId,
                                                 start_time = null,
+                                                start_date = r.startDay,
                                                 vehicle_id = null,
-                                                route_type = it.routeType
+                                                route_type = r.routeType
                                             )
                                         )
-
                                         catenaryStack = newStack
-
+                                    },
+                                    onRouteClick = { chateauId, routeId ->
+                                        val newStack = ArrayDeque(catenaryStack)
+                                        newStack.addLast(
+                                            CatenaryStackEnum.RouteStack(
+                                                chateau_id = chateauId,
+                                                route_id = routeId
+                                        )
+                                        )
+                                        catenaryStack = newStack
                                     }
                                 )
-
                             } else {
                                 // Handle other stack states
                                 val currentScreen = catenaryStack.last()
@@ -2104,6 +2110,11 @@ class MainActivity : ComponentActivity() {
                                                         newStack.addLast(blockStack)
                                                         catenaryStack = newStack
                                                     },
+                                                    onRouteClick = { routeStack ->
+                                                        val newStack = ArrayDeque(catenaryStack)
+                                                        newStack.addLast(routeStack)
+                                                        catenaryStack = newStack
+                                                    },
 
                                                     // --- Pass the .value of the sources ---
                                                     transitShapeSource = transitShapeSourceRef.value!!,
@@ -2141,10 +2152,25 @@ class MainActivity : ComponentActivity() {
                                         }
 
                                         is CatenaryStackEnum.RouteStack -> {
-                                            Text(
-                                                text = "TODO ROUTE SCREEN"
-                                            )
-                                            //RouteScreen(currentScreen)
+                                            if (transitShapeSourceRef.value != null && stopsContextSourceRef.value != null) {
+                                                RouteScreen(
+                                                    screenData = currentScreen,
+                                                    transitShapeSource = transitShapeSourceRef.value!!,
+                                                    stopsContextSource = stopsContextSourceRef.value!!,
+                                                    onStopClick = { stopStack ->
+                                                        val newStack = ArrayDeque(catenaryStack)
+                                                        newStack.addLast(stopStack)
+                                                        catenaryStack = newStack
+                                                    },
+                                                    onTripClick = { tripStack ->
+                                                        val newStack = ArrayDeque(catenaryStack)
+                                                        newStack.addLast(tripStack)
+                                                        catenaryStack = newStack
+                                                    },
+                                                    onSetStopsToHide = { newSet ->
+                                                        stopsToHide = newSet
+                                                    })
+                                            }
                                         }
 
                                         is CatenaryStackEnum.StopStack -> {

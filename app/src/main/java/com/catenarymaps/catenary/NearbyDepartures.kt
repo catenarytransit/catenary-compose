@@ -46,11 +46,13 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextDecoration
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
@@ -302,7 +304,8 @@ fun NearbyDepartures(
     onMyLocation: () -> Unit = {},
     onPinDrop: () -> Unit = {},
     onCenterPin: () -> Unit = {},
-    onTripClick: (TripClickResponse) -> Unit = {}
+    onTripClick: (TripClickResponse) -> Unit = {},
+    onRouteClick: (chateauId: String, routeId: String) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -498,7 +501,7 @@ fun NearbyDepartures(
                     Text("No departures.", style = MaterialTheme.typography.bodyMedium)
                 } else {
                     sorted.forEach { route ->
-                        RouteGroupCard(route, stopsTable, darkMode, onTripClick)
+                        RouteGroupCard(route, stopsTable, darkMode, onTripClick, onRouteClick)
                     }
                 }
                 Spacer(Modifier.height(64.dp))
@@ -648,7 +651,8 @@ private fun RouteGroupCard(
     route: RouteGroup,
     stopsTable: Map<String, Map<String, StopEntry>>,
     darkMode: Boolean,
-    onTripClick: (TripClickResponse) -> Unit
+    onTripClick: (TripClickResponse) -> Unit,
+    onRouteClick: (chateauId: String, routeId: String) -> Unit
 ) {
     val bg = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (darkMode) 0.5f else 1f)
     val textCol = normalizeHex(route.textColor) ?: MaterialTheme.colorScheme.onSurface
@@ -663,6 +667,7 @@ private fun RouteGroupCard(
             .padding(8.dp)
     ) {
         Row(
+            modifier = Modifier.clickable { onRouteClick(route.chateauId, route.routeId) },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp) // space between texts
         ) {
@@ -670,14 +675,16 @@ private fun RouteGroupCard(
                 text = route.shortName?.trim().orEmpty(),
                 color = if (darkMode) lightenColour(lineCol) else darkenColour(lineCol),
                 fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                textDecoration = TextDecoration.Underline
             )
 
             Text(
                 text = route.longName?.trim().orEmpty(),
                 color = if (darkMode) lightenColour(lineCol) else darkenColour(lineCol),
                 fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                textDecoration = TextDecoration.Underline
             )
         }
 

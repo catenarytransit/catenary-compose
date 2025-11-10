@@ -1,12 +1,15 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -227,7 +232,11 @@ fun RouteScreen(
     }
 
     if (routeInfo == null) {
-        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp), contentAlignment = Alignment.Center
+        ) {
             CircularProgressIndicator()
         }
         return
@@ -266,7 +275,8 @@ fun RouteScreen(
                 shortName = info.short_name,
                 longName = info.long_name,
                 description = info.gtfs_desc,
-                isCompact = false
+                isCompact = false,
+                onRouteClick = {}
             )
             if (info.alert_id_to_alert.isNotEmpty()) {
                 val json = Json { ignoreUnknownKeys = true }
@@ -435,11 +445,12 @@ fun RouteScreen(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
-            items(activeStops) { stopTime ->
+            itemsIndexed(activeStops) { index, stopTime ->
                 val stopDetails = info.stops[stopTime.stop_id]
                 if (stopDetails != null) {
                     Row(
                         modifier = Modifier
+                            .height(IntrinsicSize.Min)
                             .fillMaxWidth()
                             .clickable {
                                 onStopClick(
@@ -448,12 +459,19 @@ fun RouteScreen(
                                         stop_id = stopTime.stop_id
                                     )
                                 )
-                            }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            },
+                        verticalAlignment = Alignment.Top
                     ) {
-                        // Timeline decoration can be added here later
-                        Column {
+                        RouteStopProgressIndicator(
+                            color = parseColor(info.color),
+                            isFirst = index == 0,
+                            isLast = index == activeStops.lastIndex,
+                            modifier = Modifier
+                                .width(12.dp)
+                                .fillMaxHeight()
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
                             Text(stopDetails.name, fontWeight = FontWeight.Medium)
                             stopDetails.code?.let {
                                 Text(
@@ -467,5 +485,56 @@ fun RouteScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun RouteStopProgressIndicator(
+    color: Color,
+    isFirst: Boolean,
+    isLast: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier.fillMaxHeight()) {
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+        val hCenter = canvasHeight / 2
+        val wCenter = canvasWidth / 2
+
+        val boxWidth = canvasWidth / 2
+
+        val circleColor = Color.White
+        val strokeColor = color
+
+        // Top box
+        if (!isFirst) {
+            drawRect(
+                color = color,
+                topLeft = Offset(wCenter - boxWidth / 2, 0f),
+                size = androidx.compose.ui.geometry.Size(boxWidth, hCenter)
+            )
+        }
+
+        // Bottom box
+        if (!isLast) {
+            drawRect(
+                color = color,
+                topLeft = Offset(wCenter - boxWidth / 2, hCenter),
+                size = androidx.compose.ui.geometry.Size(boxWidth, canvasHeight - hCenter)
+            )
+        }
+
+        // Center circle
+        drawCircle(
+            color = circleColor,
+            radius = canvasWidth / 2,
+            center = center
+        )
+        drawCircle(
+            color = strokeColor,
+            radius = canvasWidth / 2,
+            center = center,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = canvasWidth / 4)
+        )
     }
 }

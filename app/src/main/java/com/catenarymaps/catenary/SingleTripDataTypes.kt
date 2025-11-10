@@ -80,18 +80,29 @@ data class TripRtUpdateResponse(
 
 @Serializable
 data class TripRtUpdateData(
-    val stoptimes: List<TripStoptime> = emptyList()
+    val stoptimes: List<StopTimeRefresh> = emptyList()
+)
+
+@Serializable
+data class StopTimeRefresh(
+    val stop_id: String? = null,
+    val rt_arrival: RtTime? = null,
+    val rt_departure: RtTime? = null,
+    val schedule_relationship: Int? = null,
+    val gtfs_stop_sequence: Int? = null,
+    val rt_platform_string: String? = null,
+    val departure_occupancy_status: Int? = null
 )
 
 // --- Data class for get_vehicle_information_from_label ---
 
 @Serializable
-data class VehicleInfoResponse(
-    val data: VehicleInfoData? = null
+data class VehicleRealtimeDataResponse(
+    val data: VehicleRealtimeData? = null
 )
 
 @Serializable
-data class VehicleInfoData(
+data class VehicleRealtimeData(
     val timestamp: Long? = null,
     val position: VehiclePositionData? = null, // Re-use from MainActivity
     val occupancy_status: String? = null,

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.catenarymaps.catenary.ui.components.RouteHeading
 import io.github.dellisd.spatialk.geojson.FeatureCollection
 import io.github.dellisd.spatialk.geojson.LineString
 import io.github.dellisd.spatialk.geojson.Position
@@ -76,6 +77,7 @@ fun SingleTripInfoScreen(
     tripSelected: CatenaryStackEnum.SingleTrip,
     onStopClick: (CatenaryStackEnum.StopStack) -> Unit,
     onBlockClick: (CatenaryStackEnum.BlockStack) -> Unit,
+    onRouteClick: (CatenaryStackEnum.RouteStack) -> Unit,
     // --- Map sources passed from MainActivity ---
     transitShapeSource: MutableState<GeoJsonSource>,
     transitShapeDetourSource: MutableState<GeoJsonSource>,
@@ -235,8 +237,27 @@ fun SingleTripInfoScreen(
         } else if (tripData != null) {
             val data = tripData!!
 
-            // TODO: Port your RouteHeading.svelte component here
-            RouteHeadingStub(data)
+            RouteHeading(
+                color = data.color ?: "#808080",
+                textColor = data.text_color ?: "#000000",
+                routeType = data.route_type,
+                agencyName = null, // Not available in TripDataResponse
+                shortName = data.route_short_name,
+                longName = data.route_long_name,
+                description = data.trip_headsign?.let { "to $it" },
+                isCompact = false,
+                routeClickable = true,
+                onRouteClick = {
+                    if (data.route_id != null) {
+                        onRouteClick(
+                            CatenaryStackEnum.RouteStack(
+                                chateau_id = tripSelected.chateau_id,
+                                route_id = data.route_id
+                            )
+                        )
+                    }
+                }
+            )
 
             // Clickable Block ID
             if (data.block_id != null && data.service_date != null) {
@@ -256,8 +277,24 @@ fun SingleTripInfoScreen(
                 )
             }
 
-            // TODO: Add VehicleInfo.svelte content here
-            // TODO: Add AlertBox.svelte content here
+            // Clickable Vehicle Label
+            if (data.vehicle?.label != null) {
+                VehicleInfo(
+                    label = data.vehicle.label,
+                    chateau = tripSelected.chateau_id,
+                    routeId = data.route_id
+                )
+            }
+
+            /*
+            if (data.alert_id_to_alert.isNotEmpty()) {
+                AlertsBox(
+                    alerts = data.alert_id_to_alert,
+                    default_tz = data.tz,
+                    chateau = tripSelected.chateau_id
+                )
+            }
+            */
 
             // Show/Hide Previous Stops Button
             if (lastInactiveStopIdx > -1) {
@@ -451,25 +488,7 @@ fun TripProgressIndicator(
     }
 }
 
-// --- STUBS for components you need to port ---
 
-@Composable
-fun RouteHeadingStub(data: TripDataResponse) {
-    // TODO: Implement the full RouteHeading.svelte UI
-    Text(
-        text = data.route_short_name ?: data.route_long_name ?: "Route",
-        style = MaterialTheme.typography.headlineMedium,
-        color = try {
-            Color(android.graphics.Color.parseColor(data.color))
-        } catch (e: Exception) {
-            MaterialTheme.colorScheme.onSurface
-        }
-    )
-    Text(
-        text = "to ${data.trip_headsign}",
-        style = MaterialTheme.typography.titleMedium
-    )
-}
 
 @Composable
 fun StopTimeNumber(

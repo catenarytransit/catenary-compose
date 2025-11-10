@@ -58,6 +58,8 @@
     <string name="alert_effect_stop_moved">Arrêt déplacé</string>
     <string name="alert_effect_no_effect">Aucun effet</string>
     <string name="alert_effect_accessibility_issue">Problème d\'accessibilité</string>
+    <string name="starting_time">Début</string>
+    <string name="ending_time">Fin</string>
     <plurals name="service_alerts">
         <item quantity="one">%d alerte de service</item>
         <item quantity="other">%d alertes de service</item>

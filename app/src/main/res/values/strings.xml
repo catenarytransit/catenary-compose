@@ -22,7 +22,7 @@
     <string name="arrival">Arrival</string>
     <string name="departure">Departure</string>
     <string name="no_headsign">No headsign</string>
-    <string name="directions">Directions</string>
+    <string name="directions" translatable="false">Directions</string>
     <string name="vehicles">Vehicles</string>
     <string name="stops">Stops</string>
     <string name="next_stop">Next stop</string>
@@ -58,6 +58,8 @@
     <string name="alert_effect_stop_moved">Stop moved</string>
     <string name="alert_effect_no_effect">No effect</string>
     <string name="alert_effect_accessibility_issue">Accessibility issue</string>
+    <string name="starting_time">Starting</string>
+    <string name="ending_time">Ending</string>
     <plurals name="service_alerts">
         <item quantity="one">%d service alert</item>
         <item quantity="other">%d service alerts</item>

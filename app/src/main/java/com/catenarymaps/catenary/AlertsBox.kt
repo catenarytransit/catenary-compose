@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -29,11 +31,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.Serializable
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @Serializable
 data class AlertTranslation(
@@ -176,21 +188,176 @@ private fun AlertItem(
             )
         }
 
-        // TODO: Implement URL, Header, Description, and Active Period rendering
-        // This would involve creating composables for:
-        // - Displaying translated URLs
-        // - Parsing and displaying HTML/Markdown-like text for headers and descriptions
-        // - Formatting and displaying active periods with TimeDiff
+        alert.url?.let { AlertUrl(it) }
 
-        // Placeholder for description
         languageListToUse.forEach { lang ->
-            alert.description_text?.translation?.find { it.language == lang }?.let {
-                Text(
-                    text = it.text.replace(Regex("<.*?>"), "").replace("\\n", "\n"),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp)
+            alert.header_text?.translation?.find { it.language == lang }?.let {
+                FormattedText(
+                    text = it.text,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
+            alert.description_text?.translation?.find { it.language == lang }?.let {
+                FormattedText(
+                    text = it.text,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        alert.active_period.forEach {
+            AlertActivePeriod(
+                activePeriod = it,
+                locale = locale,
+                default_tz = default_tz
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlertUrl(url: AlertText) {
+    val uriHandler = LocalUriHandler.current
+    url.translation.forEach { urlTranslation ->
+        Row {
+            Text(
+                text = "${urlTranslation.language}: ",
+                style = MaterialTheme.typography.bodySmall
+            )
+            ClickableText(
+                text = AnnotatedString(urlTranslation.text),
+                style = MaterialTheme.typography.bodySmall.copy(color = Color.Blue),
+                onClick = { uriHandler.openUri(urlTranslation.text) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FormattedText(text: String, style: TextStyle) {
+    val uriHandler = LocalUriHandler.current
+    val annotatedString = buildAnnotatedString {
+        val linkRegex = Regex("""<a href="([^"]+)">([^<]+)</a>""")
+        val boldRegex = Regex("""<b>([^<]+)</b>""")
+        val routeRegex = Regex("""\[([A-Z0-9]+)]""") // Simplified from JS
+
+        var lastIndex = 0
+        val combinedRegex = Regex("""<a href="[^"]+">[^<]+</a>|<b>[^<]+</b>|\[[A-Z0-9]+]""")
+        combinedRegex.findAll(text.replace("\n", " ")).forEach { matchResult ->
+            val match = matchResult.value
+            val startIndex = matchResult.range.first
+
+            // Append text before the match
+            if (startIndex > lastIndex) {
+                append(text.substring(lastIndex, startIndex))
+            }
+
+            // Handle link
+            linkRegex.find(match)?.let {
+                val (url, linkText) = it.destructured
+                pushStringAnnotation(tag = "URL", annotation = url)
+                withStyle(
+                    style = SpanStyle(
+                        color = Color.Blue,
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
+                    append(linkText)
+                }
+                pop()
+            }
+
+            // Handle bold
+            boldRegex.find(match)?.let {
+                val (boldText) = it.destructured
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(boldText)
+                }
+            }
+
+            // Handle route
+            routeRegex.find(match)?.let {
+                val (routeId) = it.destructured
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append("[$routeId]")
+                }
+            }
+
+
+            lastIndex = matchResult.range.last + 1
+        }
+
+        // Append remaining text
+        if (lastIndex < text.length) {
+            append(text.substring(lastIndex))
+        }
+    }
+
+    ClickableText(
+        text = annotatedString,
+        style = style,
+        onClick = { offset ->
+            annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                .firstOrNull()?.let { annotation ->
+                    uriHandler.openUri(annotation.item)
+                }
+        }
+    )
+}
+
+
+@Composable
+private fun AlertActivePeriod(
+    activePeriod: AlertActivePeriod,
+    locale: Locale,
+    default_tz: String?
+) {
+    val context = LocalContext.current
+    val dateFormat = remember(locale, default_tz) {
+        SimpleDateFormat("yyyy-MM-dd HH:mm", locale).apply {
+            default_tz?.let { timeZone = TimeZone.getTimeZone(it) }
+        }
+    }
+
+    activePeriod.start?.let { start ->
+        val startDate = Date(start * 1000)
+        val diff = (start * 1000 - System.currentTimeMillis()) / 1000.0
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "${stringResource(R.string.starting_time)}: ${dateFormat.format(startDate)}",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(Modifier.width(4.dp))
+            DiffTimer(
+                diff = diff,
+                showBrackets = true,
+                showPlus = true,
+                showDays = true,
+                numSize = MaterialTheme.typography.bodySmall.fontSize,
+                unitSize = MaterialTheme.typography.bodySmall.fontSize * 0.8,
+                bracketSize = MaterialTheme.typography.bodySmall.fontSize
+            )
+        }
+    }
+
+    activePeriod.end?.let { end ->
+        val endDate = Date(end * 1000)
+        val diff = (end * 1000 - System.currentTimeMillis()) / 1000.0
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "${stringResource(R.string.ending_time)}: ${dateFormat.format(endDate)}",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(Modifier.width(4.dp))
+            DiffTimer(
+                diff = diff,
+                showBrackets = true,
+                showPlus = true,
+                showDays = true,
+                numSize = MaterialTheme.typography.bodySmall.fontSize,
+                unitSize = MaterialTheme.typography.bodySmall.fontSize * 0.8,
+                bracketSize = MaterialTheme.typography.bodySmall.fontSize
+            )
         }
     }
 }

@@ -39,7 +39,7 @@ class SingleTripViewModel(
     private val _tripData = MutableStateFlow<TripDataResponse?>(null)
     val tripData = _tripData.asStateFlow()
 
-    private val _vehicleData = MutableStateFlow<VehicleInfoData?>(null)
+    private val _vehicleData = MutableStateFlow<VehicleRealtimeData?>(null)
     val vehicleData = _vehicleData.asStateFlow()
 
     // This is your stoptimes_cleaned_dataset
@@ -157,7 +157,7 @@ class SingleTripViewModel(
             try {
                 val url =
                     "https://birch.catenarymaps.org/get_vehicle_information_from_label/${tripSelected.chateau_id}/$vehicleId"
-                val response = ktorClient.get(url).body<VehicleInfoResponse>()
+                val response = ktorClient.get(url).body<VehicleRealtimeDataResponse>()
                 _vehicleData.value = response.data
             } catch (e: Exception) {
                 Log.e("SingleTripViewModel", "Error fetching vehicle info: ${e.message}")
@@ -214,7 +214,7 @@ class SingleTripViewModel(
         return cleaned
     }
 
-    private fun mergeRtStopTime(existing: StopTimeCleaned, rt: TripStoptime): StopTimeCleaned {
+    private fun mergeRtStopTime(existing: StopTimeCleaned, rt: StopTimeRefresh): StopTimeCleaned {
         // This function merges new RT data, like in your Svelte update_realtime_data
         val updated =
             existing.copy(raw = existing.raw.copy(rt_platform_string = rt.rt_platform_string))
