@@ -1112,16 +1112,20 @@ class MainActivity : ComponentActivity() {
                     val isLandscape =
                         configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
+                    val bottomInset = WindowInsets.safeDrawing.getBottom(density)
+                    val collapsedHandleHeight = with(density) { 64.dp.toPx() }
+                    val collapsedAnchor = screenHeightPx - collapsedHandleHeight - bottomInset
+
                     val anchors = DraggableAnchors<SheetSnapPoint> {
-                        SheetSnapPoint.Collapsed at screenHeightPx - with(density) { 64.dp.toPx() }
-                        SheetSnapPoint.PartiallyExpanded at screenHeightPx / 2f
+                        SheetSnapPoint.Collapsed at collapsedAnchor
+                        SheetSnapPoint.PartiallyExpanded at screenHeightPx / 2f - bottomInset
                         SheetSnapPoint.Expanded at with(density) { 60.dp.toPx() }
                     }
 
 
                     val draggableState = remember {
                         AnchoredDraggableState(
-                            initialValue = SheetSnapPoint.Collapsed,
+                            initialValue = SheetSnapPoint.PartiallyExpanded,
                             anchors = anchors,
                             positionalThreshold = { with(density) { 128.dp.toPx() } },
                             velocityThreshold = { with(density) { 128.dp.toPx() } },
@@ -2749,6 +2753,7 @@ class MainActivity : ComponentActivity() {
                         hostState = snackbars,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
+                            .zIndex(10f)
                             .windowInsetsPadding(
                                 WindowInsets(
                                     bottom = WindowInsets.safeContent.getBottom(
