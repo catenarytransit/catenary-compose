@@ -19,6 +19,10 @@ android {
     namespace = "com.catenarymaps.catenary"
     compileSdk = 36
 
+    androidResources {
+        generateLocaleConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27

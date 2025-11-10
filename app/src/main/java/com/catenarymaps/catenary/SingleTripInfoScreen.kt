@@ -286,7 +286,7 @@ fun SingleTripInfoScreen(
                 )
             }
 
-            /*
+
             if (data.alert_id_to_alert.isNotEmpty()) {
                 AlertsBox(
                     alerts = data.alert_id_to_alert,
@@ -294,7 +294,7 @@ fun SingleTripInfoScreen(
                     chateau = tripSelected.chateau_id
                 )
             }
-            */
+
 
             // Show/Hide Previous Stops Button
             if (lastInactiveStopIdx > -1) {

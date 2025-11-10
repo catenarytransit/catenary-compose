@@ -46,7 +46,7 @@ class SingleTripViewModel(
     private val _stopTimes = MutableStateFlow<List<StopTimeCleaned>>(emptyList())
     val stopTimes = _stopTimes.asStateFlow()
 
-    private val _alerts = MutableStateFlow<Map<String, TripAlert>>(emptyMap())
+    private val _alerts = MutableStateFlow<Map<String, Alert>>(emptyMap())
     val alerts = _alerts.asStateFlow()
 
     private val _stopIdToAlertIds = MutableStateFlow<Map<String, List<String>>>(emptyMap())
@@ -88,7 +88,7 @@ class SingleTripViewModel(
 
                 _tripData.value = data
                 _alerts.value = data.alert_id_to_alert
-                processStopIdToAlertIds(data.alert_id_to_alert)
+                //processStopIdToAlertIds(data.alert_id_to_alert)
 
                 // Process stoptimes into the "cleaned" dataset
                 _stopTimes.value = data.stoptimes.map { processStopTime(it) }
@@ -240,18 +240,6 @@ class SingleTripViewModel(
         // ... add logic for arrival/departure time conflicts ...
 
         return updated
-    }
-
-    private fun processStopIdToAlertIds(alerts: Map<String, TripAlert>) {
-        val map = mutableMapOf<String, MutableList<String>>()
-        alerts.forEach { (alertId, alert) ->
-            alert.informed_entity.forEach { entity ->
-                if (entity.stop_id != null) {
-                    map.getOrPut(entity.stop_id) { mutableListOf() }.add(alertId)
-                }
-            }
-        }
-        _stopIdToAlertIds.value = map
     }
 
     private fun updateStopProgress() {

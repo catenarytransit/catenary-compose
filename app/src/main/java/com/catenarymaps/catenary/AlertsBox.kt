@@ -50,7 +50,7 @@ import java.util.TimeZone
 @Serializable
 data class AlertTranslation(
     val text: String,
-    val language: String
+    val language: String?
 )
 
 @Serializable
@@ -161,7 +161,7 @@ fun AlertsBox(
 @Composable
 private fun AlertItem(
     alert: Alert,
-    languageListToUse: List<String>,
+    languageListToUse: List<String?>,
     locale: Locale,
     default_tz: String?,
     alertColor: Color
@@ -236,6 +236,8 @@ private fun AlertUrl(url: AlertText) {
 @Composable
 private fun FormattedText(text: String, style: TextStyle) {
     val uriHandler = LocalUriHandler.current
+    val defaultColor = MaterialTheme.colorScheme.onSurface
+
     val annotatedString = buildAnnotatedString {
         val linkRegex = Regex("""<a href="([^"]+)">([^<]+)</a>""")
         val boldRegex = Regex("""<b>([^<]+)</b>""")
@@ -243,6 +245,7 @@ private fun FormattedText(text: String, style: TextStyle) {
 
         var lastIndex = 0
         val combinedRegex = Regex("""<a href="[^"]+">[^<]+</a>|<b>[^<]+</b>|\[[A-Z0-9]+]""")
+
         combinedRegex.findAll(text.replace("\n", " ")).forEach { matchResult ->
             val match = matchResult.value
             val startIndex = matchResult.range.first
@@ -250,7 +253,9 @@ private fun FormattedText(text: String, style: TextStyle) {
             // Append text before the match
             if (startIndex > lastIndex) {
                 append(text.substring(lastIndex, startIndex))
+
             }
+
 
             // Handle link
             linkRegex.find(match)?.let {
@@ -295,7 +300,7 @@ private fun FormattedText(text: String, style: TextStyle) {
 
     ClickableText(
         text = annotatedString,
-        style = style,
+        style = style.copy(color = defaultColor),
         onClick = { offset ->
             annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
                 .firstOrNull()?.let { annotation ->

@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -71,28 +73,24 @@ fun RouteHeading(
     }
 
     Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Text(
+            text = buildAnnotatedString {
+                if (!shortName.isNullOrBlank()) {
+                    withStyle(style = textStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {
+                        append(shortName)
+                    }
+                    if (!longName.isNullOrBlank()) {
+                        append(" ")
+                    }
+                }
+                if (!longName.isNullOrBlank()) {
+                    append(longName)
+                }
+            },
+            color = displayColor,
+            style = textStyle,
             modifier = clickableModifier
-        ) {
-            if (!shortName.isNullOrBlank()) {
-                Text(
-                    text = shortName,
-                    color = displayColor,
-                    style = textStyle,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            if (!longName.isNullOrBlank()) {
-                Text(
-                    text = longName,
-                    color = displayColor,
-                    style = textStyle,
-                    modifier = Modifier
-                        .padding(start = if (shortName.isNullOrBlank()) 0.dp else 8.dp)
-                )
-            }
-        }
+        )
 
         if (!agencyName.isNullOrBlank()) {
             Text(text = agencyName, style = MaterialTheme.typography.titleMedium)

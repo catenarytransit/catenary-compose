@@ -265,6 +265,7 @@ fun StopResultItem(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RouteResultItem(
     routeInfo: RouteInfo,
@@ -278,29 +279,30 @@ fun RouteResultItem(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            //horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             RouteBadge(route = routeInfo)
-            Column(modifier = Modifier.padding(start = 8.dp)) {
-                if (routeInfo.longName != null) {
-                    Text(
-                        text = routeInfo.longName,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                agency?.agencyName?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            if (routeInfo.longName != null) {
+                Text(
+                    text = routeInfo.longName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // The FlowRow will handle wrapping, so no need for maxLines or overflow here
+                    // if we wanted it to be part of the text flow.
+                    // modifier = Modifier.weight(1f) // Could be useful depending on desired behavior
+                )
             }
+        }
+
+        agency?.agencyName?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
