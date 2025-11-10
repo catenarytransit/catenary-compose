@@ -23,6 +23,7 @@
     <string name="departure">Départ</string>
     <string name="no_headsign">Pas de girouette</string>
     <string name="no_departures_found">Aucun départ trouvé</string>
+    <string name="directions">Directions</string>
     <string name="vehicles">Véhicules</string>
     <string name="stops">Arrêts</string>
     <string name="next_stop">Prochain arrêt</string>
@@ -64,4 +65,11 @@
         <item quantity="one">%d alerte de service</item>
         <item quantity="other">%d alertes de service</item>
     </plurals>
+    <string name="heading_bus">Bus</string>
+    <string name="heading_other">Autres</string>
+    <string name="heading_intercity_rail">Rail</string>
+    <string name="heading_local_rail">métro/tramway</string>
+    <string name="vehicle">Véhicule</string>
+    <string name="delay">Retard</string>
+    <string name="route">Itinéraire</string>
 </resources>

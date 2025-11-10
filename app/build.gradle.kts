@@ -27,8 +27,8 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 131
-        versionName = "2.0.29"
+        versionCode = 132
+        versionName = "2.0.30"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -98,6 +98,7 @@ dependencies {
     implementation(libs.app.update)
 // For Kotlin users also add the Kotlin extensions library for Play In-App Update:
     implementation(libs.app.update.ktx)
+    implementation(libs.ktor.client.cio)
 }
 
 datadog {

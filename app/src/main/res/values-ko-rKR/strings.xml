@@ -65,4 +65,11 @@
         <item quantity="one">%d개의 서비스 알림</item>
         <item quantity="other">%d개의 서비스 알림</item>
     </plurals>
+    <string name="heading_intercity_rail">철도</string>
+    <string name="heading_local_rail">지하철/트램</string>
+    <string name="heading_bus">버스</string>
+    <string name="heading_other">다른</string>
+    <string name="vehicle">차량</string>
+    <string name="delay">지연</string>
+    <string name="route">노선</string>
 </resources>

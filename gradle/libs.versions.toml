@@ -17,6 +17,7 @@ espressoCore = "3.7.0"
 kotlinxSerializationJson = "1.9.0"
 kotlinxSerializationJsonVersion = "1.9.0"
 ktorClientAndroid = "3.3.1"
+ktorClientCio = "3.3.2"
 ktorClientContentNegotiation = "3.3.1"
 ktorClientCore = "3.3.1"
 ktorSerializationKotlinxJson = "3.3.1"
@@ -67,6 +68,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 kotlinx-serialization-json-v163 = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJsonVersion" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientAndroid" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorClientCio" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorClientContentNegotiation" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorSerializationKotlinxJson" }

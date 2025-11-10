@@ -65,4 +65,11 @@
         <item quantity="one">%d service alert</item>
         <item quantity="other">%d service alerts</item>
     </plurals>
+    <string name="heading_intercity_rail">Rail</string>
+    <string name="heading_local_rail">Metro/Tram</string>
+    <string name="heading_bus">Bus</string>
+    <string name="heading_other">Other</string>
+    <string name="vehicle">Vehicle</string>
+    <string name="delay">Delay</string>
+    <string name="route">Route</string>
 </resources>

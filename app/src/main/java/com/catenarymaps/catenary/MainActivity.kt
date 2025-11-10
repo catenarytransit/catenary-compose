@@ -208,8 +208,16 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.touchlab.kermit.Logger.Companion.config
 import com.google.firebase.analytics.FirebaseAnalytics
+import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
+import okhttp3.Dispatcher
+import okhttp3.OkHttp
+import okhttp3.OkHttpClient
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
     return try {
@@ -588,10 +596,15 @@ data class ChateauFetchParams(
 @Serializable
 data class BulkRealtimeRequest(
     val categories: List<String>, val chateaus: Map<String, ChateauFetchParams>
-)
+)// 1. Create the OkHttp dispatcher
+
+val httpDispatcher = Dispatcher().apply {
+    maxRequests = Integer.MAX_VALUE
+    maxRequestsPerHost = Integer.MAX_VALUE
+}
 
 // Ktor HTTP Client (initialize once)
-val ktorClient = HttpClient() {
+val ktorClient = HttpClient(CIO) {
     install(ContentNegotiation) {
         json(Json {
             ignoreUnknownKeys = true
@@ -599,6 +612,15 @@ val ktorClient = HttpClient() {
             isLenient = true
             encodeDefaults = true
         })
+    }
+
+    engine {
+        maxConnectionsCount = Int.MAX_VALUE
+        endpoint {
+            maxConnectionsPerRoute = Int.MAX_VALUE
+            pipelineMaxSize = Int.MAX_VALUE
+            connectAttempts = 5
+        }
     }
 }
 
@@ -2658,7 +2680,7 @@ class MainActivity : ComponentActivity() {
                                             horizontalArrangement = Arrangement.SpaceEvenly
                                         ) {
                                             VehicleLabelToggleButton(
-                                                name = "Route", // Corresponds to $_('showroute')
+                                                name = stringResource(id = R.string.route), // Corresponds to $_('showroute')
                                                 icon = Icons.Filled.Route, // Corresponds to symbol="route"
                                                 isActive = labelSettings.route,
                                                 onToggle = {
@@ -2692,7 +2714,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = "Vehicle", // Corresponds to $_('showvehicle')
+                                                name = stringResource(id = R.string.vehicle), // Corresponds to $_('showvehicle')
                                                 icon = Icons.Filled.Train, // Corresponds to symbol="train"
                                                 isActive = labelSettings.vehicle,
                                                 onToggle = {
@@ -2711,7 +2733,7 @@ class MainActivity : ComponentActivity() {
                                             )
 
                                             VehicleLabelToggleButton(
-                                                name = "Headsign", // Corresponds to $_('headsign')
+                                                name = stringResource(id = R.string.headsign), // Corresponds to $_('headsign')
                                                 icon = Icons.Filled.SportsScore, // Corresponds to symbol="sports_score"
                                                 isActive = labelSettings.headsign,
                                                 onToggle = {
@@ -2762,7 +2784,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = "Delay", // Corresponds to $_('delay')
+                                                name = stringResource(id = R.string.delay), // Corresponds to $_('delay')
                                                 icon = Icons.Filled.Timer, // Corresponds to symbol="timer"
                                                 isActive = labelSettings.delay,
                                                 onToggle = {

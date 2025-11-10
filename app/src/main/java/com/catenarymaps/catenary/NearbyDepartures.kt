@@ -523,6 +523,8 @@ private fun TopRow(
     onSortChange: (SortMode) -> Unit,
     darkMode: Boolean
 ) {
+    val primaryButtonColor =
+        if (darkMode) Color(0xFF00532F) else Color(0xFF48DC90) // Dark green for dark mode, light green for light mode
     Row(
         Modifier
             .fillMaxWidth()
@@ -536,30 +538,34 @@ private fun TopRow(
                     .size(36.dp)
                     .border(
                         2.dp,
-                        MaterialTheme.colorScheme.primary,
+                        Color(0xFF008744), // oklch(72.3% 0.219 149.579)
                         RoundedCornerShape(8.dp)
                     )
                     .background(
-                        if (!currentPickModeIsPin) MaterialTheme.colorScheme.primary.copy(0.2f) else Color.Transparent,
+                        if (!currentPickModeIsPin) primaryButtonColor.copy(0.25f) else Color.Transparent,
                         RoundedCornerShape(8.dp)
                     )
             ) { Icon(Icons.Default.NearMe, contentDescription = "My location") }
 
             Row(
                 modifier = Modifier
-                    .border(2.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(8.dp))
+                    .border(2.dp, Color(0xFFC9A2C8), RoundedCornerShape(8.dp)) // purple
                     .clip(RoundedCornerShape(8.dp))
                     .height(36.dp)
             ) {
                 TextButton(
                     onClick = onPinDrop,
                     colors = ButtonDefaults.textButtonColors(
-                        containerColor = if (currentPickModeIsPin) MaterialTheme.colorScheme.secondary.copy(
-                            0.25f
-                        ) else Color.Transparent
+                        containerColor = if (currentPickModeIsPin) Color(0xFFC9A2C8).copy(0.25f) else Color.Transparent
                     ),
-                    contentPadding = PaddingValues(horizontal = 10.dp)
-                ) { Icon(Icons.Default.PinDrop, contentDescription = "Pin") }
+                    contentPadding = PaddingValues(horizontal = 10.dp),
+                ) {
+                    Icon(
+                        Icons.Default.PinDrop,
+                        contentDescription = "Pin",
+                        tint = if (darkMode) Color.White else Color.Black
+                    )
+                }
                 Divider(
                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
                     modifier = Modifier
@@ -569,7 +575,13 @@ private fun TopRow(
                 TextButton(
                     onClick = onCenterPin,
                     contentPadding = PaddingValues(horizontal = 10.dp)
-                ) { Icon(Icons.Default.CenterFocusStrong, contentDescription = "Center") }
+                ) {
+                    Icon(
+                        Icons.Default.CenterFocusStrong,
+                        contentDescription = "Center",
+                        tint = if (darkMode) Color.White else Color.Black
+                    )
+                }
             }
         }
 
@@ -622,10 +634,25 @@ private fun FilterRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilterChip("Intercity Rail", filters.rail) { onChange(filters.copy(rail = !filters.rail)) }
-        FilterChip("Local Rail", filters.metro) { onChange(filters.copy(metro = !filters.metro)) }
-        FilterChip("Bus", filters.bus) { onChange(filters.copy(bus = !filters.bus)) }
-        FilterChip("Other", filters.other) { onChange(filters.copy(other = !filters.other)) }
+        FilterChip(
+            stringResource(R.string.heading_intercity_rail),
+            filters.rail
+        ) { onChange(filters.copy(rail = !filters.rail)) }
+        FilterChip(
+            stringResource(R.string.heading_local_rail),
+            filters.metro
+        ) { onChange(filters.copy(metro = !filters.metro)) }
+        FilterChip(
+            stringResource(R.string.heading_bus),
+            filters.bus
+        ) { onChange(filters.copy(bus = !filters.bus)) }
+        FilterChip(stringResource(R.string.heading_other), filters.other) {
+            onChange(
+                filters.copy(
+                    other = !filters.other
+                )
+            )
+        }
     }
     Spacer(Modifier.height(2.dp))
 }
@@ -866,7 +893,7 @@ private fun TripPill(
             // Platform/Track
             trip.platform?.let {
                 Text(
-                    "${stringResource(R.string.platform)} ${it.trim()} ${
+                    "${stringResource(R.string.platform)} ${
                         it.replace("Track", "").trim()
                     }",
                     style = MaterialTheme.typography.labelSmall
