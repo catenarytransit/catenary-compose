@@ -105,7 +105,8 @@ data class StopEvent(
     val last_stop: Boolean? = false,
     val platform_string_realtime: String? = null,
     val vehicle_number: String? = null,
-    val delay_seconds: Long? = null
+    val delay_seconds: Long? = null,
+    val trip_cancelled: Boolean
 )
 
 @Serializable
@@ -575,6 +576,7 @@ private fun StopScreenRow(
     val scheduledTime = event.scheduled_departure ?: event.scheduled_arrival
     val isRealtime = event.realtime_departure != null
     val delaySeconds = event.delay_seconds
+    val isCancelled = event.trip_cancelled == true
 
     // The main column for the entire row item
     Column(modifier = modifier) {
@@ -615,7 +617,7 @@ private fun StopScreenRow(
 
         Text(
             text = event.headsign ?: stringResource(id = R.string.no_headsign),
-            style = MaterialTheme.typography.bodyLarge,
+            style = if (isCancelled) MaterialTheme.typography.bodyLarge.copy(textDecoration = TextDecoration.LineThrough) else MaterialTheme.typography.bodyLarge,
             color = if (isPast) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(top = 2.dp)
         )
@@ -627,62 +629,81 @@ private fun StopScreenRow(
                 .padding(top = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val label =
-                if (event.last_stop == true) stringResource(R.string.arrival) else stringResource(R.string.departure)
-            Text(text = "$label: ", style = MaterialTheme.typography.bodyMedium)
-
-            val targetTime = departureTimeToShow ?: scheduledTime
-            if (targetTime != null) {
-                DiffTimer(
-                    diff = (targetTime - currentTime).toDouble(),
-                    showBrackets = false,
-                    showSeconds = false,
-                    showDays = false,
-                    showPlus = false
+            if (isCancelled) {
+                Text(
+                    text = "Cancelled",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                 )
-            }
-
-            if (isRealtime && scheduledTime != null && departureTimeToShow != null) {
-                Spacer(Modifier.size(4.dp))
-                DelayDiff(diff = departureTimeToShow - scheduledTime, show_seconds = false)
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            // Wall clock time display
-            val timeColor =
-                if (isRealtime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-            val finalColor = if (isPast) timeColor.copy(alpha = 0.7f) else timeColor
-
-            if (isRealtime && scheduledTime != null && departureTimeToShow != null) {
-                if (departureTimeToShow == scheduledTime) {
-                    // Bullseye icon can be added here if you have one
+                Spacer(Modifier.weight(1f))
+                val timeToStrike = scheduledTime ?: departureTimeToShow
+                if (timeToStrike != null) {
+                    FormattedTimeText(
+                        timezone = zoneId.id,
+                        timeSeconds = timeToStrike,
+                        showSeconds = false,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
+                        textDecoration = TextDecoration.LineThrough
+                    )
                 }
-                if (departureTimeToShow != scheduledTime) {
+            } else {
+                val label =
+                    if (event.last_stop == true) stringResource(R.string.arrival) else stringResource(
+                        R.string.departure
+                    )
+                Text(text = "$label: ", style = MaterialTheme.typography.bodyMedium)
+
+                val targetTime = departureTimeToShow ?: scheduledTime
+                if (targetTime != null) {
+                    DiffTimer(
+                        diff = (targetTime - currentTime).toDouble(),
+                        showBrackets = false,
+                        showSeconds = false,
+                        showDays = false,
+                        showPlus = false
+                    )
+                }
+
+                if (isRealtime && scheduledTime != null && departureTimeToShow != null) {
+                    Spacer(Modifier.size(4.dp))
+                    DelayDiff(diff = departureTimeToShow - scheduledTime, show_seconds = false)
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                // Wall clock time display
+                val timeColor =
+                    if (isRealtime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                val finalColor = if (isPast) timeColor.copy(alpha = 0.7f) else timeColor
+
+                if (isRealtime && scheduledTime != null && departureTimeToShow != null) {
+                    if (departureTimeToShow != scheduledTime) {
+                        FormattedTimeText(
+                            timezone = zoneId.id,
+                            timeSeconds = scheduledTime,
+                            showSeconds = false,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 1.0f),
+                            textDecoration = TextDecoration.LineThrough,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                    FormattedTimeText(
+                        timezone = zoneId.id,
+                        timeSeconds = departureTimeToShow,
+                        showSeconds = false,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = finalColor
+                    )
+                } else if (scheduledTime != null) {
                     FormattedTimeText(
                         timezone = zoneId.id,
                         timeSeconds = scheduledTime,
                         showSeconds = false,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 1.0f),
-                        textDecoration = TextDecoration.LineThrough,
-                        modifier = Modifier.padding(end = 8.dp)
+                        style = MaterialTheme.typography.bodyMedium, color = finalColor
                     )
                 }
-                FormattedTimeText(
-                    timezone = zoneId.id,
-                    timeSeconds = departureTimeToShow,
-                    showSeconds = false,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                    color = finalColor
-                )
-            } else if (scheduledTime != null) {
-                FormattedTimeText(
-                    timezone = zoneId.id,
-                    timeSeconds = scheduledTime,
-                    showSeconds = false,
-                    style = MaterialTheme.typography.bodyMedium, color = finalColor
-                )
             }
         }
     }
