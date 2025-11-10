@@ -3579,6 +3579,7 @@ fun AddLiveDots(
     railDotsSrc: MutableState<GeoJsonSource>,
     otherDotsSrc: MutableState<GeoJsonSource>,
 ) {
+    val scope = rememberCoroutineScope()
     // remember previous references per category to detect changes cheaply.
     // If the fetcher did not touch a category, its inner maps keep the same reference.
     val prevVehicleRefs = remember { mutableStateMapOf<String, Any?>() }
@@ -3609,24 +3610,31 @@ fun AddLiveDots(
     }
 
     suspend fun updateIfChanged(category: String, sink: MutableState<GeoJsonSource>) {
-        if (!categoryChanged(category)) return
+        scope.launch(kotlinx.coroutines.Dispatchers.Default) { // Launch in a background thread
+            if (!categoryChanged(category)) return@launch
 
-        val features = rerenderCategoryLiveDots(
-            category = category,
-            isDark = isDark,
-            usUnits = usUnits,
-            vehicleLocationsV2 = vehicleLocationsV2,
-            routeCache = routeCache
-        )
-        sink.value.setData(GeoJsonData.Features(FeatureCollection(features)))
+            val features = rerenderCategoryLiveDots(
+                category = category,
+                isDark = isDark,
+                usUnits = usUnits,
+                vehicleLocationsV2 = vehicleLocationsV2,
+                routeCache = routeCache
+            )
 
-        // Stamp current references so future comparisons are accurate
-        prevVehicleRefs[category] = vehicleLocationsV2[category]
-        previousRouteStructHash.value = routeRefsFor()
+            // Switch back to main thread to update the GeoJsonSource
+            launch(kotlinx.coroutines.Dispatchers.Main) {
+                sink.value.setData(GeoJsonData.Features(FeatureCollection(features)))
+            }
+
+            // Stamp current references so future comparisons are accurate
+            prevVehicleRefs[category] = vehicleLocationsV2[category]
+            previousRouteStructHash.value = routeRefsFor()
+        }
     }
 
     // Re-check when backing data *or* styling inputs that affect rendering change.
     LaunchedEffect(vehicleLocationsV2, routeCache, isDark, usUnits) {
+        println("Rerender")
         updateIfChanged("bus", busDotsSrc)
         updateIfChanged("metro", metroDotsSrc)
         updateIfChanged("rail", railDotsSrc)

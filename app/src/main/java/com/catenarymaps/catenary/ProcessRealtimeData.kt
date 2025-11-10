@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -86,7 +87,7 @@ fun fetchRoutesOfChateauByAgency(
     }
 }
 
-fun processRealtimeDataV2(
+suspend fun processRealtimeDataV2(
     response: BulkRealtimeResponseV2,
     bounds: BoundsInput,
     realtimeVehicleLocationsStoreV2: MutableState<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>,

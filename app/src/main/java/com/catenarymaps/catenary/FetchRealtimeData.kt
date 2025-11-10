@@ -260,7 +260,7 @@ fun fetchRealtimeData(
                 val json = Json { ignoreUnknownKeys = true }
                 val response = json.decodeFromString<BulkRealtimeResponseV2>(rawresponse)
 
-                processRealtimeDataV2(
+                processRealtimeDataV2( // This is now a suspend function call
                     response,
                     boundsInput,
                     realtimeVehicleLocationsStoreV2,
