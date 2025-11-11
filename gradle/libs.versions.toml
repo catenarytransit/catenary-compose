@@ -51,7 +51,9 @@ dd-sdk-android-rum = { module = "com.datadoghq:dd-sdk-android-rum", version.ref 
 dd-sdk-android-rum-v320 = { module = "com.datadoghq:dd-sdk-android-rum", version.ref = "ddSdkAndroidRumVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-crashlytics-ndk = { module = "com.google.firebase:firebase-crashlytics-ndk" }
 geojson = { module = "org.maplibre.spatialk:geojson", version.ref = "geojson" }
+google-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
