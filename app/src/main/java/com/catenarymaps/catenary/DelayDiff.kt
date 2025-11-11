@@ -53,17 +53,17 @@ fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: Tex
         if (diff != 0L) {
             if (h > 0) {
                 Text(text = h.toString(), fontSize = 14.sp, color = textColor)
-                Text(text = locale_hour_marking(), fontSize = 12.sp, color = textColor)
+                Text(text = locale_hour_marking(), fontSize = 10.sp, color = textColor)
             }
             if (h > 0 || m > 0 || (!show_seconds && m >= 0 && diff != 0L)) {
                 val minuteText = if (!show_seconds && abs(diff) < 60) "<1" else m.toString()
                 Text(text = minuteText, fontSize = 14.sp, color = textColor)
-                Text(text = locale_min_marking(show_seconds), fontSize = 12.sp, color = textColor)
+                Text(text = locale_min_marking(show_seconds), fontSize = 10.sp, color = textColor)
             }
             if (show_seconds) {
                 if (abs(diff) > 0) {
                     Text(text = s.toString(), fontSize = 14.sp, color = textColor)
-                    Text(text = locale_s_marking(), fontSize = 12.sp, color = textColor)
+                    Text(text = locale_s_marking(), fontSize = 10.sp, color = textColor)
                 }
             }
         }

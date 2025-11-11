@@ -16,7 +16,6 @@
     <string name="searchhere">Rechercher ici</string>
     <string name="early">En avance</string>
     <string name="late">En retard</string>
-    <string name="ontime">À l'heure</string>
     <string name="previous_departures">Départs précédents</string>
     <string name="load_more">Charger plus</string>
     <string name="arrival">Arrivée</string>
@@ -34,7 +33,7 @@
     <string name="occupancy_status_standing_room_only">Places debout uniquement</string>
     <string name="occupancy_status_crushed_standing_room_only">Places debout uniquement (bondé)</string>
     <string name="occupancy_status_full">Plein</string>
-    <string name="occupancy_status_not_accepting_passengers">N'accepte pas les passagers</string>
+    <string name="occupancy_status_not_accepting_passengers" translatable="false">n\'accepte pas les passagers</string>
     <string name="occupancy_status_no_data">Pas de données</string>
     <string name="occupancy_status_not_boardable">Embarquement impossible</string>
     <string name="alert_cause_other_cause">Autre cause</string>
@@ -58,12 +57,12 @@
     <string name="alert_effect_unknown_effect">Effet inconnu</string>
     <string name="alert_effect_stop_moved">Arrêt déplacé</string>
     <string name="alert_effect_no_effect">Aucun effet</string>
-    <string name="alert_effect_accessibility_issue">Problème d'accessibilité</string>
+    <string name="alert_effect_accessibility_issue" translatable="false">Problème d\'accessibilité</string>
     <string name="starting_time">Début</string>
     <string name="ending_time">Fin</string>
     <plurals name="service_alerts">
         <item quantity="one">%d alerte de service</item>
-        <item quantity="other">%d alertes de service</item>
+        <item quantity="many">%d alertes de service</item>
     </plurals>
     <string name="heading_bus">Bus</string>
     <string name="heading_other">Autres</string>
@@ -77,33 +76,25 @@
     <string name="heading_more">Plus</string>
     <string name="update_downloaded">Une mise à jour a été téléchargée.</string>
     <string name="restart">Redémarrer</string>
-
     <string name="settings_datadog_analytics_title">Analyses Datadog</string>
     <string name="settings_datadog_analytics_description">Active un suivi intensif et détaillé pour aider les développeurs à trouver et à corriger les bogues.</string>
     <string name="settings_disable_datadog_tracking">Désactiver le suivi Datadog</string>
-    <string name="settings_enable_datadog_tracking">Activer le suivi Datadog</string>
     <string name="settings_google_analytics_title">Google Analytics</string>
-    <string name="settings_google_analytics_description">Active les analyses de base sur l'utilisation des fonctionnalités.</string>
+    <string name="settings_google_analytics_description">Active les analyses de base sur l\'utilisation des fonctionnalités.</string>
     <string name="settings_disable_google_analytics">Désactiver Google Analytics</string>
     <string name="settings_enable_google_analytics">Activer Google Analytics</string>
     <string name="settings_test_crash">Tester le crash</string>
-
     <string name="block_screen_block_id">Roulement: : %1$s</string>
     <string name="block_screen_duration">Durée :</string>
     <string name="block_screen_layover">Temps de battement :</string>
     <string name="block_screen_error">Erreur lors du chargement des données.</string>
-
     <string name="nearby_departures_no_departures">Aucun départ.</string>
-
     <string name="route_screen_to">Vers : %1$s</string>
-
     <string name="single_trip_info_screen_error">Erreur : %1$s</string>
     <string name="single_trip_info_screen_hide_previous_stops">Masquer les arrêts précédents</string>
     <string name="single_trip_info_screen_show_previous_stops">Afficher les %1$d arrêts précédents</string>
-
     <string name="stop_screen_label">%1$s :</string>
-
-    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_loading">…</string>
     <string name="vehicle_info_model"> %1$s</string>
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>

@@ -149,7 +149,8 @@ fun StopScreen(
     stopsContextSource: MutableState<GeoJsonSource>,
     transitShapeSource: MutableState<GeoJsonSource>,
     camera: CameraState,
-    onSetStopsToHide: (Set<String>) -> Unit
+    onSetStopsToHide: (Set<String>) -> Unit,
+    geoLock: GeoLockController
 ) {
     val chateau = screenData.chateau_id
     val stopId = screenData.stop_id
@@ -344,6 +345,8 @@ fun StopScreen(
 
         if (!flyToAlready) {
             scope.launch {
+                geoLock.deactivate()
+
                 camera.animateTo(
                     camera.position.copy(
                         target = Position(primary.stop_lon, primary.stop_lat),

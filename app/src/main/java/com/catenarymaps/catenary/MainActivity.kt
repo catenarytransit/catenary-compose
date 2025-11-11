@@ -827,8 +827,6 @@ class MainActivity : ComponentActivity() {
         }
 
 
-
-
         setContent {
             val context = LocalContext.current
 
@@ -1244,15 +1242,24 @@ class MainActivity : ComponentActivity() {
 
                     // 3) Apply padding to the camera when it changes
                     LaunchedEffect(desiredPadding) {
-                        camera.animateTo(
-                            CameraPosition(
-                                target = camera.position.target,
+
+
+                        geoLock.beginInternalMove()
+
+                        try {
+                            teleportCamera(
+                                camera,
+                                geoLock,
+                                lat = camera.position.target.latitude,
+                                lon = camera.position.target.longitude,
                                 zoom = camera.position.zoom,
-                                bearing = camera.position.bearing,
-                                tilt = camera.position.tilt,
                                 padding = desiredPadding
                             )
-                        )
+                        } finally {
+                            geoLock.endInternalMove()
+                        }
+
+
                     }
 
                     /** idle detection state for move/zoom end */
@@ -1320,10 +1327,14 @@ class MainActivity : ComponentActivity() {
                         baseStyle = BaseStyle.Uri(styleUri),
                         cameraState = camera,
                         onMapClick = { latlng, screenPos ->
+                            println("map clicked")
+
                             val projection = camera.projection ?: run {
                                 Log.w(TAG, "Map clicked, but projection is not ready.")
                                 return@MaplibreMap ClickResult.Pass
                             }
+
+                            geoLock.deactivate()
 
                             val clickPaddingDp = 5.dp
                             val clickRect = DpRect(
@@ -1407,8 +1418,16 @@ class MainActivity : ComponentActivity() {
 
                                 // Only drop the lock if this wasn't an internal move we initiated.
                                 if (!geoLock.isInternalMove() && geoLock.isActive()) {
-                                    geoLock.deactivate()
+                                    println("deactivate camera ${geoLock.isInternalMove()}")
+
+                                    println("current ${pos.target.latitude} ${pos.target.longitude} last set ${geoLock.getInternalPos()?.latitude} ${geoLock.getInternalPos()?.longitude}")
+
+                                    if (pos.target.latitude != geoLock.getInternalPos()?.latitude || pos.target.longitude != geoLock.getInternalPos()?.longitude) {
+
+                                        geoLock.deactivate()
+                                    }
                                 }
+
                                 if (geoLock.isActive()) lastPosByLock = pos
                             }
 
@@ -1453,7 +1472,9 @@ class MainActivity : ComponentActivity() {
                             }
 
 
-                        }) {
+                        })
+
+                    {
                         val busDotsSrc: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
                                 GeoJsonSource(
@@ -2258,7 +2279,8 @@ class MainActivity : ComponentActivity() {
                                                     camera = camera,
                                                     onSetStopsToHide = { newSet ->
                                                         stopsToHide = newSet
-                                                    }
+                                                    },
+                                                    geoLock = geoLock
                                                 )
                                             }
                                         }
@@ -2319,6 +2341,7 @@ class MainActivity : ComponentActivity() {
                                     searchQuery = searchQuery,
                                     onValueChange = { newQuery ->
                                         searchQuery = newQuery
+
                                         // This line should now resolve (Error 1)
                                         searchViewModel.onSearchQueryChanged(
                                             query = newQuery,
@@ -2426,6 +2449,7 @@ class MainActivity : ComponentActivity() {
                                         zoom = 16.0 // pick your desired snap zoom
                                     )
                                 }
+                                println("Geolock state ${geoLock.isActive()}")
                                 // scope.launch { snackbars.showSnackbar("Following your location") }
                             },
                             shape = CircleShape,
@@ -2466,6 +2490,9 @@ class MainActivity : ComponentActivity() {
 
                                 // === FIX for Error 3 ===
                                 scope.launch {
+
+                                    geoLock.deactivate()
+
                                     camera.animateTo(
                                         camera.position.copy(
                                             target = pos,

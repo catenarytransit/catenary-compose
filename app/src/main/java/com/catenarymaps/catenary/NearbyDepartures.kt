@@ -869,7 +869,8 @@ private fun TripPill(
                 val diff = rt - sched // seconds
                 if (diff != 0L) {
                     DelayDiff(diff = diff,
-                        fontSizeOfPolarity = 10.sp)
+                        fontSizeOfPolarity = 12.sp
+                    )
                 }
             }
 
