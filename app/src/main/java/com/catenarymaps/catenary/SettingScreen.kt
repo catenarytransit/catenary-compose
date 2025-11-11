@@ -1,10 +1,13 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +29,7 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(vertical = 8.dp)
     ) {
         Text(
@@ -95,5 +99,15 @@ fun SettingsScreen(
                 Text("Enable Google Analytics")
             }
         }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+        // --- Test Crash Button ---
+        Button(
+            onClick = {
+                throw RuntimeException("Test Crash") // Force a crash
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(text = "Test crash") }
     }
 }
