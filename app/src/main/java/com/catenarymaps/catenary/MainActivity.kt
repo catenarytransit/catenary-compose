@@ -240,6 +240,10 @@ private const val K_ZOOM = "camera_zoom"
 private const val K_BEAR = "camera_bearing"
 private const val K_TILT = "camera_tilt"
 
+private const val K_PIN_ACTIVE = "pin_active"
+private const val K_PIN_LAT = "pin_lat"
+private const val K_PIN_LON = "pin_lon"
+
 private const val K_DATADOG_CONSENT = "datadog_consent"
 private const val K_GA_CONSENT = "ga_consent"
 
@@ -303,6 +307,29 @@ private fun SharedPreferences.writeCamera(pos: CameraPosition) {
     putDouble(K_ZOOM, pos.zoom)
     putDouble(K_BEAR, pos.bearing)
     putDouble(K_TILT, pos.tilt)
+}
+
+private fun SharedPreferences.readPinState(): PinState? {
+    if (!contains(K_PIN_ACTIVE)) return null
+    val active = getBoolean(K_PIN_ACTIVE, false)
+    if (!active) return PinState(active = false)
+
+    val lat = getDouble(K_PIN_LAT)
+    val lon = getDouble(K_PIN_LON)
+
+    if (lat.isNaN() || lon.isNaN()) return PinState(active = false)
+
+    return PinState(active = true, position = Position(lon, lat))
+}
+
+private fun SharedPreferences.writePinState(pin: PinState) {
+    edit().apply {
+        putBoolean(K_PIN_ACTIVE, pin.active)
+        if (pin.active && pin.position != null) {
+            putLong(K_PIN_LAT, java.lang.Double.doubleToRawLongBits(pin.position.latitude))
+            putLong(K_PIN_LON, java.lang.Double.doubleToRawLongBits(pin.position.longitude))
+        }
+    }.apply()
 }
 
 object LayersPerCategory {
@@ -674,6 +701,9 @@ class MainActivity : ComponentActivity() {
 
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
+        // --- Load Pin State ---
+        val initialPinState = prefs.readPinState() ?: PinState()
+
         // --- Load Layer Settings ---
         val initialLayerSettings = prefs.readLayerSettings() ?: AllLayerSettings()
 
@@ -832,7 +862,12 @@ class MainActivity : ComponentActivity() {
                 remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
 
             val density = LocalDensity.current
-            var pin by remember { mutableStateOf(PinState(active = false, position = null)) }
+            var pin by remember { mutableStateOf(initialPinState) }
+
+            // Whenever pin state changes, save it to SharedPreferences.
+            LaunchedEffect(pin) {
+                prefs.writePinState(pin)
+            }
 
             val searchViewModel: SearchViewModel = viewModel()
 
