@@ -251,13 +251,14 @@ suspend fun rerenderCategoryLiveDots(
     usUnits: Boolean,
     vehicleLocationsV2: Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>,
     routeCache: Map<String, Map<String, RouteCacheEntry>>
-): List<Feature<Point, Map<String, JsonElement>>> = withContext(Dispatchers.Default) {
+): List<Feature<Point, JsonObject>> = withContext(Dispatchers.Default) {
     val categoryLocations = vehicleLocationsV2[category] ?: return@withContext emptyList()
 
     val featureJobs = categoryLocations.map { (chateauId, gridData) ->
         async {
-            val chateauVehiclesList = gridData.values.flatMap { it.values }.flatMap { it.entries }
-                .associate { it.key to it.value }
+            val chateauVehiclesList: Map<String, VehiclePosition> =
+                gridData.values.flatMap { it.values }.flatMap { it.entries }
+                    .associate { it.key to it.value }
 
             chateauVehiclesList.mapNotNull { (rtId, vehicleData) ->
 
@@ -375,59 +376,68 @@ suspend fun rerenderCategoryLiveDots(
             } ?: ""
 
             // Build GeoJSON properties
-            val properties = buildMap<String, JsonElement> {
-                put("vehicleIdLabel", JsonPrimitive(vehicleLabel))
-                put("speed", JsonPrimitive(speedStr))
-                put("color", JsonPrimitive(color))
-                put("chateau", JsonPrimitive(chateauId))
-                put("route_type", JsonPrimitive(vehicleData.route_type))
-                put("tripIdLabel", JsonPrimitive(tripIdLabel))
-                vehicleData.position.bearing?.let { put("bearing", JsonPrimitive(it)) }
-                put("has_bearing", JsonPrimitive(vehicleData.position.bearing != null))
-                put(
-                    "maptag", JsonPrimitive(
-                        fixRouteName(chateauId, maptag, routeId)
-                            .replace(" Branch", "")
-                            .replace(" Line", "")
-                            .replace("Counterclockwise", "ACW") // TODO: i18n
-                            .replace("Clockwise", "CW")
-                    )
-                )
-                tripShortName?.let { put("trip_short_name", JsonPrimitive(it)) }
-                routeShortName?.let { put("route_short_name", JsonPrimitive(it)) }
-                routeLongName?.let { put("route_long_name", JsonPrimitive(it)) }
+                val properties = JsonObject(
+                    buildMap<String, JsonElement> {
+                        put("vehicleIdLabel", JsonPrimitive(vehicleLabel))
+                        put("speed", JsonPrimitive(speedStr))
+                        put("color", JsonPrimitive(color))
+                        put("chateau", JsonPrimitive(chateauId))
+                        put("route_type", JsonPrimitive(vehicleData.route_type))
+                        put("tripIdLabel", JsonPrimitive(tripIdLabel))
+                        vehicleData.position.bearing?.let { put("bearing", JsonPrimitive(it)) }
+                        put("has_bearing", JsonPrimitive(vehicleData.position.bearing != null))
+                        put(
+                            "maptag", JsonPrimitive(
+                                fixRouteName(chateauId, maptag, routeId)
+                                    .replace(" Branch", "")
+                                    .replace(" Line", "")
+                                    .replace("Counterclockwise", "ACW") // TODO: i18n
+                                    .replace("Clockwise", "CW")
+                            )
+                        )
+                        tripShortName?.let { put("trip_short_name", JsonPrimitive(it)) }
+                        routeShortName?.let { put("route_short_name", JsonPrimitive(it)) }
+                        routeLongName?.let { put("route_long_name", JsonPrimitive(it)) }
 
-                // Add contrast colors based on theme
-                if (isDark) {
-                    put("contrastdarkmode", JsonPrimitive(contrastColor))
-                    put("contrastdarkmodebearing", JsonPrimitive(contrastBearingColor))
-                } else {
-                    put("contrastlightmode", JsonPrimitive(contrastColor))
-                }
+                        // Add contrast colors based on theme
+                        if (isDark) {
+                            put("contrastdarkmode", JsonPrimitive(contrastColor))
+                            put("contrastdarkmodebearing", JsonPrimitive(contrastBearingColor))
+                        } else {
+                            put("contrastlightmode", JsonPrimitive(contrastColor))
+                        }
 
-                routeId?.let { put("routeId", JsonPrimitive(it)) }
-                put(
-                    "headsign", JsonPrimitive(
-                        fixHeadsignText(headsign, maptag)
-                            .replace("Counterclockwise", "ACW") // TODO: i18n
-                            .replace("Clockwise", "CW")
-                    )
-                )
-                vehicleData.timestamp?.let { put("timestamp", JsonPrimitive(it)) }
-                put("rtid", JsonPrimitive(rtId))
-                put("text_color", JsonPrimitive(textColor))
-                vehicleData.trip?.trip_id?.let { put("trip_id", JsonPrimitive(it)) }
-                vehicleData.trip?.start_time?.let { put("start_time", JsonPrimitive(it)) }
-                vehicleData.trip?.start_date?.let { put("start_date", JsonPrimitive(it)) }
-                put("crowd_symbol", JsonPrimitive(crowdSymbol))
-                vehicleData.occupancy_status?.let { put("occupancy_status", JsonPrimitive(it)) }
-                put("delay_label", JsonPrimitive(delayLabel))
-                vehicleData.trip?.delay?.let { put("delay", JsonPrimitive(it)) }
+                        routeId?.let { put("routeId", JsonPrimitive(it)) }
+                        put(
+                            "headsign", JsonPrimitive(
+                                fixHeadsignText(headsign, maptag)
+                                    .replace("Counterclockwise", "ACW") // TODO: i18n
+                                    .replace("Clockwise", "CW")
+                            )
+                        )
+                        vehicleData.timestamp?.let { put("timestamp", JsonPrimitive(it)) }
+                        put("rtid", JsonPrimitive(rtId))
+                        put("text_color", JsonPrimitive(textColor))
+                        vehicleData.trip?.trip_id?.let { put("trip_id", JsonPrimitive(it)) }
+                        vehicleData.trip?.start_time?.let { put("start_time", JsonPrimitive(it)) }
+                        vehicleData.trip?.start_date?.let { put("start_date", JsonPrimitive(it)) }
+                        put("crowd_symbol", JsonPrimitive(crowdSymbol))
+                        vehicleData.occupancy_status?.let {
+                            put(
+                                "occupancy_status",
+                                JsonPrimitive(it)
+                            )
+                        }
+                        put("delay_label", JsonPrimitive(delayLabel))
+                        vehicleData.trip?.delay?.let { put("delay", JsonPrimitive(it)) }
 
-                //println("hashcode = ${"$chateauId:$rtId".hashCode().absoluteValue}")
+                        //println("hashcode = ${"$chateauId:$rtId".hashCode().absoluteValue}")
 
-                put("id", JsonPrimitive("$chateauId:$rtId".hashCode().absoluteValue.toString()))
-            }
+                        put(
+                            "id",
+                            JsonPrimitive("$chateauId:$rtId".hashCode().absoluteValue.toString())
+                        )
+                    })
 
             val point = Point(Position(lon, lat))
             // This will now work correctly
