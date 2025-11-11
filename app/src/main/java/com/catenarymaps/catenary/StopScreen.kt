@@ -665,7 +665,7 @@ private fun StopScreenRow(
                     if (event.last_stop == true) stringResource(R.string.arrival) else stringResource(
                         R.string.departure
                     )
-                Text(text = "$label: ", style = MaterialTheme.typography.bodyMedium)
+                Text(text = stringResource(id = R.string.stop_screen_label, label), style = MaterialTheme.typography.bodyMedium)
 
                 val targetTime = departureTimeToShow ?: scheduledTime
                 if (targetTime != null) {

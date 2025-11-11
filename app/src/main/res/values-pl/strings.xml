@@ -1,0 +1,111 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Peron</string>
+    <string name="layers">Warstwy</string>
+    <string name="occupancy">Zajętość</string>
+    <string name="headsign">Kierunek</string>
+    <string name="alert_cause_unknown_cause">Nieznana przyczyna</string>
+    <string name="hidepreviousstops">Ukryj poprzednie przystanki</string>
+    <string name="settings">Ustawienia</string>
+    <string name="trip">Kurs</string>
+    <string name="fleet">Tabor</string>
+    <string name="lastupdated">Ostatnia aktualizacja</string>
+    <string name="now">Teraz</string>
+    <string name="speed">Prędkość</string>
+    <string name="searchhere">Szukaj tutaj</string>
+    <string name="early">Za wcześnie</string>
+    <string name="late">Opóźniony</string>
+    <string name="ontime">Na czas</string>
+    <string name="previous_departures">Poprzednie odjazdy</string>
+    <string name="no_departures_found">Nie znaleziono odjazdów</string>
+    <string name="load_more">Załaduj więcej</string>
+    <string name="arrival">Przyjazd</string>
+    <string name="departure">Odjazd</string>
+    <string name="no_headsign">Brak kierunku</string>
+    <string name="directions">Wskazówki</string>
+    <string name="vehicles">Pojazdy</string>
+    <string name="stops">Przystanki</string>
+    <string name="next_stop">Następny przystanek</string>
+    <string name="occupancy_status">Zajętość</string>
+    <string name="occupancy_status_empty">Pusty</string>
+    <string name="occupancy_status_many_seats_available">Wiele miejsc siedzących</string>
+    <string name="occupancy_status_few_seats_available">Mało miejsc siedzących</string>
+    <string name="occupancy_status_standing_room_only">Tylko miejsca stojące</string>
+    <string name="occupancy_status_crushed_standing_room_only">Tylko miejsca stojące (ściski)</string>
+    <string name="occupancy_status_full">Pełny</string>
+    <string name="occupancy_status_not_accepting_passengers">Nie przyjmuje pasażerów</string>
+    <string name="occupancy_status_no_data">Brak danych</string>
+    <string name="occupancy_status_not_boardable">Wsiadanie niemożliwe</string>
+    <string name="alert_cause_other_cause">Inna przyczyna</string>
+    <string name="alert_cause_technical_problem">Problem techniczny</string>
+    <string name="alert_cause_labour_strike">Strajk</string>
+    <string name="alert_cause_demonstration_street_blockage">Demonstracja</string>
+    <string name="alert_cause_accident">Wypadek</string>
+    <string name="alert_cause_holiday">Święto</string>
+    <string name="alert_cause_weather">Pogoda</string>
+    <string name="alert_cause_maintenance">Konserwacja</string>
+    <string name="alert_cause_construction">Budowa</string>
+    <string name="alert_cause_police_activity">Działania policji</string>
+    <string name="alert_cause_medical_emergency">Nagły wypadek medyczny</string>
+    <string name="alert_effect_no_service">Brak kursów</string>
+    <string name="alert_effect_reduced_service">Ograniczone kursy</string>
+    <string name="alert_effect_significant_delays">Znaczne opóźnienia</string>
+    <string name="alert_effect_detour">Objazd</string>
+    <string name="alert_effect_additional_service">Dodatkowe kursy</string>
+    <string name="alert_effect_modified_service">Zmienione kursy</string>
+    <string name="alert_effect_other_effect">Inny efekt</string>
+    <string name="alert_effect_unknown_effect">Nieznany efekt</string>
+    <string name="alert_effect_stop_moved">Przystanek przeniesiony</string>
+    <string name="alert_effect_no_effect">Brak efektu</string>
+    <string name="alert_effect_accessibility_issue">Problem z dostępnością</string>
+    <string name="starting_time">Początek</string>
+    <string name="ending_time">Koniec</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d alert serwisowy</item>
+        <item quantity="few">%d alerty serwisowe</item>
+        <item quantity="many">%d alertów serwisowych</item>
+        <item quantity="other">%d alertów serwisowych</item>
+    </plurals>
+    <string name="heading_intercity_rail">Kolej</string>
+    <string name="heading_local_rail">Metro/Tramwaj</string>
+    <string name="heading_bus">Autobus</string>
+    <string name="heading_other">Inne</string>
+    <string name="vehicle">Pojazd</string>
+    <string name="delay">Opóźnienie</string>
+    <string name="route">Linia</string>
+    <string name="cancelled">Anulowano</string>
+    <string name="deleted">Usunięto</string>
+    <string name="heading_more">Więcej</string>
+    <string name="update_downloaded">Aktualizacja została właśnie pobrana.</string>
+    <string name="restart">Uruchom ponownie</string>
+
+    <string name="settings_datadog_analytics_title">Analityka Datadog</string>
+    <string name="settings_datadog_analytics_description">Umożliwia intensywne, szczegółowe śledzenie, aby pomóc programistom w znajdowaniu i naprawianiu błędów.</string>
+    <string name="settings_disable_datadog_tracking">Wyłącz śledzenie Datadog</string>
+    <string name="settings_enable_datadog_tracking">Włącz śledzenie Datadog</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Umożliwia podstawową analitykę dotyczącą wykorzystania funkcji.</string>
+    <string name="settings_disable_google_analytics">Wyłącz Google Analytics</string>
+    <string name="settings_enable_google_analytics">Włącz Google Analytics</string>
+    <string name="settings_test_crash">Testuj awarię</string>
+
+    <string name="block_screen_block_id">Blok: %1$s</string>
+    <string name="block_screen_duration">Czas trwania: </string>
+    <string name="block_screen_layover">Postój: </string>
+    <string name="block_screen_error">Błąd podczas ładowania danych.</string>
+
+    <string name="nearby_departures_no_departures">Brak odjazdów.</string>
+
+    <string name="route_screen_to">Do: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Błąd: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Ukryj poprzednie przystanki</string>
+    <string name="single_trip_info_screen_show_previous_stops">Pokaż %1$d poprzednich przystanków</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

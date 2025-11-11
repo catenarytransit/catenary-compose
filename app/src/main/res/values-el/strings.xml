@@ -1,0 +1,109 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Πλατφόρμα</string>
+    <string name="layers">Επίπεδα</string>
+    <string name="occupancy">Πληρότητα</string>
+    <string name="headsign">Προορισμός</string>
+    <string name="alert_cause_unknown_cause">Άγνωστη αιτία</string>
+    <string name="hidepreviousstops">Απόκρυψη προηγούμενων στάσεων</string>
+    <string name="settings">Ρυθμίσεις</string>
+    <string name="trip">Διαδρομή</string>
+    <string name="fleet">Στόλος</string>
+    <string name="lastupdated">Τελευταία ενημέρωση</string>
+    <string name="now">Τώρα</string>
+    <string name="speed">Ταχύτητα</string>
+    <string name="searchhere">Αναζήτηση εδώ</string>
+    <string name="early">Νωρίς</string>
+    <string name="late">Αργά</string>
+    <string name="ontime"> στην ώρα του</string>
+    <string name="previous_departures">Προηγούμενες αναχωρήσεις</string>
+    <string name="no_departures_found">Δεν βρέθηκαν αναχωρήσεις</string>
+    <string name="load_more">Φόρτωση περισσότερων</string>
+    <string name="arrival">Άφιξη</string>
+    <string name="departure">Αναχώρηση</string>
+    <string name="no_headsign">Χωρίς προορισμό</string>
+    <string name="directions">Οδηγίες</string>
+    <string name="vehicles">Οχήματα</string>
+    <string name="stops">Στάσεις</string>
+    <string name="next_stop">Επόμενη στάση</string>
+    <string name="occupancy_status">Πληρότητα</string>
+    <string name="occupancy_status_empty">Άδειο</string>
+    <string name="occupancy_status_many_seats_available">Πολλές διαθέσιμες θέσεις</string>
+    <string name="occupancy_status_few_seats_available">Λίγες διαθέσιμες θέσεις</string>
+    <string name="occupancy_status_standing_room_only">Μόνο όρθιοι</string>
+    <string name="occupancy_status_crushed_standing_room_only">Μόνο όρθιοι (συνωστισμός)</string>
+    <string name="occupancy_status_full">Γεμάτο</string>
+    <string name="occupancy_status_not_accepting_passengers">Δεν δέχεται επιβάτες</string>
+    <string name="occupancy_status_no_data">Χωρίς δεδομένα</string>
+    <string name="occupancy_status_not_boardable">Δεν επιτρέπεται η επιβίβαση</string>
+    <string name="alert_cause_other_cause">Άλλη αιτία</string>
+    <string name="alert_cause_technical_problem">Τεχνικό πρόβλημα</string>
+    <string name="alert_cause_labour_strike">Απεργία</string>
+    <string name="alert_cause_demonstration_street_blockage">Διαδήλωση</string>
+    <string name="alert_cause_accident">Ατύχημα</string>
+    <string name="alert_cause_holiday">Αργία</string>
+    <string name="alert_cause_weather">Καιρός</string>
+    <string name="alert_cause_maintenance">Συντήρηση</string>
+    <string name="alert_cause_construction">Κατασκευή</string>
+    <string name="alert_cause_police_activity">Αστυνομική δραστηριότητα</string>
+    <string name="alert_cause_medical_emergency">Ιατρική έκτακτη ανάγκη</string>
+    <string name="alert_effect_no_service">Καμία υπηρεσία</string>
+    <string name="alert_effect_reduced_service">Μειωμένη υπηρεσία</string>
+    <string name="alert_effect_significant_delays">Σημαντικές καθυστερήσεις</string>
+    <string name="alert_effect_detour">Παράκαμψη</string>
+    <string name="alert_effect_additional_service">Πρόσθετη υπηρεσία</string>
+    <string name="alert_effect_modified_service">Τροποποιημένη υπηρεσία</string>
+    <string name="alert_effect_other_effect">Άλλη επίδραση</string>
+    <string name="alert_effect_unknown_effect">Άγνωστη επίδραση</string>
+    <string name="alert_effect_stop_moved">Η στάση μετακινήθηκε</string>
+    <string name="alert_effect_no_effect">Καμία επίδραση</string>
+    <string name="alert_effect_accessibility_issue">Πρόβλημα προσβασιμότητας</string>
+    <string name="starting_time">Έναρξη</string>
+    <string name="ending_time">Λήξη</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d ειδοποίηση υπηρεσίας</item>
+        <item quantity="other">%d ειδοποιήσεις υπηρεσίας</item>
+    </plurals>
+    <string name="heading_intercity_rail">Σιδηρόδρομος</string>
+    <string name="heading_local_rail">Μετρό/Τραμ</string>
+    <string name="heading_bus">Λεωφορείο</string>
+    <string name="heading_other">Άλλο</string>
+    <string name="vehicle">Όχημα</string>
+    <string name="delay">Καθυστέρηση</string>
+    <string name="route">Διαδρομή</string>
+    <string name="cancelled">Ακυρώθηκε</string>
+    <string name="deleted">Διαγράφηκε</string>
+    <string name="heading_more">Περισσότερα</string>
+    <string name="update_downloaded">Μια ενημέρωση μόλις κατέβηκε.</string>
+    <string name="restart">Επανεκκίνηση</string>
+
+    <string name="settings_datadog_analytics_title">Αναλυτικά στοιχεία Datadog</string>
+    <string name="settings_datadog_analytics_description">Ενεργοποιεί την εντατική, λεπτομερή παρακολούθηση για να βοηθήσει τους προγραμματιστές να βρουν και να διορθώσουν σφάλματα.</string>
+    <string name="settings_disable_datadog_tracking">Απενεργοποίηση παρακολούθησης Datadog</string>
+    <string name="settings_enable_datadog_tracking">Ενεργοποίηση παρακολούθησης Datadog</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Ενεργοποιεί βασικά αναλυτικά στοιχεία σχετικά με τη χρήση των λειτουργιών.</string>
+    <string name="settings_disable_google_analytics">Απενεργοποίηση του Google Analytics</string>
+    <string name="settings_enable_google_analytics">Ενεργοποίηση του Google Analytics</string>
+    <string name="settings_test_crash">Δοκιμαστική συντριβή</string>
+
+    <string name="block_screen_block_id">Μπλοκ: %1$s</string>
+    <string name="block_screen_duration">Διάρκεια: </string>
+    <string name="block_screen_layover">Παραμονή: </string>
+    <string name="block_screen_error">Σφάλμα κατά τη φόρτωση δεδομένων.</string>
+
+    <string name="nearby_departures_no_departures">Δεν υπάρχουν αναχωρήσεις.</string>
+
+    <string name="route_screen_to">Προς: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Σφάλμα: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Απόκρυψη προηγούμενων στάσεων</string>
+    <string name="single_trip_info_screen_show_previous_stops">Εμφάνιση %1$d προηγούμενων στάσεων</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

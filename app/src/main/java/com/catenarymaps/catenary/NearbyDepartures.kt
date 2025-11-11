@@ -487,7 +487,7 @@ fun NearbyDepartures(
                 if (sorted.isEmpty() && firstLoadComplete && !loading) {
                     item {
                         Spacer(Modifier.height(16.dp))
-                        Text("No departures.", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(id = R.string.nearby_departures_no_departures), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 items(sorted, key = { it.chateauId + it.routeId }) { route ->
@@ -801,10 +801,9 @@ private fun TripPill(
         Column(
             modifier = Modifier
                 .widthIn(min = 76.dp)
-
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 8.dp, vertical = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            verticalArrangement = Arrangement.spacedBy((-4).dp)
         ) {
             if (trip.tripShortName != null && trip.tripShortName.isNotBlank()) {
                 Text(
@@ -858,9 +857,9 @@ private fun TripPill(
             }
 
             if (trip.cancelled == true) {
-                Text("Cancelled", color = Color.Red, style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.cancelled), color = Color.Red, style = MaterialTheme.typography.labelSmall)
             } else if (trip.deleted == true) {
-                Text("Deleted", color = Color.Red, style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.deleted), color = Color.Red, style = MaterialTheme.typography.labelSmall)
             }
 
             // If both schedule & realtime are available, show +/- delay
@@ -869,13 +868,8 @@ private fun TripPill(
             if (sched != null && rt != null) {
                 val diff = rt - sched // seconds
                 if (diff != 0L) {
-                    val late = diff > 0
-                    val mins = abs(diff) / 60
-                    Text(
-                        (if (late) "+" else "−") + "${mins}m",
-                        color = if (late) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                    DelayDiff(diff = diff,
+                        fontSizeOfPolarity = 10.sp)
                 }
             }
 
@@ -921,4 +915,3 @@ private fun tryDistanceForRouteGroup(
     //println("Distance is ${best}m")
     return best
 }
-

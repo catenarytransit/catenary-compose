@@ -72,4 +72,39 @@
     <string name="vehicle">차량</string>
     <string name="delay">지연</string>
     <string name="route">노선</string>
+    <string name="cancelled">취소됨</string>
+    <string name="deleted">삭제됨</string>
+    <string name="heading_more">더 보기</string>
+    <string name="update_downloaded">업데이트가 방금 다운로드되었습니다.</string>
+    <string name="restart">다시 시작</string>
+
+    <string name="settings_datadog_analytics_title">Datadog 분석</string>
+    <string name="settings_datadog_analytics_description">개발자가 버그를 찾고 수정하는 데 도움이 되는 집중적이고 상세한 추적을 활성화합니다.</string>
+    <string name="settings_disable_datadog_tracking">Datadog 추적 비활성화</string>
+    <string name="settings_enable_datadog_tracking">Datadog 추적 활성화</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">기능 사용에 대한 기본 분석을 활성화합니다.</string>
+    <string name="settings_disable_google_analytics">Google Analytics 비활성화</string>
+    <string name="settings_enable_google_analytics">Google Analytics 활성화</string>
+    <string name="settings_test_crash">테스트 충돌</string>
+
+    <string name="block_screen_block_id">블록: %1$s</string>
+    <string name="block_screen_duration">기간: </string>
+    <string name="block_screen_layover">레이오버: </string>
+    <string name="block_screen_error">데이터를 로드하는 중 오류가 발생했습니다.</string>
+
+    <string name="nearby_departures_no_departures">출발편이 없습니다.</string>
+
+    <string name="route_screen_to">행선지: %1$s</string>
+
+    <string name="single_trip_info_screen_error">오류: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">이전 정류장 숨기기</string>
+    <string name="single_trip_info_screen_show_previous_stops">이전 정류장 %1$d개 표시</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">로딩 중...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
 </resources>

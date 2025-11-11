@@ -1,0 +1,109 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Laituri</string>
+    <string name="layers">Tasot</string>
+    <string name="occupancy">Täyttöaste</string>
+    <string name="headsign">Määränpää</string>
+    <string name="alert_cause_unknown_cause">Tuntematon syy</string>
+    <string name="hidepreviousstops">Piilota edelliset pysäkit</string>
+    <string name="settings">Asetukset</string>
+    <string name="trip">Matka</string>
+    <string name="fleet">Kalusto</string>
+    <string name="lastupdated">Viimeksi päivitetty</string>
+    <string name="now">Nyt</string>
+    <string name="speed">Nopeus</string>
+    <string name="searchhere">Hae täältä</string>
+    <string name="early">Aikaisin</string>
+    <string name="late">Myöhässä</string>
+    <string name="ontime">Ajallaan</string>
+    <string name="previous_departures">Aiemmat lähdöt</string>
+    <string name="no_departures_found">Lähtöjä ei löytynyt</string>
+    <string name="load_more">Lataa lisää</string>
+    <string name="arrival">Saapuminen</string>
+    <string name="departure">Lähtö</string>
+    <string name="no_headsign">Ei määränpäätä</string>
+    <string name="directions">Ohjeet</string>
+    <string name="vehicles">Ajoneuvot</string>
+    <string name="stops">Pysäkit</string>
+    <string name="next_stop">Seuraava pysäkki</string>
+    <string name="occupancy_status">Täyttöaste</string>
+    <string name="occupancy_status_empty">Tyhjä</string>
+    <string name="occupancy_status_many_seats_available">Paljon istumapaikkoja vapaana</string>
+    <string name="occupancy_status_few_seats_available">Vähän istumapaikkoja vapaana</string>
+    <string name="occupancy_status_standing_room_only">Vain seisomapaikkoja</string>
+    <string name="occupancy_status_crushed_standing_room_only">Vain seisomapaikkoja (ruuhka)</string>
+    <string name="occupancy_status_full">Täynnä</string>
+    <string name="occupancy_status_not_accepting_passengers">Ei ota matkustajia</string>
+    <string name="occupancy_status_no_data">Ei tietoja</string>
+    <string name="occupancy_status_not_boardable">Kyytiin ei voi nousta</string>
+    <string name="alert_cause_other_cause">Muu syy</string>
+    <string name="alert_cause_technical_problem">Tekninen ongelma</string>
+    <string name="alert_cause_labour_strike">Lakko</string>
+    <string name="alert_cause_demonstration_street_blockage">Mielenosoitus</string>
+    <string name="alert_cause_accident">Onnettomuus</string>
+    <string name="alert_cause_holiday">Loma</string>
+    <string name="alert_cause_weather">Sää</string>
+    <string name="alert_cause_maintenance">Huolto</string>
+    <string name="alert_cause_construction">Rakentaminen</string>
+    <string name="alert_cause_police_activity">Poliisitoiminta</string>
+    <string name="alert_cause_medical_emergency">Lääketieteellinen hätätilanne</string>
+    <string name="alert_effect_no_service">Ei liikennettä</string>
+    <string name="alert_effect_reduced_service">Vähennetty liikenne</string>
+    <string name="alert_effect_significant_delays">Merkittäviä viivästyksiä</string>
+    <string name="alert_effect_detour">Kiertotie</string>
+    <string name="alert_effect_additional_service">Lisäliikenne</string>
+    <string name="alert_effect_modified_service">Muutettu liikenne</string>
+    <string name="alert_effect_other_effect">Muu vaikutus</string>
+    <string name="alert_effect_unknown_effect">Tuntematon vaikutus</string>
+    <string name="alert_effect_stop_moved">Pysäkki siirretty</string>
+    <string name="alert_effect_no_effect">Ei vaikutusta</string>
+    <string name="alert_effect_accessibility_issue">Saavutettavuusongelma</string>
+    <string name="starting_time">Alkaa</string>
+    <string name="ending_time">Päättyy</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d liikennetiedote</item>
+        <item quantity="other">%d liikennetiedotetta</item>
+    </plurals>
+    <string name="heading_intercity_rail">Juna</string>
+    <string name="heading_local_rail">Metro/Raitiovaunu</string>
+    <string name="heading_bus">Bussi</string>
+    <string name="heading_other">Muu</string>
+    <string name="vehicle">Ajoneuvo</string>
+    <string name="delay">Viive</string>
+    <string name="route">Reitti</string>
+    <string name="cancelled">Peruttu</string>
+    <string name="deleted">Poistettu</string>
+    <string name="heading_more">Lisää</string>
+    <string name="update_downloaded">Päivitys on juuri ladattu.</string>
+    <string name="restart">Käynnistä uudelleen</string>
+
+    <string name="settings_datadog_analytics_title">Datadog Analytics</string>
+    <string name="settings_datadog_analytics_description">Ottaa käyttöön intensiivisen ja yksityiskohtaisen seurannan, joka auttaa kehittäjiä löytämään ja korjaamaan virheitä.</string>
+    <string name="settings_disable_datadog_tracking">Poista Datadog-seuranta käytöstä</string>
+    <string name="settings_enable_datadog_tracking">Ota Datadog-seuranta käyttöön</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Ottaa käyttöön perusanalytiikan ominaisuuksien käytöstä.</string>
+    <string name="settings_disable_google_analytics">Poista Google Analytics käytöstä</string>
+    <string name="settings_enable_google_analytics">Ota Google Analytics käyttöön</string>
+    <string name="settings_test_crash">Testaa kaatuminen</string>
+
+    <string name="block_screen_block_id">Lohko: %1$s</string>
+    <string name="block_screen_duration">Kesto: </string>
+    <string name="block_screen_layover">Pysähdys: </string>
+    <string name="block_screen_error">Virhe ladattaessa tietoja.</string>
+
+    <string name="nearby_departures_no_departures">Ei lähtöjä.</string>
+
+    <string name="route_screen_to">Määränpäähän: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Virhe: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Piilota edelliset pysäkit</string>
+    <string name="single_trip_info_screen_show_previous_stops">Näytä %1$d edellistä pysäkkiä</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

@@ -50,6 +50,8 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
     var vehicleData by remember { mutableStateOf<VehicleData?>(null) }
     var loading by remember { mutableStateOf(true) }
 
+    
+
     LaunchedEffect(label, chateau, routeId) {
         loading = true
         val client = HttpClient() {

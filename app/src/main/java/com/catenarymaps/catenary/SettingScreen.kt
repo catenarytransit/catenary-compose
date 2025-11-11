@@ -40,11 +40,11 @@ fun SettingsScreen(
 
         // --- Datadog Section ---
         Text(
-            text = "Datadog Analytics",
+            text = stringResource(id = R.string.settings_datadog_analytics_title),
             style = MaterialTheme.typography.titleMedium
         )
         Text(
-            text = "Enables intensive, detailed tracking to help developers find and fix bugs.",
+            text = stringResource(id = R.string.settings_datadog_analytics_description),
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(vertical = 4.dp)
         )
@@ -56,7 +56,7 @@ fun SettingsScreen(
                 onClick = { onDatadogConsentChanged(false) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Disable Datadog Tracking")
+                Text(stringResource(id = R.string.settings_disable_datadog_tracking))
             }
         } else {
             // Show Enable button if consent is NOT_GRANTED
@@ -64,7 +64,7 @@ fun SettingsScreen(
                 onClick = { onDatadogConsentChanged(true) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Enable Datadog Tracking")
+                Text(stringResource(id = R.string.settings_enable_datadog_tracking))
             }
         }
 
@@ -72,11 +72,11 @@ fun SettingsScreen(
 
         // --- Google Analytics Section ---
         Text(
-            text = "Google Analytics",
+            text = stringResource(id = R.string.settings_google_analytics_title),
             style = MaterialTheme.typography.titleMedium
         )
         Text(
-            text = "Enables basic analytics about feature usage.",
+            text = stringResource(id = R.string.settings_google_analytics_description),
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(vertical = 4.dp)
         )
@@ -88,7 +88,7 @@ fun SettingsScreen(
                 onClick = { onGaConsentChanged(false) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Disable Google Analytics")
+                Text(stringResource(id = R.string.settings_disable_google_analytics))
             }
         } else {
             // Show Enable button if consent is NOT_GRANTED
@@ -96,7 +96,7 @@ fun SettingsScreen(
                 onClick = { onGaConsentChanged(true) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Enable Google Analytics")
+                Text(stringResource(id = R.string.settings_enable_google_analytics))
             }
         }
 
@@ -108,6 +108,6 @@ fun SettingsScreen(
                 throw RuntimeException("Test Crash") // Force a crash
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(text = "Test crash") }
+        ) { Text(text = stringResource(id = R.string.settings_test_crash)) }
     }
 }

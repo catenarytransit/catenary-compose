@@ -1151,9 +1151,11 @@ class MainActivity : ComponentActivity() {
                         onFlexibleUpdateDownloaded = {
                             // Show a snackbar when the update is ready
                             scope.launch {
+                                val message = context.getString(R.string.update_downloaded)
+                                val actionLabel = context.getString(R.string.restart)
                                 val result = snackbars.showSnackbar(
-                                    message = "An update has just been downloaded.",
-                                    actionLabel = "RESTART",
+                                    message = message,
+                                    actionLabel = actionLabel,
                                     duration = SnackbarDuration.Indefinite
                                 )
                                 if (result == SnackbarResult.ActionPerformed) {
@@ -2400,32 +2402,38 @@ class MainActivity : ComponentActivity() {
                                 .zIndex(4f)
                         }
 
-                    FloatingActionButton(
-                        onClick = {
-                            val loc = currentLocation
-                            if (loc == null) {
-                                scope.launch { snackbars.showSnackbar("Location unavailable") }
-                                return@FloatingActionButton
-                            }
-                            // Activate lock and teleport *now*
-                            geoLock.activate()
-                            scope.launch {
-                                teleportCamera(
-                                    camera = camera,
-                                    controller = geoLock,
-                                    lat = loc.first,
-                                    lon = loc.second,
-                                    zoom = 16.0 // pick your desired snap zoom
-                                )
-                            }
-                            // scope.launch { snackbars.showSnackbar("Following your location") }
-                        },
+                    AnimatedVisibility(
+                        visible = isWideLayout || !(isSearchFocused || sheetIsExpanded),
                         modifier = fabModifier,
-                        shape = CircleShape,
-                        containerColor = if (geoLock.isActive()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                        contentColor = if (geoLock.isActive()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                        enter = slideInVertically(initialOffsetY = { it / 2 }),
+                        exit = slideOutVertically(targetOffsetY = { it })
                     ) {
-                        Icon(Icons.Filled.MyLocation, contentDescription = "My Location")
+                        FloatingActionButton(
+                            onClick = {
+                                val loc = currentLocation
+                                if (loc == null) {
+                                    scope.launch { snackbars.showSnackbar("Location unavailable") }
+                                    return@FloatingActionButton
+                                }
+                                // Activate lock and teleport *now*
+                                geoLock.activate()
+                                scope.launch {
+                                    teleportCamera(
+                                        camera = camera,
+                                        controller = geoLock,
+                                        lat = loc.first,
+                                        lon = loc.second,
+                                        zoom = 16.0 // pick your desired snap zoom
+                                    )
+                                }
+                                // scope.launch { snackbars.showSnackbar("Following your location") }
+                            },
+                            shape = CircleShape,
+                            containerColor = if (geoLock.isActive()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                            contentColor = if (geoLock.isActive()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                        ) {
+                            Icon(Icons.Filled.MyLocation, contentDescription = "My Location")
+                        }
                     }
 
                     // The results overlay that shows when the searchbar is focused.
@@ -2561,19 +2569,26 @@ class MainActivity : ComponentActivity() {
                                 // Tab Row
                                 TabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
                                     tabs.forEachIndexed { index, title ->
-                                        Tab(
-                                            selected = selectedTab == title,
-                                            onClick = { selectedTab = title },
-                                            text = {
-                                                Text(
-                                                    text = title.replaceFirstChar { it.uppercase() },
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                            }
-                                        )
-                                    }
+                                                                        val textResId = when (title) {
+                                                                            "intercityrail" -> R.string.heading_intercity_rail
+                                                                            "localrail" -> R.string.heading_local_rail
+                                                                            "bus" -> R.string.heading_bus
+                                                                            "other" -> R.string.heading_other
+                                                                            "more" -> R.string.heading_more
+                                                                            else -> R.string.app_name // Fallback, though should not happen
+                                                                        }
+                                                                        Tab(
+                                                                            selected = selectedTab == title,
+                                                                            onClick = { selectedTab = title },
+                                                                            text = {
+                                                                                Text(
+                                                                                    text = stringResource(textResId),
+                                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                                    maxLines = 1,
+                                                                                    overflow = TextOverflow.Ellipsis
+                                                                                )
+                                                                            }
+                                                                        )                                    }
                                 }
 
                                 Spacer(modifier = Modifier.height(16.dp))

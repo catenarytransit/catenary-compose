@@ -450,7 +450,7 @@ fun RouteScreen(
                             "Vehicle ${vehicle.vehicle?.label ?: vehicle.vehicle?.id ?: "Unknown"}",
                             fontWeight = FontWeight.Bold
                         )
-                        vehicle.trip?.trip_headsign?.let { Text("To: $it") }
+                        vehicle.trip?.trip_headsign?.let { Text(stringResource(id = R.string.route_screen_to, it)) }
 
                         // New Trip Data and Occupancy Info
                         val possibleUpdates = tripUpdatesByTripId[vehicle.trip?.trip_id] ?: emptyList()

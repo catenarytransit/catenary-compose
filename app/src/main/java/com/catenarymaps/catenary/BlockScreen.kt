@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -180,9 +181,9 @@ fun BlockScreen(
                 }
             }
 
-            Text(text = "Block: $blockId", fontWeight = FontWeight.SemiBold)
+            Text(text = stringResource(id = R.string.block_screen_block_id, blockId), fontWeight = FontWeight.SemiBold)
             Row {
-                Text(text = "Duration: ")
+                Text(text = stringResource(id = R.string.block_screen_duration))
                 DiffTimer(diff = tripDurationSeconds.toDouble(), showBrackets = false)
             }
 
@@ -264,7 +265,7 @@ fun BlockScreen(
                         }
 
                         Row {
-                            Text(text = "Duration: ")
+                            Text(text = stringResource(id = R.string.block_screen_duration))
                             DiffTimer(
                                 diff = (trip.end_time - trip.start_time).toDouble(),
                                 showBrackets = false
@@ -294,7 +295,7 @@ fun BlockScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 // Icon for layover, e.g., self_improvement from material symbols
                                 // For now, just text
-                                Text(text = "Layover: ")
+                                Text(text = stringResource(id = R.string.block_screen_layover))
                                 DiffTimer(diff = layover.toDouble(), showBrackets = false)
                             }
                         }
@@ -303,7 +304,7 @@ fun BlockScreen(
                 }
             }
         } else {
-            Text(text = "Error loading data.")
+            Text(text = stringResource(id = R.string.block_screen_error))
         }
     }
 }

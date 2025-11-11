@@ -1,0 +1,110 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Peron</string>
+    <string name="layers">Straturi</string>
+    <string name="occupancy">Ocupare</string>
+    <string name="headsign">Destinație</string>
+    <string name="alert_cause_unknown_cause">Cauză necunoscută</string>
+    <string name="hidepreviousstops">Ascunde stațiile anterioare</string>
+    <string name="settings">Setări</string>
+    <string name="trip">Călătorie</string>
+    <string name="fleet">Flotă</string>
+    <string name="lastupdated">Ultima actualizare</string>
+    <string name="now">Acum</string>
+    <string name="speed">Viteză</string>
+    <string name="searchhere">Caută aici</string>
+    <string name="early">Devreme</string>
+    <string name="late">Târziu</string>
+    <string name="ontime">La timp</string>
+    <string name="previous_departures">Plecări anterioare</string>
+    <string name="no_departures_found">Nu s-au găsit plecări</string>
+    <string name="load_more">Încarcă mai mult</string>
+    <string name="arrival">Sosire</string>
+    <string name="departure">Plecare</string>
+    <string name="no_headsign">Fără destinație</string>
+    <string name="directions">Indicații</string>
+    <string name="vehicles">Vehicule</string>
+    <string name="stops">Stații</string>
+    <string name="next_stop">Următoarea stație</string>
+    <string name="occupancy_status">Ocupare</string>
+    <string name="occupancy_status_empty">Gol</string>
+    <string name="occupancy_status_many_seats_available">Multe locuri disponibile</string>
+    <string name="occupancy_status_few_seats_available">Puține locuri disponibile</string>
+    <string name="occupancy_status_standing_room_only">Doar locuri în picioare</string>
+    <string name="occupancy_status_crushed_standing_room_only">Doar locuri în picioare (aglomerat)</string>
+    <string name="occupancy_status_full">Plin</string>
+    <string name="occupancy_status_not_accepting_passengers">Nu acceptă pasageri</string>
+    <string name="occupancy_status_no_data">Fără date</string>
+    <string name="occupancy_status_not_boardable">Îmbarcare nepermisă</string>
+    <string name="alert_cause_other_cause">Altă cauză</string>
+    <string name="alert_cause_technical_problem">Problemă tehnică</string>
+    <string name="alert_cause_labour_strike">Grevă</string>
+    <string name="alert_cause_demonstration_street_blockage">Demonstrație</string>
+    <string name="alert_cause_accident">Accident</string>
+    <string name="alert_cause_holiday">Sărbătoare</string>
+    <string name="alert_cause_weather">Vreme</string>
+    <string name="alert_cause_maintenance">Întreținere</string>
+    <string name="alert_cause_construction">Construcție</string>
+    <string name="alert_cause_police_activity">Activitate polițienească</string>
+    <string name="alert_cause_medical_emergency">Urgență medicală</string>
+    <string name="alert_effect_no_service">Niciun serviciu</string>
+    <string name="alert_effect_reduced_service">Serviciu redus</string>
+    <string name="alert_effect_significant_delays">Întârzieri semnificative</string>
+    <string name="alert_effect_detour">Ocolire</string>
+    <string name="alert_effect_additional_service">Serviciu suplimentar</string>
+    <string name="alert_effect_modified_service">Serviciu modificat</string>
+    <string name="alert_effect_other_effect">Alt efect</string>
+    <string name="alert_effect_unknown_effect">Efect necunoscut</string>
+    <string name="alert_effect_stop_moved">Stație mutată</string>
+    <string name="alert_effect_no_effect">Niciun efect</string>
+    <string name="alert_effect_accessibility_issue">Problemă de accesibilitate</string>
+    <string name="starting_time">Început</string>
+    <string name="ending_time">Sfârșit</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d alertă de serviciu</item>
+        <item quantity="few">%d alerte de serviciu</item>
+        <item quantity="other">%d alerte de serviciu</item>
+    </plurals>
+    <string name="heading_intercity_rail">Cale ferată</string>
+    <string name="heading_local_rail">Metrou/Tramvai</string>
+    <string name="heading_bus">Autobuz</string>
+    <string name="heading_other">Altul</string>
+    <string name="vehicle">Vehicul</string>
+    <string name="delay">Întârziere</string>
+    <string name="route">Traseu</string>
+    <string name="cancelled">Anulat</string>
+    <string name="deleted">Șters</string>
+    <string name="heading_more">Mai mult</string>
+    <string name="update_downloaded">O actualizare tocmai a fost descărcată.</string>
+    <string name="restart">Repornire</string>
+
+    <string name="settings_datadog_analytics_title">Analiză Datadog</string>
+    <string name="settings_datadog_analytics_description">Permite urmărirea intensivă și detaliată pentru a ajuta dezvoltatorii să găsească și să remedieze erorile.</string>
+    <string name="settings_disable_datadog_tracking">Dezactivați urmărirea Datadog</string>
+    <string name="settings_enable_datadog_tracking">Activați urmărirea Datadog</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Permite analize de bază despre utilizarea funcțiilor.</string>
+    <string name="settings_disable_google_analytics">Dezactivați Google Analytics</string>
+    <string name="settings_enable_google_analytics">Activați Google Analytics</string>
+    <string name="settings_test_crash">Test de blocare</string>
+
+    <string name="block_screen_block_id">Bloc: %1$s</string>
+    <string name="block_screen_duration">Durată: </string>
+    <string name="block_screen_layover">Pauză: </string>
+    <string name="block_screen_error">Eroare la încărcarea datelor.</string>
+
+    <string name="nearby_departures_no_departures">Nicio plecare.</string>
+
+    <string name="route_screen_to">Către: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Eroare: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Ascunde stațiile anterioare</string>
+    <string name="single_trip_info_screen_show_previous_stops">Arată %1$d stații anterioare</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

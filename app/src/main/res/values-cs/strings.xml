@@ -1,0 +1,111 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Nástupiště</string>
+    <string name="layers">Vrstvy</string>
+    <string name="occupancy">Obsazenost</string>
+    <string name="headsign">Směr</string>
+    <string name="alert_cause_unknown_cause">Neznámá příčina</string>
+    <string name="hidepreviousstops">Skrýt předchozí zastávky</string>
+    <string name="settings">Nastavení</string>
+    <string name="trip">Jízda</string>
+    <string name="fleet">Vozový park</string>
+    <string name="lastupdated">Poslední aktualizace</string>
+    <string name="now">Nyní</string>
+    <string name="speed">Rychlost</string>
+    <string name="searchhere">Hledat zde</string>
+    <string name="early">Dříve</string>
+    <string name="late">Zpoždění</string>
+    <string name="ontime">Načas</string>
+    <string name="previous_departures">Předchozí odjezdy</string>
+    <string name="no_departures_found">Nebyly nalezeny žádné odjezdy</string>
+    <string name="load_more">Načíst více</string>
+    <string name="arrival">Příjezd</string>
+    <string name="departure">Odjezd</string>
+    <string name="no_headsign">Bez směru</string>
+    <string name="directions">Pokyny</string>
+    <string name="vehicles">Vozidla</string>
+    <string name="stops">Zastávky</string>
+    <string name="next_stop">Další zastávka</string>
+    <string name="occupancy_status">Obsazenost</string>
+    <string name="occupancy_status_empty">Prázdné</string>
+    <string name="occupancy_status_many_seats_available">Mnoho volných míst</string>
+    <string name="occupancy_status_few_seats_available">Málo volných míst</string>
+    <string name="occupancy_status_standing_room_only">Pouze k stání</string>
+    <string name="occupancy_status_crushed_standing_room_only">Pouze k stání (přeplněno)</string>
+    <string name="occupancy_status_full">Plné</string>
+    <string name="occupancy_status_not_accepting_passengers">Nepřijímá cestující</string>
+    <string name="occupancy_status_no_data">Žádná data</string>
+    <string name="occupancy_status_not_boardable">Nástup není možný</string>
+    <string name="alert_cause_other_cause">Jiná příčina</string>
+    <string name="alert_cause_technical_problem">Technický problém</string>
+    <string name="alert_cause_labour_strike">Stávka</string>
+    <string name="alert_cause_demonstration_street_blockage">Demonstrace</string>
+    <string name="alert_cause_accident">Nehoda</string>
+    <string name="alert_cause_holiday">Svátek</string>
+    <string name="alert_cause_weather">Počasí</string>
+    <string name="alert_cause_maintenance">Údržba</string>
+    <string name="alert_cause_construction">Výstavba</string>
+    <string name="alert_cause_police_activity">Policejní činnost</string>
+    <string name="alert_cause_medical_emergency">Lékařská pohotovost</string>
+    <string name="alert_effect_no_service">Žádná služba</string>
+    <string name="alert_effect_reduced_service">Omezená služba</string>
+    <string name="alert_effect_significant_delays">Významná zpoždění</string>
+    <string name="alert_effect_detour">Objížďka</string>
+    <string name="alert_effect_additional_service">Dodatečná služba</string>
+    <string name="alert_effect_modified_service">Upravená služba</string>
+    <string name="alert_effect_other_effect">Jiný účinek</string>
+    <string name="alert_effect_unknown_effect">Neznámý účinek</string>
+    <string name="alert_effect_stop_moved">Zastávka přesunuta</string>
+    <string name="alert_effect_no_effect">Žádný účinek</string>
+    <string name="alert_effect_accessibility_issue">Problém s přístupností</string>
+    <string name="starting_time">Začátek</string>
+    <string name="ending_time">Konec</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d upozornění na službu</item>
+        <item quantity="few">%d upozornění na službu</item>
+        <item quantity="many">%d upozornění na službu</item>
+        <item quantity="other">%d upozornění na službu</item>
+    </plurals>
+    <string name="heading_intercity_rail">Železnice</string>
+    <string name="heading_local_rail">Metro/Tramvaj</string>
+    <string name="heading_bus">Autobus</string>
+    <string name="heading_other">Ostatní</string>
+    <string name="vehicle">Vozidlo</string>
+    <string name="delay">Zpoždění</string>
+    <string name="route">Trasa</string>
+    <string name="cancelled">Zrušeno</string>
+    <string name="deleted">Smazáno</string>
+    <string name="heading_more">Více</string>
+    <string name="update_downloaded">Aktualizace byla právě stažena.</string>
+    <string name="restart">Restartovat</string>
+
+    <string name="settings_datadog_analytics_title">Analytika Datadog</string>
+    <string name="settings_datadog_analytics_description">Umožňuje intenzivní a podrobné sledování, které vývojářům pomáhá najít a opravit chyby.</string>
+    <string name="settings_disable_datadog_tracking">Zakázat sledování Datadog</string>
+    <string name="settings_enable_datadog_tracking">Povolit sledování Datadog</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Umožňuje základní analýzu využití funkcí.</string>
+    <string name="settings_disable_google_analytics">Zakázat Google Analytics</string>
+    <string name="settings_enable_google_analytics">Povolit Google Analytics</string>
+    <string name="settings_test_crash">Testovací pád</string>
+
+    <string name="block_screen_block_id">Blok: %1$s</string>
+    <string name="block_screen_duration">Doba trvání: </string>
+    <string name="block_screen_layover">Pauza: </string>
+    <string name="block_screen_error">Chyba při načítání dat.</string>
+
+    <string name="nearby_departures_no_departures">Žádné odjezdy.</string>
+
+    <string name="route_screen_to">Do: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Chyba: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Skrýt předchozí zastávky</string>
+    <string name="single_trip_info_screen_show_previous_stops">Zobrazit %1$d předchozích zastávek</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

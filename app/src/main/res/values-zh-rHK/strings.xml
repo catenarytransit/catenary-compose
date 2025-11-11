@@ -72,4 +72,39 @@
     <string name="vehicle">車輛</string>
     <string name="delay">延誤</string>
     <string name="route">路線</string>
+    <string name="cancelled">已取消</string>
+    <string name="deleted">已刪除</string>
+    <string name="heading_more">更多</string>
+    <string name="update_downloaded">更新已下載。</string>
+    <string name="restart">重新開始</string>
+
+    <string name="settings_datadog_analytics_title">Datadog 分析</string>
+    <string name="settings_datadog_analytics_description">啟用密集、詳細的追蹤，以幫助開發人員尋找和修復錯誤。</string>
+    <string name="settings_disable_datadog_tracking">停用 Datadog 追蹤</string>
+    <string name="settings_enable_datadog_tracking">啟用 Datadog 追蹤</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">啟用有關功能使用的基本分析。</string>
+    <string name="settings_disable_google_analytics">停用 Google Analytics</string>
+    <string name="settings_enable_google_analytics">啟用 Google Analytics</string>
+    <string name="settings_test_crash">測試崩潰</string>
+
+    <string name="block_screen_block_id">區塊： %1$s</string>
+    <string name="block_screen_duration">持續時間： </string>
+    <string name="block_screen_layover">中途停留： </string>
+    <string name="block_screen_error">載入資料時發生錯誤。</string>
+
+    <string name="nearby_departures_no_departures">沒有出發。</string>
+
+    <string name="route_screen_to">至： %1$s</string>
+
+    <string name="single_trip_info_screen_error">錯誤： %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">隱藏先前的站點</string>
+    <string name="single_trip_info_screen_show_previous_stops">顯示 %1$d 個先前的站點</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">載入中...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
 </resources>

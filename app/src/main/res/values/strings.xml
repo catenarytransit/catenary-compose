@@ -71,4 +71,40 @@
     <string name="vehicle">Vehicle</string>
     <string name="delay">Delay</string>
     <string name="route">Route</string>
+    <string name="cancelled">Cancelled</string>
+    <string name="deleted">Deleted</string>
+    <string name="heading_more">More</string>
+    <string name="update_downloaded">An update has just been downloaded.</string>
+    <string name="restart">Restart</string>
+
+    <string name="settings_datadog_analytics_title">Datadog Analytics</string>
+    <string name="settings_datadog_analytics_description">Enables intensive, detailed tracking to help developers find and fix bugs.</string>
+    <string name="settings_disable_datadog_tracking">Disable Datadog Tracking</string>
+    <string name="settings_enable_datadog_tracking">Enable Datadog Tracking</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Enables basic analytics about feature usage.</string>
+    <string name="settings_disable_google_analytics">Disable Google Analytics</string>
+    <string name="settings_enable_google_analytics">Enable Google Analytics</string>
+    <string name="settings_test_crash">Test crash</string>
+
+    <string name="block_screen_block_id">Block: %1$s</string>
+    <string name="block_screen_duration">Duration: </string>
+    <string name="block_screen_layover">Layover: </string>
+    <string name="block_screen_error">Error loading data.</string>
+
+    <string name="nearby_departures_no_departures">No departures.</string>
+
+    <string name="route_screen_to">To: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Error: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Hide previous stops</string>
+    <string name="single_trip_info_screen_show_previous_stops">Show %1$d previous stops</string>
+    <string name="single_trip_info_screen_current_location_emoji" translatable="false">🎯</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
 </resources>

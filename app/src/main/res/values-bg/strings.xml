@@ -1,0 +1,109 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Перон</string>
+    <string name="layers">Слоеве</string>
+    <string name="occupancy">Заетост</string>
+    <string name="headsign">Посока</string>
+    <string name="alert_cause_unknown_cause">Неизвестна причина</string>
+    <string name="hidepreviousstops">Скриване на предишни спирки</string>
+    <string name="settings">Настройки</string>
+    <string name="trip">Курс</string>
+    <string name="fleet">Автопарк</string>
+    <string name="lastupdated">Последно обновяване</string>
+    <string name="now">Сега</string>
+    <string name="speed">Скорост</string>
+    <string name="searchhere">Търсене тук</string>
+    <string name="early">По-рано</string>
+    <string name="late">Закъснение</string>
+    <string name="ontime">Навреме</string>
+    <string name="previous_departures">Предишни тръгвания</string>
+    <string name="no_departures_found">Няма намерени тръгвания</string>
+    <string name="load_more">Зареждане на още</string>
+    <string name="arrival">Пристигане</string>
+    <string name="departure">Тръгване</string>
+    <string name="no_headsign">Няма посока</string>
+    <string name="directions">Упътвания</string>
+    <string name="vehicles">Превозни средства</string>
+    <string name="stops">Спирки</string>
+    <string name="next_stop">Следваща спирка</string>
+    <string name="occupancy_status">Заетост</string>
+    <string name="occupancy_status_empty">Празна</string>
+    <string name="occupancy_status_many_seats_available">Много свободни места</string>
+    <string name="occupancy_status_few_seats_available">Малко свободни места</string>
+    <string name="occupancy_status_standing_room_only">Само правостоящи</string>
+    <string name="occupancy_status_crushed_standing_room_only">Само правостоящи (претъпкано)</string>
+    <string name="occupancy_status_full">Пълна</string>
+    <string name="occupancy_status_not_accepting_passengers">Не приема пътници</string>
+    <string name="occupancy_status_no_data">Няма данни</string>
+    <string name="occupancy_status_not_boardable">Качването е невъзможно</string>
+    <string name="alert_cause_other_cause">Друга причина</string>
+    <string name="alert_cause_technical_problem">Технически проблем</string>
+    <string name="alert_cause_labour_strike">Стачка</string>
+    <string name="alert_cause_demonstration_street_blockage">Демонстрация</string>
+    <string name="alert_cause_accident">Инцидент</string>
+    <string name="alert_cause_holiday">Празник</string>
+    <string name="alert_cause_weather">Време</string>
+    <string name="alert_cause_maintenance">Поддръжка</string>
+    <string name="alert_cause_construction">Строителство</string>
+    <string name="alert_cause_police_activity">Полицейска дейност</string>
+    <string name="alert_cause_medical_emergency">Спешен медицински случай</string>
+    <string name="alert_effect_no_service">Няма обслужване</string>
+    <string name="alert_effect_reduced_service">Намалено обслужване</string>
+    <string name="alert_effect_significant_delays">Значителни закъснения</string>
+    <string name="alert_effect_detour">Отклонение</string>
+    <string name="alert_effect_additional_service">Допълнително обслужване</string>
+    <string name="alert_effect_modified_service">Променено обслужване</string>
+    <string name="alert_effect_other_effect">Друг ефект</string>
+    <string name="alert_effect_unknown_effect">Неизвестен ефект</string>
+    <string name="alert_effect_stop_moved">Спирката е преместена</string>
+    <string name="alert_effect_no_effect">Няма ефект</string>
+    <string name="alert_effect_accessibility_issue">Проблем с достъпността</string>
+    <string name="starting_time">Начало</string>
+    <string name="ending_time">Край</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d предупреждение за услуга</item>
+        <item quantity="other">%d предупреждения за услуга</item>
+    </plurals>
+    <string name="heading_intercity_rail">Железопътен транспорт</string>
+    <string name="heading_local_rail">Метро/Трамвай</string>
+    <string name="heading_bus">Автобус</string>
+    <string name="heading_other">Други</string>
+    <string name="vehicle">Превозно средство</string>
+    <string name="delay">Закъснение</string>
+    <string name="route">Маршрут</string>
+    <string name="cancelled">Отменен</string>
+    <string name="deleted">Изтрит</string>
+    <string name="heading_more">Повече</string>
+    <string name="update_downloaded">Току-що беше изтеглена актуализация.</string>
+    <string name="restart">Рестартиране</string>
+
+    <string name="settings_datadog_analytics_title">Анализ на Datadog</string>
+    <string name="settings_datadog_analytics_description">Активира интензивно, подробно проследяване, за да помогне на разработчиците да намират и отстраняват грешки.</string>
+    <string name="settings_disable_datadog_tracking">Деактивиране на проследяването на Datadog</string>
+    <string name="settings_enable_datadog_tracking">Активиране на проследяването на Datadog</string>
+    <string name="settings_google_analytics_title">Google Анализ</string>
+    <string name="settings_google_analytics_description">Активира основни анализи за използването на функции.</string>
+    <string name="settings_disable_google_analytics">Деактивиране на Google Анализ</string>
+    <string name="settings_enable_google_analytics">Активиране на Google Анализ</string>
+    <string name="settings_test_crash">Тестов срив</string>
+
+    <string name="block_screen_block_id">Блок: %1$s</string>
+    <string name="block_screen_duration">Продължителност: </string>
+    <string name="block_screen_layover">Престой: </string>
+    <string name="block_screen_error">Грешка при зареждане на данни.</string>
+
+    <string name="nearby_departures_no_departures">Няма тръгвания.</string>
+
+    <string name="route_screen_to">До: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Грешка: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Скриване на предишни спирки</string>
+    <string name="single_trip_info_screen_show_previous_stops">Показване на %1$d предишни спирки</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

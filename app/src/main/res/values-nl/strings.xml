@@ -1,0 +1,109 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Platform</string>
+    <string name="layers">Lagen</string>
+    <string name="occupancy">Bezettingsgraad</string>
+    <string name="headsign">Bestemming</string>
+    <string name="alert_cause_unknown_cause">Onbekende oorzaak</string>
+    <string name="hidepreviousstops">Verberg vorige haltes</string>
+    <string name="settings">Instellingen</string>
+    <string name="trip">Rit</string>
+    <string name="fleet">Vloot</string>
+    <string name="lastupdated">Laatst bijgewerkt</string>
+    <string name="now">Nu</string>
+    <string name="speed">Snelheid</string>
+    <string name="searchhere">Zoek hier</string>
+    <string name="early">Te vroeg</string>
+    <string name="late">Te laat</string>
+    <string name="ontime">Op tijd</string>
+    <string name="previous_departures">Vorige vertrekken</string>
+    <string name="no_departures_found">Geen vertrekken gevonden</string>
+    <string name="load_more">Laad meer</string>
+    <string name="arrival">Aankomst</string>
+    <string name="departure">Vertrek</string>
+    <string name="no_headsign">Geen bestemming</string>
+    <string name="directions">Routebeschrijving</string>
+    <string name="vehicles">Voertuigen</string>
+    <string name="stops">Haltes</string>
+    <string name="next_stop">Volgende halte</string>
+    <string name="occupancy_status">Bezettingsgraad</string>
+    <string name="occupancy_status_empty">Leeg</string>
+    <string name="occupancy_status_many_seats_available">Veel zitplaatsen beschikbaar</string>
+    <string name="occupancy_status_few_seats_available">Weinig zitplaatsen beschikbaar</string>
+    <string name="occupancy_status_standing_room_only">Alleen staanplaatsen</string>
+    <string name="occupancy_status_crushed_standing_room_only">Alleen staanplaatsen (vol)</string>
+    <string name="occupancy_status_full">Vol</string>
+    <string name="occupancy_status_not_accepting_passengers">Accepteert geen passagiers</string>
+    <string name="occupancy_status_no_data">Geen gegevens</string>
+    <string name="occupancy_status_not_boardable">Instappen niet mogelijk</string>
+    <string name="alert_cause_other_cause">Andere oorzaak</string>
+    <string name="alert_cause_technical_problem">Technisch probleem</string>
+    <string name="alert_cause_labour_strike">Staking</string>
+    <string name="alert_cause_demonstration_street_blockage">Demonstratie</string>
+    <string name="alert_cause_accident">Ongeval</string>
+    <string name="alert_cause_holiday">Feestdag</string>
+    <string name="alert_cause_weather">Weer</string>
+    <string name="alert_cause_maintenance">Onderhoud</string>
+    <string name="alert_cause_construction">Constructie</string>
+    <string name="alert_cause_police_activity">Politieactiviteit</string>
+    <string name="alert_cause_medical_emergency">Medisch noodgeval</string>
+    <string name="alert_effect_no_service">Geen dienst</string>
+    <string name="alert_effect_reduced_service">Verminderde dienst</string>
+    <string name="alert_effect_significant_delays">Aanzienlijke vertragingen</string>
+    <string name="alert_effect_detour">Omleiding</string>
+    <string name="alert_effect_additional_service">Aanvullende dienst</string>
+    <string name="alert_effect_modified_service">Gewijzigde dienst</string>
+    <string name="alert_effect_other_effect">Ander effect</string>
+    <string name="alert_effect_unknown_effect">Onbekend effect</string>
+    <string name="alert_effect_stop_moved">Halte verplaatst</string>
+    <string name="alert_effect_no_effect">Geen effect</string>
+    <string name="alert_effect_accessibility_issue">Toegankelijkheidsprobleem</string>
+    <string name="starting_time">Starttijd</string>
+    <string name="ending_time">Eindtijd</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d dienstmededeling</item>
+        <item quantity="other">%d dienstmededelingen</item>
+    </plurals>
+    <string name="heading_intercity_rail">Trein</string>
+    <string name="heading_local_rail">Metro/Tram</string>
+    <string name="heading_bus">Bus</string>
+    <string name="heading_other">Overig</string>
+    <string name="vehicle">Voertuig</string>
+    <string name="delay">Vertraging</string>
+    <string name="route">Route</string>
+    <string name="cancelled">Geannuleerd</string>
+    <string name="deleted">Verwijderd</string>
+    <string name="heading_more">Meer</string>
+    <string name="update_downloaded">Er is zojuist een update gedownload.</string>
+    <string name="restart">Herstarten</string>
+
+    <string name="settings_datadog_analytics_title">Datadog Analytics</string>
+    <string name="settings_datadog_analytics_description">Maakt intensieve, gedetailleerde tracking mogelijk om ontwikkelaars te helpen bugs te vinden en op te lossen.</string>
+    <string name="settings_disable_datadog_tracking">Datadog-tracking uitschakelen</string>
+    <string name="settings_enable_datadog_tracking">Datadog-tracking inschakelen</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Maakt basisanalyses over het gebruik van functies mogelijk.</string>
+    <string name="settings_disable_google_analytics">Google Analytics uitschakelen</string>
+    <string name="settings_enable_google_analytics">Google Analytics inschakelen</string>
+    <string name="settings_test_crash">Testcrash</string>
+
+    <string name="block_screen_block_id">Blok: %1$s</string>
+    <string name="block_screen_duration">Duur: </string>
+    <string name="block_screen_layover">Overstap: </string>
+    <string name="block_screen_error">Fout bij het laden van gegevens.</string>
+
+    <string name="nearby_departures_no_departures">Geen vertrekken.</string>
+
+    <string name="route_screen_to">Naar: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Fout: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Verberg vorige haltes</string>
+    <string name="single_trip_info_screen_show_previous_stops">Toon %1$d vorige haltes</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

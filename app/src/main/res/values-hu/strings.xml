@@ -1,0 +1,109 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Peron</string>
+    <string name="layers">Rétegek</string>
+    <string name="occupancy">Telítettség</string>
+    <string name="headsign">Célállomás</string>
+    <string name="alert_cause_unknown_cause">Ismeretlen ok</string>
+    <string name="hidepreviousstops">Előző megállók elrejtése</string>
+    <string name="settings">Beállítások</string>
+    <string name="trip">Utazás</string>
+    <string name="fleet">Flotta</string>
+    <string name="lastupdated">Utoljára frissítve</string>
+    <string name="now">Most</string>
+    <string name="speed">Sebesség</string>
+    <string name="searchhere">Keresés itt</string>
+    <string name="early">Korán</string>
+    <string name="late">Későn</string>
+    <string name="ontime">Időben</string>
+    <string name="previous_departures">Előző indulások</string>
+    <string name="no_departures_found">Nincsenek indulások</string>
+    <string name="load_more">Több betöltése</string>
+    <string name="arrival">Érkezés</string>
+    <string name="departure">Indulás</string>
+    <string name="no_headsign">Nincs célállomás</string>
+    <string name="directions">Útvonalterv</string>
+    <string name="vehicles">Járművek</string>
+    <string name="stops">Megállók</string>
+    <string name="next_stop">Következő megálló</string>
+    <string name="occupancy_status">Telítettség</string>
+    <string name="occupancy_status_empty">Üres</string>
+    <string name="occupancy_status_many_seats_available">Sok ülőhely</string>
+    <string name="occupancy_status_few_seats_available">Kevés ülőhely</string>
+    <string name="occupancy_status_standing_room_only">Csak állóhely</string>
+    <string name="occupancy_status_crushed_standing_room_only">Csak állóhely (zsúfolt)</string>
+    <string name="occupancy_status_full">Tele</string>
+    <string name="occupancy_status_not_accepting_passengers">Nem fogad utasokat</string>
+    <string name="occupancy_status_no_data">Nincs adat</string>
+    <string name="occupancy_status_not_boardable">Felszállás nem lehetséges</string>
+    <string name="alert_cause_other_cause">Egyéb ok</string>
+    <string name="alert_cause_technical_problem">Műszaki probléma</string>
+    <string name="alert_cause_labour_strike">Sztrájk</string>
+    <string name="alert_cause_demonstration_street_blockage">Tüntetés</string>
+    <string name="alert_cause_accident">Baleset</string>
+    <string name="alert_cause_holiday">Ünnep</string>
+    <string name="alert_cause_weather">Időjárás</string>
+    <string name="alert_cause_maintenance">Karbantartás</string>
+    <string name="alert_cause_construction">Építkezés</string>
+    <string name="alert_cause_police_activity">Rendőri intézkedés</string>
+    <string name="alert_cause_medical_emergency">Orvosi vészhelyzet</string>
+    <string name="alert_effect_no_service">Nincs szolgáltatás</string>
+    <string name="alert_effect_reduced_service">Csökkentett szolgáltatás</string>
+    <string name="alert_effect_significant_delays">Jelentős késések</string>
+    <string name="alert_effect_detour">Terelőút</string>
+    <string name="alert_effect_additional_service">Kiegészítő szolgáltatás</string>
+    <string name="alert_effect_modified_service">Módosított szolgáltatás</string>
+    <string name="alert_effect_other_effect">Egyéb hatás</string>
+    <string name="alert_effect_unknown_effect">Ismeretlen hatás</string>
+    <string name="alert_effect_stop_moved">Megálló áthelyezve</string>
+    <string name="alert_effect_no_effect">Nincs hatás</string>
+    <string name="alert_effect_accessibility_issue">Akadálymentesítési probléma</string>
+    <string name="starting_time">Kezdés</string>
+    <string name="ending_time">Befejezés</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d szolgáltatási riasztás</item>
+        <item quantity="other">%d szolgáltatási riasztás</item>
+    </plurals>
+    <string name="heading_intercity_rail">Vasút</string>
+    <string name="heading_local_rail">Metró/Villamos</string>
+    <string name="heading_bus">Busz</string>
+    <string name="heading_other">Egyéb</string>
+    <string name="vehicle">Jármű</string>
+    <string name="delay">Késés</string>
+    <string name="route">Útvonal</string>
+    <string name="cancelled">Törölve</string>
+    <string name="deleted">Törölve</string>
+    <string name="heading_more">Több</string>
+    <string name="update_downloaded">Egy frissítés letöltődött.</string>
+    <string name="restart">Újraindítás</string>
+
+    <string name="settings_datadog_analytics_title">Datadog Analytics</string>
+    <string name="settings_datadog_analytics_description">Lehetővé teszi az intenzív, részletes követést, hogy a fejlesztők megtalálják és kijavítsák a hibákat.</string>
+    <string name="settings_disable_datadog_tracking">Datadog követés letiltása</string>
+    <string name="settings_enable_datadog_tracking">Datadog követés engedélyezése</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Lehetővé teszi az alapvető elemzéseket a funkciók használatáról.</string>
+    <string name="settings_disable_google_analytics">Google Analytics letiltása</string>
+    <string name="settings_enable_google_analytics">Google Analytics engedélyezése</string>
+    <string name="settings_test_crash">Tesztesés</string>
+
+    <string name="block_screen_block_id">Blokk: %1$s</string>
+    <string name="block_screen_duration">Időtartam: </string>
+    <string name="block_screen_layover">Várakozás: </string>
+    <string name="block_screen_error">Hiba az adatok betöltése közben.</string>
+
+    <string name="nearby_departures_no_departures">Nincsenek indulások.</string>
+
+    <string name="route_screen_to">Cél: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Hiba: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Előző megállók elrejtése</string>
+    <string name="single_trip_info_screen_show_previous_stops">%1$d előző megálló megjelenítése</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

@@ -10,13 +10,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 
 @Composable
-fun DelayDiff(diff: Long, show_seconds: Boolean = false) {
+fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: TextUnit = 12.sp) {
     val textColor by remember(diff) {
         mutableStateOf(
             when {
@@ -37,18 +38,17 @@ fun DelayDiff(diff: Long, show_seconds: Boolean = false) {
 
     Row {
         if (diff < 0) {
-            Text(text = stringResource(id = R.string.early), fontSize = 12.sp, color = textColor)
+            Text(text = stringResource(id = R.string.early), fontSize = fontSizeOfPolarity, color = textColor)
         } else if (diff > 0) {
-            Text(text = stringResource(id = R.string.late), fontSize = 12.sp, color = textColor)
+            Text(text = stringResource(id = R.string.late), fontSize = fontSizeOfPolarity, color = textColor)
         } else {
             Text(
                 text = stringResource(id = R.string.ontime),
-                fontSize = 12.sp,
+                fontSize = fontSizeOfPolarity,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF58A738)
             )
         }
-        Text(text = " ", fontSize = 12.sp)
 
         if (diff != 0L) {
             if (h > 0) {

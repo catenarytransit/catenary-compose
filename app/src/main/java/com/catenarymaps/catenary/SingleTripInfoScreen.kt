@@ -63,6 +63,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.google.android.gms.analytics.GoogleAnalytics
 import com.google.android.gms.analytics.HitBuilders
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -242,539 +243,542 @@ fun SingleTripInfoScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        if (isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            )
-        } else if (error != null) {
-            Text("Error: $error", color = MaterialTheme.colorScheme.error)
-        } else if (tripData != null) {
-            val data = tripData!!
-
-            RouteHeading(
-                color = data.color ?: "#808080",
-                textColor = data.text_color ?: "#000000",
-                routeType = data.route_type,
-                agencyName = null, // Not available in TripDataResponse
-                shortName = data.route_short_name,
-                longName = data.route_long_name,
-                description = data.trip_headsign?.let { "to $it" },
-                isCompact = false,
-                routeClickable = true,
-                onRouteClick = {
-                    if (data.route_id != null) {
-                        onRouteClick(
-                            CatenaryStackEnum.RouteStack(
-                                chateau_id = tripSelected.chateau_id,
-                                route_id = data.route_id
-                            )
-                        )
-                    }
-                }
-            )
-
-            // Clickable Block ID
-            if (data.block_id != null && data.service_date != null) {
-                Text(
-                    text = "Block: ${data.block_id}",
-                    color = MaterialTheme.colorScheme.primary,
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable {
-                        onBlockClick(
-                            CatenaryStackEnum.BlockStack(
-                                chateau_id = tripSelected.chateau_id,
-                                block_id = data.block_id,
-                                service_date = data.service_date
-                            )
-                        )
-                    }
-                )
-            }
-
-            // Clickable Vehicle Label
-            if (data.vehicle?.label != null) {
-                VehicleInfo(
-                    label = data.vehicle.label,
-                    chateau = tripSelected.chateau_id,
-                    routeId = data.route_id
-                )
-            }
-
-
-            if (data.alert_id_to_alert.isNotEmpty()) {
-                AlertsBox(
-                    alerts = data.alert_id_to_alert,
-                    default_tz = data.tz,
-                    chateau = tripSelected.chateau_id
-                )
-            }
-
-
-            // Show/Hide Previous Stops Button
-            if (lastInactiveStopIdx > -1) {
-                Button(onClick = { viewModel.toggleShowPreviousStops() }) {
-                    Text(if (showPreviousStops) "Hide previous stops" else "Show ${lastInactiveStopIdx + 1} previous stops")
-                }
-            }
-
-            // Stop List
-            val lazyListState = rememberLazyListState()
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    //.windowInsetsBottomHeight(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current)))
-                    .windowInsetsPadding(
-                        WindowInsets(
-                            bottom = WindowInsets.safeDrawing.getBottom(
-                                density = LocalDensity.current
-                            )
-                        )
-                    ),
-                state = lazyListState
-            ) {
-                itemsIndexed(stopTimes) { i, stopTime ->
-                    if (showPreviousStops || i > lastInactiveStopIdx || (i == stopTimes.lastIndex && stopTimes.isNotEmpty())) {
-                        // Calculate new state variables
-                        val isInactive = i <= lastInactiveStopIdx
-                        val isPreviousInactive = i - 1 == lastInactiveStopIdx
-
-                        StopListItem(
-                            stopTime = stopTime,
-                            tripColorStr = data.color ?: "#808080",
-                            isFirst = i == 0,
-                            isLast = i == stopTimes.lastIndex,
-                            isInactive = isInactive,
-                            isPreviousInactive = isPreviousInactive, // <-- ADD THIS
-                            showPreviousStops = showPreviousStops,   // <-- ADD THIS
-                            onStopClick = {
-                                onStopClick(
-                                    CatenaryStackEnum.StopStack(
+                if (isLoading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    )
+                } else if (error != null) {
+                    Text(stringResource(id = R.string.single_trip_info_screen_error), color = MaterialTheme.colorScheme.error)
+                } else if (tripData != null) {
+                    val data = tripData!!
+        
+                    RouteHeading(
+                        color = data.color ?: "#808080",
+                        textColor = data.text_color ?: "#000000",
+                        routeType = data.route_type,
+                        agencyName = null, // Not available in TripDataResponse
+                        shortName = data.route_short_name,
+                        longName = data.route_long_name,
+                        description = data.trip_headsign?.let { "to $it" },
+                        isCompact = false,
+                        routeClickable = true,
+                        onRouteClick = {
+                            if (data.route_id != null) {
+                                onRouteClick(
+                                    CatenaryStackEnum.RouteStack(
                                         chateau_id = tripSelected.chateau_id,
-                                        stop_id = stopTime.raw.stop_id
+                                        route_id = data.route_id
+                                    )
+                                )
+                            }
+                        }
+                    )
+        
+                    // Clickable Block ID
+                    if (data.block_id != null && data.service_date != null) {
+                        Text(
+                            text = "Block: ${data.block_id}",
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline,
+                            modifier = Modifier.clickable {
+                                onBlockClick(
+                                    CatenaryStackEnum.BlockStack(
+                                        chateau_id = tripSelected.chateau_id,
+                                        block_id = data.block_id,
+                                        service_date = data.service_date
                                     )
                                 )
                             }
                         )
                     }
+        
+                    // Clickable Vehicle Label
+                    if (data.vehicle?.label != null) {
+                        VehicleInfo(
+                            label = data.vehicle.label,
+                            chateau = tripSelected.chateau_id,
+                            routeId = data.route_id
+                        )
+                    }
+        
+        
+                    if (data.alert_id_to_alert.isNotEmpty()) {
+                        AlertsBox(
+                            alerts = data.alert_id_to_alert,
+                            default_tz = data.tz,
+                            chateau = tripSelected.chateau_id
+                        )
+                    }
+        
+        
+                    // Show/Hide Previous Stops Button
+                    if (lastInactiveStopIdx > -1) {
+                        Button(onClick = { viewModel.toggleShowPreviousStops() }) {
+                            Text(
+                                if (showPreviousStops) stringResource(id = R.string.single_trip_info_screen_hide_previous_stops)
+                                else stringResource(id = R.string.single_trip_info_screen_show_previous_stops, lastInactiveStopIdx + 1)
+                            )
+                        }
+                    }
+        
+                    // Stop List
+                    val lazyListState = rememberLazyListState()
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            //.windowInsetsBottomHeight(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current)))
+                            .windowInsetsPadding(
+                                WindowInsets(
+                                    bottom = WindowInsets.safeDrawing.getBottom(
+                                        density = LocalDensity.current
+                                    )
+                                )
+                            ),
+                        state = lazyListState
+                    ) {
+                        itemsIndexed(stopTimes) { i, stopTime ->
+                            if (showPreviousStops || i > lastInactiveStopIdx || (i == stopTimes.lastIndex && stopTimes.isNotEmpty())) {
+                                // Calculate new state variables
+                                val isInactive = i <= lastInactiveStopIdx
+                                val isPreviousInactive = i - 1 == lastInactiveStopIdx
+        
+                                StopListItem(
+                                    stopTime = stopTime,
+                                    tripColorStr = data.color ?: "#808080",
+                                    isFirst = i == 0,
+                                    isLast = i == stopTimes.lastIndex,
+                                    isInactive = isInactive,
+                                    isPreviousInactive = isPreviousInactive, // <-- ADD THIS
+                                    showPreviousStops = showPreviousStops,   // <-- ADD THIS
+                                    onStopClick = {
+                                        onStopClick(
+                                            CatenaryStackEnum.StopStack(
+                                                chateau_id = tripSelected.chateau_id,
+                                                stop_id = stopTime.raw.stop_id
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun StopListItem(
-    stopTime: StopTimeCleaned,
-    tripColorStr: String,
-    isFirst: Boolean,
-    isLast: Boolean,
-    isInactive: Boolean,
-    isPreviousInactive: Boolean,
-    showPreviousStops: Boolean,
-    onStopClick: () -> Unit
-) {
-    val tripColor = try {
-        Color(android.graphics.Color.parseColor(tripColorStr))
-    } catch (e: Exception) {
-        Color.Gray
-    }
-
-    Row(
-        modifier = Modifier
-            .height(IntrinsicSize.Min) // Ensure Row has a minimum height for fillMaxHeight to work
-            .fillMaxWidth()
-            .padding(vertical = 0.dp),
-        verticalAlignment = Alignment.Top // Align items to the top
-    ) {
-        // 1. Progress Bar (port of the logic)
-        TripProgressIndicator(
-            color = tripColor,
-            isFirst = isFirst,
-            isLast = isLast,
-            isInactive = isInactive,
-            isPreviousInactive = isPreviousInactive, // <-- ADD THIS
-            showPreviousStops = showPreviousStops,   // <-- ADD THIS
-            modifier = Modifier
-                .width(10.dp)
-                .fillMaxHeight()
-        )
-
-        Spacer(Modifier.width(8.dp))
-
-        // 2. Stop Info
-        Column {
-            Text(
-                text = stopTime.raw.name, // TODO: Port fixStationName
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable(onClick = onStopClick),
-                textDecoration = TextDecoration.Underline
-            )
-
-            StopTimeNumber(
-                tripTimezone = stopTime.raw.timezone,
-                stopTime = stopTime,
-                showSeconds = false,
-                isInactive = isInactive
-            )
-
-            if (stopTime.raw.rt_platform_string != null) {
-                Text(
-                    text = "Platform: ${stopTime.raw.rt_platform_string}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        
+        @Composable
+        fun StopListItem(
+            stopTime: StopTimeCleaned,
+            tripColorStr: String,
+            isFirst: Boolean,
+            isLast: Boolean,
+            isInactive: Boolean,
+            isPreviousInactive: Boolean,
+            showPreviousStops: Boolean,
+            onStopClick: () -> Unit
+        ) {
+            val tripColor = try {
+                Color(android.graphics.Color.parseColor(tripColorStr))
+            } catch (e: Exception) {
+                Color.Gray
             }
-        }
-    }
-}
-
-@Composable
-fun TripProgressIndicator(
-    color: Color,
-    isFirst: Boolean,
-    isLast: Boolean,
-    isInactive: Boolean,
-    isPreviousInactive: Boolean, // <-- ADDED
-    showPreviousStops: Boolean,  // <-- ADDED
-    modifier: Modifier = Modifier
-) {
-    Canvas(modifier = modifier.fillMaxHeight()) {
-        val canvasWidth = size.width
-        val canvasHeight = size.height
-        val hCenter = canvasHeight / 2
-        val wCenter = canvasWidth / 2
-
-        val boxWidth = canvasWidth / 2
-
-        print("Trip Progress Indicator w: $boxWidth h: $hCenter")
-
-        val circleColor = if (isInactive) Color.Gray else Color.White
-        val strokeColor = if (isInactive) Color.DarkGray else color
-
-        // This is the logic from the JS app. It's the color used for the line segment
-        // *above* an inactive stop when previous stops are shown.
-        // Faded if showing previous stops, transparent if not
-        val fadedColor = if (showPreviousStops) color.copy(alpha = 0.4f) else Color.Transparent
-
-        // Top box
-        if (!isFirst) {
-            if (isPreviousInactive) {
-                // This is the "in-between" stop. Draw gradient.
-                drawRect(
-                    brush = Brush.verticalGradient(colors = listOf(fadedColor, color)),
-                    topLeft = Offset(wCenter - boxWidth / 2, 0f),
-                    size = androidx.compose.ui.geometry.Size(boxWidth, hCenter)
+        
+            Row(
+                modifier = Modifier
+                    .height(IntrinsicSize.Min) // Ensure Row has a minimum height for fillMaxHeight to work
+                    .fillMaxWidth()
+                    .padding(vertical = 0.dp),
+                verticalAlignment = Alignment.Top // Align items to the top
+            ) {
+                // 1. Progress Bar (port of the logic)
+                TripProgressIndicator(
+                    color = tripColor,
+                    isFirst = isFirst,
+                    isLast = isLast,
+                    isInactive = isInactive,
+                    isPreviousInactive = isPreviousInactive, // <-- ADD THIS
+                    showPreviousStops = showPreviousStops,   // <-- ADD THIS
+                    modifier = Modifier
+                        .width(10.dp)
+                        .fillMaxHeight()
                 )
-            } else {
-                // This is a normal solid box
-                drawRect(
-                    // If this stop is inactive, use the faded color for the line above it.
-                    // Otherwise, use the regular color.
-                    color = if (isInactive) fadedColor else color,
-                    topLeft = Offset(wCenter - boxWidth / 2, 0f),
-                    size = androidx.compose.ui.geometry.Size(boxWidth, hCenter)
-                )
-            }
-        }
-
-        // Bottom box
-        if (!isLast) {
-            drawRect(
-                color = if (isInactive) fadedColor else color,
-                topLeft = Offset(wCenter - boxWidth / 2, hCenter),
-                size = androidx.compose.ui.geometry.Size(boxWidth, canvasHeight - hCenter)
-            )
-        }
-
-        // Center circle
-        drawCircle(
-            color = circleColor,
-            radius = canvasWidth / 2,
-            center = center
-        )
-        drawCircle(
-            color = strokeColor,
-            radius = canvasWidth / 2,
-            center = center,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = canvasWidth / 4)
-        )
-    }
-}
-
-
-
-@Composable
-fun StopTimeNumber(
-    tripTimezone: String?,              // trip_data.tz in Svelte
-    stopTime: StopTimeCleaned,          // stoptime in Svelte
-    showSeconds: Boolean,
-    isInactive: Boolean
-) {
-    // --- Current time ticker (milliseconds) ---
-    val tickMillis = if (showSeconds) 1000L else 30_000L
-    var now by remember { mutableStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(tickMillis) {
-        while (true) {
-            now = System.currentTimeMillis()
-            kotlinx.coroutines.delay(tickMillis)
-        }
-    }
-    val nowSecs = now / 1000
-
-    // --- Pull fields to mirror Svelte shape ---
-    val rtArrival = stopTime.rtArrivalTime
-    val rtDeparture = stopTime.rtDepartureTime
-
-    val schedArr = stopTime.raw.scheduled_arrival_time_unix_seconds
-        ?: stopTime.raw.interpolated_stoptime_unix_seconds
-    val schedDep = stopTime.raw.scheduled_departure_time_unix_seconds
-        ?: stopTime.raw.interpolated_stoptime_unix_seconds
-
-    // Shared values (when not showing both)
-    val sharedRt = rtDeparture ?: rtArrival
-    val sharedSched = stopTime.raw.scheduled_departure_time_unix_seconds
-        ?: stopTime.raw.scheduled_arrival_time_unix_seconds
-        ?: stopTime.raw.interpolated_stoptime_unix_seconds
-
-    // Svelte's calculate_show_both_departure_and_arrival()
-    val showBoth = remember(rtArrival, rtDeparture, schedArr, schedDep) {
-        when {
-            (schedDep != null && schedArr != null && schedDep != schedArr) -> true
-            (rtDeparture != null && rtArrival != null && rtDeparture != rtArrival) -> true
-            else -> false
-        }
-    }
-
-    val baseColor = if (isInactive) Color.Gray else MaterialTheme.colorScheme.onSurface
-    val tz = (stopTime.raw.timezone ?: tripTimezone) ?: java.time.ZoneId.systemDefault().id
-
-    if ((sharedSched != null) || (sharedRt != null)) {
-        if (showBoth) {
-            // ---------------- ARRIVAL ----------------
-            TimeRow(
-                label = "arrival",
-                currentTimeSecs = nowSecs,
-                rt = rtArrival,
-                scheduled = schedArr,
-                tz = tz,
-                showSeconds = showSeconds,
-                isInactive = isInactive,
-                textColor = baseColor
-            )
-            // ---------------- DEPARTURE --------------
-            TimeRow(
-                label = "departure",
-                currentTimeSecs = nowSecs,
-                rt = rtDeparture,
-                scheduled = schedDep,
-                tz = tz,
-                showSeconds = showSeconds,
-                isInactive = isInactive,
-                textColor = baseColor
-            )
-        } else {
-            // ---------------- UNIFIED -----------------
-            UnifiedTimeRow(
-                currentTimeSecs = nowSecs,
-                rt = sharedRt,
-                scheduled = sharedSched,
-                tz = tz,
-                showSeconds = showSeconds,
-                isInactive = isInactive,
-                textColor = baseColor
-            )
-        }
-    }
-}
-
-@Composable
-private fun TimeRow(
-    label: String,                   // "arrival" | "departure"
-    currentTimeSecs: Long,
-    rt: Long?,
-    scheduled: Long?,
-    tz: String,
-    showSeconds: Boolean,
-    isInactive: Boolean,
-    textColor: Color
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Left: relative time (uses DiffTimer)
-        val target = rt ?: scheduled
-        if (target != null) {
-            DiffTimer(
-                diff = (target - currentTimeSecs).toDouble(),
-                showBrackets = false,
-                showSeconds = showSeconds,
-                showDays = false,
-                showPlus = false
-            )
-        }
-
-        // Middle: delay chip (uses DiffTimer for signed offset)
-        if (rt != null && scheduled != null) {
-            Spacer(Modifier.width(6.dp))
-            DelayDiff(diff = rt - scheduled, show_seconds = showSeconds)
-        }
-
-        // Right: label + clocks (uses FormattedTimeText)
-        Spacer(Modifier.weight(1f))
-        Column(horizontalAlignment = Alignment.End) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = label.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        
                 Spacer(Modifier.width(8.dp))
-
-                if (rt != null) {
-                    if (scheduled != null && rt == scheduled) {
-                        Text("🎯", modifier = Modifier.padding(end = 4.dp))
+        
+                // 2. Stop Info
+                Column {
+                    Text(
+                        text = stopTime.raw.name, // TODO: Port fixStationName
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(onClick = onStopClick),
+                        textDecoration = TextDecoration.Underline
+                    )
+        
+                    StopTimeNumber(
+                        tripTimezone = stopTime.raw.timezone,
+                        stopTime = stopTime,
+                        showSeconds = false,
+                        isInactive = isInactive
+                    )
+        
+                    if (stopTime.raw.rt_platform_string != null) {
+                        Text(
+                            text = "Platform: ${stopTime.raw.rt_platform_string}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                    if (scheduled != null && rt != scheduled) {
-                        Box { // Use Box to apply decoration to the child
+                }
+            }
+        }
+        
+        @Composable
+        fun TripProgressIndicator(
+            color: Color,
+            isFirst: Boolean,
+            isLast: Boolean,
+            isInactive: Boolean,
+            isPreviousInactive: Boolean, // <-- ADDED
+            showPreviousStops: Boolean,  // <-- ADDED
+            modifier: Modifier = Modifier
+        ) {
+            Canvas(modifier = modifier.fillMaxHeight()) {
+                val canvasWidth = size.width
+                val canvasHeight = size.height
+                val hCenter = canvasHeight / 2
+                val wCenter = canvasWidth / 2
+        
+                val boxWidth = canvasWidth / 2
+        
+                print("Trip Progress Indicator w: $boxWidth h: $hCenter")
+        
+                val circleColor = if (isInactive) Color.Gray else Color.White
+                val strokeColor = if (isInactive) Color.DarkGray else color
+        
+                // This is the logic from the JS app. It's the color used for the line segment
+                // *above* an inactive stop when previous stops are shown.
+                // Faded if showing previous stops, transparent if not
+                val fadedColor = if (showPreviousStops) color.copy(alpha = 0.4f) else Color.Transparent
+        
+                // Top box
+                if (!isFirst) {
+                    if (isPreviousInactive) {
+                        // This is the "in-between" stop. Draw gradient.
+                        drawRect(
+                            brush = Brush.verticalGradient(colors = listOf(fadedColor, color)),
+                            topLeft = Offset(wCenter - boxWidth / 2, 0f),
+                            size = androidx.compose.ui.geometry.Size(boxWidth, hCenter)
+                        )
+                    } else {
+                        // This is a normal solid box
+                        drawRect(
+                            // If this stop is inactive, use the faded color for the line above it.
+                            // Otherwise, use the regular color.
+                            color = if (isInactive) fadedColor else color,
+                            topLeft = Offset(wCenter - boxWidth / 2, 0f),
+                            size = androidx.compose.ui.geometry.Size(boxWidth, hCenter)
+                        )
+                    }
+                }
+        
+                // Bottom box
+                if (!isLast) {
+                    drawRect(
+                        color = if (isInactive) fadedColor else color,
+                        topLeft = Offset(wCenter - boxWidth / 2, hCenter),
+                        size = androidx.compose.ui.geometry.Size(boxWidth, canvasHeight - hCenter)
+                    )
+                }
+        
+                // Center circle
+                drawCircle(
+                    color = circleColor,
+                    radius = canvasWidth / 2,
+                    center = center
+                )
+                drawCircle(
+                    color = strokeColor,
+                    radius = canvasWidth / 2,
+                    center = center,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = canvasWidth / 4)
+                )
+            }
+        }
+        
+        
+        
+        @Composable
+        fun StopTimeNumber(
+            tripTimezone: String?,              // trip_data.tz in Svelte
+            stopTime: StopTimeCleaned,          // stoptime in Svelte
+            showSeconds: Boolean,
+            isInactive: Boolean
+        ) {
+            // --- Current time ticker (milliseconds) ---
+            val tickMillis = if (showSeconds) 1000L else 30_000L
+            var now by remember { mutableStateOf(System.currentTimeMillis()) }
+            LaunchedEffect(tickMillis) {
+                while (true) {
+                    now = System.currentTimeMillis()
+                    kotlinx.coroutines.delay(tickMillis)
+                }
+            }
+            val nowSecs = now / 1000
+        
+            // --- Pull fields to mirror Svelte shape ---
+            val rtArrival = stopTime.rtArrivalTime
+            val rtDeparture = stopTime.rtDepartureTime
+        
+            val schedArr = stopTime.raw.scheduled_arrival_time_unix_seconds
+                ?: stopTime.raw.interpolated_stoptime_unix_seconds
+            val schedDep = stopTime.raw.scheduled_departure_time_unix_seconds
+                ?: stopTime.raw.interpolated_stoptime_unix_seconds
+        
+            // Shared values (when not showing both)
+            val sharedRt = rtDeparture ?: rtArrival
+            val sharedSched = stopTime.raw.scheduled_departure_time_unix_seconds
+                ?: stopTime.raw.scheduled_arrival_time_unix_seconds
+                ?: stopTime.raw.interpolated_stoptime_unix_seconds
+        
+            // Svelte's calculate_show_both_departure_and_arrival()
+            val showBoth = remember(rtArrival, rtDeparture, schedArr, schedDep) {
+                when {
+                    (schedDep != null && schedArr != null && schedDep != schedArr) -> true
+                    (rtDeparture != null && rtArrival != null && rtDeparture != rtArrival) -> true
+                    else -> false
+                }
+            }
+        
+            val baseColor = if (isInactive) Color.Gray else MaterialTheme.colorScheme.onSurface
+            val tz = (stopTime.raw.timezone ?: tripTimezone) ?: java.time.ZoneId.systemDefault().id
+        
+            if ((sharedSched != null) || (sharedRt != null)) {
+                if (showBoth) {
+                    // ---------------- ARRIVAL ----------------
+                    TimeRow(
+                        label = "arrival",
+                        currentTimeSecs = nowSecs,
+                        rt = rtArrival,
+                        scheduled = schedArr,
+                        tz = tz,
+                        showSeconds = showSeconds,
+                        isInactive = isInactive,
+                        textColor = baseColor
+                    )
+                    // ---------------- DEPARTURE --------------
+                    TimeRow(
+                        label = "departure",
+                        currentTimeSecs = nowSecs,
+                        rt = rtDeparture,
+                        scheduled = schedDep,
+                        tz = tz,
+                        showSeconds = showSeconds,
+                        isInactive = isInactive,
+                        textColor = baseColor
+                    )
+                } else {
+                    // ---------------- UNIFIED -----------------
+                    UnifiedTimeRow(
+                        currentTimeSecs = nowSecs,
+                        rt = sharedRt,
+                        scheduled = sharedSched,
+                        tz = tz,
+                        showSeconds = showSeconds,
+                        isInactive = isInactive,
+                        textColor = baseColor
+                    )
+                }
+            }
+        }
+        
+        @Composable
+        private fun TimeRow(
+            label: String,                   // "arrival" | "departure"
+            currentTimeSecs: Long,
+            rt: Long?,
+            scheduled: Long?,
+            tz: String,
+            showSeconds: Boolean,
+            isInactive: Boolean,
+            textColor: Color
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left: relative time (uses DiffTimer)
+                val target = rt ?: scheduled
+                if (target != null) {
+                    DiffTimer(
+                        diff = (target - currentTimeSecs).toDouble(),
+                        showBrackets = false,
+                        showSeconds = showSeconds,
+                        showDays = false,
+                        showPlus = false
+                    )
+                }
+        
+                // Middle: delay chip (uses DiffTimer for signed offset)
+                if (rt != null && scheduled != null) {
+                    Spacer(Modifier.width(6.dp))
+                    DelayDiff(diff = rt - scheduled, show_seconds = showSeconds)
+                }
+        
+                // Right: label + clocks (uses FormattedTimeText)
+                Spacer(Modifier.weight(1f))
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = label.replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(8.dp))
+        
+                        if (rt != null) {
+                            if (scheduled != null && rt == scheduled) {
+                                Text(stringResource(id = R.string.single_trip_info_screen_current_location_emoji), modifier = Modifier.padding(end = 4.dp))
+                            }
+                            if (scheduled != null && rt != scheduled) {
+                                Box { // Use Box to apply decoration to the child
+                                    FormattedTimeText(
+                                        timezone = tz,
+                                        timeSeconds = scheduled,
+                                        showSeconds = showSeconds,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textDecoration = TextDecoration.LineThrough
+                                    )
+                                }
+                                Spacer(Modifier.width(8.dp))
+                            }
+                            // RT time highlighted
+                            FormattedTimeText(
+                                timezone = tz,
+                                timeSeconds = rt,
+                                showSeconds = showSeconds
+                            )
+                        } else if (scheduled != null) {
                             FormattedTimeText(
                                 timezone = tz,
                                 timeSeconds = scheduled,
-                                showSeconds = showSeconds,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textDecoration = TextDecoration.LineThrough
+                                showSeconds = showSeconds
                             )
                         }
-                        Spacer(Modifier.width(8.dp))
                     }
-                    // RT time highlighted
-                    FormattedTimeText(
-                        timezone = tz,
-                        timeSeconds = rt,
-                        showSeconds = showSeconds
-                    )
-                } else if (scheduled != null) {
-                    FormattedTimeText(
-                        timezone = tz,
-                        timeSeconds = scheduled,
-                        showSeconds = showSeconds
-                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun UnifiedTimeRow(
-    currentTimeSecs: Long,
-    rt: Long?,
-    scheduled: Long?,
-    tz: String,
-    showSeconds: Boolean,
-    isInactive: Boolean,
-    textColor: Color
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Left: relative diff
-        val target = rt ?: scheduled
-        if (target != null) {
-            DiffTimer(
-                diff = (target - currentTimeSecs).toDouble(),
-                showBrackets = false,
-                showSeconds = showSeconds,
-                showDays = false,
-                showPlus = false
-            )
-        }
-
-        // Middle: delay chip
-        if (rt != null && scheduled != null) {
-            Spacer(Modifier.width(6.dp))
-            DelayDiff(diff = rt - scheduled, show_seconds = showSeconds)
-        }
-
-        // Right: clocks
-        Spacer(Modifier.weight(1f))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (rt != null) {
-                if (scheduled != null && rt == scheduled) {
-                    Text("🎯", modifier = Modifier.padding(end = 4.dp))
+        
+        @Composable
+        private fun UnifiedTimeRow(
+            currentTimeSecs: Long,
+            rt: Long?,
+            scheduled: Long?,
+            tz: String,
+            showSeconds: Boolean,
+            isInactive: Boolean,
+            textColor: Color
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left: relative diff
+                val target = rt ?: scheduled
+                if (target != null) {
+                    DiffTimer(
+                        diff = (target - currentTimeSecs).toDouble(),
+                        showBrackets = false,
+                        showSeconds = showSeconds,
+                        showDays = false,
+                        showPlus = false
+                    )
                 }
-                if (scheduled != null && rt != scheduled) {
-                    Box { // Use Box to apply decoration to the child
+        
+                // Middle: delay chip
+                if (rt != null && scheduled != null) {
+                    Spacer(Modifier.width(6.dp))
+                    DelayDiff(diff = rt - scheduled, show_seconds = showSeconds)
+                }
+        
+                // Right: clocks
+                Spacer(Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (rt != null) {
+                        if (scheduled != null && rt == scheduled) {
+                            Text(stringResource(id = R.string.single_trip_info_screen_current_location_emoji), modifier = Modifier.padding(end = 4.dp))
+                        }
+                        if (scheduled != null && rt != scheduled) {
+                            Box { // Use Box to apply decoration to the child
+                                FormattedTimeText(
+                                    timezone = tz,
+                                    timeSeconds = scheduled,
+                                    showSeconds = showSeconds,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textDecoration = TextDecoration.LineThrough
+        
+                                )
+                            }
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        FormattedTimeText(
+                            timezone = tz,
+                            timeSeconds = rt,
+                            showSeconds = showSeconds
+                        )
+                    } else if (scheduled != null) {
                         FormattedTimeText(
                             timezone = tz,
                             timeSeconds = scheduled,
-                            showSeconds = showSeconds,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textDecoration = TextDecoration.LineThrough
-
+                            showSeconds = showSeconds
                         )
                     }
-                    Spacer(Modifier.width(8.dp))
                 }
-                FormattedTimeText(
-                    timezone = tz,
-                    timeSeconds = rt,
-                    showSeconds = showSeconds
-                )
-            } else if (scheduled != null) {
-                FormattedTimeText(
-                    timezone = tz,
-                    timeSeconds = scheduled,
-                    showSeconds = showSeconds
-                )
             }
         }
-    }
-}
-
-@Composable
-private fun DelayChip(diffSecs: Long, showSeconds: Boolean, muted: Boolean) {
-    // label (Late / Early / On time)
-    val state = when {
-        diffSecs > 30 -> "Late"
-        diffSecs < -30 -> "Early"
-        else -> "On time"
-    }
-
-    val bg = when (state) {
-        "Late" -> MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
-        "Early" -> Color(0xFF1B8A34).copy(alpha = 0.12f)
-        else -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)
-    }
-    val fg = when (state) {
-        "Late" -> MaterialTheme.colorScheme.error
-        "Early" -> Color(0xFF1B8A34)
-        else -> MaterialTheme.colorScheme.secondary
-    }
-
-    val alpha = if (muted) 0.6f else 1f
-    Row(
-        modifier = Modifier
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
-            .background(bg.copy(alpha = bg.alpha * alpha))
-            .padding(horizontal = 6.dp, vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(state, style = MaterialTheme.typography.labelSmall, color = fg.copy(alpha = alpha))
-        if (state != "On time") {
-            Spacer(Modifier.width(6.dp))
-            // Render signed offset with your DiffTimer (shows + / -)
-            DiffTimer(
-                diff = diffSecs.toDouble(),
-                showBrackets = false,
-                showSeconds = showSeconds,
-                showDays = false,
-                showPlus = true
-            )
+        
+        @Composable
+        private fun DelayChip(diffSecs: Long, showSeconds: Boolean, muted: Boolean) {
+            // label (Late / Early / On time)
+            val state = when {
+                diffSecs > 30 -> "Late"
+                diffSecs < -30 -> "Early"
+                else -> "On time"
+            }
+        
+            val bg = when (state) {
+                "Late" -> MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+                "Early" -> Color(0xFF1B8A34).copy(alpha = 0.12f)
+                else -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)
+            }
+            val fg = when (state) {
+                "Late" -> MaterialTheme.colorScheme.error
+                "Early" -> Color(0xFF1B8A34)
+                else -> MaterialTheme.colorScheme.secondary
+            }
+        
+            val alpha = if (muted) 0.6f else 1f
+            Row(
+                modifier = Modifier
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                    .background(bg.copy(alpha = bg.alpha * alpha))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(state, style = MaterialTheme.typography.labelSmall, color = fg.copy(alpha = alpha))
+                if (state != "On time") {
+                    Spacer(Modifier.width(6.dp))
+                    // Render signed offset with your DiffTimer (shows + / -)
+                    DiffTimer(
+                        diff = diffSecs.toDouble(),
+                        showBrackets = false,
+                        showSeconds = showSeconds,
+                        showDays = false,
+                        showPlus = true
+                    )
+                }
+            }
         }
-    }
-}

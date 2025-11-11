@@ -1,0 +1,109 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Platform</string>
+    <string name="layers">Katmanlar</string>
+    <string name="occupancy">Doluluk</string>
+    <string name="headsign">Gideceği Yer</string>
+    <string name="alert_cause_unknown_cause">Bilinmeyen neden</string>
+    <string name="hidepreviousstops">Önceki durakları gizle</string>
+    <string name="settings">Ayarlar</string>
+    <string name="trip">Sefer</string>
+    <string name="fleet">Filo</string>
+    <string name="lastupdated">Son güncelleme</string>
+    <string name="now">Şimdi</string>
+    <string name="speed">Hız</string>
+    <string name="searchhere">Burada ara</string>
+    <string name="early">Erken</string>
+    <string name="late">Geç</string>
+    <string name="ontime">Zamanında</string>
+    <string name="previous_departures">Önceki kalkışlar</string>
+    <string name="no_departures_found">Kalkış bulunamadı</string>
+    <string name="load_more">Daha fazla yükle</string>
+    <string name="arrival">Varış</string>
+    <string name="departure">Kalkış</string>
+    <string name="no_headsign">Gideceği yer yok</string>
+    <string name="directions">Yol Tarifleri</string>
+    <string name="vehicles">Araçlar</string>
+    <string name="stops">Duraklar</string>
+    <string name="next_stop">Sonraki durak</string>
+    <string name="occupancy_status">Doluluk</string>
+    <string name="occupancy_status_empty">Boş</string>
+    <string name="occupancy_status_many_seats_available">Çok sayıda koltuk mevcut</string>
+    <string name="occupancy_status_few_seats_available">Az sayıda koltuk mevcut</string>
+    <string name="occupancy_status_standing_room_only">Sadece ayakta yolcu</string>
+    <string name="occupancy_status_crushed_standing_room_only">Sadece ayakta yolcu (sıkışık)</string>
+    <string name="occupancy_status_full">Dolu</string>
+    <string name="occupancy_status_not_accepting_passengers">Yolcu kabul etmiyor</string>
+    <string name="occupancy_status_no_data">Veri yok</string>
+    <string name="occupancy_status_not_boardable">Binilemez</string>
+    <string name="alert_cause_other_cause">Diğer neden</string>
+    <string name="alert_cause_technical_problem">Teknik sorun</string>
+    <string name="alert_cause_labour_strike">Grev</string>
+    <string name="alert_cause_demonstration_street_blockage">Gösteri</string>
+    <string name="alert_cause_accident">Kaza</string>
+    <string name="alert_cause_holiday">Tatil</string>
+    <string name="alert_cause_weather">Hava durumu</string>
+    <string name="alert_cause_maintenance">Bakım</string>
+    <string name="alert_cause_construction">İnşaat</string>
+    <string name="alert_cause_police_activity">Polis etkinliği</string>
+    <string name="alert_cause_medical_emergency">Tıbbi acil durum</string>
+    <string name="alert_effect_no_service">Servis yok</string>
+    <string name="alert_effect_reduced_service">Azaltılmış servis</string>
+    <string name="alert_effect_significant_delays">Önemli gecikmeler</string>
+    <string name="alert_effect_detour">Güzergah değişikliği</string>
+    <string name="alert_effect_additional_service">Ek servis</string>
+    <string name="alert_effect_modified_service">Değiştirilmiş servis</string>
+    <string name="alert_effect_other_effect">Diğer etki</string>
+    <string name="alert_effect_unknown_effect">Bilinmeyen etki</string>
+    <string name="alert_effect_stop_moved">Durak taşındı</string>
+    <string name="alert_effect_no_effect">Etkisi yok</string>
+    <string name="alert_effect_accessibility_issue">Erişilebilirlik sorunu</string>
+    <string name="starting_time">Başlangıç</string>
+    <string name="ending_time">Bitiş</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d servis uyarısı</item>
+        <item quantity="other">%d servis uyarısı</item>
+    </plurals>
+    <string name="heading_intercity_rail">Tren</string>
+    <string name="heading_local_rail">Metro/Tramvay</string>
+    <string name="heading_bus">Otobüs</string>
+    <string name="heading_other">Diğer</string>
+    <string name="vehicle">Araç</string>
+    <string name="delay">Gecikme</string>
+    <string name="route">Hat</string>
+    <string name="cancelled">İptal edildi</string>
+    <string name="deleted">Silindi</string>
+    <string name="heading_more">Daha fazla</string>
+    <string name="update_downloaded">Bir güncelleme indirildi.</string>
+    <string name="restart">Yeniden başlat</string>
+
+    <string name="settings_datadog_analytics_title">Datadog Analytics</string>
+    <string name="settings_datadog_analytics_description">Geliştiricilerin hataları bulmasına ve düzeltmesine yardımcı olmak için yoğun, ayrıntılı izlemeyi etkinleştirir.</string>
+    <string name="settings_disable_datadog_tracking">Datadog İzlemeyi Devre Dışı Bırak</string>
+    <string name="settings_enable_datadog_tracking">Datadog İzlemeyi Etkinleştir</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Özellik kullanımı hakkında temel analizleri etkinleştirir.</string>
+    <string name="settings_disable_google_analytics">Google Analytics'i Devre Dışı Bırak</string>
+    <string name="settings_enable_google_analytics">Google Analytics'i Etkinleştir</string>
+    <string name="settings_test_crash">Test çökmesi</string>
+
+    <string name="block_screen_block_id">Blok: %1$s</string>
+    <string name="block_screen_duration">Süre: </string>
+    <string name="block_screen_layover">Bekleme: </string>
+    <string name="block_screen_error">Veri yüklenirken hata oluştu.</string>
+
+    <string name="nearby_departures_no_departures">Kalkış yok.</string>
+
+    <string name="route_screen_to">Varış: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Hata: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Önceki durakları gizle</string>
+    <string name="single_trip_info_screen_show_previous_stops">%1$d önceki durağı göster</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

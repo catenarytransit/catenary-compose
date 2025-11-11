@@ -1,0 +1,111 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Платформа</string>
+    <string name="layers">Шари</string>
+    <string name="occupancy">Заповненість</string>
+    <string name="headsign">Напрямок</string>
+    <string name="alert_cause_unknown_cause">Невідома причина</string>
+    <string name="hidepreviousstops">Сховати попередні зупинки</string>
+    <string name="settings">Налаштування</string>
+    <string name="trip">Рейс</string>
+    <string name="fleet">Парк</string>
+    <string name="lastupdated">Останнє оновлення</string>
+    <string name="now">Зараз</string>
+    <string name="speed">Швидкість</string>
+    <string name="searchhere">Шукати тут</string>
+    <string name="early">Раніше</string>
+    <string name="late">Пізніше</string>
+    <string name="ontime">Вчасно</string>
+    <string name="previous_departures">Попередні відправлення</string>
+    <string name="no_departures_found">Відправлень не знайдено</string>
+    <string name="load_more">Завантажити ще</string>
+    <string name="arrival">Прибуття</string>
+    <string name="departure">Відправлення</string>
+    <string name="no_headsign">Немає напрямку</string>
+    <string name="directions">Напрямки</string>
+    <string name="vehicles">Транспортні засоби</string>
+    <string name="stops">Зупинки</string>
+    <string name="next_stop">Наступна зупинка</string>
+    <string name="occupancy_status">Заповненість</string>
+    <string name="occupancy_status_empty">Порожньо</string>
+    <string name="occupancy_status_many_seats_available">Багато вільних місць</string>
+    <string name="occupancy_status_few_seats_available">Мало вільних місць</string>
+    <string name="occupancy_status_standing_room_only">Тільки стоячі місця</string>
+    <string name="occupancy_status_crushed_standing_room_only">Тільки стоячі місця (тиснява)</string>
+    <string name="occupancy_status_full">Повністю</string>
+    <string name="occupancy_status_not_accepting_passengers">Пасажирів не приймає</string>
+    <string name="occupancy_status_no_data">Немає даних</string>
+    <string name="occupancy_status_not_boardable">Посадка неможлива</string>
+    <string name="alert_cause_other_cause">Інша причина</string>
+    <string name="alert_cause_technical_problem">Технічна проблема</string>
+    <string name="alert_cause_labour_strike">Страйк</string>
+    <string name="alert_cause_demonstration_street_blockage">Демонстрація</string>
+    <string name="alert_cause_accident">Аварія</string>
+    <string name="alert_cause_holiday">Свято</string>
+    <string name="alert_cause_weather">Погода</string>
+    <string name="alert_cause_maintenance">Технічне обслуговування</string>
+    <string name="alert_cause_construction">Будівництво</string>
+    <string name="alert_cause_police_activity">Діяльність поліції</string>
+    <string name="alert_cause_medical_emergency">Медична надзвичайна ситуація</string>
+    <string name="alert_effect_no_service">Немає обслуговування</string>
+    <string name="alert_effect_reduced_service">Зменшене обслуговування</string>
+    <string name="alert_effect_significant_delays">Значні затримки</string>
+    <string name="alert_effect_detour">Об\u0027їзд</string>
+    <string name="alert_effect_additional_service">Додаткове обслуговування</string>
+    <string name="alert_effect_modified_service">Змінене обслуговування</string>
+    <string name="alert_effect_other_effect">Інший ефект</string>
+    <string name="alert_effect_unknown_effect">Невідомий ефект</string>
+    <string name="alert_effect_stop_moved">Зупинку перенесено</string>
+    <string name="alert_effect_no_effect">Немає ефекту</string>
+    <string name="alert_effect_accessibility_issue">Проблема з доступністю</string>
+    <string name="starting_time">Початок</string>
+    <string name="ending_time">Кінець</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d сповіщення про обслуговування</item>
+        <item quantity="few">%d сповіщення про обслуговування</item>
+        <item quantity="many">%d сповіщень про обслуговування</item>
+        <item quantity="other">%d сповіщень про обслуговування</item>
+    </plurals>
+    <string name="heading_intercity_rail">Залізниця</string>
+    <string name="heading_local_rail">Метро/Трамвай</string>
+    <string name="heading_bus">Автобус</string>
+    <string name="heading_other">Інше</string>
+    <string name="vehicle">Транспортний засіб</string>
+    <string name="delay">Затримка</string>
+    <string name="route">Маршрут</string>
+    <string name="cancelled">Скасовано</string>
+    <string name="deleted">Видалено</string>
+    <string name="heading_more">Більше</string>
+    <string name="update_downloaded">Оновлення щойно завантажено.</string>
+    <string name="restart">Перезапустити</string>
+
+    <string name="settings_datadog_analytics_title">Аналітика Datadog</string>
+    <string name="settings_datadog_analytics_description">Дозволяє інтенсивне, детальне відстеження, щоб допомогти розробникам знаходити та виправляти помилки.</string>
+    <string name="settings_disable_datadog_tracking">Вимкнути відстеження Datadog</string>
+    <string name="settings_enable_datadog_tracking">Увімкнути відстеження Datadog</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Дозволяє базову аналітику щодо використання функцій.</string>
+    <string name="settings_disable_google_analytics">Вимкнути Google Analytics</string>
+    <string name="settings_enable_google_analytics">Увімкнути Google Analytics</string>
+    <string name="settings_test_crash">Тестовий збій</string>
+
+    <string name="block_screen_block_id">Блок: %1$s</string>
+    <string name="block_screen_duration">Тривалість: </string>
+    <string name="block_screen_layover">Перерва: </string>
+    <string name="block_screen_error">Помилка завантаження даних.</string>
+
+    <string name="nearby_departures_no_departures">Немає відправлень.</string>
+
+    <string name="route_screen_to">До: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Помилка: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Сховати попередні зупинки</string>
+    <string name="single_trip_info_screen_show_previous_stops">Показати %1$d попередніх зупинок</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>

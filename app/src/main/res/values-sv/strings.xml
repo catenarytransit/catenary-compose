@@ -1,0 +1,109 @@
+<resources>
+    <string name="app_name">Catenary</string>
+    <string name="platform">Plattform</string>
+    <string name="layers">Lager</string>
+    <string name="occupancy">Beläggning</string>
+    <string name="headsign">Destination</string>
+    <string name="alert_cause_unknown_cause">Okänd orsak</string>
+    <string name="hidepreviousstops">Dölj tidigare hållplatser</string>
+    <string name="settings">Inställningar</string>
+    <string name="trip">Resa</string>
+    <string name="fleet">Flotta</string>
+    <string name="lastupdated">Senast uppdaterad</string>
+    <string name="now">Nu</string>
+    <string name="speed">Hastighet</string>
+    <string name="searchhere">Sök här</string>
+    <string name="early">Tidig</string>
+    <string name="late">Sen</string>
+    <string name="ontime">I tid</string>
+    <string name="previous_departures">Föregående avgångar</string>
+    <string name="no_departures_found">Inga avgångar hittades</string>
+    <string name="load_more">Ladda mer</string>
+    <string name="arrival">Ankomst</string>
+    <string name="departure">Avgång</string>
+    <string name="no_headsign">Ingen destination</string>
+    <string name="directions">Vägbeskrivning</string>
+    <string name="vehicles">Fordon</string>
+    <string name="stops">Hållplatser</string>
+    <string name="next_stop">Nästa hållplats</string>
+    <string name="occupancy_status">Beläggning</string>
+    <string name="occupancy_status_empty">Tom</string>
+    <string name="occupancy_status_many_seats_available">Många lediga platser</string>
+    <string name="occupancy_status_few_seats_available">Få lediga platser</string>
+    <string name="occupancy_status_standing_room_only">Endast ståplatser</string>
+    <string name="occupancy_status_crushed_standing_room_only">Endast ståplatser (trångt)</string>
+    <string name="occupancy_status_full">Full</string>
+    <string name="occupancy_status_not_accepting_passengers">Tar inte emot passagerare</string>
+    <string name="occupancy_status_no_data">Inga data</string>
+    <string name="occupancy_status_not_boardable">Ombordstigning ej möjlig</string>
+    <string name="alert_cause_other_cause">Annan orsak</string>
+    <string name="alert_cause_technical_problem">Tekniskt problem</string>
+    <string name="alert_cause_labour_strike">Strejk</string>
+    <string name="alert_cause_demonstration_street_blockage">Demonstration</string>
+    <string name="alert_cause_accident">Olycka</string>
+    <string name="alert_cause_holiday">Helgdag</string>
+    <string name="alert_cause_weather">Väder</string>
+    <string name="alert_cause_maintenance">Underhåll</string>
+    <string name="alert_cause_construction">Byggnation</string>
+    <string name="alert_cause_police_activity">Polisaktivitet</string>
+    <string name="alert_cause_medical_emergency">Medicinsk nödsituation</string>
+    <string name="alert_effect_no_service">Ingen service</string>
+    <string name="alert_effect_reduced_service">Reducerad service</string>
+    <string name="alert_effect_significant_delays">Betydande förseningar</string>
+    <string name="alert_effect_detour">Omväg</string>
+    <string name="alert_effect_additional_service">Ytterligare service</string>
+    <string name="alert_effect_modified_service">Modifierad service</string>
+    <string name="alert_effect_other_effect">Annan effekt</string>
+    <string name="alert_effect_unknown_effect">Okänd effekt</string>
+    <string name="alert_effect_stop_moved">Hållplats flyttad</string>
+    <string name="alert_effect_no_effect">Ingen effekt</string>
+    <string name="alert_effect_accessibility_issue">Tillgänglighetsproblem</string>
+    <string name="starting_time">Starttid</string>
+    <string name="ending_time">Sluttid</string>
+    <plurals name="service_alerts">
+        <item quantity="one">%d servicemeddelande</item>
+        <item quantity="other">%d servicemeddelanden</item>
+    </plurals>
+    <string name="heading_intercity_rail">Tåg</string>
+    <string name="heading_local_rail">Tunnelbana/Spårvagn</string>
+    <string name="heading_bus">Buss</string>
+    <string name="heading_other">Övrigt</string>
+    <string name="vehicle">Fordon</string>
+    <string name="delay">Försening</string>
+    <string name="route">Linje</string>
+    <string name="cancelled">Inställd</string>
+    <string name="deleted">Raderad</string>
+    <string name="heading_more">Mer</string>
+    <string name="update_downloaded">En uppdatering har precis laddats ner.</string>
+    <string name="restart">Starta om</string>
+
+    <string name="settings_datadog_analytics_title">Datadog Analytics</string>
+    <string name="settings_datadog_analytics_description">Möjliggör intensiv, detaljerad spårning för att hjälpa utvecklare att hitta och åtgärda buggar.</string>
+    <string name="settings_disable_datadog_tracking">Inaktivera Datadog-spårning</string>
+    <string name="settings_enable_datadog_tracking">Aktivera Datadog-spårning</string>
+    <string name="settings_google_analytics_title">Google Analytics</string>
+    <string name="settings_google_analytics_description">Möjliggör grundläggande analys av funktionsanvändning.</string>
+    <string name="settings_disable_google_analytics">Inaktivera Google Analytics</string>
+    <string name="settings_enable_google_analytics">Aktivera Google Analytics</string>
+    <string name="settings_test_crash">Testkrasch</string>
+
+    <string name="block_screen_block_id">Block: %1$s</string>
+    <string name="block_screen_duration">Varaktighet: </string>
+    <string name="block_screen_layover">Väntetid: </string>
+    <string name="block_screen_error">Fel vid inläsning av data.</string>
+
+    <string name="nearby_departures_no_departures">Inga avgångar.</string>
+
+    <string name="route_screen_to">Till: %1$s</string>
+
+    <string name="single_trip_info_screen_error">Fel: %1$s</string>
+    <string name="single_trip_info_screen_hide_previous_stops">Dölj tidigare hållplatser</string>
+    <string name="single_trip_info_screen_show_previous_stops">Visa %1$d tidigare hållplatser</string>
+
+    <string name="stop_screen_label">%1$s: </string>
+
+    <string name="vehicle_info_loading">...</string>
+    <string name="vehicle_info_model"> %1$s</string>
+    <string name="vehicle_info_years"> %1$s</string>
+    <string name="vehicle_info_engine"> %1$s</string>
+</resources>
