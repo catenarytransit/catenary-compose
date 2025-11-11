@@ -1,20 +1,11 @@
 package com.catenarymaps.catenary
 
-import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CenterFocusStrong
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PinDrop
 import androidx.compose.material.icons.filled.RssFeed
@@ -31,16 +22,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.lang.Integer.min
 import java.util.Locale
 import kotlin.math.*
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.ResponseBody
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -57,15 +44,12 @@ import androidx.compose.ui.text.style.TextDecoration
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import com.google.android.gms.analytics.GoogleAnalytics
-import com.google.android.gms.analytics.HitBuilders
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.*
 
 /* -------------------------------------------------------------------------- */
@@ -310,10 +294,10 @@ fun NearbyDepartures(
     onTripClick: (TripClickResponse) -> Unit = {},
     onRouteClick: (chateauId: String, routeId: String) -> Unit = { _, _ -> }
 ) {
-    val context = LocalContext.current
+    val applicationContext = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
         try {
-            val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
+            val firebaseAnalytics = FirebaseAnalytics.getInstance(applicationContext)
             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, "NearbyDeparturesScreen")
                 //param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
