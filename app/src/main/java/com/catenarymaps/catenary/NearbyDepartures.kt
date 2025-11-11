@@ -45,6 +45,7 @@ import okhttp3.ResponseBody
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.NearMe
@@ -487,13 +488,10 @@ fun NearbyDepartures(
 
         FilterRow(filters = filters, onChange = { filters = it })
 
-        val listScroll = rememberScrollState()
         Box(Modifier.fillMaxSize()) {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(listScroll)
-                    //.windowInsetsBottomHeight(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current)))
                     .windowInsetsPadding(
                         WindowInsets(
                             bottom = WindowInsets.safeDrawing.getBottom(
@@ -503,14 +501,15 @@ fun NearbyDepartures(
                     ),
             ) {
                 if (sorted.isEmpty() && firstLoadComplete && !loading) {
-                    Spacer(Modifier.height(16.dp))
-                    Text("No departures.", style = MaterialTheme.typography.bodyMedium)
-                } else {
-                    sorted.forEach { route ->
-                        RouteGroupCard(route, stopsTable, darkMode, onTripClick, onRouteClick)
+                    item {
+                        Spacer(Modifier.height(16.dp))
+                        Text("No departures.", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-                Spacer(Modifier.height(64.dp))
+                items(sorted, key = { it.chateauId + it.routeId }) { route ->
+                    RouteGroupCard(route, stopsTable, darkMode, onTripClick, onRouteClick)
+                }
+
             }
         }
     }
