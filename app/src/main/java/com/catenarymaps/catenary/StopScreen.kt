@@ -64,6 +64,7 @@ import java.time.format.FormatStyle
 import java.util.Locale
 import kotlin.math.abs
 import androidx.compose.ui.platform.LocalConfiguration
+import kotlinx.serialization.json.JsonObject
 
 // --- Paging controls ---
 private const val OVERLAP_SECONDS = 5 * 60 // 5 min
@@ -356,9 +357,11 @@ fun StopScreen(
         // Set stop pin
         val stopFeature = Feature(
             Point(Position(primary.stop_lon, primary.stop_lat)),
-            properties = mapOf(
-                "label" to JsonPrimitive(primary.stop_name),
-                "stop_route_type" to JsonPrimitive(0)
+            properties = JsonObject(
+                mapOf(
+                    "label" to JsonPrimitive(primary.stop_name),
+                    "stop_route_type" to JsonPrimitive(0)
+                )
             ) // Use 0 for "other" style
         )
         stopsContextSource.value.setData(GeoJsonData.Features(FeatureCollection(listOf(stopFeature))))
@@ -372,7 +375,7 @@ fun StopScreen(
         onSetStopsToHide(emptySet()) // Clear stop hiding
 
         // Build and set shape lines for this stop
-        val features = mutableListOf<Feature<LineString, Map<String, JsonElement>>>()
+        val features = mutableListOf<Feature<LineString, JsonObject>>()
         meta.routes.forEach { (chateauId, routes) ->
             routes.forEach { (routeId, route) ->
                 route.shapes_list?.forEach { shapeId ->
@@ -384,7 +387,7 @@ fun StopScreen(
                             features.add(
                                 Feature(
                                     lineString,
-                                    properties = mapOf("color" to JsonPrimitive(route.color))
+                                    properties = JsonObject(mapOf("color" to JsonPrimitive(route.color)))
                                 )
                             )
                         } catch (e: Exception) {
