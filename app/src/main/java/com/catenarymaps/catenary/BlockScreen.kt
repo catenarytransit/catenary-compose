@@ -32,10 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -117,6 +120,22 @@ fun BlockScreen(
 ) {
     val blockData by viewModel.blockData.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        try {
+            val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+                param(FirebaseAnalytics.Param.SCREEN_NAME, "BlockScreen")
+                //param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
+                param("chateau_id", chateau)
+                param("block_id", blockId)
+            }
+        } catch (e: Exception) {
+            // Log the error or handle it gracefully
+            android.util.Log.e("GA", "Failed to log screen view", e)
+        }
+    }
 
     var currentTime by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
 

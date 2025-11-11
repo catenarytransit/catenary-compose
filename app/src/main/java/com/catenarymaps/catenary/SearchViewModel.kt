@@ -1,8 +1,11 @@
 // SearchViewModel.kt
 package com.catenarymaps.catenary
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import org.maplibre.spatialk.geojson.Position
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -68,7 +71,8 @@ class SearchViewModel : ViewModel() {
     fun onSearchQueryChanged(
         query: String,
         userLocation: Pair<Double, Double>?,
-        mapCenter: Position
+        mapCenter: Position,
+        context: Context
     ) {
         searchJob?.cancel() // Cancel previous job
         if (query.isBlank()) {
@@ -80,7 +84,7 @@ class SearchViewModel : ViewModel() {
 
         searchJob = viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
-            delay(300) // Debounce for 300ms
+            delay(200) // Debounce for 200ms
 
             try {
                 // --- Catenary Search API (Ktor) ---
@@ -97,6 +101,11 @@ class SearchViewModel : ViewModel() {
                     } catch (e: Exception) {
                         e.printStackTrace()
                         _catenaryResults.value = null // Clear on error
+                    }
+
+                    val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
+                    firebaseAnalytics.logEvent("search_bar_type") {
+                        param("text", query)
                     }
                 }
 

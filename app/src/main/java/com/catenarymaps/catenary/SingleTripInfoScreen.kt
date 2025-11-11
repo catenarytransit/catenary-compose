@@ -95,6 +95,8 @@ fun SingleTripInfoScreen(
             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, "SingleTripInfoScreen")
                 //param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
+                param("chateau_id", tripSelected.chateau_id)
+                param("trip_id", tripSelected.trip_id.toString())
             }
         } catch (e: Exception) {
             // Log the error or handle it gracefully
@@ -120,6 +122,22 @@ fun SingleTripInfoScreen(
     LaunchedEffect(tripData) {
         val data = tripData
         if (data != null) {
+            try {
+                val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
+                val routeName = (data.route_short_name ?: "") + (data.route_long_name ?: "")
+
+                firebaseAnalytics.logEvent("view_trip_details") {
+                    param("route_name", routeName)
+                    param("trip_id", tripSelected.trip_id.toString())
+                    param("chateau_id", tripSelected.chateau_id)
+                    if (data.route_id != null) {
+                        param("route_id", data.route_id)
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("GA", "Failed to log trip details view", e)
+            }
+
             // Update trip shape
             if (data.shape_polyline != null) {
                 val coordinates =

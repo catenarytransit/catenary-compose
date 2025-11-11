@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +52,8 @@ import com.google.android.gms.maps.model.Polyline
 import org.maplibre.spatialk.geojson.Feature
 import com.catenarymaps.catenary.Alert
 import com.catenarymaps.catenary.AlertsBox
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Point
@@ -139,6 +142,22 @@ fun RouteScreen(
     var error by remember { mutableStateOf<String?>(null) }
 
     // Fetch static route info once
+
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        try {
+            val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+                param(FirebaseAnalytics.Param.SCREEN_NAME, "RouteScreen")
+                //param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
+                param("chateau_id", screenData.chateau_id)
+                param("route_id", screenData.route_id)
+            }
+        } catch (e: Exception) {
+            // Log the error or handle it gracefully
+            android.util.Log.e("GA", "Failed to log screen view", e)
+        }
+    }
     LaunchedEffect(screenData) {
         try {
             val url =
@@ -150,6 +169,15 @@ fun RouteScreen(
                 }"
             val response: RouteInfoResponse = ktorClient.get(url).body()
             routeInfo = response
+
+            val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
+            firebaseAnalytics.logEvent("view_route") {
+                param("route_name", response.short_name ?: response.long_name ?: "Unknown")
+                param("route_id", screenData.route_id)
+                param("agency_name", response.agency_name)
+                param("chateau", screenData.chateau_id)
+            }
+
             // Set initial active pattern
             if (response.direction_patterns.isNotEmpty()) {
                 activePatternId = response.direction_patterns.keys.first()

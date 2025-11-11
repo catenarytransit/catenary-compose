@@ -830,6 +830,8 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
+            val context = LocalContext.current
+
             // --- Moved from onCreate ---
             // The state that will hold our layer settings. Initialize with loaded or default.
             val layerSettings = remember { mutableStateOf(initialLayerSettings) }
@@ -2319,7 +2321,8 @@ class MainActivity : ComponentActivity() {
                                         searchViewModel.onSearchQueryChanged(
                                             query = newQuery,
                                             userLocation = currentLocation,
-                                            mapCenter = camera.position.target
+                                            mapCenter = camera.position.target,
+                                            context = context
                                         )
                                     },
                                     onFocusChange = { isFocused -> isSearchFocused = isFocused },
