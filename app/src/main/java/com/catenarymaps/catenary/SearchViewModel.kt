@@ -3,7 +3,7 @@ package com.catenarymaps.catenary
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.Position
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android

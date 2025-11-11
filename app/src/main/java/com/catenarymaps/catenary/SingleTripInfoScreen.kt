@@ -23,15 +23,15 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.catenarymaps.catenary.ui.components.RouteHeading
-import io.github.dellisd.spatialk.geojson.FeatureCollection
-import io.github.dellisd.spatialk.geojson.LineString
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.FeatureCollection
+import org.maplibre.spatialk.geojson.LineString
+import org.maplibre.spatialk.geojson.Position
 import kotlinx.serialization.json.JsonElement
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.GeoJsonSource
 import com.google.maps.android.PolyUtil.decode as decodePolyutil
-import io.github.dellisd.spatialk.geojson.Feature
-import io.github.dellisd.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.Point
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import androidx.compose.ui.graphics.Brush
@@ -143,7 +143,9 @@ fun SingleTripInfoScreen(
                     )
                 )
             } else {
-                transitShapeSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
+                transitShapeSource.value.setData(
+                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>()))
+                )
             }
 
             // Update detour shape
@@ -169,11 +171,7 @@ fun SingleTripInfoScreen(
                 )
             } else {
                 transitShapeDetourSource.value.setData(
-                    GeoJsonData.Features(
-                        FeatureCollection(
-                            emptyList()
-                        )
-                    )
+                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>()))
                 )
             }
         }
@@ -212,10 +210,10 @@ fun SingleTripInfoScreen(
         onDispose {
             onSetStopsToHide(emptySet())
             // Clear context layers
-            transitShapeSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
-            transitShapeDetourSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
-            stopsContextSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
-            majorDotsSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
+            transitShapeSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())))
+            transitShapeDetourSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())))
+            stopsContextSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())))
+            majorDotsSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())))
         }
     }
 

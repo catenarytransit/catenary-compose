@@ -268,16 +268,18 @@ private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
 
                 Log.d(NEARBY_TAG, "Body length: ${rawBody.length} chars")
 
-                try {
-                    val parsed = json.decodeFromString(NearbyResponse.serializer(), rawBody)
-                    Log.d(
-                        NEARBY_TAG,
-                        "Decoded OK: departures=${parsed.departures.size}, stops chateaus=${parsed.stop.keys.size}, serverMs=${parsed.debug?.totalTimeMs}"
-                    )
-                    parsed
-                } catch (se: SerializationException) {
-                    logSerializationError(se, rawBody)
-                    null
+                withContext(Dispatchers.Default) {
+                    try {
+                        val parsed = json.decodeFromString(NearbyResponse.serializer(), rawBody)
+                        Log.d(
+                            NEARBY_TAG,
+                            "Decoded OK: departures=${parsed.departures.size}, stops chateaus=${parsed.stop.keys.size}, serverMs=${parsed.debug?.totalTimeMs}"
+                        )
+                        parsed
+                    } catch (se: SerializationException) {
+                        logSerializationError(se, rawBody)
+                        null
+                    }
                 }
             }
         } catch (t: Throwable) {
@@ -408,28 +410,32 @@ fun NearbyDepartures(
         }
     }
 
-    val sorted = remember(filtered, sortMode, lockedOrigin, stopsTable) {
-        when (sortMode) {
-            SortMode.ALPHA -> filtered.sortedWith(
-                compareBy(
-                    { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) },
-                    { it.routeId }
-                )
-            )
+    var sorted by remember { mutableStateOf<List<RouteGroup>>(emptyList()) }
 
-            SortMode.DISTANCE -> filtered.sortedWith(
-                compareBy(
-                    {
-                        val o = lockedOrigin
-                        if (o == null) Double.POSITIVE_INFINITY
-                        else tryDistanceForRouteGroup(it, o, stopsTable)
-                    },
-                    { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) }
+    LaunchedEffect(filtered, sortMode, lockedOrigin, stopsTable) {
+        withContext(Dispatchers.Default) {
+            val result = when (sortMode) {
+                SortMode.ALPHA -> filtered.sortedWith(
+                    compareBy(
+                        { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) },
+                        { it.routeId }
+                    )
                 )
-            )
+
+                SortMode.DISTANCE -> filtered.sortedWith(
+                    compareBy(
+                        {
+                            val o = lockedOrigin
+                            if (o == null) Double.POSITIVE_INFINITY
+                            else tryDistanceForRouteGroup(it, o, stopsTable)
+                        },
+                        { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) }
+                    )
+                )
+            }
+            sorted = result
         }
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()

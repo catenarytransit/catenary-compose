@@ -1,9 +1,9 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.runtime.MutableState
-import io.github.dellisd.spatialk.geojson.Feature
-import io.github.dellisd.spatialk.geojson.Point
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.Position
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.lang.Math.abs
 import kotlin.math.absoluteValue
@@ -250,7 +251,7 @@ suspend fun rerenderCategoryLiveDots(
     usUnits: Boolean,
     vehicleLocationsV2: Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>,
     routeCache: Map<String, Map<String, RouteCacheEntry>>
-): List<Feature> = withContext(Dispatchers.Default) {
+): List<Feature<Point, Map<String, JsonElement>>> = withContext(Dispatchers.Default) {
     val categoryLocations = vehicleLocationsV2[category] ?: return@withContext emptyList()
 
     val featureJobs = categoryLocations.map { (chateauId, gridData) ->
@@ -425,14 +426,14 @@ suspend fun rerenderCategoryLiveDots(
 
                 //println("hashcode = ${"$chateauId:$rtId".hashCode().absoluteValue}")
 
-                put("id", JsonPrimitive("$chateauId:$rtId".hashCode().absoluteValue))
+                put("id", JsonPrimitive("$chateauId:$rtId".hashCode().absoluteValue.toString()))
             }
 
             val point = Point(Position(lon, lat))
             // This will now work correctly
             //val featureId = "${category}:${chateauId}:${rtId}"
             Feature(
-                id = "$chateauId:$rtId".hashCode().absoluteValue.toString(),
+                id = JsonPrimitive("$chateauId:$rtId".hashCode().absoluteValue.toString()),
                 geometry = point,
                 properties = properties
             )

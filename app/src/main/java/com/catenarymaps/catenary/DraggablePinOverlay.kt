@@ -16,11 +16,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
+import org.maplibre.spatialk.geojson.Feature
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import io.github.dellisd.spatialk.geojson.FeatureCollection
-import io.github.dellisd.spatialk.geojson.Point
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.FeatureCollection
+import org.maplibre.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.Position
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.image
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import org.maplibre.compose.sources.GeoJsonOptions
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import kotlin.collections.emptyList
 
 data class PinState(
     val active: Boolean = false, val position: Position? = null
@@ -46,7 +48,7 @@ fun DraggablePinLayers(pin: PinState) {
     val pinSource = remember {
         GeoJsonSource(
             id = "pin",
-            data = GeoJsonData.Features(FeatureCollection(emptyList())),
+            data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
             GeoJsonOptions()
         )
     }

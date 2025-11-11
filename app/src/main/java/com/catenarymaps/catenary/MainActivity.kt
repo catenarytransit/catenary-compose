@@ -68,7 +68,7 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.Position
 import kotlin.math.roundToInt
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
@@ -118,7 +118,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.zIndex
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import io.github.dellisd.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.Point
 import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.value.ColorValue
 import org.maplibre.compose.expressions.dsl.plus
@@ -128,7 +128,7 @@ import org.maplibre.compose.map.RenderOptions
 import android.content.SharedPreferences
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateTo
-import io.github.dellisd.spatialk.geojson.FeatureCollection
+import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.compose.sources.GeoJsonSource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
@@ -218,6 +218,11 @@ import okhttp3.OkHttpClient
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import org.json.JSONObject
+import org.maplibre.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.LineString
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
     return try {
@@ -510,7 +515,7 @@ private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {
     )
 
     val names = features.map { f ->
-        f.properties["chateau"]?.toString()?.trimStart('"')?.trimEnd('"') ?: "Unknown"
+        f.properties?.get("chateau")?.toString()?.trimStart('"')?.trimEnd('"') ?: "Unknown"
     }
     visibleChateaus = names
     Log.d(TAG, "Visible chateaus (${names.size}): ${names.joinToString(limit = 100)}")
@@ -1410,87 +1415,85 @@ class MainActivity : ComponentActivity() {
 
 
                         }) {
-                        val busDotsSrc = remember {
-                            mutableStateOf<GeoJsonSource>(
+                        val busDotsSrc: MutableState<GeoJsonSource> = remember {
+                            mutableStateOf(
                                 GeoJsonSource(
                                     "bus_dots",
-                                    GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
                         }
 
-                        val metroDotsSrc = remember {
-                            mutableStateOf<GeoJsonSource>(
+                        val metroDotsSrc: MutableState<GeoJsonSource> = remember {
+                            mutableStateOf(
                                 GeoJsonSource(
                                     "metro_dots",
-                                    GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
                         }
-                        val railDotsSrc = remember {
-                            mutableStateOf<GeoJsonSource>(
+                        val railDotsSrc: MutableState<GeoJsonSource> = remember {
+                            mutableStateOf(
                                 GeoJsonSource(
                                     "rail_dots",
-                                    GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
                         }
-                        val otherDotsSrc = remember {
-                            mutableStateOf<GeoJsonSource>(
+                        val otherDotsSrc: MutableState<GeoJsonSource> = remember {
+                            mutableStateOf(
                                 GeoJsonSource(
                                     "other_dots",
-                                    GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
                         }
 
-                        val transitShapeSource = remember {
+                        val transitShapeSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
                                 GeoJsonSource(
                                     id = "transit_shape_context",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
                         }
-                        val transitShapeDetourSource = remember {
+                        val transitShapeDetourSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
                                 GeoJsonSource(
                                     id = "transit_shape_context_detour",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
                         }
-
-                        val transitShapeForStopSource = remember {
+                        val transitShapeForStopSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
                                 GeoJsonSource(
                                     id = "transit_shape_context_for_stop",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
                         }
-                        val stopsContextSource = remember {
+                        val stopsContextSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
                                 GeoJsonSource(
                                     id = "stops_context",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
                         }
-
-                        val majorDotsSource = remember {
+                        val majorDotsSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
                                 GeoJsonSource(
                                     id = "majordots_context",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList())),
+                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
                                     GeoJsonOptions()
                                 )
                             )
@@ -2862,21 +2865,25 @@ class MainActivity : ComponentActivity() {
     }
 
     // Helper to get string property from spatialk.geojson.Feature
-    private fun io.github.dellisd.spatialk.geojson.Feature.getString(key: String): String? {
+    private fun org.maplibre.spatialk.geojson.Feature<*, JsonObject?>.getString(key: String): String? {
         // Check for null primitive or string "null"
-        return this.properties[key]?.jsonPrimitive?.content?.takeIf { it != "null" }
+        return this.properties?.get(key)?.jsonPrimitive?.content?.takeIf { it != "null" }
     }
 
     // Helper to get int property from spatialk.geojson.Feature
-    private fun io.github.dellisd.spatialk.geojson.Feature.getInt(key: String): Int? {
+    private fun org.maplibre.spatialk.geojson.Feature<*, JsonObject?>.getInt(key: String): Int? {
         // Properties are often stored as doubles, so get double and convert to Int
-        return this.properties[key]?.jsonPrimitive?.double?.toInt()
+        return this.properties?.get(key)?.jsonPrimitive?.double?.toInt()
     }
 
     /**
      * Processes a list of clicked features known to be VEHICLES.
      */
-    private fun processVehicleClicks(features: List<io.github.dellisd.spatialk.geojson.Feature>): List<MapSelectionOption> {
+    private fun processVehicleClicks(
+        features: List<org.maplibre.spatialk.geojson.Feature<
+                *, JsonObject?
+                >>
+    ): List<MapSelectionOption> {
         val selectedVehiclesKeyUnique = mutableSetOf<String>()
 
         return features.mapNotNull { f ->
@@ -2891,11 +2898,11 @@ class MainActivity : ComponentActivity() {
                         vehicle_id = f.getString("vehicleIdLabel"),
                         route_id = f.getString("routeId"),
                         headsign = f.getString("headsign") ?: "",
-                        triplabel = f.getString("tripIdLabel") ?: "",
+                        triplabel = f.getString("tripIdLabel"),
                         colour = f.getString("color") ?: "#FFFFFF",
                         route_short_name = f.getString("route_short_name"),
                         route_long_name = f.getString("route_long_name"),
-                        route_type = f.getInt("routeType") ?: 0,
+                        route_type = f.getString("routeType")?.toIntOrNull() ?: 3,
                         trip_short_name = f.getString("trip_short_name"),
                         text_colour = f.getString("text_color") ?: "#000000",
                         gtfs_id = f.getString("rt_id") ?: "", // JS maps rt_id to gtfs_id
@@ -2917,7 +2924,11 @@ class MainActivity : ComponentActivity() {
     /**
      * Processes a list of clicked features known to be ROUTES.
      */
-    private fun processRouteClicks(features: List<io.github.dellisd.spatialk.geojson.Feature>): List<MapSelectionOption> {
+    private fun processRouteClicks(
+        features: List<org.maplibre.spatialk.geojson.Feature<*,
+                JsonObject?
+                >>
+    ): List<MapSelectionOption> {
         val selectedRoutesKeyUnique = mutableSetOf<String>()
 
         return features.mapNotNull { f ->
@@ -2951,7 +2962,7 @@ class MainActivity : ComponentActivity() {
     /**
      * Processes a list of clicked features known to be STOPS.
      */
-    private fun processStopClicks(features: List<io.github.dellisd.spatialk.geojson.Feature>): List<MapSelectionOption> {
+    private fun processStopClicks(features: List<org.maplibre.spatialk.geojson.Feature<*, JsonObject?>>): List<MapSelectionOption> {
         val selectedStopsKeyUnique = mutableSetOf<String>()
 
         return features.mapNotNull { f ->
@@ -2977,6 +2988,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 @Composable
 fun LayerTabs(

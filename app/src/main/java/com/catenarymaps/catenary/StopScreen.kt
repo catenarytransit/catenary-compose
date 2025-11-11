@@ -42,11 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.datadog.android.core.internal.utils.JsonSerializer.safeMapValuesToJson
 import com.google.maps.android.PolyUtil.decode
-import io.github.dellisd.spatialk.geojson.Feature
-import io.github.dellisd.spatialk.geojson.FeatureCollection
-import io.github.dellisd.spatialk.geojson.Point
-import io.github.dellisd.spatialk.geojson.LineString
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.FeatureCollection
+import org.maplibre.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.LineString
+import org.maplibre.spatialk.geojson.Position
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.delay
@@ -364,11 +364,15 @@ fun StopScreen(
         stopsContextSource.value.setData(GeoJsonData.Features(FeatureCollection(listOf(stopFeature))))
 
         // Clear other context lines
-        transitShapeSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
+        transitShapeSource.value.setData(
+            GeoJsonData.Features(
+                FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
+            )
+        )
         onSetStopsToHide(emptySet()) // Clear stop hiding
 
         // Build and set shape lines for this stop
-        val features = mutableListOf<Feature>()
+        val features = mutableListOf<Feature<LineString, Map<String, JsonElement>>>()
         meta.routes.forEach { (chateauId, routes) ->
             routes.forEach { (routeId, route) ->
                 route.shapes_list?.forEach { shapeId ->
@@ -396,8 +400,14 @@ fun StopScreen(
     // Cleanup map on exit
     DisposableEffect(Unit) {
         onDispose {
-            transitShapeForStopSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
-            stopsContextSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
+            transitShapeForStopSource.value.setData(
+                GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>()))
+            )
+            stopsContextSource.value.setData(
+                GeoJsonData.Features(
+                    FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
+                )
+            )
         }
     }
 

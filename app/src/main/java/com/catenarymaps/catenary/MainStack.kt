@@ -80,7 +80,7 @@ sealed interface MapSelectionSelector {
         val vehicle_id: String?,
         val route_id: String?,
         val headsign: String,
-        val triplabel: String,
+        val triplabel: String?,
         val colour: String,
         val route_short_name: String?,
         val route_long_name: String?,

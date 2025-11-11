@@ -48,13 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.catenarymaps.catenary.ui.components.RouteHeading
 import com.google.android.gms.maps.model.Polyline
-import io.github.dellisd.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.Feature
 import com.catenarymaps.catenary.Alert
 import com.catenarymaps.catenary.AlertsBox
-import io.github.dellisd.spatialk.geojson.FeatureCollection
-import io.github.dellisd.spatialk.geojson.LineString
-import io.github.dellisd.spatialk.geojson.Point
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.FeatureCollection
+import org.maplibre.spatialk.geojson.LineString
+import org.maplibre.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.Position
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.delay
@@ -65,6 +65,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.GeoJsonSource
+import kotlin.collections.emptyList
 
 @Serializable
 data class RouteInfoStop(
@@ -201,7 +202,9 @@ fun RouteScreen(
             )
             transitShapeSource.value.setData(GeoJsonData.Features(FeatureCollection(listOf(feature))))
         } else {
-            transitShapeSource.value.setData(GeoJsonData.Features(FeatureCollection(emptyList())))
+            transitShapeSource.value.setData(
+                GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>()))
+            )
         }
 
         // 2. Update stops on map

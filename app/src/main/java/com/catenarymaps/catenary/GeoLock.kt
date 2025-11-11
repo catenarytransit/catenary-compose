@@ -2,7 +2,7 @@ package com.catenarymaps.catenary
 
 import androidx.compose.runtime.*
 import org.maplibre.compose.camera.CameraState
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.Position
 
 /**
  * Controller you can hand to any component so they can:
