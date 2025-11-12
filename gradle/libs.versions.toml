@@ -4,6 +4,7 @@ androidMapsUtils = "3.19.1"
 androidSdk = "12.0.1"
 appcompat = "1.7.1"
 appUpdate = "2.1.0"
+coreSplashscreen = "1.2.0"
 ddSdkAndroidGradlePlugin = "1.21.0"
 ddSdkAndroidRum = "3.2.0"
 ddSdkAndroidRumVersion = "3.2.0"
@@ -42,6 +43,7 @@ android-sdk-v1201 = { module = "org.maplibre.gl:android-sdk", version.ref = "map
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
 app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdate" }

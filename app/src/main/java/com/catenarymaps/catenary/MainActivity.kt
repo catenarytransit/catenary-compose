@@ -223,6 +223,7 @@ import kotlinx.serialization.json.JsonObject
 import org.json.JSONObject
 import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.LineString
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
     return try {
@@ -693,6 +694,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

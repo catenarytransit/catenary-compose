@@ -464,10 +464,10 @@ fun NearbyDepartures(
             LinearProgressIndicator(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp)
+                    .padding(top = 4.dp)
             )
         } else {
-            Spacer(Modifier.height(8.dp))
+            //Spacer(Modifier.height(8.dp))
         }
 
         FilterRow(filters = filters, onChange = { filters = it })
@@ -486,7 +486,7 @@ fun NearbyDepartures(
             ) {
                 if (sorted.isEmpty() && firstLoadComplete && !loading) {
                     item {
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(8.dp))
                         Text(stringResource(id = R.string.nearby_departures_no_departures), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
@@ -517,7 +517,7 @@ private fun TopRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(top = 4.dp),
+            .padding(top = 0.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -618,7 +618,7 @@ private fun FilterRow(
     filters: Filters,
     onChange: (Filters) -> Unit
 ) {
-    Spacer(Modifier.height(2.dp))
+    //Spacer(Modifier.height(2.dp))
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -643,7 +643,7 @@ private fun FilterRow(
             )
         }
     }
-    Spacer(Modifier.height(2.dp))
+    Spacer(Modifier.height(0.dp))
 }
 
 @Composable
@@ -677,7 +677,7 @@ private fun RouteGroupCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(bg)
             .padding(8.dp)
