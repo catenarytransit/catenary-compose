@@ -122,7 +122,7 @@ suspend fun processRealtimeDataV2(
                         5 -> bounds.level5
                         7 -> bounds.level7
                         8 -> bounds.level8
-                        10 -> bounds.level10
+                        12 -> bounds.level12
                         else -> null
                     }
 

@@ -35,7 +35,7 @@ data class BoundsInput(
     val level5: BoundsInputPerLevel,
     val level7: BoundsInputPerLevel,
     val level8: BoundsInputPerLevel,
-    val level10: BoundsInputPerLevel
+    val level12: BoundsInputPerLevel
 )
 
 @Serializable
@@ -126,7 +126,7 @@ fun getTileBoundaries(camera: CameraState, zoom: Int): TileBbox? {
 }
 
 fun boundsInputCalculate(camera: CameraState): BoundsInput {
-    val levels = listOf(5, 7, 8, 10)
+    val levels = listOf(5, 7, 8, 12)
     val boundsInputMap = mutableMapOf<Int, BoundsInputPerLevel>()
 
     val currentZoom = camera.position.zoom
@@ -135,7 +135,11 @@ fun boundsInputCalculate(camera: CameraState): BoundsInput {
         val boundaries = getTileBoundaries(camera, zoom)
         if (boundaries != null) {
             val maxTiles = (Math.pow(2.0, zoom.toDouble()) - 1).toInt()
-            val padding = if (currentZoom > 10) 0 else 2
+
+            val padding = when (zoom) {
+                12 -> if (currentZoom > 11) 0 else 1
+                else -> if (currentZoom > 9) 0 else 1
+            }
 
             boundsInputMap[zoom] = BoundsInputPerLevel(
                 min_x = max(0, boundaries.west - padding),
@@ -153,7 +157,7 @@ fun boundsInputCalculate(camera: CameraState): BoundsInput {
         level5 = boundsInputMap[5]!!,
         level7 = boundsInputMap[7]!!,
         level8 = boundsInputMap[8]!!,
-        level10 = boundsInputMap[10]!!
+        level12 = boundsInputMap[12]!!
     )
 }
 
@@ -252,7 +256,7 @@ fun fetchRealtimeData(
 
             try {
                 val rawresponse: String =
-                    ktorClient.post("https://birch.catenarymaps.org/bulk_realtime_fetch_v2") {
+                    ktorClient.post("https://birch.catenarymaps.org/bulk_realtime_fetch_v3") {
                         contentType(ContentType.Application.Json)
                         setBody(requestBody)
                     }.body()
