@@ -239,11 +239,11 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-10).dp),
-                10.0 to offset(0.dp, (-8).dp),
-                12.0 to offset(0.dp, (-7).dp),
-                13.0 to offset(0.dp, (-6).dp),
-                15.0 to offset(0.dp, (-5).dp)
+                9.0 to offset(0.dp, (-6).dp),
+                10.0 to offset(0.dp, (-5).dp),
+                12.0 to offset(0.dp, (-4).dp),
+                13.0 to offset(0.dp, (-4).dp),
+                15.0 to offset(0.dp, (-4).dp)
             )
             bearingShellOpacity = interpolate(
                 linear(),
@@ -313,26 +313,26 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
             bearingIconSize = interpolate(
                 type = linear(),
                 input = zoom(),
-                4.0 to const(0.4f),
-                6.0 to const(0.5f),
-                8.0 to const(0.55f),
-                9.0 to const(0.6f),
-                11.0 to const(0.7f),
-                12.0 to const(0.8f),
-                15.0 to const(0.9f)
+                4.0 to const(0.3f),
+                6.0 to const(0.4f),
+                8.0 to const(0.45f),
+                9.0 to const(0.5f),
+                11.0 to const(0.6f),
+                12.0 to const(0.7f),
+                15.0 to const(0.8f)
             )
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-10).dp),
-                10.0 to offset(0.dp, (-8).dp),
-                12.0 to offset(0.dp, (-7).dp),
-                13.0 to offset(0.dp, (-6).dp),
-                15.0 to offset(0.dp, (-5).dp)
+                9.0 to offset(0.dp, (-6).dp),
+                10.0 to offset(0.dp, (-5).dp),
+                12.0 to offset(0.dp, (-4).dp),
+                13.0 to offset(0.dp, (-3).dp),
+                15.0 to offset(0.dp, (-2).dp)
             )
             bearingShellOpacity =
                 interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
-            bearingFilledOpacity = const(1.0f)
+            bearingFilledOpacity = const(0.8f)
             labelTextSize = interpolate(
                 type = linear(),
                 input = zoom(),

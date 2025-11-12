@@ -205,6 +205,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -1424,9 +1425,21 @@ class MainActivity : ComponentActivity() {
 
                                     println("current ${pos.target.latitude} ${pos.target.longitude} last set ${geoLock.getInternalPos()?.latitude} ${geoLock.getInternalPos()?.longitude}")
 
-                                    if (pos.target.latitude != geoLock.getInternalPos()?.latitude || pos.target.longitude != geoLock.getInternalPos()?.longitude) {
-
-                                        geoLock.deactivate()
+                                    // Compare floating point numbers with a small tolerance (epsilon)
+                                    // to avoid deactivating the lock from tiny precision differences.
+                                    val epsilon = 1e-6
+                                    val internalPos = geoLock.getInternalPos()
+                                    val currentLoc = currentLocation
+                                    if (internalPos == null || kotlin.math.abs(pos.target.latitude - internalPos.latitude) > epsilon || kotlin.math.abs(
+                                            pos.target.longitude - internalPos.longitude
+                                        ) > epsilon
+                                    ) {
+                                        if (currentLoc == null || kotlin.math.abs(pos.target.latitude - currentLoc.first) > epsilon || kotlin.math.abs(
+                                                pos.target.longitude - currentLoc.second
+                                            ) > epsilon
+                                        ) {
+                                            geoLock.deactivate()
+                                        }
                                     }
                                 }
 
@@ -2023,9 +2036,7 @@ class MainActivity : ComponentActivity() {
                                     12 to const(6.dp),
                                     15 to const(8.dp)
                                 ),
-                                color = if (isSystemInDarkTheme()) const(Color(0xFF4CC9F0)) else const(
-                                    Color(0xFF1D4ED8)
-                                ),
+                                color = const(Color(0xFF1D4ED8)),
                                 strokeColor = const(Color.White),
                                 strokeWidth = const(2.dp),
                                 minZoom = 0f,
@@ -2040,9 +2051,6 @@ class MainActivity : ComponentActivity() {
 
 
                     }
-
-
-
 
                     DraggablePinOverlay(
                         camera = camera,
@@ -2374,7 +2382,7 @@ class MainActivity : ComponentActivity() {
                             .align(Alignment.TopEnd)
                             .windowInsetsPadding(WindowInsets.safeDrawing)
                             .padding(
-                                top = if (contentWidthFraction == 1.0f) 72.dp else 16.dp,
+                                top = if (contentWidthFraction == 1.0f) 64.dp else 16.dp,
                                 end = 16.dp
                             )
                             .zIndex(3f) // keep above map
@@ -2390,6 +2398,43 @@ class MainActivity : ComponentActivity() {
                                 Icons.Filled.Layers,
                                 contentDescription = "Toggle Layers",
                                 Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    //Compass Screen
+                    AnimatedVisibility(
+                        visible = !(sheetIsExpanded && contentWidthFraction == 1f) && !(isSearchFocused && contentWidthFraction == 1f),
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .padding(
+                                top = if (contentWidthFraction == 1.0f) 110.dp else 64.dp,
+                                end = 16.dp
+                            )
+                            .zIndex(3f) // keep above map
+                    ) {
+                        FloatingActionButton(
+                            onClick = {
+                                scope.launch {
+                                    camera.animateTo(
+                                        camera.position.copy(
+                                            bearing = 0.0
+                                        )
+                                    )
+                                }
+                            },
+                            modifier = Modifier.size(36.dp),
+                            shape = CircleShape,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                        ) {
+                            Image(
+                                painter = painterResource(id = if (isDark) R.drawable.compass_dark else R.drawable.compass_light),
+                                contentDescription = "Set to North",
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .rotate(-camera.position.bearing.toFloat())
                             )
                         }
                     }
@@ -3791,6 +3836,7 @@ private fun LiveDotLayers(
     val contrastBearingColorProp = if (isDark) "contrastdarkmodebearing" else "contrastlightmode"
     val vehicleColor = get(contrastColorProp).cast<ColorValue>()
     val bearingColor = get(contrastBearingColorProp).cast<ColorValue>()
+
     val styles = getLiveDotStyle(category, settings)
 
     // --- End of Category-Specific Sizing ---
@@ -3800,7 +3846,7 @@ private fun LiveDotLayers(
     CircleLayer(
         id = idDots,
         source = source,
-        color = vehicleColor,
+        color = get("color").cast<ColorValue>(),
         radius = styles.dotRadius,
         strokeColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
         strokeWidth = styles.dotStrokeWidth,
