@@ -241,7 +241,7 @@ fun SingleTripInfoScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 8.dp)
     ) {
                 if (isLoading) {
                     LinearProgressIndicator(
@@ -295,9 +295,9 @@ fun SingleTripInfoScreen(
                     }
         
                     // Clickable Vehicle Label
-                    if (data.vehicle?.label != null) {
+                    if (data.vehicle?.label != null || data.vehicle?.id != null) {
                         VehicleInfo(
-                            label = data.vehicle.label,
+                            label = data.vehicle.label ?: data.vehicle.id ?: "",
                             chateau = tripSelected.chateau_id,
                             routeId = data.route_id
                         )

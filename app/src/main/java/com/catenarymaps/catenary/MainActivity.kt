@@ -2156,7 +2156,7 @@ class MainActivity : ComponentActivity() {
                             } else {
                                 // Handle other stack states
                                 val currentScreen = catenaryStack.last()
-                                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                                     // Add a simple back button
                                     Row() {
                                         IconButton(onClick = {

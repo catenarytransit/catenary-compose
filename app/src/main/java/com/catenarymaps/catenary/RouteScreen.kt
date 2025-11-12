@@ -295,7 +295,7 @@ fun RouteScreen(
         }?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap()
     }
 
-    LazyColumn(modifier = Modifier.padding(horizontal = 16.dp)) {
+    LazyColumn(modifier = Modifier.padding(horizontal = 8.dp)) {
         // Header
         item {
             RouteHeading(

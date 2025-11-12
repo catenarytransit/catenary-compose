@@ -1,5 +1,6 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -7,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -18,15 +20,29 @@ import kotlin.math.floor
 
 @Composable
 fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: TextUnit = 12.sp) {
+    val isDark = isSystemInDarkTheme()
+
     val textColor by remember(diff) {
         mutableStateOf(
-            when {
-                diff <= -300 -> Color(0xFFE53935) // Red 600
-                diff <= -60 -> Color(0xFFFDD835) // Yellow 600
-                diff >= 3600 -> Color(0xFFD81B60) // Pink 600
-                diff >= 300 -> Color(0xFFE53935) // Red 700
-                diff >= 180 -> Color(0xFFFDD835) // Yellow 600
-                else -> Color(0xFF58A738)
+            if (isDark) {
+                when {
+                    diff <= -300 -> Color(0xFFE53935) // Red 600
+                    diff <= -60 -> Color(0xFFFDD835) // Yellow 600
+                    diff >= 3600 -> Color(0xFFff6467) // Pink 600
+                    diff >= 300 -> Color(0xFFE53935) // Red 700
+                    diff >= 180 -> Color(0xFFFDD835) // Yellow 600
+                    else -> Color(0xFF58A738)
+                }
+            } else {
+                when {
+                    diff <= -300 -> Color(0xFFE53935) // Red 600
+                    diff <= -60 -> Color(0xFFe17100) // Amber 600
+                    diff >= 3600 -> Color(0xFFD81B60) // Pink 600
+                    diff >= 300 -> Color(0xFFE53935) // Red 700
+                    diff >= 180 -> Color(0xFFe17100) // Amber 600
+                    else -> Color(0xFF58A738)
+                }
+
             }
         )
     }
@@ -36,7 +52,9 @@ fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: Tex
     val m = floor((remainder - h * 3600) / 60.0).toLong()
     val s = remainder - h * 3600 - m * 60
 
-    Row {
+    Row(
+        verticalAlignment = Alignment.Bottom
+    ) {
         if (diff < 0) {
             Text(text = stringResource(id = R.string.early), fontSize = fontSizeOfPolarity, color = textColor)
         } else if (diff > 0) {
@@ -49,6 +67,8 @@ fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: Tex
                 color = Color(0xFF58A738)
             )
         }
+
+        Text(text = " ", fontSize = fontSizeOfPolarity)
 
         if (diff != 0L) {
             if (h > 0) {

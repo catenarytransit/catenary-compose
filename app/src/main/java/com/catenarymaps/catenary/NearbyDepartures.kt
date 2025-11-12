@@ -543,11 +543,12 @@ private fun TopRow(
                     .height(36.dp)
             ) {
                 TextButton(
+                    modifier = Modifier.height(36.dp),
                     onClick = onPinDrop,
                     colors = ButtonDefaults.textButtonColors(
                         containerColor = if (currentPickModeIsPin) Color(0xFFC9A2C8).copy(0.25f) else Color.Transparent
                     ),
-                    contentPadding = PaddingValues(horizontal = 10.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp),
                 ) {
                     Icon(
                         Icons.Default.PinDrop,
@@ -563,7 +564,8 @@ private fun TopRow(
                 )
                 TextButton(
                     onClick = onCenterPin,
-                    contentPadding = PaddingValues(horizontal = 10.dp)
+                    modifier = Modifier.height(36.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
                     Icon(
                         Icons.Default.CenterFocusStrong,
@@ -597,7 +599,7 @@ private fun TopRow(
                         0.3f
                     ) else Color.Transparent
                 ),
-                contentPadding = PaddingValues(horizontal = 10.dp)
+                contentPadding = PaddingValues(horizontal = 8.dp)
             ) { Icon(Icons.Default.SortByAlpha, contentDescription = "Sort by Alpha") }
 
             TextButton(
@@ -607,7 +609,7 @@ private fun TopRow(
                         0.3f
                     ) else Color.Transparent
                 ),
-                contentPadding = PaddingValues(horizontal = 10.dp)
+                contentPadding = PaddingValues(horizontal = 8.dp)
             ) { Icon(Icons.Default.Straighten, contentDescription = "Sort by Distance") }
         }
     }
@@ -651,8 +653,9 @@ private fun FilterChip(label: String, on: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(999.dp),
-        tonalElevation = if (on) 3.dp else 0.dp,
-        border = if (on) null else ButtonDefaults.outlinedButtonBorder
+        tonalElevation = if (on) 4.dp else 16.dp,
+        border = if (on) ButtonDefaults.outlinedButtonBorder else null,
+        color = if (on) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surfaceVariant
     ) {
         Text(
             label,
@@ -689,7 +692,10 @@ private fun RouteGroupCard(
         ) {
             Text(
                 text = route.shortName?.trim().orEmpty(),
-                color = if (darkMode) lightenColour(lineCol) else darkenColour(lineCol),
+                color = if (darkMode) lightenColour(lineCol) else darkenColour(
+                    lineCol,
+                    minContrast = 2.0
+                ),
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
                 textDecoration = TextDecoration.Underline
@@ -697,7 +703,10 @@ private fun RouteGroupCard(
 
             Text(
                 text = route.longName?.trim().orEmpty(),
-                color = if (darkMode) lightenColour(lineCol) else darkenColour(lineCol),
+                color = if (darkMode) lightenColour(lineCol) else darkenColour(
+                    lineCol,
+                    minContrast = 2.0
+                ),
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.titleMedium,
                 textDecoration = TextDecoration.Underline

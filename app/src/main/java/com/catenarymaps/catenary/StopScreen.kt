@@ -447,7 +447,7 @@ fun StopScreen(
         ) {
             // Header
             item {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 0.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -477,7 +477,7 @@ fun StopScreen(
                 item {
                     TextButton(
                         onClick = { showPreviousDepartures = !showPreviousDepartures },
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier.padding(horizontal = 4.dp)
                     ) {
                         Icon(
                             imageVector = if (showPreviousDepartures) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
@@ -511,7 +511,7 @@ fun StopScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(MaterialTheme.colorScheme.surface)
-                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 text = dateHeaderFormatter.format(date),
@@ -545,7 +545,7 @@ fun StopScreen(
                                         )
                                     )
                                 }
-                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outlineVariant.copy(
@@ -616,7 +616,7 @@ private fun StopScreenRow(
                         text = event.trip_short_name,
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(end = 4.dp)
+                        modifier = Modifier.padding(end = 0.dp)
                     )
                 }
             }

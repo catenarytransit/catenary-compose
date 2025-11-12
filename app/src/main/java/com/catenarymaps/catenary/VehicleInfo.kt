@@ -1,6 +1,7 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -71,6 +72,7 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
         try {
             val response = client.get(url).body<VehicleDetailsResponse>()
             if (response.found_data) {
+                println("Found vehicle data")
                 vehicleData = response.vehicle
             }
         } catch (e: Exception) {
@@ -82,10 +84,12 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
     }
 
     if (loading) {
-        Text("...", modifier = Modifier) // TODO: Add loading animation
+        //Text("...", modifier = Modifier) // TODO: Add loading animation
     } else {
         vehicleData?.let {
-            Column {
+            Column(
+                verticalArrangement = Arrangement.spacedBy((-6).dp)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     it.manufacturer?.let { manufacturer ->
                         Text(text = manufacturer, fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -97,7 +101,6 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
                         Text(text = " ${years.joinToString(",")}", fontSize = 14.sp)
                     }
                 }
-                Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     it.engine?.let { engine ->
                         Icon(
@@ -105,8 +108,11 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
                             contentDescription = "Engine",
                             modifier = Modifier.size(14.dp)
                         )
-                        Text(text = " $engine", fontSize = 14.sp)
+                        Text(text = " $engine", fontSize = 12.sp)
                     }
+
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     it.transmission?.let { transmission ->
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.ic_transmission),
@@ -115,8 +121,8 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
                         )
                         Text(
                             text = " $transmission",
-                            fontWeight = FontWeight.Light,
-                            fontSize = 14.sp
+                            // fontWeight = FontWeight.Light,
+                            fontSize = 12.sp
                         )
                     }
                 }

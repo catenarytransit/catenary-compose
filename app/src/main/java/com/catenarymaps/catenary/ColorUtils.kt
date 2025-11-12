@@ -111,78 +111,89 @@ fun lightenColour(inputString: String): String {
 fun darkenColour(inputString: String): String {
     var out = inputString
     val rgb = hexToRgb(inputString) ?: return out
-    val hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
 
-    if (hsl.l < 50.0) {
-        hsl.l = (0.5 * (hsl.l - 60.0)) + 60.0
-    }
+    val new_rgb = darkenColour(rgb)
+
+    val hsl = rgbToHsl(new_rgb.r, new_rgb.g, new_rgb.b)
 
     val newRgb = hslToRgb(hsl.h, hsl.s, hsl.l)
     out = "#${componentToHex(newRgb.r)}${componentToHex(newRgb.g)}${componentToHex(newRgb.b)}"
     return out
 }
 
-// ---------- Android @ColorInt Int API ----------
-@ColorInt
-fun lightenColour(@ColorInt color: Int): Int {
-    val a = (color shr 24) and 0xFF
-    val r = (color shr 16) and 0xFF
-    val g = (color shr 8) and 0xFF
-    val b = (color) and 0xFF
+/** Luminance of a white background. */
+private const val LUMINANCE_WHITE = 1.0
 
-    val hsl = rgbToHsl(r, g, b)
-    val newDarkHsl = Hsl(hsl.h, hsl.s, hsl.l)
+/** Target contrast ratio for AA-level readability. */
+fun srgbToLinear(u8: Int): Double {
+    val s = (u8.coerceIn(0, 255)) / 255.0
+    return if (s <= 0.04045) s / 12.92 else Math.pow((s + 0.055) / 1.055, 2.4)
+}
+
+fun linearToSrgb(lin: Double): Int {
+    val s = if (lin <= 0.0031308) 12.92 * lin else 1.055 * Math.pow(lin, 1.0 / 2.4) - 0.055
+    return (s * 255.0).roundToInt().coerceIn(0, 255)
+}
+
+fun darkenColour(rgb: Rgb, minContrast: Double = 4.5): Rgb {
+    // Convert to linear sRGB
+    val rLin = srgbToLinear(rgb.r)
+    val gLin = srgbToLinear(rgb.g)
+    val bLin = srgbToLinear(rgb.b)
+
+    // Relative luminance per WCAG
+    val y = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin
+
+    // Contrast vs white (white luminance = 1.0)
+    val contrast = (1.0 + 0.05) / (y + 0.05)
+    if (contrast >= minContrast || y == 0.0) {
+        return rgb // already dark enough or black
+    }
+
+    // Find scalar k so new luminance y' = k * y meets contrast:
+    // (1.05) / (y' + 0.05) >= minContrast  =>  y' <= (1.05 / minContrast) - 0.05
+    val yTargetMax = (1.05 / minContrast) - 0.05
+    val k = (yTargetMax / y).coerceIn(0.0, 1.0)
+
+    // Scale linear channels uniformly, then convert back to sRGB
+    val rOut = linearToSrgb(rLin * k)
+    val gOut = linearToSrgb(gLin * k)
+    val bOut = linearToSrgb(bLin * k)
+    return Rgb(rOut, gOut, bOut)
+}
+
+// ---------- Compose Color API (new) ----------
+fun lightenColour(color: Color): Color {
+    val rgb = Rgb(
+        (color.red * 255).roundToInt(),
+        (color.green * 255).roundToInt(),
+        (color.blue * 255).roundToInt()
+    )
+    val hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
 
     var blueOffset = 0.0
-    if (b > 40) blueOffset = 30.0 * (b / 255.0)
+    if (rgb.b > 40) blueOffset = 30.0 * (rgb.b / 255.0)
 
     if (hsl.l < 60.0) {
-        newDarkHsl.l = hsl.l + 10.0 + (25.0 * ((100.0 - hsl.s) / 100.0) + blueOffset)
+        hsl.l = hsl.l + 10.0 + (25.0 * ((100.0 - hsl.s) / 100.0) + blueOffset)
         if (hsl.l > 60.0) {
             hsl.l = if (blueOffset == 0.0) 60.0 else 60.0 + blueOffset
         }
     }
-    if (hsl.l < 60.0) {
-        hsl.l = hsl.l + ((100.0 - hsl.l) * 0.4)
-    }
-
-    val newRgb = hslToRgb(newDarkHsl.h, newDarkHsl.s, newDarkHsl.l)
-    return (a shl 24) or (newRgb.r shl 16) or (newRgb.g shl 8) or newRgb.b
-}
-
-@ColorInt
-fun darkenColour(@ColorInt color: Int): Int {
-    val a = (color shr 24) and 0xFF
-    val r = (color shr 16) and 0xFF
-    val g = (color shr 8) and 0xFF
-    val b = (color) and 0xFF
-
-    val hsl = rgbToHsl(r, g, b)
-    if (hsl.l < 50.0) {
-        hsl.l = (0.5 * (hsl.l - 60.0)) + 60.0
-    }
 
     val newRgb = hslToRgb(hsl.h, hsl.s, hsl.l)
-    return (a shl 24) or (newRgb.r shl 16) or (newRgb.g shl 8) or newRgb.b
+    return Color(newRgb.r, newRgb.g, newRgb.b)
 }
 
-// ---------- Jetpack Compose Color API ----------
-fun lightenColour(color: Color): Color {
-    val a = (color.alpha * 255f).roundToInt()
-    val r = (color.red * 255f).roundToInt()
-    val g = (color.green * 255f).roundToInt()
-    val b = (color.blue * 255f).roundToInt()
-    val out = lightenColour((a shl 24) or (r shl 16) or (g shl 8) or b)
-    return Color(out)
-}
-
-fun darkenColour(color: Color): Color {
-    val a = (color.alpha * 255f).roundToInt()
-    val r = (color.red * 255f).roundToInt()
-    val g = (color.green * 255f).roundToInt()
-    val b = (color.blue * 255f).roundToInt()
-    val out = darkenColour((a shl 24) or (r shl 16) or (g shl 8) or b)
-    return Color(out)
+fun darkenColour(color: Color, minContrast: Double = 4.5): Color {
+    val newRgb = darkenColour(
+        Rgb(
+            (color.red * 255).roundToInt(),
+            (color.green * 255).roundToInt(),
+            (color.blue * 255).roundToInt()
+        ), minContrast
+    )
+    return Color(newRgb.r, newRgb.g, newRgb.b)
 }
 
 
