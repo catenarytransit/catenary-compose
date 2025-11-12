@@ -3245,7 +3245,7 @@ fun AddStops(
         ))
     }
 
-    val isMetro = all(
+    val isMetro = any(
         any(
             (rtEq(1)),
             childrenRtEq(1),
