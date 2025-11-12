@@ -65,7 +65,7 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
                 16.0 to const(6.0.dp)
             )
             dotStrokeWidth =
-                interpolate(linear(), zoom(), 9.0 to const(0.3.dp), 15.0 to const(0.6.dp))
+                interpolate(linear(), zoom(), 9.0 to const(0.3.dp), 15.0 to const(1.0.dp))
             dotOpacity = const(0.5f)
             dotStrokeOpacity = interpolate(
                 linear(),

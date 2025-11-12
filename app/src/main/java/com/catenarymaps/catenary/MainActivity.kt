@@ -3954,36 +3954,3 @@ fun fixHeadsignText(headsign: String, maptag: String): String {
     }
     return headsign
 }
-
-@Composable
-fun VehicleLabelToggleButton(
-    name: String,
-    icon: ImageVector,
-    isActive: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.width(IntrinsicSize.Min) // Ensure column shrinks to text
-    ) {
-        FilledIconToggleButton(
-            checked = isActive,
-            onCheckedChange = { onToggle() },
-            colors = IconButtonDefaults.filledIconToggleButtonColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-        ) {
-            Icon(icon, contentDescription = name)
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = name,
-            style = MaterialTheme.typography.labelSmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}

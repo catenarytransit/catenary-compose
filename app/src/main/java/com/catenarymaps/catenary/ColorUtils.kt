@@ -82,30 +82,25 @@ fun hslToRgb(h: Double, s: Double, l: Double): Rgb {
     return Rgb(clampInt(r, 0, 255), clampInt(g, 0, 255), clampInt(b, 0, 255))
 }
 
-// ---------- Original String <-> #RRGGBB API (unchanged behavior) ----------
-fun lightenColour(inputString: String): String {
+fun lightenColour(inputString: String, minContrast: Double = 4.5): String {
     var out = inputString
     val rgb = hexToRgb(inputString) ?: return out
 
-    val hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
-    val newDarkHsl = Hsl(hsl.h, hsl.s, hsl.l)
+    val newRgb = lightenColour(rgb, minContrast)
 
-    var blueOffset = 0.0
-    if (rgb.b > 40) blueOffset = 30.0 * (rgb.b / 255.0)
-
-    if (hsl.l < 60.0) {
-        newDarkHsl.l = hsl.l + 10.0 + (25.0 * ((100.0 - hsl.s) / 100.0) + blueOffset)
-        if (hsl.l > 60.0) {
-            hsl.l = if (blueOffset == 0.0) 60.0 else 60.0 + blueOffset
-        }
-    }
-    if (hsl.l < 60.0) {
-        hsl.l = hsl.l + ((100.0 - hsl.l) * 0.4)
-    }
-
-    val newRgb = hslToRgb(newDarkHsl.h, newDarkHsl.s, newDarkHsl.l)
     out = "#${componentToHex(newRgb.r)}${componentToHex(newRgb.g)}${componentToHex(newRgb.b)}"
     return out
+}
+
+fun lightenColour(color: Color, minContrast: Double = 4.5): Color {
+    val newRgb = lightenColour(
+        Rgb(
+            (color.red * 255).roundToInt(),
+            (color.green * 255).roundToInt(),
+            (color.blue * 255).roundToInt()
+        ), minContrast
+    )
+    return Color(newRgb.r, newRgb.g, newRgb.b)
 }
 
 fun darkenColour(inputString: String): String {
@@ -163,26 +158,42 @@ fun darkenColour(rgb: Rgb, minContrast: Double = 4.5): Rgb {
 }
 
 // ---------- Compose Color API (new) ----------
-fun lightenColour(color: Color): Color {
-    val rgb = Rgb(
-        (color.red * 255).roundToInt(),
-        (color.green * 255).roundToInt(),
-        (color.blue * 255).roundToInt()
-    )
-    val hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
+/**
+ * Lightens an sRGB color just enough to meet a minimum contrast against black.
+ * Default target is 4.5:1 (WCAG AA for normal text on dark backgrounds).
+ *
+ * Moves uniformly toward white in *linear sRGB*, so hues with low luminance (e.g., blue)
+ * are boosted more than high-luminance hues—mirroring darkenColour's behavior.
+ */
+fun lightenColour(rgb: Rgb, minContrast: Double = 4.5): Rgb {
+    // Convert to linear sRGB
+    val rLin = srgbToLinear(rgb.r)
+    val gLin = srgbToLinear(rgb.g)
+    val bLin = srgbToLinear(rgb.b)
 
-    var blueOffset = 0.0
-    if (rgb.b > 40) blueOffset = 30.0 * (rgb.b / 255.0)
+    // Relative luminance per WCAG
+    val y = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin
 
-    if (hsl.l < 60.0) {
-        hsl.l = hsl.l + 10.0 + (25.0 * ((100.0 - hsl.s) / 100.0) + blueOffset)
-        if (hsl.l > 60.0) {
-            hsl.l = if (blueOffset == 0.0) 60.0 else 60.0 + blueOffset
-        }
+    // Contrast vs black (black luminance = 0.0)
+    val contrast = (y + 0.05) / 0.05
+    if (contrast >= minContrast || y >= 1.0) {
+        return rgb // already bright enough or white
     }
 
-    val newRgb = hslToRgb(hsl.h, hsl.s, hsl.l)
-    return Color(newRgb.r, newRgb.g, newRgb.b)
+    // Minimum luminance to hit target contrast against black:
+    // (y' + 0.05) / 0.05 >= minContrast  =>  y' >= 0.05 * (minContrast - 1)
+    val yTargetMin = 0.05 * (minContrast - 1.0)
+
+    // Interpolate each channel toward 1.0 (white) by the same factor 'a' in linear space:
+    // lin' = lin + a * (1 - lin). Luminance then follows y' = y + a * (1 - y).
+    // Solve for minimal 'a' that reaches yTargetMin.
+    val a = ((yTargetMin - y) / (1.0 - y)).coerceIn(0.0, 1.0)
+
+    val rOut = linearToSrgb(rLin + a * (1.0 - rLin))
+    val gOut = linearToSrgb(gLin + a * (1.0 - gLin))
+    val bOut = linearToSrgb(bLin + a * (1.0 - bLin))
+
+    return Rgb(rOut, gOut, bOut)
 }
 
 fun darkenColour(color: Color, minContrast: Double = 4.5): Color {

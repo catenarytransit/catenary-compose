@@ -692,7 +692,10 @@ private fun RouteGroupCard(
         ) {
             Text(
                 text = route.shortName?.trim().orEmpty(),
-                color = if (darkMode) lightenColour(lineCol) else darkenColour(
+                color = if (darkMode) lightenColour(
+                    lineCol,
+                    minContrast = 6.0,
+                ) else darkenColour(
                     lineCol,
                     minContrast = 2.0
                 ),
@@ -703,7 +706,10 @@ private fun RouteGroupCard(
 
             Text(
                 text = route.longName?.trim().orEmpty(),
-                color = if (darkMode) lightenColour(lineCol) else darkenColour(
+                color = if (darkMode) lightenColour(
+                    lineCol,
+                    minContrast = 4.5
+                ) else darkenColour(
                     lineCol,
                     minContrast = 2.0
                 ),
