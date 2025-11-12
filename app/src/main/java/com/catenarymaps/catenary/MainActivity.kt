@@ -663,6 +663,11 @@ class MainActivity : ComponentActivity() {
 
     //private var tracker: Tracker? = null
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // No-op on purpose.
+    }
+
     private val layerSettings = mutableStateOf(AllLayerSettings())
 
     val applyFilterToLiveDots = mutableStateOf<Expression<BooleanValue>>(const(true))
@@ -1204,6 +1209,12 @@ class MainActivity : ComponentActivity() {
                             snapAnimationSpec = easeOutSpec,
                             decayAnimationSpec = splineBasedDecay(density),
                         )
+                    }
+
+                    // When screen size / insets change (rotation, etc.), refresh the anchors
+                    // so the sheet snaps correctly with the new height.
+                    LaunchedEffect(anchors) {
+                        draggableState.updateAnchors(anchors)
                     }
 
                     val sheetIsExpanded by remember {
