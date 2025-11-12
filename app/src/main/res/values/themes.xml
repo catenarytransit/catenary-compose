@@ -3,7 +3,8 @@
 
     <style name="Theme.CatenaryCompose" parent="android:Theme.Material.Light.NoActionBar">
         <!-- Main app theme attributes -->
-
+        <item name="android:fontFamily">@font/barlow</item>
+        <item name="fontFamily">@font/barlow</item>
     </style>
 
     <style name="Theme.CatenaryCompose.Splash" parent="Theme.SplashScreen">
