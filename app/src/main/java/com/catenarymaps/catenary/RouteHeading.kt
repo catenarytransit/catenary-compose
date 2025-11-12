@@ -27,6 +27,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.catenarymaps.catenary.CatenaryStackEnum
 import com.catenarymaps.catenary.darkenColour
 import com.catenarymaps.catenary.lightenColour
@@ -67,9 +68,14 @@ fun RouteHeading(
     }
 
     val textStyle = if (routeClickable) {
-        MaterialTheme.typography.headlineSmall.copy(textDecoration = TextDecoration.Underline)
+        MaterialTheme.typography.titleLarge.copy(
+            textDecoration = TextDecoration.Underline,
+            lineHeight = MaterialTheme.typography.titleLarge.fontSize * 0.8
+        )
     } else {
-        MaterialTheme.typography.headlineSmall
+        MaterialTheme.typography.titleLarge.copy(
+            lineHeight = MaterialTheme.typography.titleLarge.fontSize * 0.8
+        )
     }
 
     Column {

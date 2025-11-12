@@ -319,7 +319,8 @@ fun RouteScreen(
                     chateau = screenData.chateau_id
                 )
             }
-            Spacer(Modifier.height(16.dp))
+
+            //Spacer(Modifier.height(16.dp))
         }
 
         // Directions
@@ -412,7 +413,7 @@ fun RouteScreen(
                     }
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            // Spacer(Modifier.height(24.dp))
         }
 
         // Active Vehicles

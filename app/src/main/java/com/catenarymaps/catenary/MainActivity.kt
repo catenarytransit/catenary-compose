@@ -1405,8 +1405,25 @@ class MainActivity : ComponentActivity() {
                         // 2) Map done loading
                         onMapLoadFinished = {
                             queryVisibleChateaus(camera, mapSize)
+                            val pos = camera.position
 
+                            val now = SystemClock.uptimeMillis()
 
+                            fetchRealtimeData(
+                                scope = rtScope,
+                                zoom = pos.zoom,
+                                settings = layerSettings.value,
+                                isFetchingRealtimeData = isFetchingRealtimeData,
+                                visibleChateaus = visibleChateaus,
+                                realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
+                                ktorClient = ktorClient,
+                                realtimeVehicleRouteCache = realtimeVehicleRouteCache,
+                                camera = camera,
+                                previousTileBoundariesStore = previousTileBoundariesStore,
+                                realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2,
+                                routeCacheAgenciesKnown = routeCacheAgenciesKnown
+                            )
+                            lastFetchedAt = now
                         },
                         // 3) Use onFrame to detect camera idle -> covers move end & zoom end
 
@@ -1414,16 +1431,15 @@ class MainActivity : ComponentActivity() {
                             val now = SystemClock.uptimeMillis()
                             val pos = camera.position
 
-
                             if (lastCameraPos == null || lastCameraPos != pos) {
                                 lastCameraPos = pos
                                 lastMoveAt = now
 
                                 // Only drop the lock if this wasn't an internal move we initiated.
                                 if (!geoLock.isInternalMove() && geoLock.isActive()) {
-                                    println("deactivate camera ${geoLock.isInternalMove()}")
+                                    //println("deactivate camera ${geoLock.isInternalMove()}")
 
-                                    println("current ${pos.target.latitude} ${pos.target.longitude} last set ${geoLock.getInternalPos()?.latitude} ${geoLock.getInternalPos()?.longitude}")
+                                    //println("current ${pos.target.latitude} ${pos.target.longitude} last set ${geoLock.getInternalPos()?.latitude} ${geoLock.getInternalPos()?.longitude}")
 
                                     // Compare floating point numbers with a small tolerance (epsilon)
                                     // to avoid deactivating the lock from tiny precision differences.

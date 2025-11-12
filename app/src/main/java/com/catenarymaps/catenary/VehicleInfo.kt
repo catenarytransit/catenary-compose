@@ -1,7 +1,9 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.foundation.layout.Column
+
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -90,27 +92,35 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
             Column(
                 verticalArrangement = Arrangement.spacedBy((-6).dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    it.manufacturer?.let { manufacturer ->
-                        Text(text = manufacturer, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        it.manufacturer?.let { manufacturer ->
+                            Text(
+                                text = manufacturer,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                        it.model?.let { model ->
+                            Text(text = " $model", fontStyle = FontStyle.Italic, fontSize = 14.sp)
+                        }
+                        it.years?.let { years ->
+                            Text(text = " ${years.joinToString(",")}", fontSize = 14.sp)
+                        }
                     }
-                    it.model?.let { model ->
-                        Text(text = " $model", fontStyle = FontStyle.Italic, fontSize = 14.sp)
-                    }
-                    it.years?.let { years ->
-                        Text(text = " ${years.joinToString(",")}", fontSize = 14.sp)
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    it.engine?.let { engine ->
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_engine),
-                            contentDescription = "Engine",
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(text = " $engine", fontSize = 12.sp)
-                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        it.engine?.let { engine ->
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_engine),
+                                contentDescription = "Engine",
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(text = " $engine", fontSize = 12.sp)
+                        }
 
+                    }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     it.transmission?.let { transmission ->

@@ -2,6 +2,7 @@ package com.catenarymaps.catenary
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -123,7 +124,7 @@ fun AlertsBox(
                 text = pluralStringResource(R.plurals.service_alerts, alerts.size, alerts.size),
                 color = alertColor,
                 fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(start = 8.dp)
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -226,7 +227,11 @@ private fun AlertUrl(url: AlertText) {
             )
             ClickableText(
                 text = AnnotatedString(urlTranslation.text),
-                style = MaterialTheme.typography.bodySmall.copy(color = Color.Blue),
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = if (isSystemInDarkTheme()) Color(
+                        0xff2b7fff
+                    ) else Color.Blue
+                ),
                 onClick = { uriHandler.openUri(urlTranslation.text) }
             )
         }
@@ -263,7 +268,7 @@ private fun FormattedText(text: String, style: TextStyle) {
                 pushStringAnnotation(tag = "URL", annotation = url)
                 withStyle(
                     style = SpanStyle(
-                        color = Color.Blue,
+                        color = Color(0xff2b7fff),
                         textDecoration = TextDecoration.Underline
                     )
                 ) {

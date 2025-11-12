@@ -314,12 +314,17 @@ fun SingleTripInfoScreen(
         
         
                     // Show/Hide Previous Stops Button
-                    if (lastInactiveStopIdx > -1) {
-                        Button(onClick = { viewModel.toggleShowPreviousStops() }) {
-                            Text(
-                                if (showPreviousStops) stringResource(id = R.string.single_trip_info_screen_hide_previous_stops)
-                                else stringResource(id = R.string.single_trip_info_screen_show_previous_stops, lastInactiveStopIdx + 1)
-                            )
+                    if (showPreviousStops) {
+                        if (lastInactiveStopIdx > -1) {
+                            Button(onClick = { viewModel.toggleShowPreviousStops() }) {
+                                Text(
+                                    if (showPreviousStops) stringResource(id = R.string.single_trip_info_screen_hide_previous_stops)
+                                    else stringResource(
+                                        id = R.string.single_trip_info_screen_show_previous_stops,
+                                        lastInactiveStopIdx + 1
+                                    )
+                                )
+                            }
                         }
                     }
         
@@ -338,12 +343,24 @@ fun SingleTripInfoScreen(
                             ),
                         state = lazyListState
                     ) {
+                        // Show/Hide Previous Stops Button
+                        if (!showPreviousStops && lastInactiveStopIdx > -1) {
+                            item {
+                                Button(onClick = { viewModel.toggleShowPreviousStops() }) {
+                                    Text(
+                                        stringResource(
+                                            id = R.string.single_trip_info_screen_show_previous_stops,
+                                            lastInactiveStopIdx + 1
+                                        )
+                                    )
+                                }
+                            }
+                        }
                         itemsIndexed(stopTimes) { i, stopTime ->
                             if (showPreviousStops || i > lastInactiveStopIdx || (i == stopTimes.lastIndex && stopTimes.isNotEmpty())) {
                                 // Calculate new state variables
                                 val isInactive = i <= lastInactiveStopIdx
                                 val isPreviousInactive = i - 1 == lastInactiveStopIdx
-        
                                 StopListItem(
                                     stopTime = stopTime,
                                     tripColorStr = data.color ?: "#808080",
