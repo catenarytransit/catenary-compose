@@ -126,6 +126,7 @@ import org.maplibre.compose.expressions.dsl.contains as dslcontains
 import org.maplibre.compose.expressions.value.TextUnitValue
 import org.maplibre.compose.map.RenderOptions
 import android.content.SharedPreferences
+import android.net.Uri
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateTo
 import org.maplibre.spatialk.geojson.FeatureCollection
@@ -704,6 +705,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val action: String? = intent?.action
+        val initial_uri: Uri? = intent?.data
+
+        println("url data ${initial_uri}")
 
         val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
 
@@ -1417,6 +1422,15 @@ class MainActivity : ComponentActivity() {
                         onMapLoadFinished = {
                             queryVisibleChateaus(camera, mapSize)
                             val pos = camera.position
+
+                            readDeeplink(
+                                initial_uri,
+                                catenaryStack,
+                                camera,
+                                reassigncatenarystack = { it ->
+                                    catenaryStack = it
+                                }
+                            )
 
                             val now = SystemClock.uptimeMillis()
 
@@ -2291,7 +2305,11 @@ class MainActivity : ComponentActivity() {
                                                     },
                                                     onSetStopsToHide = { newSet ->
                                                         stopsToHide = newSet
-                                                    })
+                                                    },
+                                                    camera = camera,
+                                                    desiredPadding = desiredPadding
+                                                )
+
                                             }
                                         }
 

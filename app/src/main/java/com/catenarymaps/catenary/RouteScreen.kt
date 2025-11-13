@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -66,8 +67,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.GeoJsonSource
+import org.maplibre.spatialk.geojson.BoundingBox
 import kotlin.collections.emptyList
 
 @Serializable
@@ -110,7 +113,8 @@ data class RouteInfoResponse(
     val alert_id_to_alert: Map<String, JsonObject> = emptyMap(),
     val direction_patterns: Map<String, RouteInfoDirectionPattern>,
     val shapes_polyline: Map<String, String> = emptyMap(),
-    val stops: Map<String, RouteInfoStop>
+    val stops: Map<String, RouteInfoStop>,
+    val bounding_box: RustRect? = null,
 )
 
 @Serializable
@@ -134,7 +138,9 @@ fun RouteScreen(
     stopsContextSource: MutableState<GeoJsonSource>,
     onStopClick: (CatenaryStackEnum.StopStack) -> Unit,
     onTripClick: (CatenaryStackEnum.SingleTrip) -> Unit,
-    onSetStopsToHide: (Set<String>) -> Unit
+    onSetStopsToHide: (Set<String>) -> Unit,
+    camera: CameraState,
+    desiredPadding: PaddingValues
 ) {
     var routeInfo by remember { mutableStateOf<RouteInfoResponse?>(null) }
     var routeRealtime by remember { mutableStateOf<RouteRealtimeResponse?>(null) }
@@ -145,6 +151,7 @@ fun RouteScreen(
 
     val context = LocalContext.current
     LaunchedEffect(Unit) {
+
         try {
             val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
@@ -169,6 +176,44 @@ fun RouteScreen(
                 }"
             val response: RouteInfoResponse = ktorClient.get(url).body()
             routeInfo = response
+
+            val currentMapBounds = camera.projection?.queryVisibleBoundingBox()
+
+            if (currentMapBounds != null) {
+                response.bounding_box?.let {
+                    val newBoundingBox = BoundingBox(
+                        west = it.min.x.toDouble(),
+                        south = it.min.y.toDouble(),
+                        east = it.max.x.toDouble(),
+                        north = it.max.y.toDouble()
+                    )
+
+                    val currentWest = currentMapBounds.west
+                    val currentSouth = currentMapBounds.south
+                    val currentEast = currentMapBounds.east
+                    val currentNorth = currentMapBounds.north
+
+                    val newWest = newBoundingBox.west
+                    val newSouth = newBoundingBox.south
+                    val newEast = newBoundingBox.east
+                    val newNorth = newBoundingBox.north
+
+                    val contained = (currentWest <= newWest &&
+                            currentSouth <= newSouth &&
+                            currentEast >= newEast &&
+                            currentNorth >= newNorth) ||
+                            camera.position.zoom < 4
+
+                    if (!contained) {
+                        camera.animateTo(
+                            boundingBox = newBoundingBox,
+                            padding = desiredPadding
+                        )
+                    }
+                }
+            }
+
+
 
             val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
             firebaseAnalytics.logEvent("view_route") {

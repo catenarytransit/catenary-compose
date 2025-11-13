@@ -67,8 +67,8 @@ data class AlertActivePeriod(
 
 @Serializable
 data class Alert(
-    val cause: Int,
-    val effect: Int,
+    val cause: Int?,
+    val effect: Int?,
     val url: AlertText? = null,
     val header_text: AlertText? = null,
     val description_text: AlertText? = null,
@@ -373,7 +373,7 @@ private fun AlertActivePeriod(
 }
 
 @Composable
-fun causeIdToStr(cause: Int): String {
+fun causeIdToStr(cause: Int?): String {
     val resourceId = when (cause) {
         1 -> R.string.alert_cause_unknown_cause
         2 -> R.string.alert_cause_other_cause
@@ -393,7 +393,7 @@ fun causeIdToStr(cause: Int): String {
 }
 
 @Composable
-fun effectIdToStr(effect: Int): String {
+fun effectIdToStr(effect: Int?): String {
     val resourceId = when (effect) {
         1 -> R.string.alert_effect_no_service
         2 -> R.string.alert_effect_reduced_service

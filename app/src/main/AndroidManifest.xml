@@ -25,6 +25,18 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter
+                android:label="CatenaryHttpOpener"
+                android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "http://maps.catenarymaps.org” -->
+                <data
+                    android:scheme="http"
+                    android:host="maps.catenarymaps.org" />
+            </intent-filter>
         </activity>
 
         <profileable android:shell="true" />
