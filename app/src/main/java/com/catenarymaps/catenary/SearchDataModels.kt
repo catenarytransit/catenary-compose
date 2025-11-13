@@ -16,7 +16,8 @@ data class NominatimResult(
     @SerialName("osm_type") val osmType: String,
     //@SerialName("category") val category: String,
     @SerialName("place_id") val placeId: Long,
-    @SerialName("boundingbox") val boundingBox: List<String>? = null
+    @SerialName("boundingbox") val boundingBox: List<String>? = null,
+    @SerialName("importance") val importance: Float
 )
 
 // --- Catenary Text Search API Response ---

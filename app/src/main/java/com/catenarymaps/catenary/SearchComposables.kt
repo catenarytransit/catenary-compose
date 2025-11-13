@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +39,46 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Weight knobs: tune relative influence of each category on the combined ranking.
+// Example: increase NOMINATIM_WEIGHT to prefer address/place results; increase
+// STOP_WEIGHT to bias toward stops; increase ROUTE_WEIGHT to bias toward routes.
+// ────────────────────────────────────────────────────────────────────────────────
+private const val NOMINATIM_WEIGHT: Double = 2.0
+private const val ROUTE_WEIGHT: Double = 1.0
+private const val STOP_WEIGHT: Double = 1.0
+
+// Internal row model that lets us render different result types in one list
+private sealed class SearchRow(val weightedScore: Double) {
+    class NominatimRow(
+        val item: NominatimResult,
+        score: Double
+    ) : SearchRow(score)
+
+    class RouteRow(
+        val ranking: RouteRanking,
+        val routeInfo: RouteInfo,
+        val agency: Agency?,
+        score: Double
+    ) : SearchRow(score)
+
+    class StopRow(
+        val ranking: StopRanking,
+        val stopInfo: StopInfo,
+        val routes: List<RouteInfo>,
+        val agencyNames: List<String>,
+        val distanceMetres: Double?,
+        score: Double
+    ) : SearchRow(score)
+}
+
+// Helper to convert a 1-based rank position into a 0..1 score (1.0 is best)
+private fun rankToUnitScore(index: Int, total: Int): Double {
+    if (total <= 0) return 0.0
+    // Top item => 1.0; last => 1/total. Clamped just in case.
+    return ((total - index).toDouble() / total).coerceIn(0.0, 1.0)
+}
 
 @Composable
 fun SearchResultsOverlay(
@@ -54,6 +95,79 @@ fun SearchResultsOverlay(
 
     val stopsSection = catenaryResults?.stopsSection
     val routesSection = catenaryResults?.routesSection
+
+    // Build a single, intermingled list of rows, each with a weighted score.
+    val combinedRows = remember(nominatimResults, stopsSection, routesSection, currentLocation) {
+        val rows = mutableListOf<SearchRow>()
+
+        // Nominatim (limit to 3, matching prior behavior; tweak as desired)
+        nominatimResults
+            .take(10)
+            .forEach { item ->
+                val base = item.importance
+                    .toDouble()
+                    .coerceIn(0.0, 1.0)
+                val score = base * NOMINATIM_WEIGHT
+                rows += SearchRow.NominatimRow(item, score)
+            }
+
+        // Routes (limit to 10, keep existing matching)
+        routesSection?.let { section ->
+            val ranked = section.ranking.take(10)
+            val total = ranked.size.coerceAtLeast(1)
+            ranked.forEachIndexed { index, ranking ->
+                val routeInfo = section.routes[ranking.chateau]?.get(ranking.gtfsId)
+                val agency = routeInfo?.agencyId?.let { section.agencies[ranking.chateau]?.get(it) }
+                if (routeInfo != null) {
+                    val base = rankToUnitScore(index, total)
+                    val score = base * ROUTE_WEIGHT
+                    rows += SearchRow.RouteRow(ranking, routeInfo, agency, score)
+                }
+            }
+        }
+
+        // Stops (limit to 10, keep existing matching)
+        stopsSection?.let { section ->
+            val ranked = section.ranking.take(10)
+            val total = ranked.size.coerceAtLeast(1)
+            ranked.forEachIndexed { index, ranking ->
+                val stopInfo = section.stops[ranking.chateau]?.get(ranking.gtfsId)
+                if (stopInfo != null && stopInfo.parentStation == null) {
+                    // Resolve routes for the stop
+                    val routes = stopInfo.routes.mapNotNull { routeId ->
+                        section.routes[ranking.chateau]?.get(routeId)
+                    }
+
+                    // Resolve agencies for those routes
+                    val agencyNames = routes.mapNotNull { route ->
+                        route.agencyId?.let { section.agencies[ranking.chateau]?.get(it)?.agencyName }
+                    }.distinct()
+
+                    // Distance from user, if available
+                    val distanceMetres = currentLocation?.let { (userLat, userLon) ->
+                        haversineDistance(
+                            userLat, userLon,
+                            stopInfo.point.y, stopInfo.point.x
+                        )
+                    }
+
+                    val base = rankToUnitScore(index, total)
+                    val score = base * STOP_WEIGHT
+                    rows += SearchRow.StopRow(
+                        ranking = ranking,
+                        stopInfo = stopInfo,
+                        routes = routes,
+                        agencyNames = agencyNames,
+                        distanceMetres = distanceMetres,
+                        score = score
+                    )
+                }
+            }
+        }
+
+        // Sort across categories by weighted score (descending)
+        rows.sortedByDescending { it.weightedScore }
+    }
 
     Surface(
         modifier = modifier
@@ -73,79 +187,45 @@ fun SearchResultsOverlay(
                     .background(MaterialTheme.colorScheme.surface)
                     .windowInsetsPadding(WindowInsets.safeDrawing)
             ) {
-                // --- Nominatim Results ---
-                items(nominatimResults.take(3)) { item ->
-                    NominatimResultItem(
-                        item = item,
-                        onClick = { onNominatimClick(item) }
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                }
-
-                // --- Route Results ---
-                if (routesSection != null) {
-                    items(routesSection.ranking.take(10)) { ranking ->
-                        val routeInfo = routesSection.routes[ranking.chateau]?.get(ranking.gtfsId)
-                        val agency = routeInfo?.agencyId?.let {
-                            routesSection.agencies[ranking.chateau]?.get(it)
-                        }
-
-                        if (routeInfo != null) {
-                            RouteResultItem(
-                                routeInfo = routeInfo,
-                                agency = agency,
-                                onClick = { onRouteClick(ranking, routeInfo, agency) }
+                // Single, intermingled list
+                items(combinedRows) { row ->
+                    when (row) {
+                        is SearchRow.NominatimRow -> {
+                            NominatimResultItem(
+                                item = row.item,
+                                onClick = { onNominatimClick(row.item) }
                             )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         }
-                    }
-                }
 
-                // --- Stop Results ---
-                if (stopsSection != null) {
-                    items(stopsSection.ranking.take(10)) { ranking ->
-                        // Find the stop details from the 'stops' map using 'chateau' and 'gtfsId'
-                        val stopInfo = stopsSection.stops[ranking.chateau]?.get(ranking.gtfsId)
-                        if (stopInfo != null && stopInfo.parentStation == null) {
-                            // Resolve routes
-                            val routes = stopInfo.routes.mapNotNull { routeId ->
-                                stopsSection.routes[ranking.chateau]?.get(routeId)
-                            }
+                        is SearchRow.RouteRow -> {
+                            RouteResultItem(
+                                routeInfo = row.routeInfo,
+                                agency = row.agency,
+                                onClick = { onRouteClick(row.ranking, row.routeInfo, row.agency) }
+                            )
+                        }
 
-                            // Resolve agency names
-                            val agencyNames = routes.mapNotNull { route ->
-                                route.agencyId?.let { stopsSection.agencies[ranking.chateau]?.get(it)?.agencyName }
-                            }.distinct()
-
-                            // Calculate distance
-                            val distanceMetres = currentLocation?.let { (userLat, userLon) ->
-                                haversineDistance(
-                                    userLat, userLon,
-                                    stopInfo.point.y, stopInfo.point.x
-                                )
-                            }
-
+                        is SearchRow.StopRow -> {
                             StopResultItem(
-                                stopInfo = stopInfo,
-                                ranking = ranking,
-                                routes = routes,
-                                agencyNames = agencyNames,
-                                distanceMetres = distanceMetres,
+                                stopInfo = row.stopInfo,
+                                ranking = row.ranking,
+                                routes = row.routes,
+                                agencyNames = row.agencyNames,
+                                distanceMetres = row.distanceMetres,
                                 onClick = {
                                     onStopClick(
-                                        ranking.chateau,
-                                        ranking.gtfsId,
-                                        ranking,
-                                        stopInfo
+                                        row.ranking.chateau,
+                                        row.ranking.gtfsId,
+                                        row.ranking,
+                                        row.stopInfo
                                     )
                                 }
                             )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         }
                     }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 }
-
-
             }
 
             if (isLoading) {
@@ -290,9 +370,6 @@ fun RouteResultItem(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    // The FlowRow will handle wrapping, so no need for maxLines or overflow here
-                    // if we wanted it to be part of the text flow.
-                    // modifier = Modifier.weight(1f) // Could be useful depending on desired behavior
                 )
             }
         }
