@@ -34,7 +34,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Accepts URIs that begin with "http://maps.catenarymaps.org” -->
                 <data
-                    android:scheme="http"
+                    android:scheme="https"
                     android:host="maps.catenarymaps.org" />
             </intent-filter>
         </activity>
