@@ -1,6 +1,7 @@
 // In a new file, e.g., SingleTripViewModel.kt
 package com.catenarymaps.catenary
 
+import java.net.URLEncoder
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -75,11 +76,17 @@ class SingleTripViewModel(
     private fun fetchInitialTripData() {
         viewModelScope.launch {
             try {
+
+
+                val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
+
                 val url =
                     "https://birch.catenarymaps.org/get_trip_information/${tripSelected.chateau_id}/?" +
-                            if (tripSelected.trip_id != null) "trip_id=${tripSelected.trip_id ?: ""}&" else "" +
+                            if (tripSelected.trip_id != null) "trip_id=${encodedTripId}&" else "" +
                                     if (tripSelected.start_date != null) "start_date=${tripSelected.start_date ?: ""}&" else "" +
                                             if (tripSelected.start_time != null) "start_time=${tripSelected.start_time ?: ""}" else ""
+
+                println("fetching url ${url}")
 
                 val response = ktorClient.get(url).body<String>()
 
@@ -111,9 +118,11 @@ class SingleTripViewModel(
         if (_isLoading.value) return // Don't fetch if still on initial load
         viewModelScope.launch {
             try {
+                val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
+
                 val url =
                     "https://birch.catenarymaps.org/get_trip_information_rt_update/${tripSelected.chateau_id}/?" +
-                            "trip_id=${tripSelected.trip_id ?: ""}&" +
+                            "trip_id=${encodedTripId}&" +
                             "start_date=${tripSelected.start_date ?: ""}&" +
                             "start_time=${tripSelected.start_time ?: ""}"
 

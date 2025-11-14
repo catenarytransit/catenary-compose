@@ -62,6 +62,7 @@ import org.maplibre.spatialk.geojson.Position
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.delay
+import java.net.URLEncoder
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -169,9 +170,9 @@ fun RouteScreen(
         try {
             val url =
                 "https://birch.catenarymaps.org/route_info?chateau=${screenData.chateau_id}&route_id=${
-                    screenData.route_id.replace(
-                        "\"",
-                        ""
+                    URLEncoder.encode(
+                        screenData.route_id,
+                        "UTF-8"
                     )
                 }"
             val response: RouteInfoResponse = ktorClient.get(url).body()
@@ -239,9 +240,8 @@ fun RouteScreen(
                 val lastUpdated = routeRealtime?.last_updated_time_ms ?: 0
                 val url =
                     "https://birch.catenarymaps.org/get_rt_of_single_route?chateau=${screenData.chateau_id}&route_id=${
-                        screenData.route_id.replace(
-                            "\"",
-                            ""
+                        URLEncoder.encode(
+                            screenData.route_id, "UTF-8"
                         )
                     }&last_updated_time_ms=$lastUpdated"
                 val response: RouteRealtimeResponse = ktorClient.get(url).body()
