@@ -250,7 +250,7 @@ fun SingleTripInfoScreen(
                             .padding(top = 8.dp)
                     )
                 } else if (error != null) {
-                    Text(text = error, color = MaterialTheme.colorScheme.error)
+                    Text(text = error!!, color = MaterialTheme.colorScheme.error)
                 } else if (tripData != null) {
                     val data = tripData!!
         
