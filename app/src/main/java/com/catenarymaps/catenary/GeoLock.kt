@@ -59,7 +59,7 @@ suspend fun teleportCamera(
     controller.beginInternalMove()
     println("begin internal move started")
     try {
-        (controller as GeoLockController).setInternalPos(pos = Position(lon, lat))
+        controller.setInternalPos(pos = Position(lon, lat))
 
         camera.animateTo(
             camera.position.copy(
