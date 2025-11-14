@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TripStoptime(
-    val name: String,
+    val name: String? = null,
     val stop_id: String,
     val longitude: Double,
     val latitude: Double,

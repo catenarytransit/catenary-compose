@@ -426,13 +426,15 @@ fun SingleTripInfoScreen(
         
                 // 2. Stop Info
                 Column {
-                    Text(
-                        text = stopTime.raw.name, // TODO: Port fixStationName
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(onClick = onStopClick),
-                        textDecoration = TextDecoration.Underline
-                    )
+                    stopTime.raw.name?.let {
+                        Text(
+                            text = it, // TODO: Port fixStationName
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable(onClick = onStopClick),
+                            textDecoration = TextDecoration.Underline
+                        )
+                    }
         
                     StopTimeNumber(
                         tripTimezone = stopTime.raw.timezone,
