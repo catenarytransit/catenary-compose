@@ -1,4 +1,4 @@
-package com.catenarymaps.catenary.ui.components
+package com.catenarymaps.catenary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +32,8 @@ import com.catenarymaps.catenary.CatenaryStackEnum
 import com.catenarymaps.catenary.darkenColour
 import com.catenarymaps.catenary.lightenColour
 import com.catenarymaps.catenary.parseColor
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
 
 @Composable
 fun RouteHeading(
@@ -41,10 +43,12 @@ fun RouteHeading(
     agencyName: String?,
     shortName: String?,
     longName: String?,
-    description: String?,
+    description: String? = null,
     isCompact: Boolean,
     routeClickable: Boolean = false,
-    onRouteClick: (() -> Unit)? = null
+    headsign: String? = null,
+    onRouteClick: (() -> Unit)? = null,
+    controls: @Composable () -> Unit = {}
 ) {
     if (isCompact) {
         // Compact version not implemented based on svelte file
@@ -79,32 +83,53 @@ fun RouteHeading(
     }
 
     Column {
-        Text(
-            text = buildAnnotatedString {
-                if (!shortName.isNullOrBlank()) {
-                    withStyle(style = textStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {
-                        append(shortName)
-                    }
-                    if (!longName.isNullOrBlank()) {
-                        append(" ")
-                    }
-                }
-                if (!longName.isNullOrBlank()) {
-                    append(longName)
-                }
-            },
-            color = displayColor,
-            style = textStyle,
-            modifier = clickableModifier
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column() {
+                Text(
+                    modifier = clickableModifier.weight(1f, fill = false),
+                    text = buildAnnotatedString {
+                        if (!shortName.isNullOrBlank()) {
+                            withStyle(
+                                style = textStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)
+                            ) {
+                                append(shortName)
+                            }
+                            if (!longName.isNullOrBlank()) {
+                                append(" ")
+                            }
+                        }
+                        if (!longName.isNullOrBlank()) {
+                            append(longName)
+                        }
+                    },
+                    color = displayColor,
+                    style = textStyle,
+                )
 
-        if (!agencyName.isNullOrBlank()) {
-            Text(text = agencyName, style = MaterialTheme.typography.titleMedium)
+                if (headsign != null) {
+                    Text(
+                        text = headsign
+                    )
+                }
+
+                if (!agencyName.isNullOrBlank()) {
+                    Text(text = agencyName, style = MaterialTheme.typography.titleMedium)
+                }
+
+                if (!description.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = description, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+
+
+            controls()
         }
 
-        if (!description.isNullOrBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = description, style = MaterialTheme.typography.bodyMedium)
-        }
+
     }
 }

@@ -48,7 +48,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.catenarymaps.catenary.ui.components.RouteHeading
 import com.google.android.gms.maps.model.Polyline
 import org.maplibre.spatialk.geojson.Feature
 import com.catenarymaps.catenary.Alert
@@ -124,7 +123,7 @@ data class RouteRealtimeResponse(
     val last_updated_time_ms: Long,
     val trips_to_trips_compressed: Map<String, ItineraryPattern> = emptyMap(),
     val itinerary_to_direction_id: Map<String, String> = emptyMap(),
-    val trip_updates: List<JsonObject> = emptyList()
+    val trip_updates: List<AspenisedTripUpdate> = emptyList()
 )
 
 @Serializable
@@ -141,7 +140,9 @@ fun RouteScreen(
     onTripClick: (CatenaryStackEnum.SingleTrip) -> Unit,
     onSetStopsToHide: (Set<String>) -> Unit,
     camera: CameraState,
-    desiredPadding: PaddingValues
+    desiredPadding: PaddingValues,
+    onBack: () -> Unit,
+    onHome: () -> Unit
 ) {
     var routeInfo by remember { mutableStateOf<RouteInfoResponse?>(null) }
     var routeRealtime by remember { mutableStateOf<RouteRealtimeResponse?>(null) }
@@ -330,14 +331,7 @@ fun RouteScreen(
     }
 
     val tripUpdatesByTripId = remember(rt) {
-        val json = Json { ignoreUnknownKeys = true }
-        rt?.trip_updates?.mapNotNull { tripUpdateJson ->
-            try {
-                json.decodeFromJsonElement(TripUpdate.serializer(), tripUpdateJson)
-            } catch (e: Exception) {
-                null // Ignore updates that fail to parse
-            }
-        }?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap()
+        rt?.trip_updates?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap()
     }
 
     LazyColumn(modifier = Modifier.padding(horizontal = 8.dp)) {
@@ -352,7 +346,10 @@ fun RouteScreen(
                 longName = info.long_name,
                 description = info.gtfs_desc,
                 isCompact = false,
-                onRouteClick = {}
+                onRouteClick = {},
+                controls = {
+                    NavigationControls(onBack = onBack, onHome = onHome)
+                }
             )
             if (info.alert_id_to_alert.isNotEmpty()) {
                 val json = Json { ignoreUnknownKeys = true }
@@ -471,6 +468,11 @@ fun RouteScreen(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
+
+            //item {
+            //    Text("debug ${tripUpdatesByTripId.toString()}")
+            //}
+
             items(activeVehicles) { vehicle ->
                 Card(
                     modifier = Modifier
@@ -491,21 +493,33 @@ fun RouteScreen(
                         },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                 ) {
-                    Column(Modifier.padding(12.dp)) {
+
+
+                    Column(
+                        Modifier.padding(12.dp)
+
+                    ) {
                         Text(
                             "Vehicle ${vehicle.vehicle?.label ?: vehicle.vehicle?.id ?: "Unknown"}",
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
                         )
-                        vehicle.trip?.trip_headsign?.let { Text(stringResource(id = R.string.route_screen_to, it)) }
+                        //vehicle.trip?.trip_headsign?.let { Text(stringResource(id = R.string.route_screen_to, it)) }
 
                         // New Trip Data and Occupancy Info
                         val possibleUpdates = tripUpdatesByTripId[vehicle.trip?.trip_id] ?: emptyList()
+
+
                         TripDataForVehicleOnRouteScreen(
                             vehicle = vehicle,
                             stops = info.stops,
-                            possibleTripUpdates = possibleUpdates
+                            possibleTripUpdates = possibleUpdates,
+                        ) // This composable also contains text, but let's shrink the top level first.
+                        OccupancyStatusText(
+                            occupancyStatus = vehicle.occupancy_status,
+
+                            style = MaterialTheme.typography.labelSmall
                         )
-                        OccupancyStatusText(occupancyStatus = vehicle.occupancy_status)
                     }
                 }
             }

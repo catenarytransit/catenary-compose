@@ -1,5 +1,6 @@
 package com.catenarymaps.catenary
 
+import com.catenarymaps.catenary.NavigationControls
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Bundle
@@ -2205,26 +2206,19 @@ class MainActivity : ComponentActivity() {
                             } else {
                                 // Handle other stack states
                                 val currentScreen = catenaryStack.last()
-                                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-                                    // Add a simple back button
-                                    Row() {
-                                        IconButton(onClick = {
-                                            val newStack = ArrayDeque(catenaryStack)
-                                            newStack.removeLastOrNull()
-                                            catenaryStack = newStack
-                                        }) {
-                                            Icon(Icons.Filled.ArrowBack, "Go back")
-                                        }
-
-                                        IconButton(
-                                            onClick = {
-                                                catenaryStack = ArrayDeque()
-                                            }
-
-                                        ) {
-                                            Icon(Icons.Filled.Home, "Home screen")
-                                        }
+                                val onBack: () -> Unit = {
+                                    if (catenaryStack.isNotEmpty()) {
+                                        val newStack = ArrayDeque(catenaryStack)
+                                        newStack.removeLast()
+                                        catenaryStack = newStack
                                     }
+                                }
+
+                                val onHome: () -> Unit = {
+                                    catenaryStack = ArrayDeque()
+                                }
+                                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+
 
                                     // Render the current stack screen
                                     when (currentScreen) {
@@ -2251,7 +2245,7 @@ class MainActivity : ComponentActivity() {
                                                         newStack.addLast(routeStack)
                                                         catenaryStack = newStack
                                                     },
-
+                                                    usUnits = usUnits,
                                                     // --- Pass the .value of the sources ---
                                                     transitShapeSource = transitShapeSourceRef.value!!,
                                                     transitShapeDetourSource = transitShapeDetourSourceRef.value!!,
@@ -2261,7 +2255,9 @@ class MainActivity : ComponentActivity() {
                                                     onSetStopsToHide = { newSet ->
                                                         stopsToHide = newSet
                                                     },
-                                                    applyFilterToLiveDots = applyFilterToLiveDots
+                                                    applyFilterToLiveDots = applyFilterToLiveDots,
+                                                    onBack = onBack,
+                                                    onHome = onHome
                                                 )
                                             }
 
@@ -2274,7 +2270,9 @@ class MainActivity : ComponentActivity() {
                                                     val newStack = ArrayDeque(catenaryStack)
                                                     newStack.addLast(newScreenData)
                                                     catenaryStack = newStack
-                                                }
+                                                },
+                                                onBack = onBack,
+                                                onHome = onHome
                                             )
                                         }
 
@@ -2283,7 +2281,9 @@ class MainActivity : ComponentActivity() {
                                                 datadogConsent = datadogConsent,
                                                 onDatadogConsentChanged = onDatadogConsentChanged,
                                                 gaConsent = gaConsent,
-                                                onGaConsentChanged = onGaConsentChanged
+                                                onGaConsentChanged = onGaConsentChanged,
+                                                onBack = onBack,
+                                                onHome = onHome
                                             )
                                         }
 
@@ -2307,7 +2307,9 @@ class MainActivity : ComponentActivity() {
                                                         stopsToHide = newSet
                                                     },
                                                     camera = camera,
-                                                    desiredPadding = desiredPadding
+                                                    desiredPadding = desiredPadding,
+                                                    onBack = onBack,
+                                                    onHome = onHome
                                                 )
 
                                             }
@@ -2335,7 +2337,9 @@ class MainActivity : ComponentActivity() {
                                                     onSetStopsToHide = { newSet ->
                                                         stopsToHide = newSet
                                                     },
-                                                    geoLock = geoLock
+                                                    geoLock = geoLock,
+                                                    onBack = onBack,
+                                                    onHome = onHome
                                                 )
                                             }
                                         }
@@ -2345,7 +2349,9 @@ class MainActivity : ComponentActivity() {
                                                 blockId = currentScreen.block_id,
                                                 serviceDate = currentScreen.service_date,
                                                 catenaryStack = catenaryStack,
-                                                onStackChange = { catenaryStack = it }
+                                                onStackChange = { catenaryStack = it },
+                                                onBack = onBack,
+                                                onHome = onHome
                                             )
                                         }
                                         // TODO: Add 'when' branches for other stack types

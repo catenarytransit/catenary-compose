@@ -1,7 +1,9 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -24,7 +27,9 @@ fun SettingsScreen(
     datadogConsent: Boolean,
     onDatadogConsentChanged: (Boolean) -> Unit,
     gaConsent: Boolean,
-    onGaConsentChanged: (Boolean) -> Unit
+    onGaConsentChanged: (Boolean) -> Unit,
+    onBack: () -> Unit,
+    onHome: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -32,11 +37,18 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
             .padding(vertical = 8.dp)
     ) {
-        Text(
-            text = stringResource(id = R.string.settings),
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.settings),
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            NavigationControls(onBack = onBack, onHome = onHome)
+        }
 
         // --- Datadog Section ---
         Text(

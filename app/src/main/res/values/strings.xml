@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Catenary</string>
-    <string name="platform" translatable="false">Platform</string>
+    <string name="platform">Platform</string>
     <string name="layers">Layers</string>
     <string name="occupancy">Occupancy</string>
     <string name="headsign">Headsign</string>
@@ -107,4 +107,5 @@
     <string name="vehicle_info_model"> %1$s</string>
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
+    <string name="occupancy_percentage">Occupancy percentage</string>
 </resources>

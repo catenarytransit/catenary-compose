@@ -150,7 +150,9 @@ fun StopScreen(
     transitShapeSource: MutableState<GeoJsonSource>,
     camera: CameraState,
     onSetStopsToHide: (Set<String>) -> Unit,
-    geoLock: GeoLockController
+    geoLock: GeoLockController,
+    onBack: () -> Unit,
+    onHome: () -> Unit
 ) {
     val chateau = screenData.chateau_id
     val stopId = screenData.stop_id
@@ -450,20 +452,22 @@ fun StopScreen(
                 Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = meta.primary.stop_name,
                             style = MaterialTheme.typography.headlineSmall,
                             modifier = Modifier.weight(1f)
                         )
-                        FormattedTimeText(
-                            timezone = zoneId.id,
-                            timeSeconds = currentTime,
-                            showSeconds = true,
-                            // The style from LiveClock is now applied here
-                        )
+                        NavigationControls(onBack = onBack, onHome = onHome)
                     }
+                    FormattedTimeText(
+                        timezone = zoneId.id,
+                        timeSeconds = currentTime,
+                        showSeconds = true,
+                        // The style from LiveClock is now applied here
+                    )
                     Text(
                         text = meta.primary.timezone,
                         style = MaterialTheme.typography.bodySmall,

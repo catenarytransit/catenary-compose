@@ -117,7 +117,9 @@ fun BlockScreen(
     serviceDate: String,
     catenaryStack: ArrayDeque<CatenaryStackEnum>,
     onStackChange: (ArrayDeque<CatenaryStackEnum>) -> Unit,
-    viewModel: BlockScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: BlockScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    onBack: () -> Unit,
+    onHome: () -> Unit
 ) {
     val blockData by viewModel.blockData.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -180,8 +182,18 @@ fun BlockScreen(
                     }
                 }
             }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(id = R.string.block_screen_block_id, blockId),
+                    fontWeight = FontWeight.SemiBold
+                )
+                NavigationControls(onBack = onBack, onHome = onHome)
+            }
 
-            Text(text = stringResource(id = R.string.block_screen_block_id, blockId), fontWeight = FontWeight.SemiBold)
             Row {
                 Text(text = stringResource(id = R.string.block_screen_duration))
                 DiffTimer(diff = tripDurationSeconds.toDouble(), showBrackets = false)

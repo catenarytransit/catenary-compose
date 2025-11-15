@@ -1,5 +1,6 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,26 +13,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-@Serializable
-data class StopTimeUpdate(
-    val stop_id: String
-)
-
-@Serializable
-data class TripUpdate(
-    val trip: TripDescriptor,
-    val stop_time_update: List<StopTimeUpdate> = emptyList()
-)
-
 @Composable
 fun TripDataForVehicleOnRouteScreen(
     vehicle: VehiclePosition,
     stops: Map<String, RouteInfoStop>,
-    possibleTripUpdates: List<TripUpdate>
+    possibleTripUpdates: List<AspenisedTripUpdate>
 ) {
-    var likelyTrip by remember { mutableStateOf<TripUpdate?>(null) }
+    var likelyTrip by remember { mutableStateOf<AspenisedTripUpdate?>(null) }
 
-    LaunchedEffect(possibleTripUpdates, vehicle) {
+    fun computeLikelyTrip() {
         if (possibleTripUpdates.size == 1) {
             likelyTrip = possibleTripUpdates[0]
         } else if (possibleTripUpdates.size > 1) {
@@ -62,15 +52,30 @@ fun TripDataForVehicleOnRouteScreen(
         }
     }
 
-    likelyTrip?.let { trip ->
-        trip.stop_time_update.firstOrNull()?.let { nextStopUpdate ->
-            stops[nextStopUpdate.stop_id]?.let { stopInfo ->
-                Text(
-                    text = "${stringResource(R.string.next_stop)}: ${stopInfo.name}",
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
+    LaunchedEffect(possibleTripUpdates, vehicle) {
+        computeLikelyTrip()
+    }
+
+    LaunchedEffect(Unit) {
+        computeLikelyTrip()
+    }
+
+
+    val nextStopId = likelyTrip?.stop_time_update?.firstOrNull()?.stop_id
+
+    //Text(text = "updates ${possibleTripUpdates.toString()}")
+
+
+    val stopInfo = nextStopId?.let { stops[it] }
+
+    if (stopInfo != null) {
+        Text(
+            text = "${stringResource(R.string.next_stop)}: ${stopInfo.name}",
+            //maxLines = 1,
+            //overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelMedium
+        )
+    } else {
+        //Text(text = "no likely trip")
     }
 }

@@ -3,16 +3,21 @@ package com.catenarymaps.catenary
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun OccupancyStatusText(occupancyStatus: Int?) {
+fun OccupancyStatusText(
+    occupancyStatus: Int?,
+    style: TextStyle = LocalTextStyle.current
+) {
     if (occupancyStatus == null) return
 
     val occupancyText = when (occupancyStatus) {
@@ -36,9 +41,15 @@ fun OccupancyStatusText(occupancyStatus: Int?) {
 
     if (occupancyText.isNotEmpty()) {
         Row {
-            Text(text = "${stringResource(R.string.occupancy_status)}:")
+            Text(
+                text = "${stringResource(R.string.occupancy_status)}:",
+                style = style
+            )
             Spacer(Modifier.width(4.dp))
-            Text(text = occupancyText, color = occupancyColor)
+            Text(
+                text = occupancyText, color = occupancyColor,
+                style = style
+            )
         }
     }
 }

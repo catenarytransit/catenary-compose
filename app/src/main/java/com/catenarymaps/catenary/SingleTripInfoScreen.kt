@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.catenarymaps.catenary.ui.components.RouteHeading
 import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Position
@@ -71,6 +70,8 @@ import com.google.firebase.analytics.logEvent
 import org.maplibre.compose.expressions.ast.Expression
 import org.maplibre.compose.expressions.value.ExpressionValue
 import org.maplibre.compose.expressions.value.BooleanValue
+import kotlinx.coroutines.delay
+import androidx.compose.ui.unit.sp
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,6 +80,7 @@ fun SingleTripInfoScreen(
     onStopClick: (CatenaryStackEnum.StopStack) -> Unit,
     onBlockClick: (CatenaryStackEnum.BlockStack) -> Unit,
     onRouteClick: (CatenaryStackEnum.RouteStack) -> Unit,
+    usUnits: Boolean,
     // --- Map sources passed from MainActivity ---
     transitShapeSource: MutableState<GeoJsonSource>,
     transitShapeDetourSource: MutableState<GeoJsonSource>,
@@ -87,7 +89,9 @@ fun SingleTripInfoScreen(
     // --- State to control other map layers ---
     onSetStopsToHide: (Set<String>) -> Unit,
     // state to control the filter
-    applyFilterToLiveDots: MutableState<Expression<BooleanValue>>
+    applyFilterToLiveDots: MutableState<Expression<BooleanValue>>,
+    onBack: () -> Unit,
+    onHome: () -> Unit
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -118,6 +122,7 @@ fun SingleTripInfoScreen(
     val stopTimes by viewModel.stopTimes.collectAsState()
     val showPreviousStops by viewModel.showPreviousStops.collectAsState()
     val lastInactiveStopIdx by viewModel.lastInactiveStopIdx.collectAsState()
+    val vehicleData by viewModel.vehicleData.collectAsState()
 
     // --- Map Update Logic ---
     LaunchedEffect(tripData) {
@@ -261,7 +266,6 @@ fun SingleTripInfoScreen(
                         agencyName = null, // Not available in TripDataResponse
                         shortName = data.route_short_name,
                         longName = data.route_long_name,
-                        description = data.trip_headsign?.let { "to $it" },
                         isCompact = false,
                         routeClickable = true,
                         onRouteClick = {
@@ -273,13 +277,18 @@ fun SingleTripInfoScreen(
                                     )
                                 )
                             }
-                        }
+                        },
+                        controls = {
+                            NavigationControls(onBack = onBack, onHome = onHome)
+                        },
+                        headsign = data.trip_headsign
                     )
         
                     // Clickable Block ID
                     if (data.block_id != null && data.service_date != null) {
                         Text(
                             text = "Block: ${data.block_id}",
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             textDecoration = TextDecoration.Underline,
                             modifier = Modifier.clickable {
@@ -301,6 +310,10 @@ fun SingleTripInfoScreen(
                             chateau = tripSelected.chateau_id,
                             routeId = data.route_id
                         )
+                    }
+
+                    if (vehicleData != null) {
+                        VehicleInfoDetails(vehicleData = vehicleData!!, usUnits = usUnits)
                     }
         
         
@@ -384,6 +397,115 @@ fun SingleTripInfoScreen(
                 }
             }
         }
+
+@Composable
+fun VehicleInfoDetails(vehicleData: VehicleRealtimeData, usUnits: Boolean) {
+    Column(modifier = Modifier.padding(vertical = 0.dp)) {
+        // Last updated
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.lastupdated) + ": ",
+                style = MaterialTheme.typography.labelSmall
+            )
+            var currentTime by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
+            LaunchedEffect(Unit) {
+                while (true) {
+                    delay(1000)
+                    currentTime = System.currentTimeMillis() / 1000
+                }
+            }
+            vehicleData.timestamp?.let {
+                val diff = (it - currentTime).toDouble()
+                DiffTimer(
+                    diff = diff,
+                    showSeconds = true,
+                    showBrackets = false,
+                    numSize = 12.sp,
+                    unitSize = 10.sp
+                )
+            }
+
+
+            // Speed
+            vehicleData.position?.speed?.let { speed ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.speed) + ": ",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    val speedText = if (usUnits) {
+                        "%.2f mph".format(speed * 2.23694)
+                    } else {
+                        "%.2f km/h".format(speed * 3.6)
+                    }
+                    Text(text = speedText, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+
+
+        // Occupancy Status
+        vehicleData.occupancy_status?.toIntOrNull()?.let { status ->
+            val occupancyColor = when (status) {
+                3 -> Color(0xFFF9A825) // Amber 600ish
+                4, 5, 6, 8 -> MaterialTheme.colorScheme.error
+                else -> Color.Unspecified
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.occupancy_status) + ": ",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = occupancyColor
+                )
+                Text(
+                    text = occupancy_to_symbol(status),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    color = occupancyColor
+                )
+                val statusText = occupancyStatusToString(status)
+                Text(
+                    text = statusText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = occupancyColor
+                )
+            }
+        }
+
+        // Occupancy Percentage
+        vehicleData.occupancy_percentage?.takeIf { it > 0 }?.let { percentage ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.occupancy_percentage) + ": ",
+                    style = MaterialTheme.typography.labelSmall
+                )
+                Text(
+                    text = "$percentage%",
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun occupancyStatusToString(status: Int): String {
+    return when (status) {
+        0 -> stringResource(R.string.occupancy_status_empty)
+        1 -> stringResource(R.string.occupancy_status_many_seats_available)
+        2 -> stringResource(R.string.occupancy_status_few_seats_available)
+        3 -> stringResource(R.string.occupancy_status_standing_room_only)
+        4 -> stringResource(R.string.occupancy_status_crushed_standing_room_only)
+        5 -> stringResource(R.string.occupancy_status_full)
+        6 -> stringResource(R.string.occupancy_status_not_accepting_passengers)
+        7 -> stringResource(R.string.occupancy_status_no_data)
+        8 -> stringResource(R.string.occupancy_status_not_boardable)
+        else -> ""
+    }
+}
         
         @Composable
         fun StopListItem(

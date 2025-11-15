@@ -16,6 +16,7 @@
     <string name="searchhere">Rechercher ici</string>
     <string name="early">En avance</string>
     <string name="late">En retard</string>
+    <string name="ontime">à l\'heure</string>
     <string name="previous_departures">Départs précédents</string>
     <string name="load_more">Charger plus</string>
     <string name="arrival">Arrivée</string>
@@ -79,6 +80,7 @@
     <string name="settings_datadog_analytics_title">Analyses Datadog</string>
     <string name="settings_datadog_analytics_description">Active un suivi intensif et détaillé pour aider les développeurs à trouver et à corriger les bogues.</string>
     <string name="settings_disable_datadog_tracking">Désactiver le suivi Datadog</string>
+    <string name="settings_enable_datadog_tracking">Activer le suivi Datadog</string>
     <string name="settings_google_analytics_title">Google Analytics</string>
     <string name="settings_google_analytics_description">Active les analyses de base sur l\'utilisation des fonctionnalités.</string>
     <string name="settings_disable_google_analytics">Désactiver Google Analytics</string>
@@ -98,4 +100,5 @@
     <string name="vehicle_info_model"> %1$s</string>
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
+    <string name="occupancy_percentage">Pourcentage d\'occupation</string>
 </resources>

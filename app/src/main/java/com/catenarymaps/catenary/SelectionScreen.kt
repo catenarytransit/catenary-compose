@@ -278,7 +278,9 @@ fun RouteSelectionItem(
 @Composable
 fun MapSelectionScreen(
     screenData: CatenaryStackEnum.MapSelectionScreen,
-    onStackPush: (CatenaryStackEnum) -> Unit
+    onStackPush: (CatenaryStackEnum) -> Unit,
+    onBack: () -> Unit,
+    onHome: () -> Unit
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -345,11 +347,18 @@ fun MapSelectionScreen(
         contentPadding = PaddingValues(bottom = 64.dp)
     ) {
         item {
-            Text(
-                text = "${screenData.arrayofoptions.size} items selected", // TODO: i18n
-                style = MaterialTheme.typography.headlineSmall, // Svelte: text-lg md:text-2xl
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "${screenData.arrayofoptions.size} items selected", // TODO: i18n
+                    style = MaterialTheme.typography.headlineSmall, // Svelte: text-lg md:text-2xl
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                NavigationControls(onBack = onBack, onHome = onHome)
+            }
         }
         if (vehicles.isNotEmpty()) {
             item {
