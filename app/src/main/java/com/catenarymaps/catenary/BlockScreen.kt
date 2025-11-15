@@ -209,10 +209,26 @@ fun BlockScreen(
 
                     Column(
                         modifier = Modifier.fillMaxWidth()
+                            .clickable {
+                                val newStack = ArrayDeque(catenaryStack)
+                                newStack.addLast(
+                                    CatenaryStackEnum.SingleTrip(
+                                        chateau_id = chateau,
+                                        trip_id = trip.trip_id,
+                                        route_id = trip.route_id,
+                                        start_time = null,
+                                        start_date = serviceDate.replace("-", ""),
+                                        vehicle_id = null,
+                                        route_type = null
+                                    )
+                                )
+                                onStackChange(newStack)
+                            }
                             .let {
                                 if (currentTime > trip.end_time) it.then(Modifier.padding(0.dp)) // TODO: figure out text dimming
                                 else it
                             }
+
                     ) {
                         if (!singleRoute && route != null) {
                             Row {
@@ -251,29 +267,7 @@ fun BlockScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            Icon(
-                                imageVector = Icons.Default.OpenInNew,
-                                contentDescription = "Open Trip",
-                                modifier = Modifier
-                                    .clickable {
-                                        val newStack = ArrayDeque(catenaryStack)
-                                        newStack.addLast(
-                                            CatenaryStackEnum.SingleTrip(
-                                                chateau_id = chateau,
-                                                trip_id = trip.trip_id,
-                                                route_id = trip.route_id,
-                                                start_time = null,
-                                                start_date = serviceDate.replace("-", ""),
-                                                vehicle_id = null,
-                                                route_type = null
-                                            )
-                                        )
-                                        onStackChange(newStack)
-                                    }
-                                    .padding(8.dp)
-                            )
+                            //Spacer(modifier = Modifier.weight(1f))
                         }
 
                         Row {
