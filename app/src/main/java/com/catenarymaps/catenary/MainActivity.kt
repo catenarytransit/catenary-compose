@@ -7,6 +7,8 @@ import android.os.Bundle
 import java.util.concurrent.atomic.AtomicBoolean
 import android.os.SystemClock
 import android.util.Log
+import java.io.File
+import kotlinx.coroutines.Dispatchers
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -228,6 +230,7 @@ import org.json.JSONObject
 import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.LineString
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
 import io.ktor.client.request.get
 import kotlinx.serialization.SerialName
 import org.maplibre.compose.expressions.dsl.Feature.has
@@ -581,6 +584,9 @@ private fun queryVisibleChateaus(scope: CoroutineScope, camera: CameraState, map
         val features = projection.queryRenderedFeatures(
             rect = rect, layerIds = setOf("chateaus_calc")
         )
+
+       
+
         val queryTime = SystemClock.uptimeMillis() - startTime
 
         val names = features.map { f ->
@@ -865,11 +871,63 @@ class MainActivity : ComponentActivity() {
         mutableStateOf<Map<String, Map<String, TileBounds>>>(emptyMap())
 
 
+    // --- tune these as needed ---
+    private val maxEntries = 8
+    private val rtreeCacheName = "chateaux.rtree.json"
+    private val geojsonCacheName = "chateaux.geojson"
+    private val chateauxUrl =
+        "https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json"
+
+    // If you kept the encode/decode helpers from the RTree file:
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+        classDiscriminator = "type"
+    }
+
+    private val http by lazy { HttpClient(CIO) }
+
+    // Current, in-memory data
+    private var features: List<Feature<Geometry?, ChateauProps>> = emptyList()
+    private var rtree: RTree<Int>? = null
+
+
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        lifecycleScope.launch {
+            // 1) Try warm start from cache.
+            val cached = loadFromCache()
+            if (cached != null) {
+                val (cachedTree, cachedFeatures) = cached
+                rtree = cachedTree
+                features = cachedFeatures
+                Log.d("Chateaux", "Loaded cache: ${features.size} features")
+                // TODO: update any UI that benefits from a warm start here
+            } else {
+                Log.d("Chateaux", "No cache found")
+            }
+
+            // 2) Recompute anyway.
+            val fresh = recomputePreferNetworkOrCached()
+            if (fresh != null) {
+                val (freshTree, freshFeatures, rawGeojson) = fresh
+                rtree = freshTree
+                features = freshFeatures
+                Log.d("Chateaux", "Recomputed index: ${features.size} features")
+
+                // 3) Save refreshed data back to cache.
+                saveToCache(freshTree, rawGeojson)
+            }
+
+            // From here on, use `rtree` + `features` for lookups.
+            // Example:
+            // val hits: List<Feature<Geometry?, ChateauProps>> =
+            //     lookupChateaux(rtree!!, features, bbox(w, s, e, n), strictTouchOnly = false)
+        }
 
         val action: String? = intent?.action
         val initial_uri: Uri? = intent?.data
@@ -1085,7 +1143,7 @@ class MainActivity : ComponentActivity() {
             val searchViewModel: SearchViewModel = viewModel()
 
             // State to hold the chateaux R-tree index
-            var chateauxIndex by remember { mutableStateOf<RTree<Feature<Geometry?, ChateauProps>>?>(null) }
+            var chateauxIndex: Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? = null
 
 
             var catenaryStack by remember { mutableStateOf(ArrayDeque<CatenaryStackEnum>()) }
@@ -1341,17 +1399,8 @@ class MainActivity : ComponentActivity() {
                     currentLocation = lat to lon
                 }
 
-                  // While we're here, fetch the chateaux index
-                    scope.launch {
-                        try {
-                            val time = kotlin.system.measureTimeMillis {
-                                chateauxIndex = fetchAndBuildChateauxIndex(ktorClient)
-                            }
-                            Log.d(TAG, "Chateaux index built successfully in ${time}ms.")
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Failed to build chateaux index", e)
-                        }
-                    }
+                // While we're here, fetch the chateaux index
+
             }
 
             var didInitialFollow by remember { mutableStateOf(false) }
@@ -3373,6 +3422,81 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    // --- recompute strategy: try network; if that fails but we have cached GeoJSON, recompute from that ---
+
+    private suspend fun recomputePreferNetworkOrCached(): Triple<RTree<Int>, List<Feature<Geometry?, ChateauProps>>, String>? {
+        // try network
+        fetchAndBuildFromNetwork()?.let { return it }
+
+        // fallback: if cached raw geojson exists, recompute rtree from it
+        val cachedGeo = readTextFile(geojsonCacheName)
+        if (cachedGeo != null) {
+            val fc = parseChateaux(cachedGeo)
+            val (tree, list) = buildRTreeIds(fc, maxEntries)
+            return Triple(tree, list, cachedGeo)
+        }
+        return null
+    }
+
+    // --- cache I/O ---
+
+    private suspend fun saveToCache(tree: RTree<Int>, rawGeojson: String) = withContext(Dispatchers.IO) {
+        // Save RTree<Int> as JSON
+        val rtreeJson = json.encodeToStringRTree(tree)
+        writeTextFile(rtreeCacheName, rtreeJson)
+        writeTextFile(geojsonCacheName, rawGeojson)
+        Log.d("Chateaux", "Cache saved (${rtreeCacheName}, ${geojsonCacheName})")
+    }
+
+    private suspend fun loadFromCache(): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? =
+        withContext(Dispatchers.IO) {
+            val rtreeJson = readTextFile(rtreeCacheName) ?: return@withContext null
+            val rawGeo = readTextFile(geojsonCacheName) ?: return@withContext null
+
+            // Rebuild features from raw GeoJSON (keeps cache format simple + stable)
+            val fc: FeatureCollection<Geometry?, ChateauProps> = parseChateaux(rawGeo)
+
+            // Decode RTree<Int>
+            val tree: RTree<Int> = try {
+                json.decodeFromStringRTree<Int>(rtreeJson)
+            } catch (e: Exception) {
+                Log.w("Chateaux", "Failed to decode cached RTree; will be recomputed", e)
+                // If RTree decoding fails, rebuild it from the cached GeoJSON so we still warm-start.
+                val (rebuilt, _) = buildRTreeIds(fc, maxEntries)
+                rebuilt
+            }
+
+            val list = fc.features as List<Feature<Geometry?, ChateauProps>>
+            return@withContext tree to list
+        }
+
+    // --- network build (fresh) ---
+
+    private suspend fun fetchAndBuildFromNetwork():
+            Triple<RTree<Int>, List<Feature<Geometry?, ChateauProps>>, String>? =
+        withContext(Dispatchers.IO) {
+            try {
+                val raw = http.get(chateauxUrl).body<String>()
+                val fc = parseChateaux(raw)
+                val (tree, list) = buildRTreeIds(fc, maxEntries)
+                Triple(tree, list, raw)
+            } catch (e: Exception) {
+                Log.w("Chateaux", "Network fetch/build failed", e)
+                null
+            }
+        }
+
+    // --- tiny file helpers ---
+
+    private suspend fun writeTextFile(name: String, content: String) = withContext(Dispatchers.IO) {
+        File(filesDir, name).writeText(content)
+    }
+
+    private suspend fun readTextFile(name: String): String? = withContext(Dispatchers.IO) {
+        val f = File(filesDir, name)
+        if (f.exists()) f.readText() else null
     }
 
     // Helper to get string property from spatialk.geojson.Feature

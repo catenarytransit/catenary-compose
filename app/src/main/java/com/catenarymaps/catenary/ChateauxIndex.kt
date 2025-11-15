@@ -45,54 +45,52 @@ fun parseChateaux(json: String): FeatureCollection<Geometry?, ChateauProps> {
     return FeatureCollection(typed, fcRaw.bbox)
 }
 
-
-/** Convert a chateaux FeatureCollection into an R-tree index (envelope-based). */
+/** Convert a chateaux FeatureCollection into an ID-based R-tree index. */
 suspend fun chateauxToRTree(
     chateaux: FeatureCollection<out Geometry?, ChateauProps>,
     maxEntries: Int = 8
-): RTree<Feature<Geometry?, ChateauProps>> {
+): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>> {
     @Suppress("UNCHECKED_CAST")
-    val fc: FeatureCollection<Geometry?, ChateauProps> = FeatureCollection(chateaux.features as List<Feature<Geometry?, ChateauProps>>, chateaux.bbox)
-    return buildRTreeParallel(fc, maxEntries, 4096)
+    val fc: FeatureCollection<Geometry?, ChateauProps> =
+        FeatureCollection(chateaux.features as List<Feature<Geometry?, ChateauProps>>, chateaux.bbox)
+    // parallel isn’t necessary here since we only need rects + IDs; but keeping it simple/serial:
+    return buildRTreeIds(fc, maxEntries)
 }
-
 
 /** Lookup chateaux that intersect (or just touch) a [bbox]. */
 fun lookupChateaux(
-    index: RTree<Feature<Geometry?, ChateauProps>>,
+    index: RTree<Int>,
+    features: List<Feature<Geometry?, ChateauProps>>,
     bbox: BoundingBox,
     strictTouchOnly: Boolean = false
-): List<Feature<Geometry?, ChateauProps>> = queryTouching(index, bbox, strictTouchOnly)
+): List<Feature<Geometry?, ChateauProps>> =
+    queryTouchingIds(index, bbox, strictTouchOnly).map { features[it] }
 
 
-// Convenience to build everything from a raw JSON string in one go.
+// Build everything from raw JSON
 suspend fun buildChateauxIndexFromJson(
     json: String,
     maxEntries: Int = 8
-): RTree<Feature<Geometry?, ChateauProps>> {
+): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>> {
     val chateaux = parseChateaux(json)
     return chateauxToRTree(chateaux, maxEntries)
 }
 
-/**
- * Fetches chateaux GeoJSON from the network, parses it, and builds an R-tree index.
- *
- * @param client The Ktor HttpClient to use for the network request.
- * @param maxEntries Node capacity for the RTree.
- * @return The built RTree, or null if fetching or parsing fails.
- */
+// Network + build
 suspend fun fetchAndBuildChateauxIndex(
     client: HttpClient,
     maxEntries: Int = 8
-): RTree<Feature<Geometry?, ChateauProps>>? = withContext(Dispatchers.IO) {
+): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? = withContext(Dispatchers.IO) {
     return@withContext try {
-        val jsonString: String = client.get("https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json").body()
+        val jsonString: String = client
+            .get("https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json")
+            .body()
 
         val t0 = System.currentTimeMillis()
-        val rtree = buildChateauxIndexFromJson(jsonString, maxEntries)
+        val result = buildChateauxIndexFromJson(jsonString, maxEntries) // (rtree, features)
         val t1 = System.currentTimeMillis()
         Log.d("ChateauxIndex", "Built chateaux index in ${t1 - t0} ms")
-        rtree
+        result
     } catch (e: Exception) {
         null
     }

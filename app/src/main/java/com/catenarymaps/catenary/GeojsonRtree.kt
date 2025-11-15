@@ -6,7 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Contextual
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -18,9 +18,24 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.serializer
 import org.maplibre.spatialk.geojson.*
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.descriptors.listSerialDescriptor
+import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.decodeStructure
+import kotlinx.serialization.encoding.encodeStructure
+import kotlinx.serialization.serializer
+import kotlinx.serialization.descriptors.PrimitiveKind
 
 // ---------------------------- Core geometry types ----------------------------
 
@@ -50,10 +65,7 @@ data class Rect(
         other.minX <= maxX && other.maxX >= minX &&
                 other.minY <= maxY && other.maxY >= minY
 
-    /**
-     * True when rectangles "touch" but do not overlap in area (edge or corner touch).
-     * For many GIS workflows this approximates ST_Touches for envelopes.
-     */
+    /** Edge/corner touch (no positive-area overlap). */
     fun touches(other: Rect): Boolean {
         if (!intersects(other)) return false
         val overlapX = minOf(maxX, other.maxX) - maxOf(minX, other.minX)
@@ -65,9 +77,7 @@ data class Rect(
     fun toBoundingBox(): BoundingBox = BoundingBox(minX, minY, maxX, maxY)
 
     companion object {
-        fun from(bbox: BoundingBox): Rect = Rect(
-            bbox.west, bbox.south, bbox.east, bbox.north
-        )
+        fun from(bbox: BoundingBox): Rect = Rect(bbox.west, bbox.south, bbox.east, bbox.north)
     }
 }
 
@@ -75,7 +85,7 @@ data class Rect(
 @Serializable
 data class Entry<T>(
     val rect: Rect,
-    val value: @Contextual T // contextual on the PROPERTY (legal)
+    val value: T
 )
 
 // ---------------------------- RTree ----------------------------
@@ -197,45 +207,148 @@ class RTree<T> internal constructor(
     }
 }
 
-// ---------------------------- Serialization helpers for RTree ----------------------------
+// ---------------------------- Serialization helpers for RTree (manual, no polymorphic surprises) ----------------------------
 
-@Serializable
-private data class RTreeDTO<T>(
-    val maxEntries: Int,
-    val root: RTree.Node<T>
-)
 
-/** Build a serializer for RTree<T> using the provided serializer for T (contextual payload). */
-fun <T> rtreeSerializer(tSer: KSerializer<T>): KSerializer<RTree<T>> = object : KSerializer<RTree<T>> {
-    private val dtoSer = RTreeDTO.serializer(tSer)
-    override val descriptor: SerialDescriptor get() = dtoSer.descriptor
-    override fun serialize(encoder: Encoder, value: RTree<T>) {
-        val dto = RTreeDTO(value.maxEntries, value.root)
-        encoder.encodeSerializableValue(dtoSer, dto)
+/** Serializer for Entry<T> that uses the concrete T serializer explicitly. */
+fun <T> entrySerializer(tSer: KSerializer<T>): KSerializer<Entry<T>> =
+    object : KSerializer<Entry<T>> {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Entry") {
+            element("rect", Rect.serializer().descriptor)
+            element("value", tSer.descriptor)
+        }
+
+        override fun serialize(encoder: Encoder, value: Entry<T>) {
+            encoder.encodeStructure(descriptor) {
+                encodeSerializableElement(descriptor, 0, Rect.serializer(), value.rect)
+                encodeSerializableElement(descriptor, 1, tSer, value.value)
+            }
+        }
+
+        override fun deserialize(decoder: Decoder): Entry<T> =
+            decoder.decodeStructure(descriptor) {
+                var rect: Rect? = null
+                var v: T? = null
+                loop@ while (true) {
+                    when (val i = decodeElementIndex(descriptor)) {
+                        0 -> rect = decodeSerializableElement(descriptor, 0, Rect.serializer())
+                        1 -> v = decodeSerializableElement(descriptor, 1, tSer)
+                        CompositeDecoder.DECODE_DONE -> break@loop
+                        else -> throw SerializationException("Unexpected index: $i")
+                    }
+                }
+                Entry(rect ?: error("rect missing"), v ?: error("value missing"))
+            }
     }
-    override fun deserialize(decoder: Decoder): RTree<T> {
-        val dto = decoder.decodeSerializableValue(dtoSer)
-        return RTree(dto.maxEntries, dto.root)
+
+/** Serializer for RTree.Node<T> (recursive, tagged with "kind":"leaf"|"branch"). */
+@OptIn(InternalSerializationApi::class)
+fun <T> nodeSerializer(tSer: KSerializer<T>): KSerializer<RTree.Node<T>> {
+    val entrySer = entrySerializer(tSer)
+
+    // Descriptor cannot reference self-serializer; use a neutral list descriptor for "children".
+    val nodeDesc: SerialDescriptor = buildClassSerialDescriptor("RTree.Node") {
+        element("kind", String.serializer().descriptor)           // <-- simple & version-safe
+        element("mbr", Rect.serializer().descriptor)
+        element("entries", listSerialDescriptor(entrySer.descriptor), isOptional = true)
+        element(
+            "children",
+            buildSerialDescriptor("kotlin.collections.List", StructureKind.LIST) { },
+            isOptional = true
+        )
     }
+
+    // Now define the actual serializer, wiring recursion only at encode/decode time.
+    lateinit var selfSer: KSerializer<RTree.Node<T>>
+    val childrenSer by lazy { ListSerializer(selfSer) }
+
+    selfSer = object : KSerializer<RTree.Node<T>> {
+        override val descriptor: SerialDescriptor = nodeDesc
+
+        override fun serialize(encoder: Encoder, value: RTree.Node<T>) {
+            encoder.encodeStructure(descriptor) {
+                when (value) {
+                    is RTree.Node.Leaf -> {
+                        encodeStringElement(descriptor, 0, "leaf")
+                        encodeSerializableElement(descriptor, 1, Rect.serializer(), value.mbr)
+                        encodeSerializableElement(descriptor, 2, ListSerializer(entrySer), value.entries)
+                    }
+                    is RTree.Node.Branch -> {
+                        encodeStringElement(descriptor, 0, "branch")
+                        encodeSerializableElement(descriptor, 1, Rect.serializer(), value.mbr)
+                        encodeSerializableElement(descriptor, 3, childrenSer, value.children)
+                    }
+                }
+            }
+        }
+
+        override fun deserialize(decoder: Decoder): RTree.Node<T> =
+            decoder.decodeStructure(descriptor) {
+                var kind: String? = null
+                var mbr: Rect? = null
+                var entries: List<Entry<T>>? = null
+                var children: List<RTree.Node<T>>? = null
+                loop@ while (true) {
+                    when (val i = decodeElementIndex(descriptor)) {
+                        0 -> kind = decodeStringElement(descriptor, 0)
+                        1 -> mbr = decodeSerializableElement(descriptor, 1, Rect.serializer())
+                        2 -> entries = decodeSerializableElement(descriptor, 2, ListSerializer(entrySer))
+                        3 -> children = decodeSerializableElement(descriptor, 3, childrenSer)
+                        CompositeDecoder.DECODE_DONE -> break@loop
+                        else -> throw SerializationException("Unexpected index: $i")
+                    }
+                }
+                when (kind) {
+                    "leaf" -> RTree.Node.Leaf(
+                        mbr ?: error("mbr missing"),
+                        entries ?: error("entries missing")
+                    )
+                    "branch" -> RTree.Node.Branch(
+                        mbr ?: error("mbr missing"),
+                        children ?: error("children missing")
+                    )
+                    else -> error("Unknown kind: $kind")
+                }
+            }
+    }
+    return selfSer
 }
 
-/** Create a Json with a module. Optionally pass contextual serializers (e.g., for Feature/Geometry/P). */
-fun defaultJson(vararg contextuals: KSerializer<*>): Json {
-    val module = SerializersModule {
-        @Suppress("UNCHECKED_CAST")
-        contextuals.forEach { contextual(it as KSerializer<Any>) }
+/** Custom serializer for RTree<T> that uses the explicit Node/Entry serializers above. */
+fun <T> rtreeSerializer(tSer: KSerializer<T>): KSerializer<RTree<T>> =
+    object : KSerializer<RTree<T>> {
+        private val nodeSer = nodeSerializer(tSer)
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("RTree") {
+            element("maxEntries", Int.serializer().descriptor)
+            element("root", nodeSer.descriptor)
+        }
+
+        override fun serialize(encoder: Encoder, value: RTree<T>) {
+            encoder.encodeStructure(descriptor) {
+                encodeIntElement(descriptor, 0, value.maxEntries)
+                encodeSerializableElement(descriptor, 1, nodeSer, value.root)
+            }
+        }
+
+        override fun deserialize(decoder: Decoder): RTree<T> =
+            decoder.decodeStructure(descriptor) {
+                var maxEntries: Int? = null
+                var root: RTree.Node<T>? = null
+                loop@ while (true) {
+                    when (val i = decodeElementIndex(descriptor)) {
+                        0 -> maxEntries = decodeIntElement(descriptor, 0)
+                        1 -> root = decodeSerializableElement(descriptor, 1, nodeSer)
+                        CompositeDecoder.DECODE_DONE -> break@loop
+                        else -> throw SerializationException("Unexpected index: $i")
+                    }
+                }
+                RTree(maxEntries ?: error("maxEntries missing"), root ?: error("root missing"))
+            }
     }
-    return Json {
-        serializersModule = module
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-        classDiscriminator = "type" // used for Node sealed polymorphism
-    }
-}
 
 /** Encode an RTree<T> to JSON using the Json's module to resolve T. */
 inline fun <reified T> Json.encodeToStringRTree(tree: RTree<T>): String {
-    val tSer = serializersModule.serializer<T>()
+    val tSer = serializersModule.serializer<T>() // works for Int, String, or any @Serializable T
     return encodeToString(rtreeSerializer(tSer), tree)
 }
 
@@ -244,7 +357,6 @@ inline fun <reified T> Json.decodeFromStringRTree(text: String): RTree<T> {
     val tSer = serializersModule.serializer<T>()
     return decodeFromString(rtreeSerializer(tSer), text)
 }
-
 // ---------------------------- GeoJSON helpers ----------------------------
 
 /** Compute a BoundingBox for any supported Geometry if absent. */
@@ -258,9 +370,9 @@ private fun computeBBox(geom: Geometry): BoundingBox {
             val x = p.longitude
             val y = p.latitude
             if (x < minX) minX = x
-            if (y < minY) minY = minY.coerceAtMost(y)
-            if (x > maxX) maxX = maxX.coerceAtLeast(x)
-            if (y > maxY) maxY = maxY.coerceAtLeast(y)
+            if (y < minY) minY = y
+            if (x > maxX) maxX = x
+            if (y > maxY) maxY = y
         }
         return BoundingBox(minX, minY, maxX, maxY)
     }
@@ -371,4 +483,31 @@ suspend fun <P : Any> buildRTreeParallel(
             .flatten()
 
     RTree.pack(entries, maxEntries)
+}
+
+/** Build an ID-based RTree: payloads are indices into the features list. */
+fun <P : Any> buildRTreeIds(
+    features: FeatureCollection<out Geometry?, P>,
+    maxEntries: Int = 8
+): Pair<RTree<Int>, List<Feature<Geometry?, P>>> {
+    @Suppress("UNCHECKED_CAST")
+    val fs = features.features as List<Feature<Geometry?, P>>
+    val entries = fs.mapIndexed { idx, f ->
+        Entry(
+            rect = featureRect(f as Feature<Geometry?, *>),
+            value = idx
+        )
+    }
+    val tree = RTree.pack(entries, maxEntries)
+    return tree to fs
+}
+
+/** Query returning matching feature indices. */
+fun queryTouchingIds(
+    index: RTree<Int>,
+    bbox: BoundingBox,
+    strictTouchOnly: Boolean = false
+): List<Int> {
+    val rect = Rect.from(bbox)
+    return if (strictTouchOnly) index.searchTouch(rect) else index.searchIntersect(rect)
 }
