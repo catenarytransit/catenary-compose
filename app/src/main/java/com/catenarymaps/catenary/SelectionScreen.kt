@@ -1,5 +1,7 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import android.graphics.drawable.Icon
 import android.util.Log
 import androidx.compose.foundation.background
@@ -255,7 +257,11 @@ fun RouteSelectionItem(
     onClick: (MapSelectionSelector.RouteMapSelector) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
-    val routeColor = parseColor(option.colour, MaterialTheme.colorScheme.onSurface)
+    val routeBaseColor = parseColor(option.colour, MaterialTheme.colorScheme.onSurface)
+
+    val routeColor = if (isDark) lightenColour(routeBaseColor, minContrast = 8.0) else darkenColour(
+        routeBaseColor
+    )
 
     Card(
         onClick = { onClick(option) },
@@ -335,104 +341,139 @@ fun MapSelectionScreen(
     val routes =
         screenData.arrayofoptions.mapNotNull { it.data as? MapSelectionSelector.RouteMapSelector }
 
+    // Keep this as-is or swap for rememberSaveable if you want to survive process death.
     val lazyListState = rememberLazyListState()
+
     LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scrollable(state = lazyListState, orientation = Orientation.Vertical)
-            // .windowInsetsBottomHeight(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current)))
-            .windowInsetsPadding(WindowInsets(bottom = WindowInsets.safeDrawing.getBottom(density = LocalDensity.current))),
         state = lazyListState,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        contentPadding = PaddingValues(bottom = 64.dp)
+        modifier = Modifier
+            .fillMaxWidth(),
+        // REMOVE the extra .scrollable(...) – LazyColumn already scrolls itself
+        // .scrollable(state = lazyListState, orientation = Orientation.Vertical)
+        contentPadding = PaddingValues(bottom = 64.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+        // Use safe drawing insets, but bottom-only to avoid top inset jank during flings
+//            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
     ) {
-        item {
+        // Give the summary row a stable key
+        item(key = "summary") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${screenData.arrayofoptions.size} items selected", // TODO: i18n
-                    style = MaterialTheme.typography.headlineSmall, // Svelte: text-lg md:text-2xl
+                    text = "${screenData.arrayofoptions.size} items selected",
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 NavigationControls(onBack = onBack, onHome = onHome)
             }
         }
+
         if (vehicles.isNotEmpty()) {
-            item {
+            // Header has a key
+            item(key = "header-vehicles") {
                 Text(
-                    "Vehicles", // TODO: i18n
-                    style = MaterialTheme.typography.titleLarge,
+                    "Vehicles",
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
-            items(vehicles) { vehicle ->
-                VehicleSelectionItem(
-                    option = vehicle,
-                    onClick = {
-                        val newStackItem = if (it.trip_id != null) {
-                            CatenaryStackEnum.SingleTrip(
-                                chateau_id = it.chateau_id,
-                                trip_id = it.trip_id,
-                                route_id = it.route_id,
-                                start_time = it.start_time,
-                                start_date = it.start_date,
-                                vehicle_id = it.vehicle_id,
-                                route_type = it.route_type
-                            )
-                        } else {
-                            CatenaryStackEnum.VehicleSelectedStack(
-                                chateau_id = it.chateau_id,
-                                vehicle_id = it.vehicle_id,
-                                gtfs_id = it.gtfs_id
-                            )
+            // Items have stable keys
+            items(
+                items = vehicles,
+                key = { v ->
+                    // Ensure uniqueness even when trip_id is null
+                    "veh:${v.chateau_id}:${v.vehicle_id ?: v.trip_id ?: "${v.hashCode()}"}"
+                },
+                contentType = { "vehicle" }
+            ) { vehicle ->
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    VehicleSelectionItem(
+                        option = vehicle,
+                        onClick = {
+                            val newStackItem = if (it.trip_id != null) {
+                                CatenaryStackEnum.SingleTrip(
+                                    chateau_id = it.chateau_id,
+                                    trip_id = it.trip_id,
+                                    route_id = it.route_id,
+                                    start_time = it.start_time,
+                                    start_date = it.start_date,
+                                    vehicle_id = it.vehicle_id,
+                                    route_type = it.route_type
+                                )
+                            } else {
+                                CatenaryStackEnum.VehicleSelectedStack(
+                                    chateau_id = it.chateau_id,
+                                    vehicle_id = it.vehicle_id,
+                                    gtfs_id = it.gtfs_id
+                                )
+                            }
+                            onStackPush(newStackItem)
                         }
-                        onStackPush(newStackItem)
-                    }
-                )
+                    )
+                }
             }
         }
 
         if (stops.isNotEmpty()) {
-            item {
+            item(key = "header-stops") {
                 Text(
-                    "Stops", // TODO: i18n
-                    style = MaterialTheme.typography.titleLarge,
+                    "Stops",
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
-            items(stops) { stop ->
-                val preview = stopPreviewData?.stops?.get(stop.chateau_id)?.get(stop.stop_id)
-                val routeCache = stopPreviewData?.routes?.get(stop.chateau_id)
+            items(
+                items = stops,
+                key = { s -> "stop:${s.chateau_id}:${s.stop_id}" },
+                contentType = { "stop" }
+            ) { stop ->
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    val preview = stopPreviewData?.stops?.get(stop.chateau_id)?.get(stop.stop_id)
+                    val routeCache = stopPreviewData?.routes?.get(stop.chateau_id)
 
-                StopSelectionItem(
-                    option = stop,
-                    previewData = preview,
-                    routeData = routeCache,
-                    onClick = {
-                        onStackPush(CatenaryStackEnum.StopStack(it.chateau_id, it.stop_id))
-                    }
-                )
+                    StopSelectionItem(
+                        option = stop,
+                        previewData = preview,
+                        routeData = routeCache,
+                        onClick = {
+                            onStackPush(CatenaryStackEnum.StopStack(it.chateau_id, it.stop_id))
+                        }
+                    )
+                }
             }
         }
 
         if (routes.isNotEmpty()) {
-            item {
+            item(key = "header-routes") {
                 Text(
-                    "Routes", // TODO: i18n
-                    style = MaterialTheme.typography.titleLarge,
+                    "Routes",
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
-            items(routes) { route ->
-                RouteSelectionItem(
-                    option = route,
-                    onClick = {
-                        onStackPush(CatenaryStackEnum.RouteStack(it.chateau_id, it.route_id))
-                    }
-                )
+            items(
+                items = routes,
+                key = { r -> "route:${r.chateau_id}:${r.route_id}" },
+                contentType = { "route" }
+
+            ) { route ->
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    RouteSelectionItem(
+                        option = route,
+                        onClick = {
+                            onStackPush(CatenaryStackEnum.RouteStack(it.chateau_id, it.route_id))
+                        }
+                    )
+                }
             }
         }
     }

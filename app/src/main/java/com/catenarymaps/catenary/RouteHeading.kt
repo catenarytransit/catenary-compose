@@ -62,7 +62,7 @@ fun RouteHeading(
     val routeTextColor = parseColor(textColor, MaterialTheme.colorScheme.onPrimary)
 
     val displayColor = if (androidx.compose.foundation.isSystemInDarkTheme()) {
-        lightenColour(routeColor)
+        lightenColour(routeColor, minContrast = 7.0)
     } else {
         darkenColour(routeColor)
     }
@@ -90,7 +90,7 @@ fun RouteHeading(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column() {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     modifier = clickableModifier,
                     text = buildAnnotatedString {
