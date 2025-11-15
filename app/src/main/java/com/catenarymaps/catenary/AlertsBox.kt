@@ -116,7 +116,7 @@ fun AlertsBox(
     Column(
         modifier = Modifier
             .border(1.dp, alertColor, RoundedCornerShape(8.dp))
-            .padding(8.dp)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
