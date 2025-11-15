@@ -545,6 +545,7 @@ private fun TopRow(
                 TextButton(
                     modifier = Modifier.height(36.dp),
                     onClick = onPinDrop,
+                    shape = RoundedCornerShape(0.dp),
                     colors = ButtonDefaults.textButtonColors(
                         containerColor = if (currentPickModeIsPin) Color(0xFFC9A2C8).copy(0.25f) else Color.Transparent
                     ),
@@ -565,6 +566,7 @@ private fun TopRow(
                 TextButton(
                     onClick = onCenterPin,
                     modifier = Modifier.height(36.dp),
+                    shape = RoundedCornerShape(0.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
                     Icon(
@@ -590,7 +592,12 @@ private fun TopRow(
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(999.dp))
-                .border(2.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(999.dp))
+                .height(42.dp)
+                .border(
+                    2.dp,
+
+                    MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(999.dp)
+                )
         ) {
             TextButton(
                 onClick = { onSortChange(SortMode.ALPHA) },
@@ -599,8 +606,16 @@ private fun TopRow(
                         0.3f
                     ) else Color.Transparent
                 ),
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Icon(Icons.Default.SortByAlpha, contentDescription = "Sort by Alpha") }
+                modifier = Modifier
+                    .border(width = 0.dp, color = Color.Transparent)
+                    .fillMaxHeight(),
+                contentPadding = PaddingValues(horizontal = 6.dp)
+            ) {
+                Icon(
+                    Icons.Default.SortByAlpha, contentDescription = "Sort by Alpha",
+                    Modifier.size(20.dp)
+                )
+            }
 
             TextButton(
                 onClick = { onSortChange(SortMode.DISTANCE) },
@@ -609,8 +624,16 @@ private fun TopRow(
                         0.3f
                     ) else Color.Transparent
                 ),
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Icon(Icons.Default.Straighten, contentDescription = "Sort by Distance") }
+                modifier = Modifier
+                    .border(width = 0.dp, color = Color.Transparent)
+                    .fillMaxHeight(),
+                contentPadding = PaddingValues(horizontal = 6.dp)
+            ) {
+                Icon(
+                    Icons.Default.Straighten, contentDescription = "Sort by Distance",
+                    Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
