@@ -251,6 +251,9 @@ private const val K_PIN_LON = "pin_lon"
 private const val K_DATADOG_CONSENT = "datadog_consent"
 private const val K_GA_CONSENT = "ga_consent"
 
+private const val K_SHOW_ZOMBIE_BUSES = "show_zombie_buses"
+private const val K_USE_US_UNITS = "use_us_units"
+
 private fun SharedPreferences.putDouble(key: String, value: Double) =
     edit().putLong(key, java.lang.Double.doubleToRawLongBits(value))
         .apply()
@@ -728,6 +731,9 @@ class MainActivity : ComponentActivity() {
         val initialGaConsent = prefs.getBoolean(K_GA_CONSENT, true)
 
         val initialOptOut = !initialGaConsent
+        val initialShowZombieBuses = prefs.getBoolean(K_SHOW_ZOMBIE_BUSES, false)
+        val initialUsUnits = prefs.getBoolean(K_USE_US_UNITS, false)
+
         try {
 
             firebaseAnalytics.setConsent(
@@ -964,7 +970,7 @@ class MainActivity : ComponentActivity() {
 
             // Camera
             // If there's a saved camera, start there. Otherwise, start somewhere neutral;
-// we'll jump to the user's location at zoom=13 as soon as get it.
+            // we'll jump to the user's location at zoom=13 as soon as get it.
             val initialCamera = saved?.let {
                 CameraPosition(
                     target = Position(it.lon, it.lat),
@@ -980,10 +986,17 @@ class MainActivity : ComponentActivity() {
             )
 
             val camera = rememberCameraState(firstPosition = initialCamera)
-
             // State for settings from JS
-            var showZombieBuses by remember { mutableStateOf(false) }
-            var usUnits by remember { mutableStateOf(false) }
+            var showZombieBuses by remember { mutableStateOf(initialShowZombieBuses) }
+            var usUnits by remember { mutableStateOf(initialUsUnits) }
+
+            LaunchedEffect(showZombieBuses) {
+                prefs.edit().putBoolean(K_SHOW_ZOMBIE_BUSES, showZombieBuses).apply()
+            }
+
+            LaunchedEffect(usUnits) {
+                prefs.edit().putBoolean(K_USE_US_UNITS, usUnits).apply()
+            }
             val isDark = isSystemInDarkTheme()
 
 
