@@ -95,7 +95,7 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    FlowRow() {
                         it.manufacturer?.let { manufacturer ->
                             Text(
                                 text = manufacturer,
