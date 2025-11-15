@@ -260,7 +260,7 @@ private fun FormattedText(text: String, style: TextStyle) {
 
     // Regex for various tags. Added <p>, </p>, <br>, <strong>, <ul>, <li>, </ul>
     val tagRegex = remember {
-        Regex("""<(/?[a-zA-Z0-9]+)(?:\s+href="([^"]+)")?>|([^<]+)""")
+        Regex("""<(/?[a-zA-Z0-9]+)(?:\s+[^>]*?\s*href="([^"]+)"[^>]*?)?>|([^<]+)""")
     }
 
     val annotatedString = buildAnnotatedString {

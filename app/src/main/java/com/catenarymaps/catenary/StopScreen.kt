@@ -115,14 +115,16 @@ data class DeparturesAtStopResponse(
     val primary: StopPrimary? = null,
     val routes: Map<String, Map<String, StopRouteInfo>>? = null,
     val shapes: Map<String, Map<String, String>>? = null, // Chateau -> Shape ID -> Polyline
-    val events: List<StopEvent>? = null
+    val events: List<StopEvent>? = null,
+    val alerts: Map<String, Map<String, Alert>> = emptyMap()
 )
 
 // --- Internal State Data Classes ---
 private data class StopMeta(
     val primary: StopPrimary,
     val routes: Map<String, Map<String, StopRouteInfo>>,
-    val shapes: Map<String, Map<String, String>>
+    val shapes: Map<String, Map<String, String>>,
+    val alerts: Map<String, Map<String, Alert>>
 )
 
 private data class PageInfo(
@@ -232,7 +234,8 @@ fun StopScreen(
         if (data.primary != null) {
             val newRoutes = (dataMeta?.routes ?: emptyMap()) + (data.routes ?: emptyMap())
             val newShapes = (dataMeta?.shapes ?: emptyMap()) + (data.shapes ?: emptyMap())
-            dataMeta = StopMeta(data.primary, newRoutes, newShapes)
+            val newStops = (dataMeta?.alerts ?: emptyMap()) + (data.alerts ?: emptyMap())
+            dataMeta = StopMeta(data.primary, newRoutes, newShapes, newStops)
         }
 
         // Merge events
@@ -473,8 +476,20 @@ fun StopScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+
+                    meta.alerts?.forEach { (chateauId, alertsmap) ->
+                        AlertsBox(
+                            alerts = alertsmap,
+                            chateau = chateauId,
+                            default_tz = zoneId.id,
+                            isScrollable = false
+                        )
+                    }
+
                 }
             }
+
 
             // Previous Departures Toggle
             if (previousCount > 0) {
