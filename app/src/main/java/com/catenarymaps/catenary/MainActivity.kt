@@ -564,26 +564,58 @@ private fun queryAreAnyRailFeaturesVisible(
                 bottom = (mapSize.height / density).dp
             )
 
-            val features = projection.queryRenderedFeatures(
+            val waitStartTime = SystemClock.uptimeMillis()
+            val featuresDotsCount = projection.queryRenderedFeatures(
                 rect = rect, layerIds = setOf(
-                    LayersPerCategory.Tram.Shapes,
-                    LayersPerCategory.Tram.Stops,
-                    LayersPerCategory.Tram.Livedots,
-                    LayersPerCategory.Metro.Shapes,
+                    //   LayersPerCategory.Tram.Stops,
+                    //   LayersPerCategory.Tram.Livedots,
                     LayersPerCategory.Metro.Stops,
                     LayersPerCategory.Metro.Livedots,
-                    LayersPerCategory.IntercityRail.Shapes,
                     LayersPerCategory.IntercityRail.Stops,
                     LayersPerCategory.IntercityRail.Livedots,
-                    LayersPerCategory.IntercityRail.Labeldots
                 )
-            )
+            ).size
 
-            val visible = features.isNotEmpty()
-            Log.d(TAG, "Are any rail features visible? $visible ${features.size} items")
+            android.os.Handler(Looper.getMainLooper()).post {
+                val handlerWaitTime1 = SystemClock.uptimeMillis() - waitStartTime
+                val queryStartTime1 = SystemClock.uptimeMillis()
 
-            val manyVisible = features.size >= 420
-            railinframe = manyVisible
+//                val intercityRailFeaturesCount = projection.queryRenderedFeatures(
+//                    rect = rect, layerIds = setOf(
+//                        LayersPerCategory.IntercityRail.Shapes,
+//                    )
+//                ).size
+
+                val queryTime1 = SystemClock.uptimeMillis() - queryStartTime1
+                val waitStartTime2 = SystemClock.uptimeMillis()
+
+                android.os.Handler(Looper.getMainLooper()).post {
+                    val handlerWaitTime2 = SystemClock.uptimeMillis() - waitStartTime2
+                    val queryStartTime2 = SystemClock.uptimeMillis()
+
+//                    val metroRailShapeFeaturesCount = projection.queryRenderedFeatures(
+//                    rect = rect, layerIds = setOf(
+//                        LayersPerCategory.Metro.Shapes,
+//                        LayersPerCategory.Tram.Shapes
+//                    )
+//                ).size
+                    val queryTime2 = SystemClock.uptimeMillis() - queryStartTime2
+
+
+                    val totalCount = featuresDotsCount
+
+                    Log.d(
+                        TAG,
+                        "total Count of rail items ${totalCount} with dots ${featuresDotsCount}"
+                    )
+
+
+                    val manyVisible = featuresDotsCount >= 20
+                    railinframe = manyVisible
+                }
+
+            }
+
         }
     }
 }
@@ -1638,8 +1670,8 @@ class MainActivity : ComponentActivity() {
                                         queryVisibleChateaus(scope, camera, mapSize)
 
                                         if (railinframe) {
-                                            if (distanceMovedOfRailChecker > 10000 || zoomMovedOfRailChecker > 5) {
-                                                if (pos.zoom > 9) {
+                                            if (distanceMovedOfRailChecker > 20000 || zoomMovedOfRailChecker > 5) {
+                                                if (pos.zoom > 6) {
                                                     queryAreAnyRailFeaturesVisible(camera, mapSize)
                                                     lastQueriedPosOfRailChecker = pos
                                                 }
@@ -2916,6 +2948,7 @@ class MainActivity : ComponentActivity() {
 
                                                     queryAreAnyRailFeaturesVisible(
                                                         camera, mapSize,
+                                                        forceRun = true
                                                     )
                                                 }
                                             )
@@ -2942,6 +2975,7 @@ class MainActivity : ComponentActivity() {
 
                                                     queryAreAnyRailFeaturesVisible(
                                                         camera, mapSize,
+                                                        forceRun = true
                                                     )
                                                 }
                                             )
