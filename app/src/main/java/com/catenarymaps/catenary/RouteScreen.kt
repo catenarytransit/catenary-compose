@@ -12,12 +12,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -44,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -336,7 +340,17 @@ fun RouteScreen(
         rt?.trip_updates?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap()
     }
 
-    LazyColumn(modifier = Modifier.padding(horizontal = 8.dp)) {
+    LazyColumn(
+        modifier = Modifier
+            .padding(horizontal = 8.dp)
+            .windowInsetsPadding(
+                WindowInsets(
+                    bottom = WindowInsets.safeDrawing.getBottom(
+                        density = LocalDensity.current
+                    )
+                )
+            )
+    ) {
         // Header
         item {
             RouteHeading(
