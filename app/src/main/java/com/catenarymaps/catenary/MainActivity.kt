@@ -215,6 +215,7 @@ import co.touchlab.kermit.Logger.Companion.config
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.Dispatcher
 import okhttp3.OkHttp
 import okhttp3.OkHttpClient
@@ -227,6 +228,10 @@ import org.json.JSONObject
 import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.LineString
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import org.maplibre.compose.expressions.dsl.Feature.has
+import org.maplibre.compose.expressions.dsl.condition
+import org.maplibre.compose.expressions.dsl.switch
+import org.maplibre.spatialk.turf.measurement.distance
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
     return try {
@@ -526,13 +531,25 @@ val STOP_SOURCES = mapOf(
 private const val TAG = "CatenaryDebug"
 var visibleChateaus: List<String> = emptyList()
 
+var railinframe by mutableStateOf(false)
+
 val easeOutSpec: AnimationSpec<Float> = tween(
     durationMillis = 300, delayMillis = 0, easing = EaseOutCirc
 )
 
 enum class SheetSnapPoint { Collapsed, PartiallyExpanded, Expanded }
 
-private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {
+private var lastRailQueryTime = 0L
+
+private fun queryAreAnyRailFeaturesVisible(
+    camera: CameraState, mapSize: IntSize,
+    forceRun: Boolean = false
+) {
+    println("query any rail features attempted")
+    val now = SystemClock.uptimeMillis()
+    if (now - lastRailQueryTime < 1000L && forceRun == false) return
+    lastRailQueryTime = now
+
     val projection = camera.projection ?: return
     if (mapSize.width == 0 || mapSize.height == 0) return
 
@@ -545,14 +562,52 @@ private fun queryVisibleChateaus(camera: CameraState, mapSize: IntSize) {
     )
 
     val features = projection.queryRenderedFeatures(
-        rect = rect, layerIds = setOf("chateaus_calc")
+        rect = rect, layerIds = setOf(
+            LayersPerCategory.Tram.Shapes,
+            LayersPerCategory.Tram.Stops,
+            LayersPerCategory.Tram.Livedots,
+            LayersPerCategory.Metro.Shapes,
+            LayersPerCategory.Metro.Stops,
+            LayersPerCategory.Metro.Livedots,
+            LayersPerCategory.IntercityRail.Shapes,
+            LayersPerCategory.IntercityRail.Stops,
+            LayersPerCategory.IntercityRail.Livedots,
+            LayersPerCategory.IntercityRail.Labeldots
+        )
     )
 
-    val names = features.map { f ->
-        f.properties?.get("chateau")?.toString()?.trimStart('"')?.trimEnd('"') ?: "Unknown"
+    val visible = features.isNotEmpty()
+    Log.d(TAG, "Are any rail features visible? $visible ${features.size} items")
+
+    val manyVisible = features.size >= 420
+    railinframe = manyVisible
+
+
+}
+
+private fun queryVisibleChateaus(scope: CoroutineScope, camera: CameraState, mapSize: IntSize) {
+    scope.launch(kotlinx.coroutines.Dispatchers.Main) {
+        val projection = camera.projection ?: return@launch
+        if (mapSize.width == 0 || mapSize.height == 0) return@launch
+
+        val density = Resources.getSystem().displayMetrics.density
+        val rect = DpRect(
+            left = 0.dp,
+            top = 0.dp,
+            right = (mapSize.width / density).dp,
+            bottom = (mapSize.height / density).dp
+        )
+
+        val features = projection.queryRenderedFeatures(
+            rect = rect, layerIds = setOf("chateaus_calc")
+        )
+
+        val names = features.map { f ->
+            f.properties?.get("chateau")?.toString()?.trimStart('"')?.trimEnd('"') ?: "Unknown"
+        }
+        visibleChateaus = names
+        Log.d(TAG, "Visible chateaus (${names.size}): ${names.joinToString(limit = 100)}")
     }
-    visibleChateaus = names
-    Log.d(TAG, "Visible chateaus (${names.size}): ${names.joinToString(limit = 100)}")
 }
 
 @Serializable
@@ -810,21 +865,42 @@ class MainActivity : ComponentActivity() {
 
             // Prune maps keyed by ChateauID
             val currentCache = realtimeVehicleRouteCache.value
-            if (currentCache.keys.any { it !in visibleSet }) {
+            val currentCacheKeys = currentCache.keys
+            if (currentCacheKeys.size != visibleSet.size || !currentCacheKeys.containsAll(visibleSet)) {
                 realtimeVehicleRouteCache.value = currentCache.filterKeys { it in visibleSet }
             }
 
             val currentLastUpdated = realtimeVehicleLocationsLastUpdated.value
-            if (currentLastUpdated.keys.any { it !in visibleSet }) {
+            val currentLastUpdatedKeys = currentLastUpdated.keys
+            if (currentLastUpdatedKeys.size != visibleSet.size || !currentLastUpdatedKeys.containsAll(
+                    visibleSet
+                )
+            ) {
                 realtimeVehicleLocationsLastUpdated.value =
                     currentLastUpdated.filterKeys { it in visibleSet }
             }
 
-            routeCacheAgenciesKnown.value =
-                routeCacheAgenciesKnown.value.filterKeys { it in visibleSet }
+            val currentAgenciesKnown = routeCacheAgenciesKnown.value
+            val currentAgenciesKnownKeys = currentAgenciesKnown.keys
+            if (currentAgenciesKnownKeys.size != visibleSet.size || !currentAgenciesKnownKeys.containsAll(
+                    visibleSet
+                )
+            ) {
+                routeCacheAgenciesKnown.value =
+                    currentAgenciesKnown.filterKeys { it in visibleSet }
+            }
 
             // Prune the 'realtimeVehicleLocations' map (which is keyed by Category first)
             val currentLocationsV2 = realtimeVehicleLocationsStoreV2.value
+            // Early exit if no pruning is needed at all.
+            if (currentLocationsV2.values.all { chateauMap ->
+                    chateauMap.keys.size == visibleSet.size && chateauMap.keys.containsAll(
+                        visibleSet
+                    )
+                }) {
+                // All categories already have the correct set of chateaus, nothing to do.
+            } else {
+
             var locationsV2Modified = false
             val newLocationsV2 = currentLocationsV2.toMutableMap()
 
@@ -838,12 +914,19 @@ class MainActivity : ComponentActivity() {
             if (locationsV2Modified) {
                 realtimeVehicleLocationsStoreV2.value = newLocationsV2
             }
+            }
 
             val currentTileBoundaries = previousTileBoundariesStore.value
-            if (currentTileBoundaries.keys.any { it !in visibleSet }) {
+            val currentTileBoundariesKeys = currentTileBoundaries.keys
+            if (currentTileBoundariesKeys.size != visibleSet.size || !currentTileBoundariesKeys.containsAll(
+                    visibleSet
+                )
+            ) {
                 previousTileBoundariesStore.value =
                     currentTileBoundaries.filterKeys { it in visibleSet }
             }
+
+
         }
 
 
@@ -857,6 +940,9 @@ class MainActivity : ComponentActivity() {
             // Whenever layerSettings changes, save it to SharedPreferences.
             LaunchedEffect(layerSettings.value) {
                 prefs.writeLayerSettings(layerSettings.value)
+                //reset the timer for the rail visible settings
+
+                lastRailQueryTime = 0L
             }
             // --- End of move ---
 
@@ -1298,7 +1384,12 @@ class MainActivity : ComponentActivity() {
                     /** idle detection state for move/zoom end */
                     var lastCameraPos by remember { mutableStateOf<CameraPosition?>(null) }
                     var lastMoveAt by remember { mutableStateOf(0L) }
-                    var lastQueriedPos by remember { mutableStateOf<CameraPosition?>(null) }
+                    var lastQueriedPos by remember {
+                        mutableStateOf<CameraPosition?>(null)
+                    }
+                    var lastQueriedPosOfRailChecker by remember {
+                        mutableStateOf<CameraPosition?>(null)
+                    }
                     val idleDebounceMs = 250L
 
                     var lastSavedPos by remember { mutableStateOf<CameraPosition?>(null) }
@@ -1434,7 +1525,7 @@ class MainActivity : ComponentActivity() {
 
                         // 2) Map done loading
                         onMapLoadFinished = {
-                            queryVisibleChateaus(camera, mapSize)
+                            queryVisibleChateaus(scope, camera, mapSize)
                             val pos = camera.position
 
                             readDeeplink(
@@ -1462,6 +1553,8 @@ class MainActivity : ComponentActivity() {
                                 realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2,
                                 routeCacheAgenciesKnown = routeCacheAgenciesKnown
                             )
+                            queryVisibleChateaus(scope, camera, mapSize)
+                            queryAreAnyRailFeaturesVisible(camera, mapSize)
                             lastFetchedAt = now
                         },
                         // 3) Use onFrame to detect camera idle -> covers move end & zoom end
@@ -1470,9 +1563,14 @@ class MainActivity : ComponentActivity() {
                             val now = SystemClock.uptimeMillis()
                             val pos = camera.position
 
+                            if (lastCameraPos == null) {
+
+                            }
+
                             if (lastCameraPos == null || lastCameraPos != pos) {
                                 lastCameraPos = pos
                                 lastMoveAt = now
+
 
                                 // Only drop the lock if this wasn't an internal move we initiated.
                                 if (!geoLock.isInternalMove() && geoLock.isActive()) {
@@ -1503,8 +1601,54 @@ class MainActivity : ComponentActivity() {
 
                             if (now - lastMoveAt >= idleDebounceMs) {
                                 if (lastQueriedPos != pos) {
+                                    // Compute distance moved in metres
+
+                                    //  val startTime = System.nanoTime()
+                                    val distanceMovedOfRailChecker =
+                                        lastQueriedPosOfRailChecker?.target?.let {
+                                            haversineDistance(
+                                                it.latitude,
+                                                it.longitude,
+                                                pos.target.latitude,
+                                                pos.target.longitude
+                                            )
+                                        } ?: 0.0
+                                    //val endTime = System.nanoTime()
+                                    //val durationMs = (endTime - startTime) / 1_000_000.0
+                                    // Log.d(TAG, "Haversine distance calculation took ${String.format("%.3f", durationMs)} ms")
+
+                                    val zoomMovedOfRailChecker = kotlin.math.abs(
+                                        pos.zoom - (lastQueriedPosOfRailChecker?.zoom ?: 0.0)
+                                    )
+
+                                    Log.d(
+                                        TAG, "Map idle." +
+                                                " Moved ${
+                                                    String.format(
+                                                        "%.2f",
+                                                        distanceMovedOfRailChecker
+                                                    )
+                                                }m since last idle."
+                                    )
+
                                     if (camera.projection != null && mapSize != IntSize.Zero) {
-                                        queryVisibleChateaus(camera, mapSize)
+                                        queryVisibleChateaus(scope, camera, mapSize)
+
+                                        if (railinframe) {
+                                            if (distanceMovedOfRailChecker > 10000 || zoomMovedOfRailChecker > 5) {
+                                                if (pos.zoom > 9) {
+                                                    queryAreAnyRailFeaturesVisible(camera, mapSize)
+                                                    lastQueriedPosOfRailChecker = pos
+                                                }
+                                            }
+                                        } else {
+                                            if (distanceMovedOfRailChecker > 500 || zoomMovedOfRailChecker > 1) {
+                                                queryAreAnyRailFeaturesVisible(camera, mapSize)
+                                                lastQueriedPosOfRailChecker = pos
+                                            }
+                                        }
+
+
                                         lastQueriedPos = pos
 
                                         if (now - lastFetchedAt >= fetchDebounceMs) {
@@ -1685,7 +1829,8 @@ class MainActivity : ComponentActivity() {
                         )
 
                         AddShapes(
-                            layerSettings = layerSettings.value
+                            layerSettings = layerSettings.value,
+                            railInFrame = railinframe
                         )
 
                         AddStops(
@@ -2764,6 +2909,12 @@ class MainActivity : ComponentActivity() {
                                                         ) { cat ->
                                                             cat.copy(shapes = !cat.shapes)
                                                         }
+
+
+                                                    queryAreAnyRailFeaturesVisible(
+                                                        camera, mapSize,
+                                                        forceRun = true
+                                                    )
                                                 }
                                             )
                                             LayerToggleButton(
@@ -2786,6 +2937,11 @@ class MainActivity : ComponentActivity() {
                                                         ) { cat ->
                                                             cat.copy(labelshapes = !cat.labelshapes)
                                                         }
+
+                                                    queryAreAnyRailFeaturesVisible(
+                                                        camera, mapSize,
+                                                        forceRun = true
+                                                    )
                                                 }
                                             )
                                             LayerToggleButton(
@@ -2808,6 +2964,11 @@ class MainActivity : ComponentActivity() {
                                                         ) { cat ->
                                                             cat.copy(stops = !cat.stops)
                                                         }
+
+                                                    queryAreAnyRailFeaturesVisible(
+                                                        camera, mapSize,
+                                                        forceRun = true
+                                                    )
                                                 }
 
                                             )
@@ -2831,6 +2992,11 @@ class MainActivity : ComponentActivity() {
                                                         ) { cat ->
                                                             cat.copy(labelstops = !cat.labelstops)
                                                         }
+
+                                                    queryAreAnyRailFeaturesVisible(
+                                                        camera, mapSize,
+                                                        forceRun = true
+                                                    )
                                                 }
                                             )
 
@@ -2854,6 +3020,11 @@ class MainActivity : ComponentActivity() {
                                                         ) { cat ->
                                                             cat.copy(visiblerealtimedots = !cat.visiblerealtimedots)
                                                         }
+
+                                                    queryAreAnyRailFeaturesVisible(
+                                                        camera, mapSize,
+                                                        forceRun = true
+                                                    )
                                                 }
                                             )
                                         }
@@ -3369,6 +3540,64 @@ fun AddStops(
     )
 
     /* ============================================================
+       OTHER (otherstops)
+       ============================================================ */
+    CircleLayer(
+        id = LayersPerCategory.Other.Stops,
+        source = otherStopsSource,
+        sourceLayer = "data",
+        color = const(circleInside),
+        radius = interpolate(
+            type = linear(),
+            input = zoom(),
+            8 to const(1.dp),
+            12 to const(4.dp),
+            15 to const(5.dp)
+        ),
+        strokeColor = const(circleOutside),
+        strokeWidth = step(
+            input = zoom(),
+            const(1.2.dp),
+            13.2 to const(1.5.dp)
+        ),
+        strokeOpacity = step(
+            input = zoom(),
+            const(0.5f),
+            15.0 to const(0.6f)
+        ),
+        opacity = interpolate(
+            type = linear(),
+            input = zoom(),
+            10 to const(0.7f),
+            16 to const(0.8f)
+        ),
+        minZoom = 9f,
+        visible = (layerSettings.other as LayerCategorySettings).stops
+    )
+
+    SymbolLayer(
+        id = LayersPerCategory.Other.LabelStops,
+        source = otherStopsSource,
+        sourceLayer = "data",
+        textField = get("displayname").cast(),
+        textSize = interpolate(
+            type = linear(),
+            input = zoom(),
+            9 to const(0.375f).em,  // 6px
+            15 to const(0.5625f).em, // 9px
+            17 to const(0.625f).em   // 10px
+        ),
+        // radial 1 => y offset +1em
+        textOffset = offset(0.em, 1.em),
+        textFont = barlowBold,
+        textColor = if (isDark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
+        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+        textHaloWidth = const(1.dp),
+        minZoom = 9f,
+        visible = (layerSettings.other as LayerCategorySettings).labelstops
+    )
+
+    /* ============================================================
        METRO (railstops, route_type 1/12)
        ============================================================ */
     CircleLayer(
@@ -3411,7 +3640,32 @@ fun AddStops(
         id = LayersPerCategory.Metro.LabelStops,
         source = railStopsSource,
         sourceLayer = "data",
-        textField = get("displayname").cast<StringValue>() + semi + level + semi + platform,
+        textField = step(
+            input = zoom(),
+            fallback = get("name").cast<StringValue>(),
+            8 to get("name").cast<StringValue>(),
+            13 to get("name").cast<StringValue>() +
+                    switch(
+                        conditions = arrayOf(
+                            condition(
+                                has("level_id"),
+                                semi + level
+                            )
+                        ),
+                        fallback = const("")
+                    )
+                    +
+                    switch(
+                        conditions = arrayOf(
+                            condition(
+                                has("platform_code"),
+                                semi + platform
+                            )
+                        ),
+
+                        fallback = const("")
+                    )
+        ),
         textSize = interpolate(
             type = linear(),
             input = zoom(),
@@ -3478,7 +3732,32 @@ fun AddStops(
         id = LayersPerCategory.Tram.LabelStops,
         source = railStopsSource,
         sourceLayer = "data",
-        textField = get("displayname").cast<StringValue>() + semi + level + semi + platform,
+        textField = step(
+            input = zoom(),
+            fallback = get("name").cast<StringValue>(),
+            8 to get("name").cast<StringValue>(),
+            14 to get("name").cast<StringValue>() +
+                    switch(
+                        conditions = arrayOf(
+                            condition(
+                                has("level_id"),
+                                semi + level
+                            )
+                        ),
+                        fallback = const("")
+                    )
+                    +
+                    switch(
+                        conditions = arrayOf(
+                            condition(
+                                has("platform_code"),
+                                semi + platform
+                            )
+                        ),
+
+                        fallback = const("")
+                    )
+        ),
         textSize = interpolate(
             type = linear(),
             input = zoom(),
@@ -3534,9 +3813,10 @@ fun AddStops(
         color = const(circleInside),
         radius = intercityCircleRadius,
         strokeColor = const(circleOutside),
-        strokeWidth = step(
+        strokeWidth = interpolate(
+            type = linear(),
             input = zoom(),
-            const(1.2.dp),
+            9 to const(1.dp),
             13.2 to const(1.5.dp)
         ),
         strokeOpacity = step(
@@ -3551,21 +3831,46 @@ fun AddStops(
         ),
         minZoom = 7.5f,
         filter = isIntercity,
-        visible = (layerSettings.intercityrail as LayerCategorySettings).stops
+        visible = layerSettings.intercityrail.stops
     )
 
     SymbolLayer(
         id = LayersPerCategory.IntercityRail.LabelStops,
         source = railStopsSource,
         sourceLayer = "data",
-        textField = get("displayname").cast<StringValue>() + semi + level + semi + platform,
+        textField = step(
+            input = zoom(),
+            fallback = get("name").cast<StringValue>(),
+            8 to get("name").cast<StringValue>(),
+            13 to get("name").cast<StringValue>() +
+                    switch(
+                        conditions = arrayOf(
+                            condition(
+                                has("level_id"),
+                                semi + level
+                            )
+                        ),
+                        fallback = const("")
+                    )
+                    +
+                    switch(
+                        conditions = arrayOf(
+                            condition(
+                                has("platform_code"),
+                                semi + platform
+                            )
+                        ),
+
+                        fallback = const("")
+                    )
+        ),
         textSize = intercityLabelSize,
         // radial 0.2 => y offset +0.2em
         textOffset = offset(0.em, 0.2.em),
         textFont = step(
             input = zoom(),
             barlowRegular,
-            8.5 to barlowMedium
+            10 to barlowMedium
         ),
         textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
         textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
@@ -3575,63 +3880,7 @@ fun AddStops(
         visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
     )
 
-    /* ============================================================
-       OTHER (otherstops)
-       ============================================================ */
-    CircleLayer(
-        id = LayersPerCategory.Other.Stops,
-        source = otherStopsSource,
-        sourceLayer = "data",
-        color = const(circleInside),
-        radius = interpolate(
-            type = linear(),
-            input = zoom(),
-            8 to const(1.dp),
-            12 to const(4.dp),
-            15 to const(5.dp)
-        ),
-        strokeColor = const(circleOutside),
-        strokeWidth = step(
-            input = zoom(),
-            const(1.2.dp),
-            13.2 to const(1.5.dp)
-        ),
-        strokeOpacity = step(
-            input = zoom(),
-            const(0.5f),
-            15.0 to const(0.6f)
-        ),
-        opacity = interpolate(
-            type = linear(),
-            input = zoom(),
-            10 to const(0.7f),
-            16 to const(0.8f)
-        ),
-        minZoom = 9f,
-        visible = (layerSettings.other as LayerCategorySettings).stops
-    )
 
-    SymbolLayer(
-        id = LayersPerCategory.Other.LabelStops,
-        source = otherStopsSource,
-        sourceLayer = "data",
-        textField = get("displayname").cast(),
-        textSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            9 to const(0.375f).em,  // 6px
-            15 to const(0.5625f).em, // 9px
-            17 to const(0.625f).em   // 10px
-        ),
-        // radial 1 => y offset +1em
-        textOffset = offset(0.em, 1.em),
-        textFont = barlowBold,
-        textColor = if (isDark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
-        textHaloWidth = const(1.dp),
-        minZoom = 9f,
-        visible = (layerSettings.other as LayerCategorySettings).labelstops
-    )
 }
 
 private fun visibilityOf(isOn: Boolean) = isOn
@@ -3779,7 +4028,7 @@ private fun LiveDotLayers(
         source = source,
         color = get("color").cast<ColorValue>(),
         radius = styles.dotRadius,
-        strokeColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
+        strokeColor = if (isDark) const(Color(0xFF2E394B)) else const(Color.White),
         strokeWidth = styles.dotStrokeWidth,
         opacity = styles.dotOpacity,
         strokeOpacity = styles.dotStrokeOpacity,

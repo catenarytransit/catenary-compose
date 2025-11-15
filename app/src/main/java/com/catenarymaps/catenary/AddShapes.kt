@@ -45,7 +45,8 @@ val SHAPES_SOURCES = mapOf(
 
 @Composable
 fun AddShapes(
-    layerSettings: AllLayerSettings
+    layerSettings: AllLayerSettings,
+    railInFrame: Boolean = false
 ) {
     val busShapesSource = rememberVectorSource(
         uri = SHAPES_SOURCES.getValue("busshapes")
@@ -72,7 +73,6 @@ fun AddShapes(
     var colorBusLineText: org.maplibre.compose.expressions.ast.Expression<ColorValue> =
         const("#").plus(get("text_color").cast()).convertToColor()
 
-
     LineLayer(
         id = LayersPerCategory.Bus.Shapes,
         source = busShapesSource,
@@ -81,7 +81,8 @@ fun AddShapes(
         width = interpolate(
             type = linear(),
             input = zoom(),
-            7 to const(0.4.dp),
+            9 to
+                    if (railInFrame) const(0.3.dp) else const(0.4.dp),
             10 to const(0.6.dp),
             12 to const(1.0.dp),
             14 to const(2.6.dp),
@@ -89,11 +90,13 @@ fun AddShapes(
         opacity = interpolate(
             type = linear(),
             input = zoom(),
-            7 to const(0.08f),
-            8 to const(0.10f),
-            11 to const(0.30f),
+            7 to if (railInFrame) const(0.04f) else const(0.09f),
+            8 to if (railInFrame) const(0.04f) else const(0.15f),
+            11 to if (railInFrame) const(0.15f) else const(0.30f),
+            14 to if (railInFrame) const(0.2f) else const(0.30f),
+            16 to if (railInFrame) const(0.3f) else const(0.30f),
         ),
-        minZoom = 9f,
+        minZoom = if (railInFrame) 10f else 8f,
         visible = bus.shapes
     )
 
@@ -133,7 +136,7 @@ fun AddShapes(
         textHaloColor = colorBusLine,
         textHaloWidth = const(2.dp),
         textHaloBlur = const(0.dp),
-        minZoom = 11f,
+        minZoom = if (railinframe) 13f else 11f,
         visible = bus.labelshapes
     )
 

@@ -338,18 +338,24 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
                 input = zoom(),
                 6.0 to const(0.5f.em),
                 9.0 to const(0.5f.em),
-                11.0 to const(0.875f.em),
-                13.0 to const(0.9375f.em)
+                11.0 to const(0.6f.em),
+                13.0 to const(0.7f.em),
+                16.0 to const(0.9.em)
             )
-            labelTextFont = const(listOf("Barlow-Medium"))
+            labelTextFont = step(
+                zoom(),
+                const(listOf("Barlow-Regular")),
+                9.0 to const(listOf("Barlow-Medium"))
+            )
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
             labelTextOpacity = interpolate(
                 linear(),
                 zoom(),
                 2.0 to const(0.0f),
-                2.5 to const(0.8f),
-                10.0 to const(1.0f)
+                2.5 to const(0.85f),
+                13.0 to const(0.95f),
+                15.0 to const(0.99f)
             )
         }
 
@@ -359,7 +365,7 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
                 input = zoom(),
                 8.0 to const(5.0.dp),
                 10.0 to const(6.0.dp),
-                16.0 to const(10.0.dp)
+                16.0 to const(8.0.dp)
             )
             dotStrokeWidth = const(1.0.dp)
             dotOpacity = const(0.5f)
@@ -393,7 +399,11 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
                 13.0 to const(1.0f.em)
             )
             labelTextFont =
-                step(zoom(), const(listOf("Barlow-Regular")), 9.0 to const(listOf("Barlow-Bold")))
+                step(
+                    zoom(),
+                    const(listOf("Barlow-Regular")),
+                    11.0 to const(listOf("Barlow-Medium"))
+                )
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
             labelTextOpacity = interpolate(
@@ -401,7 +411,7 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
                 zoom(),
                 2.0 to const(0.0f),
                 2.5 to const(0.8f),
-                10.0 to const(1.0f)
+                10.0 to const(0.8f)
             )
         }
 
