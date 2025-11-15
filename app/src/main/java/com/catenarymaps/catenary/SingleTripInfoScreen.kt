@@ -361,7 +361,7 @@ fun SingleTripInfoScreen(
                             }
                         }
 
-                        item {
+                        item(key = "show-previous-stops") {
                             Button(onClick = { viewModel.toggleShowPreviousStops() }) {
                                 Text(
                                     stringResource(
