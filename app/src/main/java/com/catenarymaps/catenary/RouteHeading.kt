@@ -56,6 +56,8 @@ fun RouteHeading(
         return
     }
 
+    println("route heading, ${shortName} ${longName}")
+
     val routeColor = parseColor(color, MaterialTheme.colorScheme.primary)
     val routeTextColor = parseColor(textColor, MaterialTheme.colorScheme.onPrimary)
 
@@ -90,7 +92,7 @@ fun RouteHeading(
         ) {
             Column() {
                 Text(
-                    modifier = clickableModifier.weight(1f, fill = false),
+                    modifier = clickableModifier,
                     text = buildAnnotatedString {
                         if (!shortName.isNullOrBlank()) {
                             withStyle(
