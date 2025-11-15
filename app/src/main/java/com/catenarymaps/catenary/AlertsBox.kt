@@ -1,11 +1,13 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,12 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,11 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -42,6 +45,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.stringResource
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -79,7 +84,8 @@ data class Alert(
 fun AlertsBox(
     alerts: Map<String, Alert>,
     default_tz: String? = null,
-    chateau: String? = null
+    chateau: String? = null,
+    isScrollable: Boolean = false
 ) {
     if (alerts.isEmpty()) return
 
@@ -120,8 +126,9 @@ fun AlertsBox(
                 modifier = Modifier.size(24.dp),
                 tint = alertColor
             )
+            val alertText = getAlertsTitle(alerts.size)
             Text(
-                text = pluralStringResource(R.plurals.service_alerts, alerts.size, alerts.size),
+                text = alertText,
                 color = alertColor,
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleSmall,
@@ -137,7 +144,15 @@ fun AlertsBox(
         }
 
         AnimatedVisibility(visible = expanded) {
-            Column {
+            val scrollState = rememberScrollState()
+            val scrollableModifier = if (isScrollable) {
+                Modifier
+                    .fillMaxHeight(0.8f)
+                    .verticalScroll(scrollState)
+            } else {
+                Modifier
+            }
+            Column(modifier = scrollableModifier) {
                 Spacer(modifier = Modifier.height(4.dp))
                 alerts.values.forEachIndexed { index, alert ->
                     if (index > 0) {
@@ -243,68 +258,103 @@ private fun FormattedText(text: String, style: TextStyle) {
     val uriHandler = LocalUriHandler.current
     val defaultColor = MaterialTheme.colorScheme.onSurface
 
+    // Regex for various tags. Added <p>, </p>, <br>, <strong>, <ul>, <li>, </ul>
+    val tagRegex = remember {
+        Regex("""<(/?[a-zA-Z0-9]+)(?:\s+href="([^"]+)")?>|([^<]+)""")
+    }
+
     val annotatedString = buildAnnotatedString {
-        val linkRegex = Regex("""<a href="([^"]+)">([^<]+)</a>""")
-        val boldRegex = Regex("""<b>([^<]+)</b>""")
-        val routeRegex = Regex("""\[([A-Z0-9]+)]""") // Simplified from JS
+        val styleStack = mutableListOf<SpanStyle>()
+        var inList = false
 
-        var lastIndex = 0
-        val combinedRegex = Regex("""<a href="[^"]+">[^<]+</a>|<b>[^<]+</b>|\[[A-Z0-9]+]""")
+        tagRegex.findAll(text)
+            .forEachIndexed { i, match ->
+                val (tag, url, content) = match.destructured
 
-        combinedRegex.findAll(text.replace("\n", " ")).forEach { matchResult ->
-            val match = matchResult.value
-            val startIndex = matchResult.range.first
+                if (content.isNotEmpty()) {
+                    // It's plain text content
+                    val currentStyle = styleStack.fold(SpanStyle()) { acc, s -> acc.merge(s) }
+                    withStyle(currentStyle) {
+                        append(content)
+                    }
+                } else {
+                    // It's a tag
+                    when (tag.lowercase()) {
+                        "a" -> {
+                            if (url.isNotEmpty()) {
+                                pushStringAnnotation(tag = "URL", annotation = url)
+                                styleStack.add(
+                                    SpanStyle(
+                                        color = Color(0xff2b7fff),
+                                        textDecoration = TextDecoration.Underline
+                                    )
+                                )
+                            }
+                        }
 
-            // Append text before the match
-            if (startIndex > lastIndex) {
-                append(text.substring(lastIndex, startIndex))
+                        "/a" -> {
+                            if (styleStack.isNotEmpty()) { // Prevent popping from an empty stack
+                                pop()
+                            }
+                            styleStack.removeLastOrNull()
+                        }
 
-            }
+                        "b", "strong" -> {
+                            styleStack.add(SpanStyle(fontWeight = FontWeight.Bold))
+                        }
 
+                        "/b", "/strong" -> {
+                            styleStack.removeLastOrNull()
+                        }
 
-            // Handle link
-            linkRegex.find(match)?.let {
-                val (url, linkText) = it.destructured
-                pushStringAnnotation(tag = "URL", annotation = url)
-                withStyle(
-                    style = SpanStyle(
-                        color = Color(0xff2b7fff),
-                        textDecoration = TextDecoration.Underline
-                    )
-                ) {
-                    append(linkText)
+                        "br" -> {
+                            append("\n")
+                        }
+
+                        "p" -> {
+
+                            append("\n\n")
+
+                        }
+
+                        "/p" -> {
+
+                            append("\n\n")
+                        }
+
+                        "ul" -> {
+
+                            append("\n")
+
+                            inList = true
+                        }
+
+                        "/ul" -> {
+
+                            append("\n")
+
+                            inList = false
+                        }
+
+                        "li" -> {
+
+                            append("\n")
+
+                            append("  • ")
+                        }
+
+                        "/li" -> {
+                            // No action needed on closing li, newline is handled by next li or /ul
+                        }
+                        // You can add more tag handlers here
+                    }
                 }
-                pop()
-            }
-
-            // Handle bold
-            boldRegex.find(match)?.let {
-                val (boldText) = it.destructured
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(boldText)
-                }
-            }
-
-            // Handle route
-            routeRegex.find(match)?.let {
-                val (routeId) = it.destructured
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("[$routeId]")
-                }
-            }
-
-
-            lastIndex = matchResult.range.last + 1
-        }
-
-        // Append remaining text
-        if (lastIndex < text.length) {
-            append(text.substring(lastIndex))
         }
     }
 
     ClickableText(
-        text = annotatedString,
+        // Replace multiple newlines with a maximum of two to prevent excessive spacing
+        text = AnnotatedString(annotatedString.toString().replace(Regex("\n{3,}"), "\n\n")),
         style = style.copy(color = defaultColor),
         onClick = { offset ->
             annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
@@ -373,6 +423,16 @@ private fun AlertActivePeriod(
 }
 
 @Composable
+private fun getAlertsTitle(alertCount: Int): String =
+    pluralStringResource(
+        R.plurals.service_alerts,
+        alertCount,
+        alertCount
+    ).takeIf { it.isNotBlank() }
+        ?: "Service Alerts ($alertCount)"
+
+
+@Composable
 fun causeIdToStr(cause: Int?): String {
     val resourceId = when (cause) {
         1 -> R.string.alert_cause_unknown_cause
@@ -409,11 +469,4 @@ fun effectIdToStr(effect: Int?): String {
         else -> R.string.alert_effect_unknown_effect
     }
     return stringResource(id = resourceId)
-}
-
-// You will need a way to handle plural strings.
-// This is a simplified example. You might use a library or a more robust implementation.
-@Composable
-fun pluralStringResource(id: Int, quantity: Int, vararg formatArgs: Any): String {
-    return LocalContext.current.resources.getQuantityString(id, quantity, *formatArgs)
 }

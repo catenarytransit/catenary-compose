@@ -321,7 +321,8 @@ fun SingleTripInfoScreen(
                         AlertsBox(
                             alerts = data.alert_id_to_alert,
                             default_tz = data.tz,
-                            chateau = tripSelected.chateau_id
+                            chateau = tripSelected.chateau_id,
+                            isScrollable = true
                         )
                     }
         

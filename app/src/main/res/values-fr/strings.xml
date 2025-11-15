@@ -63,6 +63,7 @@
     <string name="ending_time">Fin</string>
     <plurals name="service_alerts">
         <item quantity="one">%d alerte de service</item>
+        <item quantity="other">%d alertes de service</item>
         <item quantity="many">%d alertes de service</item>
     </plurals>
     <string name="heading_bus">Bus</string>
