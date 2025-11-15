@@ -87,6 +87,7 @@
     <string name="settings_enable_google_analytics">Enable Google Analytics</string>
     <string name="settings_test_crash">Test crash</string>
     <string name="block_screen_block_id">Block: %1$s</string>
+    <string name="block">Block</string>
     <string name="block_screen_duration">"Duration: "</string>
     <string name="block_screen_layover">"Layover: "</string>
     <string name="block_screen_error">Error loading data.</string>

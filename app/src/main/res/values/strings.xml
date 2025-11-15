@@ -92,6 +92,7 @@
     <string name="block_screen_layover">Layover: </string>
     <string name="block_screen_error">Error loading data.</string>
 
+    <string name="block">Block</string>
     <string name="nearby_departures_no_departures">No departures.</string>
 
     <string name="route_screen_to">To: %1$s</string>

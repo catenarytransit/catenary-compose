@@ -285,26 +285,45 @@ fun SingleTripInfoScreen(
                         },
                         headsign = data.trip_headsign
                     )
-        
-                    // Clickable Block ID
-                    if (data.block_id != null && data.service_date != null) {
-                        Text(
-                            text = "Block: ${data.block_id}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            textDecoration = TextDecoration.Underline,
-                            modifier = Modifier.clickable {
-                                onBlockClick(
-                                    CatenaryStackEnum.BlockStack(
-                                        chateau_id = tripSelected.chateau_id,
-                                        block_id = data.block_id,
-                                        service_date = data.service_date
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        //horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        if (data.vehicle?.label != null || data.vehicle?.id != null) {
+                            Text(
+                                text = "${stringResource(id = R.string.vehicle)}: ${data.vehicle.label ?: data.vehicle.id}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.width(4.dp))
+                        } else {
+                            // Spacer(modifier = Modifier.weight(1f)) // push block id to the right
+                        }
+
+
+                        // Clickable Block ID
+                        if (data.block_id != null && data.service_date != null) {
+                            Text(
+                                text = "${stringResource(id = R.string.block)}: ${data.block_id}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier.clickable {
+                                    onBlockClick(
+                                        CatenaryStackEnum.BlockStack(
+                                            chateau_id = tripSelected.chateau_id,
+                                            block_id = data.block_id,
+                                            service_date = data.service_date
+                                        )
                                     )
-                                )
-                            }
-                        )
+                                }
+                            )
+                        }
+
                     }
-        
+
                     // Clickable Vehicle Label
                     if (data.vehicle?.label != null || data.vehicle?.id != null) {
                         VehicleInfo(

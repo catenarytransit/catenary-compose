@@ -88,6 +88,7 @@
     <string name="settings_enable_google_analytics">Activer Google Analytics</string>
     <string name="settings_test_crash">Tester le crash</string>
     <string name="block_screen_block_id">Roulement: : %1$s</string>
+    <string name="block">Roulement</string>
     <string name="block_screen_duration">Durée :</string>
     <string name="block_screen_layover">Temps de battement :</string>
     <string name="block_screen_error">Erreur lors du chargement des données.</string>
