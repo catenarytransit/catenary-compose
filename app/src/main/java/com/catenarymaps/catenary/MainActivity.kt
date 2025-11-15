@@ -234,6 +234,7 @@ import org.maplibre.compose.expressions.dsl.Feature.has
 import org.maplibre.compose.expressions.dsl.condition
 import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.spatialk.geojson.BoundingBox
+import org.maplibre.spatialk.geojson.Geometry
 import org.maplibre.spatialk.turf.measurement.distance
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
@@ -706,7 +707,7 @@ val ktorClient = HttpClient(CIO) {
 }
 
 class MainActivity : ComponentActivity() {
-
+    
 
     //private var tracker: Tracker? = null
 
@@ -1083,6 +1084,9 @@ class MainActivity : ComponentActivity() {
 
             val searchViewModel: SearchViewModel = viewModel()
 
+            // State to hold the chateaux R-tree index
+            var chateauxIndex by remember { mutableStateOf<RTree<Feature<Geometry?, ChateauProps>>?>(null) }
+
 
             var catenaryStack by remember { mutableStateOf(ArrayDeque<CatenaryStackEnum>()) }
 
@@ -1336,6 +1340,18 @@ class MainActivity : ComponentActivity() {
                 fetchLocation { lat, lon ->
                     currentLocation = lat to lon
                 }
+
+                  // While we're here, fetch the chateaux index
+                    scope.launch {
+                        try {
+                            val time = kotlin.system.measureTimeMillis {
+                                chateauxIndex = fetchAndBuildChateauxIndex(ktorClient)
+                            }
+                            Log.d(TAG, "Chateaux index built successfully in ${time}ms.")
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed to build chateaux index", e)
+                        }
+                    }
             }
 
             var didInitialFollow by remember { mutableStateOf(false) }
@@ -1345,6 +1361,10 @@ class MainActivity : ComponentActivity() {
                 // Only auto-center if there was NO saved camera view
                 if (!hadSavedView && !didInitialFollow && currentLocation != null) {
                     val (lat, lon) = currentLocation!!
+
+                  
+
+
                     camera.animateTo(
                         camera.position.copy(
                             target = Position(lon, lat),
