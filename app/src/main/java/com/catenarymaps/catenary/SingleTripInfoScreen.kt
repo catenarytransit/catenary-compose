@@ -5,6 +5,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -315,32 +317,22 @@ fun SingleTripInfoScreen(
                     if (vehicleData != null) {
                         VehicleInfoDetails(vehicleData = vehicleData!!, usUnits = usUnits)
                     }
-        
-        
-                    if (data.alert_id_to_alert.isNotEmpty()) {
-                        AlertsBox(
-                            alerts = data.alert_id_to_alert,
-                            default_tz = data.tz,
-                            chateau = tripSelected.chateau_id,
-                            isScrollable = true
-                        )
-                    }
-        
-        
-                    // Show/Hide Previous Stops Button
-                    if (showPreviousStops) {
-                        if (lastInactiveStopIdx > -1) {
-                            Button(onClick = { viewModel.toggleShowPreviousStops() }) {
-                                Text(
-                                    if (showPreviousStops) stringResource(id = R.string.single_trip_info_screen_hide_previous_stops)
-                                    else stringResource(
-                                        id = R.string.single_trip_info_screen_show_previous_stops,
-                                        lastInactiveStopIdx + 1
-                                    )
-                                )
-                            }
-                        }
-                    }
+
+
+//                    // Show/Hide Previous Stops Button
+//                    if (showPreviousStops) {
+//                        if (lastInactiveStopIdx > -1) {
+//                            Button(onClick = { viewModel.toggleShowPreviousStops() }) {
+//                                Text(
+//                                    if (showPreviousStops) stringResource(id = R.string.single_trip_info_screen_hide_previous_stops)
+//                                    else stringResource(
+//                                        id = R.string.single_trip_info_screen_show_previous_stops,
+//                                        lastInactiveStopIdx + 1
+//                                    )
+//                                )
+//                            }
+//                        }
+//                    }
         
                     // Stop List
                     val lazyListState = rememberLazyListState()
@@ -357,19 +349,29 @@ fun SingleTripInfoScreen(
                             ),
                         state = lazyListState
                     ) {
-                        // Show/Hide Previous Stops Button
-                        if (!showPreviousStops && lastInactiveStopIdx > -1) {
-                            item {
-                                Button(onClick = { viewModel.toggleShowPreviousStops() }) {
-                                    Text(
-                                        stringResource(
-                                            id = R.string.single_trip_info_screen_show_previous_stops,
-                                            lastInactiveStopIdx + 1
-                                        )
-                                    )
-                                }
+                        if (data.alert_id_to_alert.isNotEmpty()) {
+                            item(key = "alerts-box") {
+                                AlertsBox(
+                                    alerts = data.alert_id_to_alert,
+                                    default_tz = data.tz,
+                                    chateau = tripSelected.chateau_id,
+                                    isScrollable = true
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
+
+                        item {
+                            Button(onClick = { viewModel.toggleShowPreviousStops() }) {
+                                Text(
+                                    stringResource(
+                                        id = R.string.single_trip_info_screen_show_previous_stops,
+                                        lastInactiveStopIdx + 1
+                                    )
+                                )
+                            }
+                        }
+
                         itemsIndexed(stopTimes) { i, stopTime ->
                             if (showPreviousStops || i > lastInactiveStopIdx || (i == stopTimes.lastIndex && stopTimes.isNotEmpty())) {
                                 // Calculate new state variables

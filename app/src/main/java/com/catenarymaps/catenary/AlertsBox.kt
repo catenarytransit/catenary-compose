@@ -53,6 +53,8 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalConfiguration
 @Serializable
 data class AlertTranslation(
     val text: String,
@@ -144,10 +146,14 @@ fun AlertsBox(
         }
 
         AnimatedVisibility(visible = expanded) {
+            val configuration = LocalConfiguration.current
+            val maxAlertHeight =
+                remember(configuration) { (configuration.screenHeightDp * 0.8f).dp }
+
             val scrollState = rememberScrollState()
             val scrollableModifier = if (isScrollable) {
                 Modifier
-                    .fillMaxHeight(0.8f)
+                    .heightIn(max = maxAlertHeight) // finite bound avoids “infinity” crash
                     .verticalScroll(scrollState)
             } else {
                 Modifier
