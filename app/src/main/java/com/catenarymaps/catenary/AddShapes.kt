@@ -83,7 +83,7 @@ fun AddShapes(
             input = zoom(),
             9 to
                     if (railInFrame) const(0.3.dp) else const(0.4.dp),
-            10 to const(0.6.dp),
+            10 to if (railInFrame) const(0.45.dp) else const(0.6.dp),
             12 to const(1.0.dp),
             14 to const(2.6.dp),
         ),
@@ -96,7 +96,7 @@ fun AddShapes(
             14 to if (railInFrame) const(0.2f) else const(0.30f),
             16 to if (railInFrame) const(0.3f) else const(0.30f),
         ),
-        minZoom = if (railInFrame) 10f else 8f,
+        minZoom = if (railInFrame) 9f else 8f,
         visible = bus.shapes
     )
 
