@@ -7,16 +7,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -33,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -201,112 +207,125 @@ fun BlockScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.windowInsetsPadding(
+                    WindowInsets(
+                        bottom = WindowInsets.safeDrawing.getBottom(
+                            density = LocalDensity.current
+                        )
+                    )
+                )
+            ) {
                 items(data.trips.size) { index ->
                     val trip = data.trips[index]
-                    val route = data.routes[trip.route_id]
                     val isTripActive = currentTime in trip.start_time..trip.end_time
+                    val isPast = currentTime > trip.end_time
 
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                            .clickable {
-                                val newStack = ArrayDeque(catenaryStack)
-                                newStack.addLast(
-                                    CatenaryStackEnum.SingleTrip(
-                                        chateau_id = chateau,
-                                        trip_id = trip.trip_id,
-                                        route_id = trip.route_id,
-                                        start_time = null,
-                                        start_date = serviceDate.replace("-", ""),
-                                        vehicle_id = null,
-                                        route_type = null
-                                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            val newStack = ArrayDeque(catenaryStack)
+                            newStack.addLast(
+                                CatenaryStackEnum.SingleTrip(
+                                    chateau_id = chateau,
+                                    trip_id = trip.trip_id,
+                                    route_id = trip.route_id,
+                                    start_time = null,
+                                    start_date = serviceDate.replace("-", ""),
+                                    vehicle_id = null,
+                                    route_type = null
                                 )
-                                onStackChange(newStack)
+                            )
+                            onStackChange(newStack)
+                        },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isPast) {
+                                CardDefaults.cardColors().disabledContainerColor
+                            } else {
+                                CardDefaults.cardColors().containerColor
                             }
-                            .let {
-                                if (currentTime > trip.end_time) it.then(Modifier.padding(0.dp)) // TODO: figure out text dimming
-                                else it
-                            }
-
+                        )
                     ) {
-                        if (!singleRoute && route != null) {
-                            Row {
-                                route.short_name?.let {
-                                    Text(
-                                        text = it,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = parseColor(route.color)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(4.dp))
-                                route.long_name?.let {
-                                    Text(
-                                        text = it,
-                                        color = parseColor(route.color)
-                                    )
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            val route = data.routes[trip.route_id]
+                            if (!singleRoute && route != null) {
+                                Row {
+                                    route.short_name?.let {
+                                        Text(
+                                            text = it,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = parseColor(route.color)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    route.long_name?.let {
+                                        Text(
+                                            text = it,
+                                            color = parseColor(route.color)
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowForward,
-                                contentDescription = "Trip direction",
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(text = trip.trip_headsign)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowForward,
+                                    contentDescription = "Trip direction",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(text = trip.trip_headsign)
 
-                            if (isTripActive) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.Blue)
+                                if (isTripActive) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(Color.Blue)
+                                    )
+                                }
+
+                                //Spacer(modifier = Modifier.weight(1f))
+                            }
+
+                            Row {
+                                Text(text = stringResource(id = R.string.block_screen_duration))
+                                DiffTimer(
+                                    diff = (trip.end_time - trip.start_time).toDouble(),
+                                    showBrackets = false
                                 )
                             }
 
-                            //Spacer(modifier = Modifier.weight(1f))
-                        }
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Text(text = trip.first_stop_name)
+                                Spacer(modifier = Modifier.weight(1f))
+                                FormattedTimeText(
+                                    timeSeconds = trip.start_time,
+                                    timezone = trip.timezone_start
+                                )
+                            }
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Text(text = trip.last_stop_name)
+                                Spacer(modifier = Modifier.weight(1f))
+                                FormattedTimeText(
+                                    timeSeconds = trip.end_time,
+                                    timezone = trip.timezone_end
+                                )
+                            }
 
-                        Row {
-                            Text(text = stringResource(id = R.string.block_screen_duration))
-                            DiffTimer(
-                                diff = (trip.end_time - trip.start_time).toDouble(),
-                                showBrackets = false
-                            )
-                        }
-
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Text(text = trip.first_stop_name)
-                            Spacer(modifier = Modifier.weight(1f))
-                            FormattedTimeText(
-                                timeSeconds = trip.start_time,
-                                timezone = trip.timezone_start
-                            )
-                        }
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Text(text = trip.last_stop_name)
-                            Spacer(modifier = Modifier.weight(1f))
-                            FormattedTimeText(
-                                timeSeconds = trip.end_time,
-                                timezone = trip.timezone_end
-                            )
-                        }
-
-                        if (index < data.trips.size - 1) {
-                            val nextTrip = data.trips[index + 1]
-                            val layover = nextTrip.start_time - trip.end_time
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Icon for layover, e.g., self_improvement from material symbols
-                                // For now, just text
-                                Text(text = stringResource(id = R.string.block_screen_layover))
-                                DiffTimer(diff = layover.toDouble(), showBrackets = false)
+                            if (index < data.trips.size - 1) {
+                                val nextTrip = data.trips[index + 1]
+                                val layover = nextTrip.start_time - trip.end_time
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // Icon for layover, e.g., self_improvement from material symbols
+                                    // For now, just text
+                                    Text(text = stringResource(id = R.string.block_screen_layover))
+                                    DiffTimer(diff = layover.toDouble(), showBrackets = false)
+                                }
                             }
                         }
                     }
-                    HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
                 }
             }
         } else {
