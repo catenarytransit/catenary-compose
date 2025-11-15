@@ -355,7 +355,7 @@ fun SingleTripInfoScreen(
                                     alerts = data.alert_id_to_alert,
                                     default_tz = data.tz,
                                     chateau = tripSelected.chateau_id,
-                                    isScrollable = true
+                                    isScrollable = false
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
