@@ -6,10 +6,26 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
+import kotlinx.serialization.serializer
 import org.maplibre.spatialk.geojson.*
 
+// ---------------------------- Core geometry types ----------------------------
+
 /** Axis-aligned rectangle in lon/lat space (WGS84). */
+@Serializable
 data class Rect(
     val minX: Double,
     val minY: Double,
@@ -42,9 +58,7 @@ data class Rect(
         if (!intersects(other)) return false
         val overlapX = minOf(maxX, other.maxX) - maxOf(minX, other.minX)
         val overlapY = minOf(maxY, other.maxY) - maxOf(minY, other.minY)
-        // If both overlaps are positive we have area overlap (not a pure touch)
         if (overlapX > 0.0 && overlapY > 0.0) return false
-        // At least one dimension has zero overlap => edge/corner touch
         return true
     }
 
@@ -58,16 +72,36 @@ data class Rect(
 }
 
 /** Leaf entry carrying a payload. */
-data class Entry<T>(val rect: Rect, val value: T)
+@Serializable
+data class Entry<T>(
+    val rect: Rect,
+    val value: @Contextual T // contextual on the PROPERTY (legal)
+)
+
+// ---------------------------- RTree ----------------------------
 
 /** Simple packed R-Tree (STR) suitable for read-mostly workloads. */
-class RTree<T> private constructor(
-    private val maxEntries: Int,
-    private val root: Node<T>
+class RTree<T> internal constructor(
+    internal val maxEntries: Int,
+    internal val root: Node<T>
 ) {
-    sealed class Node<T>(open val mbr: Rect) {
-        data class Leaf<T>(override val mbr: Rect, val entries: List<Entry<T>>) : Node<T>(mbr)
-        data class Branch<T>(override val mbr: Rect, val children: List<Node<T>>) : Node<T>(mbr)
+    @Serializable
+    sealed class Node<T> {
+        abstract val mbr: Rect
+
+        @Serializable
+        @SerialName("leaf")
+        data class Leaf<T>(
+            override val mbr: Rect,
+            val entries: List<Entry<T>>
+        ) : Node<T>()
+
+        @Serializable
+        @SerialName("branch")
+        data class Branch<T>(
+            override val mbr: Rect,
+            val children: List<Node<T>>
+        ) : Node<T>()
     }
 
     /** Query all values whose rectangles intersect [query]. */
@@ -103,13 +137,13 @@ class RTree<T> private constructor(
         fun <T> pack(entries: List<Entry<T>>, maxEntries: Int = 8): RTree<T> {
             require(maxEntries >= 4) { "maxEntries should be >= 4 for decent packing" }
             if (entries.isEmpty()) {
-                val emptyLeaf: Node.Leaf<T> = Node.Leaf(Rect(0.0, 0.0, 0.0, 0.0), emptyList<Entry<T>>())
+                val emptyLeaf: Node.Leaf<T> = Node.Leaf(Rect(0.0, 0.0, 0.0, 0.0), emptyList())
                 return RTree(maxEntries, emptyLeaf)
             }
             fun buildLeafGroups(items: List<Entry<T>>): List<Node<T>> {
                 val M = maxEntries
-                val m = kotlin.math.ceil(items.size / M.toDouble()).toInt() // groups
-                val s = kotlin.math.ceil(kotlin.math.sqrt(m.toDouble())).toInt().coerceAtLeast(1) // slices
+                val m = kotlin.math.ceil(items.size / M.toDouble()).toInt()
+                val s = kotlin.math.ceil(kotlin.math.sqrt(m.toDouble())).toInt().coerceAtLeast(1)
                 val sliceSize = s * M
                 val byX = items.sortedBy { it.rect.minX }
                 val nodes = ArrayList<Node<T>>()
@@ -134,7 +168,6 @@ class RTree<T> private constructor(
                     for (k in 1 until children.size) mbr = mbr.expandToInclude(children[k].mbr)
                     return Node.Branch(mbr, children)
                 }
-                // pack children just like leaves, using their MBRs
                 val M = maxEntries
                 val m = kotlin.math.ceil(children.size / M.toDouble()).toInt()
                 val s = kotlin.math.ceil(kotlin.math.sqrt(m.toDouble())).toInt().coerceAtLeast(1)
@@ -164,6 +197,54 @@ class RTree<T> private constructor(
     }
 }
 
+// ---------------------------- Serialization helpers for RTree ----------------------------
+
+@Serializable
+private data class RTreeDTO<T>(
+    val maxEntries: Int,
+    val root: RTree.Node<T>
+)
+
+/** Build a serializer for RTree<T> using the provided serializer for T (contextual payload). */
+fun <T> rtreeSerializer(tSer: KSerializer<T>): KSerializer<RTree<T>> = object : KSerializer<RTree<T>> {
+    private val dtoSer = RTreeDTO.serializer(tSer)
+    override val descriptor: SerialDescriptor get() = dtoSer.descriptor
+    override fun serialize(encoder: Encoder, value: RTree<T>) {
+        val dto = RTreeDTO(value.maxEntries, value.root)
+        encoder.encodeSerializableValue(dtoSer, dto)
+    }
+    override fun deserialize(decoder: Decoder): RTree<T> {
+        val dto = decoder.decodeSerializableValue(dtoSer)
+        return RTree(dto.maxEntries, dto.root)
+    }
+}
+
+/** Create a Json with a module. Optionally pass contextual serializers (e.g., for Feature/Geometry/P). */
+fun defaultJson(vararg contextuals: KSerializer<*>): Json {
+    val module = SerializersModule {
+        @Suppress("UNCHECKED_CAST")
+        contextuals.forEach { contextual(it as KSerializer<Any>) }
+    }
+    return Json {
+        serializersModule = module
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+        classDiscriminator = "type" // used for Node sealed polymorphism
+    }
+}
+
+/** Encode an RTree<T> to JSON using the Json's module to resolve T. */
+inline fun <reified T> Json.encodeToStringRTree(tree: RTree<T>): String {
+    val tSer = serializersModule.serializer<T>()
+    return encodeToString(rtreeSerializer(tSer), tree)
+}
+
+/** Decode an RTree<T> from JSON using the Json's module to resolve T. */
+inline fun <reified T> Json.decodeFromStringRTree(text: String): RTree<T> {
+    val tSer = serializersModule.serializer<T>()
+    return decodeFromString(rtreeSerializer(tSer), text)
+}
+
 // ---------------------------- GeoJSON helpers ----------------------------
 
 /** Compute a BoundingBox for any supported Geometry if absent. */
@@ -177,9 +258,9 @@ private fun computeBBox(geom: Geometry): BoundingBox {
             val x = p.longitude
             val y = p.latitude
             if (x < minX) minX = x
-            if (y < minY) minY = y
-            if (x > maxX) maxX = x
-            if (y > maxY) maxY = y
+            if (y < minY) minY = minY.coerceAtMost(y)
+            if (x > maxX) maxX = maxX.coerceAtLeast(x)
+            if (y > maxY) maxY = maxY.coerceAtLeast(y)
         }
         return BoundingBox(minX, minY, maxX, maxY)
     }
@@ -267,7 +348,7 @@ fun <P : Any> queryTouching(
 /** Easier construction of BoundingBox from lon/lat pairs. */
 fun bbox(west: Double, south: Double, east: Double, north: Double) = BoundingBox(west, south, east, north)
 
-// PARALLEL
+// ---------------------------- Parallel build ----------------------------
 
 suspend fun <P : Any> buildRTreeParallel(
     features: FeatureCollection<out Geometry?, P>,
@@ -279,7 +360,7 @@ suspend fun <P : Any> buildRTreeParallel(
 
     val entries: List<Entry<Feature<Geometry?, P>>> =
         fs.asSequence()
-            .chunked(chunkSize)            // coarse batches to reduce overhead
+            .chunked(chunkSize)
             .map { chunk ->
                 async {
                     chunk.map { f -> Entry(rect = featureRect(f as Feature<Geometry?, *>), value = f) }
