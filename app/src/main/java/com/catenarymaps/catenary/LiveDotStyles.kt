@@ -35,7 +35,10 @@ data class LiveDotStyle(
     val minBearingZoom: Float
 )
 
-fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
+fun getLiveDotStyle(
+    category: String, settings: LabelSettings,
+    railInFrame: Boolean
+): LiveDotStyle {
     val dotRadius: Expression<DpValue>
     val dotStrokeWidth: Expression<DpValue>
     val dotOpacity: Expression<FloatValue>
@@ -65,8 +68,13 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
                 16.0 to const(6.0.dp)
             )
             dotStrokeWidth =
-                interpolate(linear(), zoom(), 9.0 to const(0.3.dp), 15.0 to const(1.0.dp))
-            dotOpacity = const(0.5f)
+                interpolate(
+                    linear(),
+                    zoom(),
+                    9.0 to if (railInFrame) const(0.4.dp) else const(0.8.dp),
+                    14.0 to const(1.0.dp)
+                )
+            dotOpacity = if (railInFrame) const(0.5f) else const(0.8f)
             dotStrokeOpacity = interpolate(
                 linear(),
                 zoom(),
@@ -86,10 +94,10 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-10).dp),
-                10.0 to offset(0.dp, (-8).dp),
-                12.0 to offset(0.dp, (-7).dp),
-                13.0 to offset(0.dp, (-6).dp),
+                9.0 to offset(0.dp, (-8).dp),
+                10.0 to offset(0.dp, (-7).dp),
+                12.0 to offset(0.dp, (-6).dp),
+                13.0 to offset(0.dp, (-5).dp),
                 15.0 to offset(0.dp, (-5).dp)
             )
             bearingShellOpacity = interpolate(
@@ -105,8 +113,9 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
                 interpolate(
                     type = linear(),
                     input = zoom(),
-                    9.0 to const(0.25f.em),
-                    11.0 to const(0.3125f.em),
+                    9.0 to if (railInFrame) const(0.20f.em) else const(0.25f.em),
+                    11.0 to if (railInFrame) const(0.24f.em) else const(0.3125f.em),
+                    12.0 to if (railInFrame) const(0.3.em) else const(0.4375.em),
                     13.0 to const(0.5625f.em),
                     15.0 to const(0.6875f.em)
                 )
@@ -121,18 +130,23 @@ fun getLiveDotStyle(category: String, settings: LabelSettings): LiveDotStyle {
                 )
             }
             labelTextFont =
-                step(
+                if (railInFrame) step(
+                    zoom(),
+                    const(listOf("Barlow-Regular")),
+                    12.5 to const(listOf("Barlow-Medium")),
+                    14.0 to const(listOf("Barlow-SemiBold"))
+                ) else step(
                     zoom(),
                     const(listOf("Barlow-Medium")),
                     11.0 to const(listOf("Barlow-SemiBold"))
                 )
             labelRadialOffset = const(0.2f.em)
-            labelIgnorePlacementZoom = 10.5
+            labelIgnorePlacementZoom = if (railInFrame) 12.0 else 10.5
             labelTextOpacity = interpolate(
                 linear(),
                 zoom(),
                 7.9 to const(0.0f),
-                8.0 to const(0.9f),
+                8.0 to if (railInFrame) const(0.8f) else const(0.9f),
                 11.0 to const(0.95f),
                 12.0 to const(1.0f)
             )

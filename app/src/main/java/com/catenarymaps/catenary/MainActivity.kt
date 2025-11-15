@@ -228,9 +228,12 @@ import org.json.JSONObject
 import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.LineString
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import io.ktor.client.request.get
+import kotlinx.serialization.SerialName
 import org.maplibre.compose.expressions.dsl.Feature.has
 import org.maplibre.compose.expressions.dsl.condition
 import org.maplibre.compose.expressions.dsl.switch
+import org.maplibre.spatialk.geojson.BoundingBox
 import org.maplibre.spatialk.turf.measurement.distance
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
@@ -539,86 +542,26 @@ val easeOutSpec: AnimationSpec<Float> = tween(
 
 enum class SheetSnapPoint { Collapsed, PartiallyExpanded, Expanded }
 
+@Serializable
+private data class RailCountResponse(
+    @SerialName("intercityrail_shapes") val intercityRailShapes: Int = 0,
+    @SerialName("metro_shapes") val metroShapes: Int = 0,
+    @SerialName("tram_shapes") val tramShapes: Int = 0
+)
+
 private var lastRailQueryTime = 0L
 
-private fun queryAreAnyRailFeaturesVisible(
-    camera: CameraState, mapSize: IntSize,
-    forceRun: Boolean = false
-) {
-    println("query any rail features attempted")
-    val now = SystemClock.uptimeMillis()
-    if (now - lastRailQueryTime < 1000L && forceRun == false) return
-    lastRailQueryTime = now
-
-    android.os.Handler(Looper.getMainLooper()).post {
-        val projection = camera.projection ?: return@post
-        if (mapSize.width == 0 || mapSize.height == 0) return@post
-
-        // This will queue the task to run when the main thread has processed other pending messages.
-        android.os.Handler(Looper.getMainLooper()).post {
-            val density = Resources.getSystem().displayMetrics.density
-            val rect = DpRect(
-                left = 0.dp,
-                top = 0.dp,
-                right = (mapSize.width / density).dp,
-                bottom = (mapSize.height / density).dp
-            )
-
-            val waitStartTime = SystemClock.uptimeMillis()
-            val featuresDotsCount = projection.queryRenderedFeatures(
-                rect = rect, layerIds = setOf(
-                    //   LayersPerCategory.Tram.Stops,
-                    //   LayersPerCategory.Tram.Livedots,
-                    LayersPerCategory.Metro.Stops,
-                    LayersPerCategory.Metro.Livedots,
-                    LayersPerCategory.IntercityRail.Stops,
-                    LayersPerCategory.IntercityRail.Livedots,
-                )
-            ).size
-
-            android.os.Handler(Looper.getMainLooper()).post {
-                val handlerWaitTime1 = SystemClock.uptimeMillis() - waitStartTime
-                val queryStartTime1 = SystemClock.uptimeMillis()
-
-//                val intercityRailFeaturesCount = projection.queryRenderedFeatures(
-//                    rect = rect, layerIds = setOf(
-//                        LayersPerCategory.IntercityRail.Shapes,
-//                    )
-//                ).size
-
-                val queryTime1 = SystemClock.uptimeMillis() - queryStartTime1
-                val waitStartTime2 = SystemClock.uptimeMillis()
-
-                android.os.Handler(Looper.getMainLooper()).post {
-                    val handlerWaitTime2 = SystemClock.uptimeMillis() - waitStartTime2
-                    val queryStartTime2 = SystemClock.uptimeMillis()
-
-//                    val metroRailShapeFeaturesCount = projection.queryRenderedFeatures(
-//                    rect = rect, layerIds = setOf(
-//                        LayersPerCategory.Metro.Shapes,
-//                        LayersPerCategory.Tram.Shapes
-//                    )
-//                ).size
-                    val queryTime2 = SystemClock.uptimeMillis() - queryStartTime2
-
-
-                    val totalCount = featuresDotsCount
-
-                    Log.d(
-                        TAG,
-                        "total Count of rail items ${totalCount} with dots ${featuresDotsCount}"
-                    )
-
-
-                    val manyVisible = featuresDotsCount >= 20
-                    railinframe = manyVisible
-                }
-
-            }
-
-        }
+private suspend fun fetchRailCountInBox(bounds: BoundingBox): RailCountResponse? {
+    return try {
+        val url = "https://birch.catenarymaps.org/countrailinbox?min_y=${bounds.south - 0.03}" +
+                "&max_y=${bounds.north + 0.03}&min_x=${bounds.west - 0.03}&max_x=${bounds.east - 0.03}"
+        ktorClient.get(url).body<RailCountResponse>()
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to fetch rail count in box", e)
+        null
     }
 }
+
 
 private fun queryVisibleChateaus(scope: CoroutineScope, camera: CameraState, mapSize: IntSize) {
     scope.launch(kotlinx.coroutines.Dispatchers.Main) {
@@ -764,6 +707,117 @@ class MainActivity : ComponentActivity() {
     }
 
     private val layerSettings = mutableStateOf(AllLayerSettings())
+
+
+    private fun queryAreAnyRailFeaturesVisible(
+        camera: CameraState, mapSize: IntSize, forceRun: Boolean = false, distance_m: Double = 0.0
+    ) {
+        println("query any rail features attempted")
+        val now = SystemClock.uptimeMillis()
+        if ((now - lastRailQueryTime < 1000L && forceRun == false) && distance_m < 100000) return
+        lastRailQueryTime = now
+
+        CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+            val projection = camera.projection ?: return@launch
+            if (mapSize.width == 0 || mapSize.height == 0) return@launch
+
+            val currentBoundingBox = projection.queryVisibleBoundingBox()
+
+            launch(kotlinx.coroutines.Dispatchers.IO) {
+                val responseFromRailCounting = fetchRailCountInBox(currentBoundingBox)
+
+
+
+                if (responseFromRailCounting != null) {
+
+
+                    android.os.Handler(Looper.getMainLooper()).post {
+                        // This will queue the task to run when the main thread has processed other pending messages.
+                        android.os.Handler(Looper.getMainLooper()).post {
+                            val density = Resources.getSystem().displayMetrics.density
+                            val rect = DpRect(
+                                left = 0.dp,
+                                top = 0.dp,
+                                right = (mapSize.width / density).dp,
+                                bottom = (mapSize.height / density).dp
+                            )
+
+                            val layerSettingsValue = layerSettings.value
+                            val intercityRailShapesCount =
+                                if (layerSettingsValue.intercityrail.shapes || layerSettingsValue.intercityrail.labelshapes) (responseFromRailCounting?.intercityRailShapes
+                                    ?: 0) else 0
+                            val localRailShapesCount =
+                                if (layerSettingsValue.localrail.shapes || layerSettingsValue.localrail.labelshapes) {
+                                    (responseFromRailCounting?.metroShapes
+                                        ?: 0) + (responseFromRailCounting?.tramShapes ?: 0)
+                                } else {
+                                    0
+                                }
+
+                            val metroRailShapesCount =
+                                if (layerSettingsValue.localrail.shapes || layerSettingsValue.localrail.labelshapes) {
+                                    (responseFromRailCounting?.metroShapes ?: 0)
+                                } else {
+                                    0
+                                }
+
+
+                            val waitStartTime = SystemClock.uptimeMillis()
+                            val featuresDotsCount = projection.queryRenderedFeatures(
+                                rect = rect, layerIds = setOf(
+                                    //   LayersPerCategory.Tram.Stops,
+                                    //   LayersPerCategory.Tram.Livedots,
+                                    LayersPerCategory.Metro.Stops,
+                                    LayersPerCategory.Metro.Livedots,
+                                    LayersPerCategory.IntercityRail.Stops,
+                                    LayersPerCategory.IntercityRail.Livedots,
+                                )
+                            ).size
+
+                            android.os.Handler(Looper.getMainLooper()).post {
+                                val handlerWaitTime1 = SystemClock.uptimeMillis() - waitStartTime
+                                val queryStartTime1 = SystemClock.uptimeMillis()
+
+                                //                val intercityRailFeaturesCount = projection.queryRenderedFeatures(
+                                //                    rect = rect, layerIds = setOf(
+                                //                        LayersPerCategory.IntercityRail.Shapes,
+                                //                    )
+                                //                ).size
+
+                                val queryTime1 = SystemClock.uptimeMillis() - queryStartTime1
+                                val waitStartTime2 = SystemClock.uptimeMillis()
+
+                                android.os.Handler(Looper.getMainLooper()).post {
+                                    val handlerWaitTime2 =
+                                        SystemClock.uptimeMillis() - waitStartTime2
+                                    val queryStartTime2 = SystemClock.uptimeMillis()
+
+                                    val queryTime2 = SystemClock.uptimeMillis() - queryStartTime2
+
+                                    val totalCount =
+                                        featuresDotsCount + intercityRailShapesCount + localRailShapesCount
+
+                                    Log.d(
+                                        TAG,
+                                        "total Count of rail items ${totalCount} with dots ${featuresDotsCount} and shapes ${intercityRailShapesCount} & ${metroRailShapesCount}"
+                                    )
+
+
+                                    val manyVisible =
+                                        featuresDotsCount >= 100 || intercityRailShapesCount + metroRailShapesCount >= 20
+                                    railinframe = manyVisible
+                                }
+                            }
+
+                        }
+
+                    }
+                }
+            }
+
+
+        }
+    }
 
     val applyFilterToLiveDots = mutableStateOf<Expression<BooleanValue>>(const(true))
 
@@ -936,19 +990,19 @@ class MainActivity : ComponentActivity() {
                 // All categories already have the correct set of chateaus, nothing to do.
             } else {
 
-            var locationsV2Modified = false
-            val newLocationsV2 = currentLocationsV2.toMutableMap()
+                var locationsV2Modified = false
+                val newLocationsV2 = currentLocationsV2.toMutableMap()
 
-            currentLocationsV2.forEach { (category, chateauMap) ->
-                if (chateauMap.keys.any { it !in visibleSet }) {
-                    newLocationsV2[category] = chateauMap.filterKeys { it in visibleSet }
-                    locationsV2Modified = true
+                currentLocationsV2.forEach { (category, chateauMap) ->
+                    if (chateauMap.keys.any { it !in visibleSet }) {
+                        newLocationsV2[category] = chateauMap.filterKeys { it in visibleSet }
+                        locationsV2Modified = true
+                    }
                 }
-            }
 
-            if (locationsV2Modified) {
-                realtimeVehicleLocationsStoreV2.value = newLocationsV2
-            }
+                if (locationsV2Modified) {
+                    realtimeVehicleLocationsStoreV2.value = newLocationsV2
+                }
             }
 
             val currentTileBoundaries = previousTileBoundariesStore.value
@@ -1589,7 +1643,7 @@ class MainActivity : ComponentActivity() {
                                 routeCacheAgenciesKnown = routeCacheAgenciesKnown
                             )
                             queryVisibleChateaus(scope, camera, mapSize)
-                            queryAreAnyRailFeaturesVisible(camera, mapSize)
+                            queryAreAnyRailFeaturesVisible(camera, mapSize, forceRun = true)
                             lastFetchedAt = now
                         },
                         // 3) Use onFrame to detect camera idle -> covers move end & zoom end
@@ -1670,15 +1724,21 @@ class MainActivity : ComponentActivity() {
                                         queryVisibleChateaus(scope, camera, mapSize)
 
                                         if (railinframe) {
-                                            if (distanceMovedOfRailChecker > 20000 || zoomMovedOfRailChecker > 5) {
+                                            if (distanceMovedOfRailChecker > 20000 || zoomMovedOfRailChecker > 3) {
                                                 if (pos.zoom > 6) {
-                                                    queryAreAnyRailFeaturesVisible(camera, mapSize)
+                                                    queryAreAnyRailFeaturesVisible(
+                                                        camera, mapSize,
+                                                        distance_m = distanceMovedOfRailChecker
+                                                    )
                                                     lastQueriedPosOfRailChecker = pos
                                                 }
                                             }
                                         } else {
                                             if (distanceMovedOfRailChecker > 500 || zoomMovedOfRailChecker > 1) {
-                                                queryAreAnyRailFeaturesVisible(camera, mapSize)
+                                                queryAreAnyRailFeaturesVisible(
+                                                    camera, mapSize,
+                                                    distance_m = distanceMovedOfRailChecker
+                                                )
                                                 lastQueriedPosOfRailChecker = pos
                                             }
                                         }
@@ -2128,7 +2188,8 @@ class MainActivity : ComponentActivity() {
                             busDotsSrc = busDotsSrc,
                             metroDotsSrc = metroDotsSrc,
                             railDotsSrc = railDotsSrc,
-                            otherDotsSrc = otherDotsSrc
+                            otherDotsSrc = otherDotsSrc,
+                            railInFrame = railinframe
                         )
 
                         // Layers for BUS
@@ -2154,7 +2215,8 @@ class MainActivity : ComponentActivity() {
                             ),
                             usUnits = usUnits,
                             isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.Bus
+                            layerIdPrefix = LayersPerCategory.Bus,
+                            railInFrame = railinframe
                         )
 
 // Layers for METRO/TRAM share the metro source but are filtered
@@ -2169,7 +2231,7 @@ class MainActivity : ComponentActivity() {
                                     feature.has("trip_id"),
                                     get("trip_id").cast<StringValue>().neq(const("")),
 
-                                )
+                                    )
                             ),
                             bearingFilter = all(
                                 applyFilterToLiveDots.value,
@@ -2178,7 +2240,8 @@ class MainActivity : ComponentActivity() {
                             ),
                             usUnits = usUnits,
                             isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.Metro
+                            layerIdPrefix = LayersPerCategory.Metro,
+                            railInFrame = railinframe
                         )
 
                         LiveDotLayers(
@@ -2200,7 +2263,8 @@ class MainActivity : ComponentActivity() {
                             ),
                             usUnits = usUnits,
                             isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.Tram
+                            layerIdPrefix = LayersPerCategory.Tram,
+                            railInFrame = railinframe
                         )
 
 // Layers for INTERCITY
@@ -2223,7 +2287,8 @@ class MainActivity : ComponentActivity() {
                             ),
                             usUnits = usUnits,
                             isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.IntercityRail
+                            layerIdPrefix = LayersPerCategory.IntercityRail,
+                            railInFrame = railinframe
                         )
 
 // Layers for OTHER
@@ -2247,7 +2312,8 @@ class MainActivity : ComponentActivity() {
                             ),
                             usUnits = usUnits,
                             isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.Other
+                            layerIdPrefix = LayersPerCategory.Other,
+                            railInFrame = railinframe
                         )
 
 
@@ -2325,15 +2391,12 @@ class MainActivity : ComponentActivity() {
                                     bottom = with(LocalDensity.current) {
 
 
-                                        ((
-                                                draggableState.requireOffset()
-                                                )).toDp().coerceAtLeast(0.dp).coerceAtMost(
+                                        ((draggableState.requireOffset())).toDp()
+                                            .coerceAtLeast(0.dp).coerceAtMost(
                                                 with(LocalDensity.current) {
                                                     maxHeight.times(0.9f)
-                                                }
-                                            )
-                                    }
-                                ),
+                                                })
+                                    }),
 
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
@@ -2391,7 +2454,7 @@ class MainActivity : ComponentActivity() {
                                             CatenaryStackEnum.RouteStack(
                                                 chateau_id = chateauId,
                                                 route_id = routeId
-                                        )
+                                            )
                                         )
                                         catenaryStack = newStack
                                     }
@@ -2536,6 +2599,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         }
+
                                         is CatenaryStackEnum.BlockStack -> {
                                             BlockScreen(
                                                 chateau = currentScreen.chateau_id,
@@ -2887,26 +2951,27 @@ class MainActivity : ComponentActivity() {
                                 // Tab Row
                                 TabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
                                     tabs.forEachIndexed { index, title ->
-                                                                        val textResId = when (title) {
-                                                                            "intercityrail" -> R.string.heading_intercity_rail
-                                                                            "localrail" -> R.string.heading_local_rail
-                                                                            "bus" -> R.string.heading_bus
-                                                                            "other" -> R.string.heading_other
-                                                                            "more" -> R.string.heading_more
-                                                                            else -> R.string.app_name // Fallback, though should not happen
-                                                                        }
-                                                                        Tab(
-                                                                            selected = selectedTab == title,
-                                                                            onClick = { selectedTab = title },
-                                                                            text = {
-                                                                                Text(
-                                                                                    text = stringResource(textResId),
-                                                                                    style = MaterialTheme.typography.bodySmall,
-                                                                                    maxLines = 1,
-                                                                                    overflow = TextOverflow.Ellipsis
-                                                                                )
-                                                                            }
-                                                                        )                                    }
+                                        val textResId = when (title) {
+                                            "intercityrail" -> R.string.heading_intercity_rail
+                                            "localrail" -> R.string.heading_local_rail
+                                            "bus" -> R.string.heading_bus
+                                            "other" -> R.string.heading_other
+                                            "more" -> R.string.heading_more
+                                            else -> R.string.app_name // Fallback, though should not happen
+                                        }
+                                        Tab(
+                                            selected = selectedTab == title,
+                                            onClick = { selectedTab = title },
+                                            text = {
+                                                Text(
+                                                    text = stringResource(textResId),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -3929,6 +3994,7 @@ fun AddLiveDots(
     metroDotsSrc: MutableState<GeoJsonSource>,
     railDotsSrc: MutableState<GeoJsonSource>,
     otherDotsSrc: MutableState<GeoJsonSource>,
+    railInFrame: Boolean
 ) {
     val scope = rememberCoroutineScope()
     // remember previous references per category to detect changes cheaply.
@@ -4003,7 +4069,8 @@ private fun LiveDotLayers(
     bearingFilter: Expression<BooleanValue>,
     usUnits: Boolean,
     isDark: Boolean,
-    layerIdPrefix: Any = LayersPerCategory.Bus // Default, will be overridden
+    layerIdPrefix: Any = LayersPerCategory.Bus, // Default, will be overridden
+    railInFrame: Boolean
 ) {
     val (idDots, idLabels, idPointing, idPointingShell) = when (layerIdPrefix) {
         is LayersPerCategory.Bus -> listOf(
@@ -4049,7 +4116,7 @@ private fun LiveDotLayers(
     val vehicleColor = get(contrastColorProp).cast<ColorValue>()
     val bearingColor = get(contrastBearingColorProp).cast<ColorValue>()
 
-    val styles = getLiveDotStyle(category, settings)
+    val styles = getLiveDotStyle(category, settings, railInFrame)
 
     // --- End of Category-Specific Sizing ---
 
