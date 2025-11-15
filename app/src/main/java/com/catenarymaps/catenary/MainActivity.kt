@@ -576,15 +576,24 @@ private fun queryVisibleChateaus(scope: CoroutineScope, camera: CameraState, map
             bottom = (mapSize.height / density).dp
         )
 
+        val startTime = SystemClock.uptimeMillis()
         val features = projection.queryRenderedFeatures(
             rect = rect, layerIds = setOf("chateaus_calc")
         )
+        val queryTime = SystemClock.uptimeMillis() - startTime
 
         val names = features.map { f ->
             f.properties?.get("chateau")?.toString()?.trimStart('"')?.trimEnd('"') ?: "Unknown"
         }
         visibleChateaus = names
-        Log.d(TAG, "Visible chateaus (${names.size}): ${names.joinToString(limit = 100)}")
+        Log.d(
+            TAG,
+            "Visible chateaus query took ${queryTime}ms. Found ${names.size}: ${
+                names.joinToString(
+                    limit = 100
+                )
+            }"
+        )
     }
 }
 
@@ -763,6 +772,10 @@ class MainActivity : ComponentActivity() {
 
 
                             val waitStartTime = SystemClock.uptimeMillis()
+
+                            val queryFeatureDotTimer = SystemClock.uptimeMillis()
+
+
                             val featuresDotsCount = projection.queryRenderedFeatures(
                                 rect = rect, layerIds = setOf(
                                     //   LayersPerCategory.Tram.Stops,
@@ -773,6 +786,10 @@ class MainActivity : ComponentActivity() {
                                     LayersPerCategory.IntercityRail.Livedots,
                                 )
                             ).size
+
+                            val queryFeatureDotDuration =
+                                SystemClock.uptimeMillis() - queryFeatureDotTimer
+
 
                             android.os.Handler(Looper.getMainLooper()).post {
                                 val handlerWaitTime1 = SystemClock.uptimeMillis() - waitStartTime
@@ -799,7 +816,7 @@ class MainActivity : ComponentActivity() {
 
                                     Log.d(
                                         TAG,
-                                        "total Count of rail items ${totalCount} with dots ${featuresDotsCount} and shapes ${intercityRailShapesCount} & ${metroRailShapesCount}"
+                                        "after ${queryFeatureDotDuration} ms, total Count of rail items ${totalCount} with dots ${featuresDotsCount} and shapes ${intercityRailShapesCount} & ${metroRailShapesCount}"
                                     )
 
 
@@ -1066,7 +1083,22 @@ class MainActivity : ComponentActivity() {
 
             val searchViewModel: SearchViewModel = viewModel()
 
+
             var catenaryStack by remember { mutableStateOf(ArrayDeque<CatenaryStackEnum>()) }
+
+            // Handle back button presses
+            androidx.activity.compose.BackHandler(enabled = catenaryStack.isNotEmpty()) {
+                // This block will be executed when the back button is pressed
+                // and the catenaryStack is not empty.
+                if (catenaryStack.isNotEmpty()) {
+                    val newStack = ArrayDeque(catenaryStack)
+                    newStack.removeLast()
+                    catenaryStack = newStack
+                }
+                // By providing this custom handler, we prevent the default back
+                // action (like closing the activity) from happening when the
+                // stack has items.
+            }
 
             val usePickedLocation = pin.active && pin.position != null
             val pickedPair: Pair<Double, Double>? =
