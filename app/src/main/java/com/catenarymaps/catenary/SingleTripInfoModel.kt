@@ -258,11 +258,36 @@ class SingleTripViewModel(
         var currentAtStopIdx = -1
 
         _stopTimes.value.forEachIndexed { i, stoptime ->
-            val dep = stoptime.rtDepartureTime ?: stoptime.raw.scheduled_departure_time_unix_seconds
-            val arr = stoptime.rtArrivalTime ?: stoptime.raw.scheduled_arrival_time_unix_seconds
+            // This logic is ported from the web frontend to ensure consistency
+            var arrivalTimeToUse = stoptime.rtArrivalTime
+            var departureTimeToUse = stoptime.rtDepartureTime
+
+            // if a trip has a RT arrival time, but the scheduled departure time is before the RT arrival,
+            // then the departure time should be at least the arrival time.
+            if (stoptime.raw.scheduled_departure_time_unix_seconds != null && stoptime.rtArrivalTime != null) {
+                if (stoptime.raw.scheduled_departure_time_unix_seconds < stoptime.rtArrivalTime!!) {
+                    departureTimeToUse = stoptime.rtArrivalTime
+                }
+            }
+
+            // This handles an edge case where a train might be running express,
+            // and its realtime departure from a future stop is before its scheduled arrival at the current stop.
+            // In this case, we should consider the arrival to have happened no later than that departure.
+            if (stoptime.rtArrivalTime != null) {
+                if (stoptime.raw.scheduled_arrival_time_unix_seconds != null && stoptime.rtDepartureTime != null) {
+                    if (stoptime.raw.scheduled_arrival_time_unix_seconds > stoptime.rtDepartureTime!!) {
+                        arrivalTimeToUse = stoptime.rtDepartureTime
+                    }
+                }
+            }
+
+            val dep = departureTimeToUse ?: stoptime.raw.scheduled_departure_time_unix_seconds
+            val arr = arrivalTimeToUse ?: stoptime.raw.scheduled_arrival_time_unix_seconds
 
             val hasDeparted = dep != null && dep <= nowSec
             val hasArrived = arr != null && arr <= nowSec
+
+
 
             if (hasDeparted) {
                 lastDepartedIdx = i
