@@ -121,7 +121,7 @@ fun VehicleSelectionItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Run Number (simplified from JS logic)
-                val runNumber = option.trip_short_name ?: option.vehicle_id
+                val runNumber = option.trip_short_name //?: option.vehicle_id
                 if (runNumber != null) {
                     Box(
                         modifier = Modifier
