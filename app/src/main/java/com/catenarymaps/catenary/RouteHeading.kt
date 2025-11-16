@@ -116,20 +116,22 @@ fun RouteHeading(
 
                 if (headsign != null || tripShortName != null) {
                     Row(
-
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (tripShortName != null) {
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(routeColor)
-                                    .padding(horizontal = 4.dp, vertical = 1.5.dp)
+                                    .padding(horizontal = 4.dp, vertical = 1.dp)
                             ) {
                                 Text(
                                     text = tripShortName,
                                     color = routeTextColor
                                 )
                             }
+
+                            Spacer(Modifier.size(4.dp))
                         }
 
                         if (headsign != null) {
