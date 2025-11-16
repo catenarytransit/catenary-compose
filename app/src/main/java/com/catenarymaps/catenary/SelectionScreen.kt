@@ -32,6 +32,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DirectionsBus
+import androidx.compose.material.icons.filled.Subway
+import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.Tram
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -160,11 +163,16 @@ fun VehicleSelectionItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Icon(
-                            Icons.Filled.DirectionsBus,
+                            when (option.route_type) {
+                                0 -> Icons.Filled.Tram
+                                1 -> Icons.Filled.Subway
+                                2 -> Icons.Filled.Train
+                                else -> Icons.Filled.DirectionsBus
+                            },
                             contentDescription = "Vehicle",
                             modifier = Modifier.size(12.dp)
                         )
