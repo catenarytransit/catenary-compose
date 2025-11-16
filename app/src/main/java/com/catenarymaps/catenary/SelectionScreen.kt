@@ -117,7 +117,7 @@ fun VehicleSelectionItem(
 
             // Headsign and Vehicle ID
             Row(
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Run Number (simplified from JS logic)

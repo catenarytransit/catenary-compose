@@ -33,6 +33,7 @@ import com.catenarymaps.catenary.darkenColour
 import com.catenarymaps.catenary.lightenColour
 import com.catenarymaps.catenary.parseColor
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 
 @Composable
@@ -44,6 +45,7 @@ fun RouteHeading(
     shortName: String?,
     longName: String?,
     description: String? = null,
+    tripShortName: String? = null,
     isCompact: Boolean,
     routeClickable: Boolean = false,
     headsign: String? = null,
@@ -112,10 +114,32 @@ fun RouteHeading(
                     style = textStyle,
                 )
 
-                if (headsign != null) {
-                    Text(
-                        text = headsign
-                    )
+                if (headsign != null || tripShortName != null) {
+                    Row(
+
+                    ) {
+                        if (tripShortName != null) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(routeColor)
+                                    .padding(horizontal = 4.dp, vertical = 1.5.dp)
+                            ) {
+                                Text(
+                                    text = tripShortName,
+                                    color = routeTextColor
+                                )
+                            }
+                        }
+
+                        if (headsign != null) {
+                            Text(
+                                text = headsign
+                            )
+                        }
+                    }
+
+
                 }
 
                 if (!agencyName.isNullOrBlank()) {

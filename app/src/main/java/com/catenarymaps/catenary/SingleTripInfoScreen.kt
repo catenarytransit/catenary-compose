@@ -270,6 +270,7 @@ fun SingleTripInfoScreen(
                 agencyName = null, // Not available in TripDataResponse
                 shortName = data.route_short_name,
                 longName = data.route_long_name,
+                tripShortName = data.trip_short_name,
                 isCompact = false,
                 routeClickable = true,
                 onRouteClick = {
