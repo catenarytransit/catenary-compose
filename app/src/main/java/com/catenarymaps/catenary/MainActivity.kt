@@ -567,7 +567,10 @@ private suspend fun fetchRailCountInBox(bounds: BoundingBox): RailCountResponse?
 }
 
 
-private fun queryVisibleChateaus(scope: CoroutineScope, camera: CameraState, mapSize: IntSize) {
+private fun queryVisibleChateaus(
+    scope: CoroutineScope, camera: CameraState, mapSize: IntSize,
+    rtree: RTree<Int>?, features: List<Feature<Geometry?, ChateauProps>>
+) {
     scope.launch(kotlinx.coroutines.Dispatchers.Main) {
         val projection = camera.projection ?: return@launch
         if (mapSize.width == 0 || mapSize.height == 0) return@launch
@@ -581,26 +584,33 @@ private fun queryVisibleChateaus(scope: CoroutineScope, camera: CameraState, map
         )
 
         val startTime = SystemClock.uptimeMillis()
-        val features = projection.queryRenderedFeatures(
-            rect = rect, layerIds = setOf("chateaus_calc")
-        )
-
-       
+        //val featureschateauquery = projection.queryRenderedFeatures(
+        //   rect = rect, layerIds = setOf("chateaus_calc")
+        //)
 
         val queryTime = SystemClock.uptimeMillis() - startTime
 
-        val names = features.map { f ->
-            f.properties?.get("chateau")?.toString()?.trimStart('"')?.trimEnd('"') ?: "Unknown"
+        var rtreeQueryTime = 0L
+        val featuresFromRtree = if (rtree != null) {
+            val boundingBox = projection.queryVisibleBoundingBox()
+            val startTimeRtree: Long
+            val result = withContext(Dispatchers.Default) {
+                startTimeRtree = SystemClock.uptimeMillis()
+                lookupChateaux(rtree, features, boundingBox)
+            }
+            rtreeQueryTime = SystemClock.uptimeMillis() - startTimeRtree
+            result
+        } else {
+            emptyList()
         }
-        visibleChateaus = names
-        Log.d(
-            TAG,
-            "Visible chateaus query took ${queryTime}ms. Found ${names.size}: ${
-                names.joinToString(
-                    limit = 100
-                )
-            }"
-        )
+
+
+        val rtreeNames = featuresFromRtree.map { it.properties.chateau }.distinct()
+            .sorted()
+
+        visibleChateaus = rtreeNames
+
+        Log.d(TAG, "Visible chateaus query ${rtreeNames.joinToString(limit = 100)}")
     }
 }
 
@@ -713,7 +723,7 @@ val ktorClient = HttpClient(CIO) {
 }
 
 class MainActivity : ComponentActivity() {
-    
+
 
     //private var tracker: Tracker? = null
 
@@ -1411,7 +1421,7 @@ class MainActivity : ComponentActivity() {
                 if (!hadSavedView && !didInitialFollow && currentLocation != null) {
                     val (lat, lon) = currentLocation!!
 
-                  
+
 
 
                     camera.animateTo(
@@ -1715,7 +1725,10 @@ class MainActivity : ComponentActivity() {
 
                         // 2) Map done loading
                         onMapLoadFinished = {
-                            queryVisibleChateaus(scope, camera, mapSize)
+                            queryVisibleChateaus(
+                                scope, camera, mapSize,
+                                rtree, features
+                            )
                             val pos = camera.position
 
                             readDeeplink(
@@ -1743,7 +1756,10 @@ class MainActivity : ComponentActivity() {
                                 realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2,
                                 routeCacheAgenciesKnown = routeCacheAgenciesKnown
                             )
-                            queryVisibleChateaus(scope, camera, mapSize)
+                            queryVisibleChateaus(
+                                scope, camera, mapSize,
+                                rtree, features
+                            )
                             queryAreAnyRailFeaturesVisible(camera, mapSize, forceRun = true)
                             lastFetchedAt = now
                         },
@@ -1822,7 +1838,10 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                     if (camera.projection != null && mapSize != IntSize.Zero) {
-                                        queryVisibleChateaus(scope, camera, mapSize)
+                                        queryVisibleChateaus(
+                                            scope, camera, mapSize,
+                                            rtree, features
+                                        )
 
                                         if (railinframe) {
                                             if (distanceMovedOfRailChecker > 20000 || zoomMovedOfRailChecker > 3) {
@@ -3442,13 +3461,14 @@ class MainActivity : ComponentActivity() {
 
     // --- cache I/O ---
 
-    private suspend fun saveToCache(tree: RTree<Int>, rawGeojson: String) = withContext(Dispatchers.IO) {
-        // Save RTree<Int> as JSON
-        val rtreeJson = json.encodeToStringRTree(tree)
-        writeTextFile(rtreeCacheName, rtreeJson)
-        writeTextFile(geojsonCacheName, rawGeojson)
-        Log.d("Chateaux", "Cache saved (${rtreeCacheName}, ${geojsonCacheName})")
-    }
+    private suspend fun saveToCache(tree: RTree<Int>, rawGeojson: String) =
+        withContext(Dispatchers.IO) {
+            // Save RTree<Int> as JSON
+            val rtreeJson = json.encodeToStringRTree(tree)
+            writeTextFile(rtreeCacheName, rtreeJson)
+            writeTextFile(geojsonCacheName, rawGeojson)
+            Log.d("Chateaux", "Cache saved (${rtreeCacheName}, ${geojsonCacheName})")
+        }
 
     private suspend fun loadFromCache(): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? =
         withContext(Dispatchers.IO) {
