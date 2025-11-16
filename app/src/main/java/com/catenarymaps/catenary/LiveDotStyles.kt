@@ -133,19 +133,26 @@ fun getLiveDotStyle(
                 )
             }
             labelTextFont =
-                if (railInFrame) step(
-                    zoom(),
-                    const(listOf("Barlow-Regular")),
-                    12.5 to const(listOf("Barlow-Medium")),
-                    14.0 to const(listOf("Barlow-SemiBold"))
-                ) else step(
+                if (railInFrame) {
+                    if (isDark) step(
+                        zoom(),
+                        const(listOf("Barlow-Regular")),
+                        12.5 to const(listOf("Barlow-Medium")),
+                        14.0 to const(listOf("Barlow-SemiBold"))
+                    ) else step(
+                        zoom(),
+                        const(listOf("Barlow-Regular")),
+                        11.8 to const(listOf("Barlow-Medium")),
+                        14.0 to const(listOf("Barlow-SemiBold"))
+                    )
+                } else step(
                     zoom(),
                     const(listOf("Barlow-Medium")),
                     11.0 to const(listOf("Barlow-SemiBold"))
                 )
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = if (railInFrame) 12.0 else 10.5
-            labelTextOpacity = interpolate(
+            labelTextOpacity = if (isDark) interpolate(
                 linear(),
                 zoom(),
                 7.9 to const(0.0f),
@@ -153,6 +160,14 @@ fun getLiveDotStyle(
                 11.0 to if (railInFrame) const(0.70f) else const(0.85f),
                 12.0 to if (railInFrame) const(0.80f) else const(0.9f),
                 13.0 to if (railInFrame) const(0.85f) else const(0.95f),
+            ) else interpolate(
+                linear(),
+                zoom(),
+                7.9 to const(0.0f),
+                8.0 to if (railInFrame) const(0.7f) else const(0.85f),
+                11.0 to if (railInFrame) const(0.75f) else const(0.85f),
+                12.0 to if (railInFrame) const(0.85f) else const(0.9f),
+                13.0 to if (railInFrame) const(0.9f) else const(0.95f),
             )
             labelHaloWidth = if (isDark) const(2.0.dp) else const(1.0.dp)
             minLayerDotsZoom = 9F
