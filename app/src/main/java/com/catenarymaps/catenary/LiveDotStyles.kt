@@ -32,12 +32,14 @@ data class LiveDotStyle(
     val labelTextOpacity: Expression<FloatValue>,
     val minLayerDotsZoom: Float,
     val minLabelDotsZoom: Float,
-    val minBearingZoom: Float
+    val minBearingZoom: Float,
+    val labelHaloWidth: Expression<DpValue>
 )
 
 fun getLiveDotStyle(
     category: String, settings: LabelSettings,
-    railInFrame: Boolean
+    railInFrame: Boolean,
+    isDark: Boolean
 ): LiveDotStyle {
     val dotRadius: Expression<DpValue>
     val dotStrokeWidth: Expression<DpValue>
@@ -55,6 +57,7 @@ fun getLiveDotStyle(
     var minLayerDotsZoom: Float = 0.0F
     var minLabelDotsZoom: Float = 0.0F
     var minBearingZoom: Float = 0.0F
+    var labelHaloWidth: Expression<DpValue> = if (isDark) const(2.4.dp) else const(1.0.dp)
 
     when (category) {
         "bus" -> {
@@ -94,16 +97,16 @@ fun getLiveDotStyle(
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-8).dp),
-                10.0 to offset(0.dp, (-7).dp),
-                12.0 to offset(0.dp, (-6).dp),
+                9.0 to offset(0.dp, (-4).dp),
+                10.0 to offset(0.dp, (-5).dp),
+                12.0 to offset(0.dp, (-5).dp),
                 13.0 to offset(0.dp, (-5).dp),
                 15.0 to offset(0.dp, (-5).dp)
             )
             bearingShellOpacity = interpolate(
                 linear(),
                 zoom(),
-                9.0 to const(0.1f),
+                9.0 to const(0.05f),
                 10.0 to const(0.2f),
                 12.0 to const(0.2f),
                 15.0 to const(0.5f)
@@ -146,10 +149,12 @@ fun getLiveDotStyle(
                 linear(),
                 zoom(),
                 7.9 to const(0.0f),
-                8.0 to if (railInFrame) const(0.8f) else const(0.9f),
-                11.0 to const(0.95f),
-                12.0 to const(1.0f)
+                8.0 to if (railInFrame) const(0.7f) else const(0.85f),
+                11.0 to if (railInFrame) const(0.70f) else const(0.85f),
+                12.0 to if (railInFrame) const(0.80f) else const(0.9f),
+                13.0 to if (railInFrame) const(0.85f) else const(0.95f),
             )
+            labelHaloWidth = if (isDark) const(2.0.dp) else const(1.0.dp)
             minLayerDotsZoom = 9F
             minLabelDotsZoom = 10F
             minBearingZoom = 11F
@@ -481,6 +486,7 @@ fun getLiveDotStyle(
         labelTextOpacity = labelTextOpacity,
         minLayerDotsZoom = minLayerDotsZoom,
         minLabelDotsZoom = minLabelDotsZoom,
-        minBearingZoom = minBearingZoom
+        minBearingZoom = minBearingZoom,
+        labelHaloWidth = labelHaloWidth
     )
 }

@@ -4312,7 +4312,7 @@ private fun LiveDotLayers(
     val vehicleColor = get(contrastColorProp).cast<ColorValue>()
     val bearingColor = get(contrastBearingColorProp).cast<ColorValue>()
 
-    val styles = getLiveDotStyle(category, settings, railInFrame)
+    val styles = getLiveDotStyle(category, settings, railInFrame, isDark)
 
     // --- End of Category-Specific Sizing ---
 
@@ -4380,7 +4380,7 @@ private fun LiveDotLayers(
         textSize = styles.labelTextSize,
         textColor = vehicleColor,
         textHaloColor = if (isDark) const(Color(0xFF1E293B)) else const(Color(0xFFEDEDED)), // JS: #1d1d1d vs #ededed
-        textHaloWidth = if (isDark) const(2.4.dp) else const(1.0.dp), // JS: 2.4 vs 1
+        textHaloWidth = styles.labelHaloWidth,
         textHaloBlur = const(1.0.dp), // JS: 1
         textRadialOffset = styles.labelRadialOffset,
         textAllowOverlap = const(false),
