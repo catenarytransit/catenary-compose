@@ -78,10 +78,11 @@ class SingleTripViewModel(
             try {
 
 
+                val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
                 val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
 
                 val url =
-                    "https://birch.catenarymaps.org/get_trip_information/${tripSelected.chateau_id}/?" +
+                    "https://birch.catenarymaps.org/get_trip_information/${encodedChateauId}/?" +
                             if (tripSelected.trip_id != null) "trip_id=${encodedTripId}&" else "" +
                                     if (tripSelected.start_date != null) "start_date=${tripSelected.start_date ?: ""}&" else "" +
                                             if (tripSelected.start_time != null) "start_time=${tripSelected.start_time ?: ""}" else ""
@@ -118,10 +119,11 @@ class SingleTripViewModel(
         if (_isLoading.value) return // Don't fetch if still on initial load
         viewModelScope.launch {
             try {
+                val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
                 val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
 
                 val url =
-                    "https://birch.catenarymaps.org/get_trip_information_rt_update/${tripSelected.chateau_id}/?" +
+                    "https://birch.catenarymaps.org/get_trip_information_rt_update/${encodedChateauId}/?" +
                             "trip_id=${encodedTripId}&" +
                             "start_date=${tripSelected.start_date ?: ""}&" +
                             "start_time=${tripSelected.start_time ?: ""}"
@@ -164,8 +166,9 @@ class SingleTripViewModel(
             if (vehicleId.isNullOrBlank()) return@launch
 
             try {
+                val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
                 val url =
-                    "https://birch.catenarymaps.org/get_vehicle_information_from_label/${tripSelected.chateau_id}/$vehicleId"
+                    "https://birch.catenarymaps.org/get_vehicle_information_from_label/${encodedChateauId}/$vehicleId"
                 val response = ktorClient.get(url).body<VehicleRealtimeDataResponse>()
                 _vehicleData.value = response.data
             } catch (e: Exception) {

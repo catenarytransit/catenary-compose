@@ -176,7 +176,13 @@ fun RouteScreen(
     LaunchedEffect(screenData) {
         try {
             val url =
-                "https://birch.catenarymaps.org/route_info?chateau=${screenData.chateau_id}&route_id=${
+                "https://birch.catenarymaps.org/route_info?chateau=${
+                    URLEncoder.encode(
+                        screenData.chateau_id,
+                        "UTF-8"
+                    )
+                }" +
+                        "&route_id=${
                     URLEncoder.encode(
                         screenData.route_id,
                         "UTF-8"
@@ -246,7 +252,12 @@ fun RouteScreen(
             try {
                 val lastUpdated = routeRealtime?.last_updated_time_ms ?: 0
                 val url =
-                    "https://birch.catenarymaps.org/get_rt_of_single_route?chateau=${screenData.chateau_id}&route_id=${
+                    "https://birch.catenarymaps.org/get_rt_of_single_route?chateau=${
+                        URLEncoder.encode(
+                            screenData.chateau_id,
+                            "UTF-8"
+                        )
+                    }&route_id=${
                         URLEncoder.encode(
                             screenData.route_id, "UTF-8"
                         )

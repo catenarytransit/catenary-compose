@@ -27,7 +27,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.floor
 
 @Serializable
-data class AgencyFilterRequest(val agency_filter: List<String>?)
+data class AgencyFilterRequest(val agency_filter: List<String>?, val chateau: String)
 
 fun fetchRoutesOfChateauByAgency(
     chateauId: String,
@@ -46,9 +46,9 @@ fun fetchRoutesOfChateauByAgency(
                     !routeCacheAgenciesKnownForThisChateau!!.contains(
                         it
                     )
-                } else agencyIdList)
+                } else agencyIdList, chateau = chateauId)
             val newRoutes: List<RouteCacheEntry> =
-                ktorClient.post("https://birch.catenarymaps.org/getroutesofchateauwithagency/$chateauId") {
+                ktorClient.post("https://birch.catenarymaps.org/getroutesofchateauwithagencyv2") {
                     contentType(ContentType.Application.Json)
                     setBody(requestBody)
                 }.body()

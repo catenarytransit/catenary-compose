@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import java.net.URLEncoder
 
 @Serializable
 data class BlockData(
@@ -103,8 +104,11 @@ class BlockScreenViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
+                val encodedBlockId = URLEncoder.encode(blockId, "UTF-8")
+                val encodedServiceDate = URLEncoder.encode(serviceDate, "UTF-8")
+                val encodedChateau = URLEncoder.encode(chateau, "UTF-8")
                 val response: BlockData =
-                    client.get("https://birch.catenarymaps.org/get_block?chateau=$chateau&block_id=$blockId&service_date=$serviceDate")
+                    client.get("https://birch.catenarymaps.org/get_block?chateau=$encodedChateau&block_id=$encodedBlockId&service_date=$encodedServiceDate")
                         .body()
                 _blockData.value = response
             } catch (e: Exception) {

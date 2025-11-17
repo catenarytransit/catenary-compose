@@ -58,6 +58,7 @@ import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.GeoJsonSource
 import java.time.Instant
+import java.net.URLEncoder
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -258,8 +259,11 @@ fun StopScreen(
         if (page.loading) return
         page.loading = true
 
+        val encodedStopId = URLEncoder.encode(stopId, "UTF-8")
+        val encodedChateau = URLEncoder.encode(chateau, "UTF-8")
+
         val url =
-            "https://birch.catenarymaps.org/departures_at_stop?stop_id=$stopId&chateau_id=$chateau&greater_than_time=$startSec&less_than_time=$endSec"
+            "https://birch.catenarymaps.org/departures_at_stop?stop_id=$encodedStopId&chateau_id=$encodedChateau&greater_than_time=$startSec&less_than_time=$endSec"
 
         try {
             val data = ktorClient.get(url).body<DeparturesAtStopResponse>()
