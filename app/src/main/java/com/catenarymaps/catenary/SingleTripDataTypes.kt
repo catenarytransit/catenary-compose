@@ -67,7 +67,9 @@ data class TripDataResponse(
     val rt_shape: Boolean? = null,
     val tz: String? = null,
     val stoptimes: List<TripStoptime> = emptyList(),
-    val alert_id_to_alert: Map<String, Alert> = emptyMap()
+    val alert_id_to_alert: Map<String, Alert> = emptyMap(),
+    val is_cancelled: Boolean,
+    val deleted: Boolean,
 )
 
 // --- Data class for get_trip_information_rt_update ---

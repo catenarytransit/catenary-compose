@@ -289,6 +289,22 @@ fun SingleTripInfoScreen(
                 headsign = data.trip_headsign
             )
 
+            if (data.is_cancelled == true) {
+                Text(
+                    text = "${stringResource(id = R.string.cancelled)}",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            if (data.deleted == true) {
+                Text(
+                    text = "${stringResource(id = R.string.deleted)}",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 //horizontalArrangement = Arrangement.SpaceBetween

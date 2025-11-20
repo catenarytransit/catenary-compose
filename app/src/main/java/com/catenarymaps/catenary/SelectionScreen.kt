@@ -129,7 +129,7 @@ fun VehicleSelectionItem(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .background(routeColor)
+                            .background(routeBaseColor)
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Text(

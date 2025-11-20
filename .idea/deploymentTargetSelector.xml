@@ -18,7 +18,7 @@
       </SelectionState>
       <SelectionState runConfigName="Catenary.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-11-15T10:26:01.992773200Z">
+        <DropdownSelection timestamp="2025-11-20T23:42:23.428860500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Kyler\.android\avd\Pixel_Tablet.avd" />
