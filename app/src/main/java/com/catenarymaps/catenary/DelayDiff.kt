@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,42 +53,84 @@ fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: Tex
     val m = floor((remainder - h * 3600) / 60.0).toLong()
     val s = remainder - h * 3600 - m * 60
 
-    Row(
-        verticalAlignment = Alignment.Bottom
-    ) {
+    Row {
         if (diff < 0) {
-            Text(text = stringResource(id = R.string.early), fontSize = fontSizeOfPolarity, color = textColor)
+            Text(
+                text = stringResource(id = R.string.early),
+                fontSize = fontSizeOfPolarity,
+                color = textColor,
+                modifier = Modifier.alignByBaseline()
+            )
         } else if (diff > 0) {
-            Text(text = stringResource(id = R.string.late), fontSize = fontSizeOfPolarity, color = textColor)
+            Text(
+                text = stringResource(id = R.string.late),
+                fontSize = fontSizeOfPolarity,
+                color = textColor,
+                modifier = Modifier.alignByBaseline()
+            )
         } else {
             Text(
                 text = stringResource(id = R.string.ontime),
                 fontSize = fontSizeOfPolarity,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF58A738)
+                color = Color(0xFF58A738),
+                modifier = Modifier.alignByBaseline()
             )
         }
 
-        Text(text = " ", fontSize = fontSizeOfPolarity)
+        Text(
+            text = " ",
+            fontSize = fontSizeOfPolarity,
+            modifier = Modifier.alignByBaseline()
+        )
 
         if (diff != 0L) {
             if (h > 0) {
-                Text(text = h.toString(), fontSize = 14.sp, color = textColor)
-                Text(text = locale_hour_marking(), fontSize = 10.sp, color = textColor)
+                Text(
+                    text = h.toString(),
+                    fontSize = 14.sp,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
+                Text(
+                    text = locale_hour_marking(),
+                    fontSize = 10.sp,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
             }
             if (h > 0 || m > 0 || (!show_seconds && m >= 0 && diff != 0L)) {
                 val minuteText = if (!show_seconds && abs(diff) < 60) "<1" else m.toString()
-                Text(text = minuteText, fontSize = 14.sp, color = textColor)
-                Text(text = locale_min_marking(show_seconds), fontSize = 10.sp, color = textColor)
+                Text(
+                    text = minuteText,
+                    fontSize = 14.sp,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
+                Text(
+                    text = locale_min_marking(show_seconds),
+                    fontSize = 10.sp,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
             }
-            if (show_seconds) {
-                if (abs(diff) > 0) {
-                    Text(text = s.toString(), fontSize = 14.sp, color = textColor)
-                    Text(text = locale_s_marking(), fontSize = 10.sp, color = textColor)
-                }
+            if (show_seconds && abs(diff) > 0) {
+                Text(
+                    text = s.toString(),
+                    fontSize = 14.sp,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
+                Text(
+                    text = locale_s_marking(),
+                    fontSize = 10.sp,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
             }
         }
     }
+
 }
 
 fun locale_hour_marking(): String {

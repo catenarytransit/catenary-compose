@@ -1,5 +1,6 @@
 package com.catenarymaps.catenary
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // --- Data classes for get_trip_information ---
@@ -70,6 +71,10 @@ data class TripDataResponse(
     val alert_id_to_alert: Map<String, Alert> = emptyMap(),
     val is_cancelled: Boolean,
     val deleted: Boolean,
+    @SerialName("connecting_routes")
+    val connectingRoutes: Map<String, Map<String, ConnectingRoute>>? = null,
+    @SerialName("connections_per_stop")
+    val connectionsPerStop: Map<String, Map<String, List<String>>>? = null,
 )
 
 // --- Data class for get_trip_information_rt_update ---

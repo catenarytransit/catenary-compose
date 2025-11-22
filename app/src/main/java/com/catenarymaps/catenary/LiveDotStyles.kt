@@ -203,10 +203,10 @@ fun getLiveDotStyle(
             bearingIconOffset = interpolate(
                 type = linear(),
                 input = zoom(),
-                9.0 to offset(0.dp, (-10).dp),
-                10.0 to offset(0.dp, (-8).dp),
-                12.0 to offset(0.dp, (-7).dp),
-                13.0 to offset(0.dp, (-6).dp),
+                9.0 to offset(0.dp, (-5).dp),
+                10.0 to offset(0.dp, (-5).dp),
+                12.0 to offset(0.dp, (-5).dp),
+                13.0 to offset(0.dp, (-5).dp),
                 15.0 to offset(0.dp, (-5).dp)
             )
             bearingShellOpacity = interpolate(

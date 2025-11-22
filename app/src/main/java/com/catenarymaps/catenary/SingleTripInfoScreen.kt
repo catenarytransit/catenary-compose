@@ -128,6 +128,34 @@ fun SingleTripInfoScreen(
     val lastInactiveStopIdx by viewModel.lastInactiveStopIdx.collectAsState()
     val vehicleData by viewModel.vehicleData.collectAsState()
 
+    // NEW: build stop -> connection chips map
+    val stopConnections = remember(tripData) {
+        val result = mutableMapOf<String, List<StopConnectionChip>>()
+        val connectionsPerStop = tripData?.connectionsPerStop ?: emptyMap()
+        val connectingRoutes = tripData?.connectingRoutes ?: emptyMap()
+
+        for ((stopId, perChateau) in connectionsPerStop) {
+            val chips = mutableListOf<StopConnectionChip>()
+            for ((chateauId, routeIds) in perChateau) {
+                val routesForChateau = connectingRoutes[chateauId] ?: continue
+                for (routeId in routeIds) {
+                    val route = routesForChateau[routeId] ?: continue
+                    chips += StopConnectionChip(
+                        shortName = route.shortName,
+                        longName = route.longName,
+                        color = route.color,
+                        textColor = route.textColor
+                    )
+                }
+            }
+            if (chips.isNotEmpty()) {
+                result[stopId] = chips
+            }
+        }
+
+        result
+    }
+
     // --- Map Update Logic ---
     LaunchedEffect(tripData) {
         val data = tripData
@@ -431,14 +459,17 @@ fun SingleTripInfoScreen(
                         // Calculate new state variables
                         val isInactive = i <= lastInactiveStopIdx
                         val isPreviousInactive = i - 1 == lastInactiveStopIdx
+                        val connections = stopConnections[stopTime.raw.stop_id]
+
                         StopListItem(
                             stopTime = stopTime,
                             tripColorStr = data.color ?: "#808080",
                             isFirst = i == 0,
                             isLast = i == stopTimes.lastIndex,
                             isInactive = isInactive,
-                            isPreviousInactive = isPreviousInactive, // <-- ADD THIS
-                            showPreviousStops = showPreviousStops,   // <-- ADD THIS
+                            isPreviousInactive = isPreviousInactive,
+                            showPreviousStops = showPreviousStops,
+                            connections = connections,
                             onStopClick = {
                                 onStopClick(
                                     CatenaryStackEnum.StopStack(
@@ -573,7 +604,8 @@ fun StopListItem(
     isInactive: Boolean,
     isPreviousInactive: Boolean,
     showPreviousStops: Boolean,
-    onStopClick: () -> Unit
+    onStopClick: () -> Unit,
+    connections: List<StopConnectionChip>? = null,
 ) {
     val tripColor = try {
         Color(android.graphics.Color.parseColor(tripColorStr))
@@ -628,6 +660,20 @@ fun StopListItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isInactive) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            // NEW: transfer connections for this stop
+            if (!connections.isNullOrEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .padding(top = 0.dp)
+                        .padding(start = 0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    connections.forEach { conn ->
+                        TransferRouteChip(conn)
+                    }
+                }
             }
         }
     }

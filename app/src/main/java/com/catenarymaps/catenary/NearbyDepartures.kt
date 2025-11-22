@@ -309,6 +309,15 @@ fun NearbyDepartures(
         }
     }
 
+    var nowSec by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            nowSec = System.currentTimeMillis() / 1000
+            delay(1_000)
+        }
+    }
+
     var filters by remember { mutableStateOf(Filters()) }
     var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
     var loading by remember { mutableStateOf(false) }
@@ -491,7 +500,14 @@ fun NearbyDepartures(
                     }
                 }
                 items(sorted, key = { it.chateauId + it.routeId }) { route ->
-                    RouteGroupCard(route, stopsTable, darkMode, onTripClick, onRouteClick)
+                    RouteGroupCard(
+                        route,
+                        stopsTable,
+                        darkMode,
+                        onTripClick,
+                        onRouteClick,
+                        nowSec = nowSec
+                    )
                 }
 
             }
@@ -694,7 +710,8 @@ private fun RouteGroupCard(
     stopsTable: Map<String, Map<String, StopEntry>>,
     darkMode: Boolean,
     onTripClick: (TripClickResponse) -> Unit,
-    onRouteClick: (chateauId: String, routeId: String) -> Unit
+    onRouteClick: (chateauId: String, routeId: String) -> Unit,
+    nowSec: Long
 ) {
     val bg = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (darkMode) 0.5f else 1f)
     val textCol = normalizeHex(route.textColor) ?: MaterialTheme.colorScheme.onSurface
@@ -783,7 +800,8 @@ private fun RouteGroupCard(
                             stopsTable = stopsTable,
                             lineCol = lineCol,
                             textCol = textCol,
-                            onTripClick = onTripClick
+                            onTripClick = onTripClick,
+                            nowSec = nowSec
                         )
                     }
                 }
@@ -799,11 +817,12 @@ private fun TripPill(
     stopsTable: Map<String, Map<String, StopEntry>>,
     lineCol: Color,
     textCol: Color,
-    onTripClick: (TripClickResponse) -> Unit
+    onTripClick: (TripClickResponse) -> Unit,
+    nowSec: Long
 ) {
-    val nowSec = System.currentTimeMillis() / 1000
     val dep = trip.departureRealtime ?: trip.departureSchedule ?: 0L
     val secondsLeft = dep - nowSec
+
     val stop = stopsTable[chateauId]?.get(trip.stopId)
     val tz = stop?.timezone ?: trip.tz
     val isPast = secondsLeft < 0
@@ -890,7 +909,7 @@ private fun TripPill(
                 FormattedTimeText(
                     timezone = tz,
                     timeSeconds = dep,
-                    showSeconds = false
+                    showSeconds = false,
                 )
             }
 

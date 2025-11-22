@@ -67,6 +67,7 @@ import org.maplibre.spatialk.geojson.Position
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.delay
+import kotlinx.serialization.SerialName
 import java.net.URLEncoder
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -84,7 +85,17 @@ data class RouteInfoStop(
     val name: String,
     val code: String? = null,
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+    @SerialName("parent_station")
+    val parentStation: String? = null,
+)
+
+@Serializable
+data class ConnectingRoute(
+    @SerialName("short_name") val shortName: String? = null,
+    @SerialName("long_name") val longName: String? = null,
+    @SerialName("color") val color: String? = null,
+    @SerialName("text_color") val textColor: String? = null,
 )
 
 @Serializable
@@ -96,13 +107,15 @@ data class RouteInfoDirectionPatternDetail(
 
 @Serializable
 data class RouteInfoDirectionPattern(
-    val direction_pattern: RouteInfoDirectionPatternDetail,
-    val rows: List<RouteInfoStopTime>
+    val direction_pattern: DirectionPatternMeta,
+    val rows: List<DirectionPatternRow>
 )
 
-@Serializable
-data class RouteInfoStopTime(
-    val stop_id: String
+data class StopConnectionChip(
+    val shortName: String?,
+    val longName: String?,
+    val color: String?,
+    val textColor: String?
 )
 
 @Serializable
@@ -121,6 +134,11 @@ data class RouteInfoResponse(
     val shapes_polyline: Map<String, String> = emptyMap(),
     val stops: Map<String, RouteInfoStop>,
     val bounding_box: RustRect? = null,
+    // NEW: transfers stuff
+    @SerialName("connecting_routes")
+    val connectingRoutes: Map<String, Map<String, ConnectingRoute>>? = null,
+    @SerialName("connections_per_stop")
+    val connectionsPerStop: Map<String, Map<String, List<String>>>? = null,
 )
 
 @Serializable
@@ -152,7 +170,7 @@ fun RouteScreen(
 ) {
     var routeInfo by remember { mutableStateOf<RouteInfoResponse?>(null) }
     var routeRealtime by remember { mutableStateOf<RouteRealtimeResponse?>(null) }
-    var activePatternId by remember { mutableStateOf<String?>(null) }
+    var activeParentId by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
     // Fetch static route info once
@@ -227,8 +245,6 @@ fun RouteScreen(
                 }
             }
 
-
-
             val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
             firebaseAnalytics.logEvent("view_route") {
                 param("route_name", response.short_name ?: response.long_name ?: "Unknown")
@@ -237,10 +253,7 @@ fun RouteScreen(
                 param("chateau", screenData.chateau_id)
             }
 
-            // Set initial active pattern
-            if (response.direction_patterns.isNotEmpty()) {
-                activePatternId = response.direction_patterns.keys.first()
-            }
+
         } catch (e: Exception) {
             error = "Failed to load route details: ${e.message}"
         }
@@ -271,14 +284,111 @@ fun RouteScreen(
         }
     }
 
+    if (error != null) {
+        Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+            Text(text = error!!, color = MaterialTheme.colorScheme.error)
+        }
+        return
+    }
+
+    if (routeInfo == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp), contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val info = routeInfo!!
+
+
+    val stopConnections = remember(info) {
+        val result = mutableMapOf<String, List<StopConnectionChip>>()
+        val connectionsPerStop = info.connectionsPerStop ?: emptyMap()
+        val connectingRoutes = info.connectingRoutes ?: emptyMap()
+
+        for ((stopId, perChateau) in connectionsPerStop) {
+            val chips = mutableListOf<StopConnectionChip>()
+            for ((chateauId, routeIds) in perChateau) {
+                val routesForChateau = connectingRoutes[chateauId] ?: continue
+                for (routeId in routeIds) {
+                    val route = routesForChateau[routeId] ?: continue
+                    chips += StopConnectionChip(
+                        shortName = route.shortName,
+                        longName = route.longName,
+                        color = route.color,
+                        textColor = route.textColor
+                    )
+                }
+            }
+            if (chips.isNotEmpty()) {
+                result[stopId] = chips
+            }
+        }
+
+        result
+    }
+
+    // Map: parentId -> list of patterns sharing that parent
+    val patternsByParentId = remember(info) {
+        info.direction_patterns.values.groupBy { pattern ->
+            pattern.direction_pattern.directionPatternIdParents
+                ?: pattern.direction_pattern.directionPatternId
+        }
+    }
+
+// Sort parents by the headsign of the first child pattern
+    val sortedParentIds = remember(patternsByParentId) {
+        patternsByParentId.keys.sortedWith(compareBy { parentId ->
+            val refPattern = patternsByParentId[parentId]?.firstOrNull()
+            refPattern?.direction_pattern?.headsignOrDestination ?: ""
+        })
+    }
+
+// Ensure we always have an active parent
+    LaunchedEffect(sortedParentIds) {
+        if (activeParentId == null && sortedParentIds.isNotEmpty()) {
+            activeParentId = sortedParentIds.first()
+        }
+    }
+
+    val directionIdToParentId = remember(info) {
+        info.direction_patterns.values.associate { pattern ->
+            val directionId = pattern.direction_pattern.directionPatternId
+            val parentId = pattern.direction_pattern.directionPatternIdParents ?: directionId
+            directionId to parentId
+        }
+    }
+
+    val rt = routeRealtime
+
+
+    val vehiclesByDirectionParent = remember(rt, directionIdToParentId) {
+        rt?.vehicle_positions?.values?.groupBy { vp ->
+            val tripId = vp.trip?.trip_id
+            val itineraryId = rt.trips_to_trips_compressed[tripId]?.itinerary_pattern_id
+            val directionId = rt.itinerary_to_direction_id[itineraryId]
+            directionIdToParentId[directionId]
+        } ?: emptyMap()
+    }
+
+    val tripUpdatesByTripId = remember(rt) {
+        rt?.trip_updates?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap()
+    }
+
     // Update map when active pattern changes
-    LaunchedEffect(activePatternId, routeInfo) {
+    LaunchedEffect(activeParentId, routeInfo) {
         val info = routeInfo ?: return@LaunchedEffect
-        val patternId = activePatternId ?: return@LaunchedEffect
-        val pattern = info.direction_patterns[patternId] ?: return@LaunchedEffect
+        val parentId = activeParentId ?: return@LaunchedEffect
+
+        val patterns = patternsByParentId[parentId].orEmpty()
+        val pattern = patterns.firstOrNull() ?: return@LaunchedEffect
 
         // 1. Update route shape on map
-        val shapeId = pattern.direction_pattern.gtfs_shape_id
+        val shapeId = pattern.direction_pattern.gtfsShapeId
         val polylineString = info.shapes_polyline[shapeId]
         if (polylineString != null) {
             val decodedPath = com.google.maps.android.PolyUtil.decode(polylineString)
@@ -300,12 +410,12 @@ fun RouteScreen(
 
         // 2. Update stops on map
         val stopFeatures = pattern.rows.mapNotNull { stopTime ->
-            info.stops[stopTime.stop_id]?.let { stopDetails ->
+            info.stops[stopTime.stopId]?.let { stopDetails ->
                 Feature(
                     geometry = Point(Position(stopDetails.longitude, stopDetails.latitude)),
                     properties = buildJsonObject {
                         put("label", stopDetails.name)
-                        put("stop_id", stopTime.stop_id)
+                        put("stop_id", stopTime.stopId)
                         put("chateau", screenData.chateau_id)
                         put("stop_route_type", info.route_type)
                     }
@@ -315,41 +425,14 @@ fun RouteScreen(
         stopsContextSource.value.setData(GeoJsonData.Features(FeatureCollection(stopFeatures)))
 
         // 3. Hide these stops from the main layers
-        onSetStopsToHide(pattern.rows.map { it.stop_id }.toSet())
+        onSetStopsToHide(pattern.rows.map { it.stopId }.toSet())
     }
 
-    if (error != null) {
-        Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-            Text(text = error!!, color = MaterialTheme.colorScheme.error)
-        }
-        return
-    }
 
-    if (routeInfo == null) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp), contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-        return
+    val activePattern = activeParentId?.let { parentId ->
+        patternsByParentId[parentId]?.firstOrNull()
     }
-
-    val info = routeInfo!!
-    val rt = routeRealtime
-
-    val vehiclesByDirection = remember(rt) {
-        rt?.vehicle_positions?.values?.groupBy { vp ->
-            val tripId = vp.trip?.trip_id
-            val itineraryId = rt.trips_to_trips_compressed[tripId]?.itinerary_pattern_id
-            rt.itinerary_to_direction_id[itineraryId]
-        } ?: emptyMap()
-    }
-
-    val tripUpdatesByTripId = remember(rt) {
-        rt?.trip_updates?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap()
-    }
+    val activeStops = activePattern?.rows
 
     LazyColumn(
         modifier = Modifier
@@ -399,94 +482,76 @@ fun RouteScreen(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Group patterns by headsign to handle duplicates
-                val patternsByName = info.direction_patterns.values.groupBy { it.direction_pattern.headsign_or_destination }
-                patternsByName.entries.sortedBy { it.key }.forEach { (headsign, patterns) ->
-                    val showDisambiguation = patterns.size > 1
+                sortedParentIds.forEach { parentId ->
+                    val patterns = patternsByParentId[parentId].orEmpty()
+                    if (patterns.isEmpty()) return@forEach
 
-                    patterns.forEach { pattern ->
-                        val patternId = pattern.direction_pattern.direction_pattern_id
-                        val isActive = patternId == activePatternId
-                        val vehicleCount = vehiclesByDirection[patternId]?.size ?: 0
-                        val stopCount = pattern.rows.size
+                    val refPattern = patterns.first()
+                    val headsign = refPattern.direction_pattern.headsignOrDestination
+                    val stopCount = refPattern.rows.size
+                    val isActive = parentId == activeParentId
 
-                        val disambiguationText = if (showDisambiguation) {
-                            val firstStopId = pattern.rows.firstOrNull()?.stop_id
-                            val lastStopId = pattern.rows.lastOrNull()?.stop_id
-                            val firstStopName = firstStopId?.let { info.stops[it]?.name }
-                            val lastStopName = lastStopId?.let { info.stops[it]?.name }
-                            if (firstStopName != null && lastStopName != null) {
-                                "$firstStopName → $lastStopName"
-                            } else {
-                                null
-                            }
-                        } else {
-                            null
-                        }
+                    val vehicleCount = vehiclesByDirectionParent[parentId]?.size ?: 0
 
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { activePatternId = patternId },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                            )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { activeParentId = parentId },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isActive)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = headsign,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "$stopCount stops",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            if (vehicleCount > 0) {
+                                Spacer(Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Text(
-                                        text = headsign,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    disambiguationText?.let {
-                                        Text(
-                                            text = it,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                    Text(
-                                        text = "$stopCount stops", // TODO: Use plural string resource
+                                        text = vehicleCount.toString(),
+                                        color = MaterialTheme.colorScheme.onPrimary,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        fontWeight = FontWeight.Bold
                                     )
-                                }
-                                if (vehicleCount > 0) {
-                                    Spacer(Modifier.width(8.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primary),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = vehicleCount.toString(),
-                                            color = MaterialTheme.colorScheme.onPrimary,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-            // Spacer(Modifier.height(24.dp))
         }
 
+
         // Active Vehicles
-        val activeVehicles = vehiclesByDirection[activePatternId]
+        val activeVehicles = vehiclesByDirectionParent[activeParentId]
+
         if (!activeVehicles.isNullOrEmpty()) {
             item {
                 Text(
@@ -554,7 +619,8 @@ fun RouteScreen(
         }
 
         // Stops List
-        val activeStops = info.direction_patterns[activePatternId]?.rows
+
+
         if (!activeStops.isNullOrEmpty()) {
             item {
                 Text(
@@ -564,7 +630,7 @@ fun RouteScreen(
                 )
             }
             itemsIndexed(activeStops) { index, stopTime ->
-                val stopDetails = info.stops[stopTime.stop_id]
+                val stopDetails = info.stops[stopTime.stopId]
                 if (stopDetails != null) {
                     Row(
                         modifier = Modifier
@@ -574,7 +640,7 @@ fun RouteScreen(
                                 onStopClick(
                                     CatenaryStackEnum.StopStack(
                                         chateau_id = screenData.chateau_id,
-                                        stop_id = stopTime.stop_id
+                                        stop_id = stopTime.stopId
                                     )
                                 )
                             },
@@ -597,6 +663,28 @@ fun RouteScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                            }
+
+                            // --- NEW: transfers
+                            val parentId = stopDetails.parentStation
+                            val connectionKey = when {
+                                parentId != null && stopConnections.containsKey(parentId) -> parentId
+                                stopConnections.containsKey(stopTime.stopId) -> stopTime.stopId
+                                else -> null
+                            }
+
+                            if (connectionKey != null) {
+                                val connections = stopConnections[connectionKey].orEmpty()
+                                Row(
+                                    modifier = Modifier
+                                        .padding(top = 2.dp)
+                                        .padding(start = 0.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    connections.forEach { conn ->
+                                        TransferRouteChip(conn)
+                                    }
+                                }
                             }
                         }
                     }
@@ -653,6 +741,29 @@ fun RouteStopProgressIndicator(
             radius = canvasWidth / 2,
             center = center,
             style = androidx.compose.ui.graphics.drawscope.Stroke(width = canvasWidth / 4)
+        )
+    }
+}
+
+@Composable
+fun TransferRouteChip(conn: StopConnectionChip, modifier: Modifier = Modifier) {
+    val bgColor = remember(conn.color) { parseColor(conn.color ?: "#cccccc") }
+    val fgColor = remember(conn.textColor) { parseColor(conn.textColor ?: "#000000") }
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(bgColor)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = conn.shortName
+                ?: conn.longName?.replace(" Line", "") // same trick as JS
+                ?: "",
+            color = fgColor,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
