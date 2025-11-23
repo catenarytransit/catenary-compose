@@ -67,6 +67,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -230,6 +231,8 @@ import org.json.JSONObject
 import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.LineString
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import io.ktor.client.request.get
 import kotlinx.serialization.SerialName
@@ -1107,6 +1110,22 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val context = LocalContext.current
+            val lifecycleOwner = LocalLifecycleOwner.current
+            var isAppInForeground by remember { mutableStateOf(true) }
+
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    when (event) {
+                        Lifecycle.Event.ON_START -> isAppInForeground = true
+                        Lifecycle.Event.ON_STOP -> isAppInForeground = false
+                        else -> {} // Do nothing
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
 
             // --- Moved from onCreate ---
             // The state that will hold our layer settings. Initialize with loaded or default.
@@ -1283,23 +1302,25 @@ class MainActivity : ComponentActivity() {
             val rtScope = rememberCoroutineScope()
 
             // Periodic fetcher (e.g., every 5 seconds)
-            LaunchedEffect(Unit) {
-                while (true) {
-                    delay(1_000L) // 1 second refresh interval
-                    fetchRealtimeData(
-                        scope = rtScope,
-                        zoom = camera.position.zoom,
-                        settings = layerSettings.value,
-                        isFetchingRealtimeData = isFetchingRealtimeData,
-                        visibleChateaus = visibleChateaus,
-                        realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
-                        ktorClient = ktorClient,
-                        realtimeVehicleRouteCache = realtimeVehicleRouteCache,
-                        routeCacheAgenciesKnown = routeCacheAgenciesKnown,
-                        camera = camera,
-                        previousTileBoundariesStore = previousTileBoundariesStore,
-                        realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2
-                    )
+            LaunchedEffect(isAppInForeground) {
+                if (isAppInForeground) {
+                    while (true) {
+                        delay(1_000L) // 1 second refresh interval
+                        fetchRealtimeData(
+                            scope = rtScope,
+                            zoom = camera.position.zoom,
+                            settings = layerSettings.value,
+                            isFetchingRealtimeData = isFetchingRealtimeData,
+                            visibleChateaus = visibleChateaus,
+                            realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
+                            ktorClient = ktorClient,
+                            realtimeVehicleRouteCache = realtimeVehicleRouteCache,
+                            routeCacheAgenciesKnown = routeCacheAgenciesKnown,
+                            camera = camera,
+                            previousTileBoundariesStore = previousTileBoundariesStore,
+                            realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2
+                        )
+                    }
                 }
             }
 

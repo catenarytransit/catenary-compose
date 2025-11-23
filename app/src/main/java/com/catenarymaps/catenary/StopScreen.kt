@@ -108,7 +108,9 @@ data class StopEvent(
     val platform_string_realtime: String? = null,
     val vehicle_number: String? = null,
     val delay_seconds: Long? = null,
-    val trip_cancelled: Boolean
+    val trip_cancelled: Boolean,
+    val stop_cancelled: Boolean,
+    val trip_deleted: Boolean,
 )
 
 @Serializable
@@ -616,6 +618,8 @@ private fun StopScreenRow(
     val isRealtime = event.realtime_departure != null
     val delaySeconds = event.delay_seconds
     val isCancelled = event.trip_cancelled == true
+    val isDeleted = event.trip_deleted == true
+    val stopCancelled = event.stop_cancelled == true
 
     // The main column for the entire row item
     Column(modifier = modifier) {
@@ -671,6 +675,42 @@ private fun StopScreenRow(
             if (isCancelled) {
                 Text(
                     text = "Cancelled",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                )
+                Spacer(Modifier.weight(1f))
+                val timeToStrike = scheduledTime ?: departureTimeToShow
+                if (timeToStrike != null) {
+                    FormattedTimeText(
+                        timezone = zoneId.id,
+                        timeSeconds = timeToStrike,
+                        showSeconds = false,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
+                        textDecoration = TextDecoration.LineThrough
+                    )
+                }
+            } else if (isDeleted) {
+                Text(
+                    text = "Deleted",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                )
+                Spacer(Modifier.weight(1f))
+                val timeToStrike = scheduledTime ?: departureTimeToShow
+                if (timeToStrike != null) {
+                    FormattedTimeText(
+                        timezone = zoneId.id,
+                        timeSeconds = timeToStrike,
+                        showSeconds = false,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
+                        textDecoration = TextDecoration.LineThrough
+                    )
+                }
+            } else if (stopCancelled) {
+                Text(
+                    text = "Stop Deleted",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                 )

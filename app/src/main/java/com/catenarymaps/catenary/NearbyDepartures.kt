@@ -42,14 +42,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextDecoration
 
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
+import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.serialization.json.*
 
 /* -------------------------------------------------------------------------- */
@@ -130,6 +135,35 @@ private data class Filters(
     val bus: Boolean = true,
     val other: Boolean = true
 )
+
+private object FilterPreferences {
+    private const val PREFS_NAME = "catenary_filter_prefs"
+    private const val KEY_RAIL = "filter_rail"
+    private const val KEY_METRO = "filter_metro"
+    private const val KEY_BUS = "filter_bus"
+    private const val KEY_OTHER = "filter_other"
+
+    fun saveFilters(context: Context, filters: Filters) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        with(prefs.edit()) {
+            putBoolean(KEY_RAIL, filters.rail)
+            putBoolean(KEY_METRO, filters.metro)
+            putBoolean(KEY_BUS, filters.bus)
+            putBoolean(KEY_OTHER, filters.other)
+            apply()
+        }
+    }
+
+    fun loadFilters(context: Context): Filters {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return Filters(
+            rail = prefs.getBoolean(KEY_RAIL, true),
+            metro = prefs.getBoolean(KEY_METRO, true),
+            bus = prefs.getBoolean(KEY_BUS, true),
+            other = prefs.getBoolean(KEY_OTHER, true)
+        )
+    }
+}
 
 private fun flattenDirections(
     nested: Map<String, Map<String, DirectionGroup>>
@@ -309,6 +343,24 @@ fun NearbyDepartures(
         }
     }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var isAppInForeground by remember { mutableStateOf(true) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> isAppInForeground = true
+                Lifecycle.Event.ON_STOP -> isAppInForeground = false
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+
     var nowSec by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
 
     LaunchedEffect(Unit) {
@@ -318,7 +370,13 @@ fun NearbyDepartures(
         }
     }
 
-    var filters by remember { mutableStateOf(Filters()) }
+    val context = LocalContext.current
+    var filters by remember { mutableStateOf(FilterPreferences.loadFilters(context)) }
+
+    LaunchedEffect(filters) {
+        FilterPreferences.saveFilters(context, filters)
+    }
+
     var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
     var loading by remember { mutableStateOf(false) }
     var firstAttemptSent by remember { mutableStateOf(false) }
@@ -371,29 +429,31 @@ fun NearbyDepartures(
     }
 
     // --- POLLING LOOP: immediate fetch, then every 10s. Not tied to raw origin updates. ---
-    LaunchedEffect(pollSession) {
+    LaunchedEffect(pollSession, isAppInForeground) {
         val origin = lockedOrigin ?: return@LaunchedEffect
-        suspend fun once() {
-            loading = true
-            firstAttemptSent = true
-            val res = fetchNearby(origin.first, origin.second)
-            if (res != null) {
-                stopsTable = res.stop
-                departureList = res.departures
-                serverMs = res.debug?.totalTimeMs
-                println("nearby took ${res.debug?.totalTimeMs}")
-            } else {
-                println("nearby returned with nothing")
+        if (isAppInForeground) {
+            suspend fun once() {
+                loading = true
+                firstAttemptSent = true
+                val res = fetchNearby(origin.first, origin.second)
+                if (res != null) {
+                    stopsTable = res.stop
+                    departureList = res.departures
+                    serverMs = res.debug?.totalTimeMs
+                    println("nearby took ${res.debug?.totalTimeMs}")
+                } else {
+                    println("nearby returned with nothing")
+                }
+                loading = false
             }
-            loading = false
-        }
 
-        // immediate fetch, then every 10 seconds
-        once()
-        firstLoadComplete = true
-        while (currentCoroutineContext().isActive) {
-            delay(10_000)
+            // immediate fetch, then every 10 seconds
             once()
+            firstLoadComplete = true
+            while (currentCoroutineContext().isActive) {
+                delay(10_000)
+                once()
+            }
         }
     }
 
