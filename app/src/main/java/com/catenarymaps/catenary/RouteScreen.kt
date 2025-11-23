@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.platform.LocalConfiguration
@@ -96,6 +97,7 @@ data class ConnectingRoute(
     @SerialName("long_name") val longName: String? = null,
     @SerialName("color") val color: String? = null,
     @SerialName("text_color") val textColor: String? = null,
+    @SerialName("route_type") val routeType: Int = 3,
 )
 
 @Serializable
@@ -311,21 +313,48 @@ fun RouteScreen(
         val connectingRoutes = info.connectingRoutes ?: emptyMap()
 
         for ((stopId, perChateau) in connectionsPerStop) {
-            val chips = mutableListOf<StopConnectionChip>()
+            val connectingRoutesList = mutableListOf<ConnectingRoute>()
             for ((chateauId, routeIds) in perChateau) {
                 val routesForChateau = connectingRoutes[chateauId] ?: continue
                 for (routeId in routeIds) {
-                    val route = routesForChateau[routeId] ?: continue
-                    chips += StopConnectionChip(
+                    routesForChateau[routeId]?.let { connectingRoutesList.add(it) }
+                }
+            }
+
+            if (connectingRoutesList.isNotEmpty()) {
+
+                // Sort connections
+                val typeOrder = mapOf(
+                    2 to 1, // Rail
+                    1 to 2, // Subway, Metro
+                    0 to 3, // Tram, Streetcar, Light rail
+                    4 to 4  // Ferry
+                )
+                connectingRoutesList.sortWith(compareBy<ConnectingRoute> {
+                    typeOrder[it.routeType] ?: 5
+                }
+                    .thenComparator { a, b ->
+                        val aName = a.shortName ?: a.longName ?: ""
+                        val bName = b.shortName ?: b.longName ?: ""
+
+                        val aNameAsInt = aName.toIntOrNull()
+                        val bNameAsInt = bName.toIntOrNull()
+
+                        if (aNameAsInt != null && bNameAsInt != null) {
+                            aNameAsInt.compareTo(bNameAsInt)
+                        } else {
+                            aName.compareTo(bName)
+                        }
+                    })
+
+                result[stopId] = connectingRoutesList.map { route ->
+                    StopConnectionChip(
                         shortName = route.shortName,
                         longName = route.longName,
                         color = route.color,
                         textColor = route.textColor
                     )
                 }
-            }
-            if (chips.isNotEmpty()) {
-                result[stopId] = chips
             }
         }
 
@@ -675,11 +704,12 @@ fun RouteScreen(
 
                             if (connectionKey != null) {
                                 val connections = stopConnections[connectionKey].orEmpty()
-                                Row(
+                                FlowRow(
                                     modifier = Modifier
-                                        .padding(top = 2.dp)
-                                        .padding(start = 0.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        .padding(top = 2.dp),
+
+                                    horizontalArrangement = Arrangement.spacedBy(1.dp),
+                                    verticalArrangement = Arrangement.spacedBy(1.dp)
                                 ) {
                                     connections.forEach { conn ->
                                         TransferRouteChip(conn)
@@ -754,7 +784,7 @@ fun TransferRouteChip(conn: StopConnectionChip, modifier: Modifier = Modifier) {
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .background(bgColor)
-            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .padding(horizontal = 3.dp, vertical = 1.dp)
     ) {
         Text(
             text = conn.shortName

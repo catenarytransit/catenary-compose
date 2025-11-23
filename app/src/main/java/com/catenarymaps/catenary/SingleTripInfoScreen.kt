@@ -39,6 +39,7 @@ import kotlinx.serialization.json.buildJsonObject
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -135,21 +136,48 @@ fun SingleTripInfoScreen(
         val connectingRoutes = tripData?.connectingRoutes ?: emptyMap()
 
         for ((stopId, perChateau) in connectionsPerStop) {
-            val chips = mutableListOf<StopConnectionChip>()
+            val connectingRoutesList = mutableListOf<ConnectingRoute>()
             for ((chateauId, routeIds) in perChateau) {
                 val routesForChateau = connectingRoutes[chateauId] ?: continue
                 for (routeId in routeIds) {
-                    val route = routesForChateau[routeId] ?: continue
-                    chips += StopConnectionChip(
+                    routesForChateau[routeId]?.let { connectingRoutesList.add(it) }
+                }
+            }
+
+            if (connectingRoutesList.isNotEmpty()) {
+
+                // Sort connections
+                val typeOrder = mapOf(
+                    2 to 1, // Rail
+                    1 to 2, // Subway, Metro
+                    0 to 3, // Tram, Streetcar, Light rail
+                    4 to 4  // Ferry
+                )
+                connectingRoutesList.sortWith(compareBy<ConnectingRoute> {
+                    typeOrder[it.routeType] ?: 5
+                }
+                    .thenComparator { a, b ->
+                        val aName = a.shortName ?: a.longName ?: ""
+                        val bName = b.shortName ?: b.longName ?: ""
+
+                        val aNameAsInt = aName.toIntOrNull()
+                        val bNameAsInt = bName.toIntOrNull()
+
+                        if (aNameAsInt != null && bNameAsInt != null) {
+                            aNameAsInt.compareTo(bNameAsInt)
+                        } else {
+                            aName.compareTo(bName)
+                        }
+                    })
+
+                result[stopId] = connectingRoutesList.map { route ->
+                    StopConnectionChip(
                         shortName = route.shortName,
                         longName = route.longName,
                         color = route.color,
                         textColor = route.textColor
                     )
                 }
-            }
-            if (chips.isNotEmpty()) {
-                result[stopId] = chips
             }
         }
 
@@ -662,13 +690,12 @@ fun StopListItem(
                 )
             }
 
-            // NEW: transfer connections for this stop
             if (!connections.isNullOrEmpty()) {
-                Row(
+                FlowRow(
                     modifier = Modifier
-                        .padding(top = 0.dp)
-                        .padding(start = 0.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(top = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(1.dp),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
                     connections.forEach { conn ->
                         TransferRouteChip(conn)

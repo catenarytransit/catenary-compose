@@ -3623,7 +3623,7 @@ class MainActivity : ComponentActivity() {
                 MapSelectionOption(
                     MapSelectionSelector.RouteMapSelector(
                         chateau_id = f.getString("chateau") ?: "",
-                        route_id = routesProp.split(',').first(),
+                        route_id = routesProp.split(',').first().removeSurrounding("\""),
                         colour = "#${f.getString("color") ?: "FFFFFF"}",
                         name = f.getString("route_label")
                     )
