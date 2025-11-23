@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -96,7 +97,7 @@ data class StopEvent(
     val chateau: String,
     val trip_id: String? = null,
     val route_id: String,
-    val service_date: String,
+    val service_date: String? = null,
     val headsign: String? = null,
     val stop_id: String,
     val scheduled_departure: Long? = null,
@@ -269,6 +270,8 @@ fun StopScreen(
 
         try {
             val data = ktorClient.get(url).body<DeparturesAtStopResponse>()
+
+            // I can't think of a better way to check for a null response without making the entire model nullable
             val refreshedAt = Instant.now().toEpochMilli()
             page.refreshedAt = refreshedAt
             page.loading = false
@@ -278,6 +281,11 @@ fun StopScreen(
 
         } catch (e: Exception) {
             page.error = e.message
+
+            println("Error fetching page: $e")
+
+
+
             page.loading = false
         }
     }
@@ -564,7 +572,7 @@ fun StopScreen(
                                             trip_id = event.trip_id,
                                             route_id = event.route_id,
                                             start_time = null,
-                                            start_date = event.service_date.replace("-", ""),
+                                            start_date = event.service_date?.replace("-", ""),
                                             vehicle_id = null,
                                             route_type = null // This will be fetched in SingleTrip
                                         )
