@@ -688,15 +688,18 @@ fun RouteScreen(
                         )
                         Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                            FlowRow(
+                            Row(
 
                             ) {
                                 Text(stopDetails.name, fontWeight = FontWeight.Medium)
+
+                                Spacer(Modifier.width(4.dp))
                                 stopDetails.code?.let {
                                     Text(
-                                        "ID: $it",
+                                        "$it",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.alignByBaseline()
                                     )
                                 }
 
