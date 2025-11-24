@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -85,13 +86,14 @@ data class Alert(
 @Composable
 fun AlertsBox(
     alerts: Map<String, Alert>,
+    expanded: Boolean,
+    onExpandedChange: () -> Unit,
     default_tz: String? = null,
     chateau: String? = null,
     isScrollable: Boolean = false
 ) {
     if (alerts.isEmpty()) return
 
-    var expanded by remember { mutableStateOf(true) }
     val alertColor = Color(0xFFF99C24)
 
     val locale = LocalConfiguration.current.locales[0]
@@ -125,7 +127,7 @@ fun AlertsBox(
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = "Service Alert",
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(20.dp),
                 tint = alertColor
             )
             val alertText = getAlertsTitle(alerts.size)
@@ -137,7 +139,7 @@ fun AlertsBox(
                 modifier = Modifier.padding(start = 8.dp)
             )
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { expanded = !expanded }) {
+            IconButton(onClick = { onExpandedChange() }) {
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = if (expanded) "Collapse" else "Expand"
@@ -188,7 +190,7 @@ private fun AlertItem(
     default_tz: String?,
     alertColor: Color
 ) {
-    Column(modifier = Modifier.padding(top = 4.dp)) {
+    Column(modifier = Modifier.padding(top = 2.dp)) {
         Row {
             Text(
                 text = causeIdToStr(alert.cause),
@@ -385,45 +387,50 @@ private fun AlertActivePeriod(
         }
     }
 
-    activePeriod.start?.let { start ->
-        val startDate = Date(start * 1000)
-        val diff = (start * 1000 - System.currentTimeMillis()) / 1000.0
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "${stringResource(R.string.starting_time)}: ${dateFormat.format(startDate)}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Spacer(Modifier.width(4.dp))
-            DiffTimer(
-                diff = diff,
-                showBrackets = true,
-                showPlus = true,
-                showDays = true,
-                numSize = MaterialTheme.typography.bodySmall.fontSize,
-                unitSize = MaterialTheme.typography.bodySmall.fontSize * 0.8,
-                bracketSize = MaterialTheme.typography.bodySmall.fontSize
-            )
+    Column(
+        modifier = Modifier,
+        verticalArrangement = Arrangement.spacedBy(0.dp)
+    ) {
+        activePeriod.start?.let { start ->
+            val startDate = Date(start * 1000)
+            val diff = (start * 1000 - System.currentTimeMillis()) / 1000.0
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "${stringResource(R.string.starting_time)}: ${dateFormat.format(startDate)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(Modifier.width(4.dp))
+                DiffTimer(
+                    diff = diff,
+                    showBrackets = true,
+                    showPlus = true,
+                    showDays = true,
+                    numSize = MaterialTheme.typography.bodySmall.fontSize,
+                    unitSize = MaterialTheme.typography.bodySmall.fontSize * 0.8,
+                    bracketSize = MaterialTheme.typography.bodySmall.fontSize
+                )
+            }
         }
-    }
 
-    activePeriod.end?.let { end ->
-        val endDate = Date(end * 1000)
-        val diff = (end * 1000 - System.currentTimeMillis()) / 1000.0
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "${stringResource(R.string.ending_time)}: ${dateFormat.format(endDate)}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Spacer(Modifier.width(4.dp))
-            DiffTimer(
-                diff = diff,
-                showBrackets = true,
-                showPlus = true,
-                showDays = true,
-                numSize = MaterialTheme.typography.bodySmall.fontSize,
-                unitSize = MaterialTheme.typography.bodySmall.fontSize * 0.8,
-                bracketSize = MaterialTheme.typography.bodySmall.fontSize
-            )
+        activePeriod.end?.let { end ->
+            val endDate = Date(end * 1000)
+            val diff = (end * 1000 - System.currentTimeMillis()) / 1000.0
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "${stringResource(R.string.ending_time)}: ${dateFormat.format(endDate)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(Modifier.width(4.dp))
+                DiffTimer(
+                    diff = diff,
+                    showBrackets = true,
+                    showPlus = true,
+                    showDays = true,
+                    numSize = MaterialTheme.typography.bodySmall.fontSize,
+                    unitSize = MaterialTheme.typography.bodySmall.fontSize * 0.8,
+                    bracketSize = MaterialTheme.typography.bodySmall.fontSize
+                )
+            }
         }
     }
 }

@@ -495,9 +495,12 @@ fun RouteScreen(
                 val alerts = info.alert_id_to_alert.mapValues { (_, value) ->
                     json.decodeFromJsonElement(Alert.serializer(), value)
                 }
+                var alertsExpanded by remember { mutableStateOf(true) }
                 AlertsBox(
                     alerts = alerts,
-                    chateau = screenData.chateau_id
+                    chateau = screenData.chateau_id,
+                    expanded = alertsExpanded,
+                    onExpandedChange = { alertsExpanded = !alertsExpanded }
                 )
             }
 
@@ -655,7 +658,7 @@ fun RouteScreen(
                 Text(
                     text = stringResource(R.string.stops),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 0.dp)
                 )
             }
             itemsIndexed(activeStops) { index, stopTime ->
@@ -685,13 +688,18 @@ fun RouteScreen(
                         )
                         Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                            Text(stopDetails.name, fontWeight = FontWeight.Medium)
-                            stopDetails.code?.let {
-                                Text(
-                                    "ID: $it",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            FlowRow(
+
+                            ) {
+                                Text(stopDetails.name, fontWeight = FontWeight.Medium)
+                                stopDetails.code?.let {
+                                    Text(
+                                        "ID: $it",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
                             }
 
                             // --- NEW: transfers
@@ -706,7 +714,7 @@ fun RouteScreen(
                                 val connections = stopConnections[connectionKey].orEmpty()
                                 FlowRow(
                                     modifier = Modifier
-                                        .padding(top = 2.dp),
+                                        .padding(top = 0.dp),
 
                                     horizontalArrangement = Arrangement.spacedBy(1.dp),
                                     verticalArrangement = Arrangement.spacedBy(1.dp)
@@ -716,6 +724,12 @@ fun RouteScreen(
                                     }
                                 }
                             }
+
+                            Spacer(
+                                modifier = Modifier
+                                    .height(1.dp)
+                                    .fillMaxWidth()
+                            )
                         }
                     }
                 }

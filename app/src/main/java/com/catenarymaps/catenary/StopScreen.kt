@@ -491,13 +491,16 @@ fun StopScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-
+                    val alertsExpandedState = remember { mutableStateMapOf<String, Boolean>() }
                     meta.alerts?.forEach { (chateauId, alertsmap) ->
+                        val expanded = alertsExpandedState.getOrPut(chateauId) { true }
                         AlertsBox(
                             alerts = alertsmap,
                             chateau = chateauId,
                             default_tz = zoneId.id,
-                            isScrollable = false
+                            isScrollable = false,
+                            expanded = expanded,
+                            onExpandedChange = { alertsExpandedState[chateauId] = !expanded }
                         )
                     }
 
@@ -510,7 +513,7 @@ fun StopScreen(
                 item {
                     TextButton(
                         onClick = { showPreviousDepartures = !showPreviousDepartures },
-                        modifier = Modifier.padding(horizontal = 4.dp)
+                        modifier = Modifier.padding(horizontal = 2.dp)
                     ) {
                         Icon(
                             imageVector = if (showPreviousDepartures) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,

@@ -119,9 +119,10 @@ fun VehicleSelectionItem(
             }
 
             // Headsign and Vehicle ID
-            Row(
+            FlowRow(
                 modifier = Modifier.padding(top = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // Run Number (simplified from JS logic)
                 val runNumber = option.trip_short_name //?: option.vehicle_id
@@ -149,13 +150,10 @@ fun VehicleSelectionItem(
                     Text(
                         text = option.headsign,
                         style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
                     )
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                // Spacer(modifier = Modifier.weight(1f))
 
                 // Vehicle ID
                 if (option.vehicle_id != null && option.vehicle_id != runNumber) {

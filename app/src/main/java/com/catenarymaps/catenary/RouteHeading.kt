@@ -35,7 +35,6 @@ import com.catenarymaps.catenary.parseColor
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-
 @Composable
 fun RouteHeading(
     color: String,
@@ -54,11 +53,10 @@ fun RouteHeading(
 ) {
     if (isCompact) {
         // Compact version not implemented based on svelte file
-        // but can be added here if needed.
         return
     }
 
-    println("route heading, ${shortName} ${longName}")
+    println("route heading, $shortName $longName")
 
     val routeColor = parseColor(color, MaterialTheme.colorScheme.primary)
     val routeTextColor = parseColor(textColor, MaterialTheme.colorScheme.onPrimary)
@@ -87,18 +85,25 @@ fun RouteHeading(
     }
 
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.SpaceBetween
+        // ⬇️ This Box replaces the Row, putting controls in the top-right
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            // Main text content; padded on the end so it "wraps around" controls
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(end = 48.dp) // adjust if your controls are wider/narrower
+            ) {
                 Text(
                     modifier = clickableModifier,
                     text = buildAnnotatedString {
                         if (!shortName.isNullOrBlank()) {
                             withStyle(
-                                style = textStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)
+                                style = textStyle
+                                    .toSpanStyle()
+                                    .copy(fontWeight = FontWeight.Bold)
                             ) {
                                 append(shortName)
                             }
@@ -136,28 +141,35 @@ fun RouteHeading(
 
                         if (headsign != null) {
                             Text(
-                                text = headsign
+                                text = headsign,
                             )
                         }
                     }
-
-
                 }
 
                 if (!agencyName.isNullOrBlank()) {
-                    Text(text = agencyName, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = agencyName,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
 
                 if (!description.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = description, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
 
-
-            controls()
+            // Controls anchored to the top-right
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+            ) {
+                controls()
+            }
         }
-
-
     }
 }

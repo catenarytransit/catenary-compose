@@ -137,7 +137,7 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
                     }
                 }
                 it.notes?.let { notes ->
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(0.dp))
                     Text(text = notes, fontSize = 12.sp)
                 }
             }

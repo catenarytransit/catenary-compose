@@ -399,17 +399,18 @@ fun SingleTripInfoScreen(
 
             }
 
-            // Clickable Vehicle Label
-            if (data.vehicle?.label != null || data.vehicle?.id != null) {
-                VehicleInfo(
-                    label = data.vehicle.label ?: data.vehicle.id ?: "",
-                    chateau = tripSelected.chateau_id,
-                    routeId = data.route_id
-                )
-            }
+            Column() {// Clickable Vehicle Label
+                if (data.vehicle?.label != null || data.vehicle?.id != null) {
+                    VehicleInfo(
+                        label = data.vehicle.label ?: data.vehicle.id ?: "",
+                        chateau = tripSelected.chateau_id,
+                        routeId = data.route_id
+                    )
+                }
 
-            if (vehicleData != null) {
-                VehicleInfoDetails(vehicleData = vehicleData!!, usUnits = usUnits)
+                if (vehicleData != null) {
+                    VehicleInfoDetails(vehicleData = vehicleData!!, usUnits = usUnits)
+                }
             }
 
 
@@ -427,6 +428,8 @@ fun SingleTripInfoScreen(
 //                            }
 //                        }
 //                    }
+
+            var alertsExpanded by remember { mutableStateOf(true) }
 
             // Stop List
             val lazyListState = rememberLazyListState()
@@ -449,9 +452,11 @@ fun SingleTripInfoScreen(
                             alerts = data.alert_id_to_alert,
                             default_tz = data.tz,
                             chateau = tripSelected.chateau_id,
-                            isScrollable = false
+                            isScrollable = false,
+                            expanded = alertsExpanded,
+                            onExpandedChange = { alertsExpanded = !alertsExpanded }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
                 }
 
@@ -693,7 +698,7 @@ fun StopListItem(
             if (!connections.isNullOrEmpty()) {
                 FlowRow(
                     modifier = Modifier
-                        .padding(top = 2.dp),
+                        .padding(top = 0.dp),
                     horizontalArrangement = Arrangement.spacedBy(1.dp),
                     verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
@@ -702,6 +707,12 @@ fun StopListItem(
                     }
                 }
             }
+
+            Spacer(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
         }
     }
 }
