@@ -680,14 +680,14 @@ private fun StopScreenRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 4.dp),
+                .padding(top = 0.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isCancelled) {
                 Text(
                     text = "Cancelled",
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(Modifier.weight(1f))
                 val timeToStrike = scheduledTime ?: departureTimeToShow
@@ -696,7 +696,7 @@ private fun StopScreenRow(
                         timezone = zoneId.id,
                         timeSeconds = timeToStrike,
                         showSeconds = false,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
                         textDecoration = TextDecoration.LineThrough
                     )
@@ -705,7 +705,7 @@ private fun StopScreenRow(
                 Text(
                     text = "Deleted",
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(Modifier.weight(1f))
                 val timeToStrike = scheduledTime ?: departureTimeToShow
@@ -714,7 +714,7 @@ private fun StopScreenRow(
                         timezone = zoneId.id,
                         timeSeconds = timeToStrike,
                         showSeconds = false,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
                         textDecoration = TextDecoration.LineThrough
                     )
@@ -723,7 +723,7 @@ private fun StopScreenRow(
                 Text(
                     text = "Stop Deleted",
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(Modifier.weight(1f))
                 val timeToStrike = scheduledTime ?: departureTimeToShow
@@ -732,7 +732,7 @@ private fun StopScreenRow(
                         timezone = zoneId.id,
                         timeSeconds = timeToStrike,
                         showSeconds = false,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
                         textDecoration = TextDecoration.LineThrough
                     )
@@ -751,6 +751,7 @@ private fun StopScreenRow(
                         showBrackets = false,
                         showSeconds = false,
                         showDays = false,
+                        numSize = 16.sp,
                         showPlus = false
                     )
                 }
@@ -773,7 +774,7 @@ private fun StopScreenRow(
                             timezone = zoneId.id,
                             timeSeconds = scheduledTime,
                             showSeconds = false,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 1.0f),
                             textDecoration = TextDecoration.LineThrough,
                             modifier = Modifier.padding(end = 8.dp)
@@ -783,7 +784,7 @@ private fun StopScreenRow(
                         timezone = zoneId.id,
                         timeSeconds = departureTimeToShow,
                         showSeconds = false,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                         color = finalColor
                     )
                 } else if (scheduledTime != null) {
@@ -791,7 +792,7 @@ private fun StopScreenRow(
                         timezone = zoneId.id,
                         timeSeconds = scheduledTime,
                         showSeconds = false,
-                        style = MaterialTheme.typography.bodyMedium, color = finalColor
+                        style = MaterialTheme.typography.bodyLarge, color = finalColor
                     )
                 }
             }
