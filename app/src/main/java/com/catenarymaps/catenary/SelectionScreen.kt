@@ -339,13 +339,25 @@ fun MapSelectionScreen(
         }
     }
 
-    // Separate lists
-    val vehicles =
-        screenData.arrayofoptions.mapNotNull { it.data as? MapSelectionSelector.VehicleMapSelector }
-    val stops =
-        screenData.arrayofoptions.mapNotNull { it.data as? MapSelectionSelector.StopMapSelector }
-    val routes =
-        screenData.arrayofoptions.mapNotNull { it.data as? MapSelectionSelector.RouteMapSelector }
+    // Separate lists with deduplication to prevent LazyColumn crashes
+    // Uniqueness is enforced using the same logic as the LazyColumn keys
+    val vehicles = screenData.arrayofoptions
+        .mapNotNull { it.data as? MapSelectionSelector.VehicleMapSelector }
+        .distinctBy {
+            "${it.chateau_id}:${it.vehicle_id ?: it.trip_id ?: it.hashCode()}"
+        }
+
+    val stops = screenData.arrayofoptions
+        .mapNotNull { it.data as? MapSelectionSelector.StopMapSelector }
+        .distinctBy {
+            "${it.chateau_id}:${it.stop_id}"
+        }
+
+    val routes = screenData.arrayofoptions
+        .mapNotNull { it.data as? MapSelectionSelector.RouteMapSelector }
+        .distinctBy {
+            "${it.chateau_id}:${it.route_id}"
+        }
 
     // Keep this as-is or swap for rememberSaveable if you want to survive process death.
     val lazyListState = rememberLazyListState()
