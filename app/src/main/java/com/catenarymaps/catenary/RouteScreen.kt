@@ -42,6 +42,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -134,6 +137,7 @@ data class RouteInfoResponse(
     val alert_id_to_alert: Map<String, JsonObject> = emptyMap(),
     val direction_patterns: Map<String, RouteInfoDirectionPattern>,
     val shapes_polyline: Map<String, String> = emptyMap(),
+    val shape_ids: List<String> = emptyList(),
     val stops: Map<String, RouteInfoStop>,
     val bounding_box: RustRect? = null,
     // NEW: transfers stuff
@@ -174,6 +178,31 @@ fun RouteScreen(
     var routeRealtime by remember { mutableStateOf<RouteRealtimeResponse?>(null) }
     var activeParentId by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+    val loadedShapes = remember { mutableStateMapOf<String, String>() }
+    val scope =
+        rememberCoroutineScope() // Re-use or create new scope if needed, usually passed one is better but creating one here is fine for this screen
+
+    suspend fun fetchShape(chateauId: String, shapeId: String) {
+        if (loadedShapes.contains(shapeId) || routeInfo?.shapes_polyline?.containsKey(shapeId) == true) return
+
+        val encodedChateau = URLEncoder.encode(chateauId, "UTF-8")
+        val encodedShape = URLEncoder.encode(shapeId, "UTF-8")
+        val url =
+            "https://birch.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline"
+
+        try {
+            val response = ktorClient.get(url).body<JsonObject>()
+            // Using JsonPrimitive to safely extract content
+            val polyline =
+                (response["polyline"] as? kotlinx.serialization.json.JsonPrimitive)?.content
+
+            if (polyline != null) {
+                loadedShapes[shapeId] = polyline
+            }
+        } catch (e: Exception) {
+            println("Error fetching shape $shapeId: $e")
+        }
+    }
 
     // Fetch static route info once
 
@@ -409,7 +438,8 @@ fun RouteScreen(
     }
 
     // Update map when active pattern changes
-    LaunchedEffect(activeParentId, routeInfo) {
+    // We add loadedShapes.size to keys to re-trigger when new shapes arrive
+    LaunchedEffect(activeParentId, routeInfo, loadedShapes.size) {
         val info = routeInfo ?: return@LaunchedEffect
         val parentId = activeParentId ?: return@LaunchedEffect
 
@@ -418,7 +448,8 @@ fun RouteScreen(
 
         // 1. Update route shape on map
         val shapeId = pattern.direction_pattern.gtfsShapeId
-        val polylineString = info.shapes_polyline[shapeId]
+        val polylineString = info.shapes_polyline[shapeId] ?: loadedShapes[shapeId]
+        
         if (polylineString != null) {
             val decodedPath = com.google.maps.android.PolyUtil.decode(polylineString)
             val positions = decodedPath.map { Position(it.longitude, it.latitude) }
@@ -432,6 +463,12 @@ fun RouteScreen(
             )
             transitShapeSource.value.setData(GeoJsonData.Features(FeatureCollection(listOf(feature))))
         } else {
+            if (shapeId != null) {
+                // Trigger lazy load
+                launch {
+                    fetchShape(screenData.chateau_id, shapeId)
+                }
+            }
             transitShapeSource.value.setData(
                 GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>()))
             )
