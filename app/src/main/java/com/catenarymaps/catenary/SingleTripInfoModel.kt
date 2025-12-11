@@ -84,8 +84,8 @@ class SingleTripViewModel(
                 val url =
                     "https://birch.catenarymaps.org/get_trip_information/${encodedChateauId}/?" +
                             if (tripSelected.trip_id != null) "trip_id=${encodedTripId}&" else "" +
-                                    if (tripSelected.start_date != null) "start_date=${tripSelected.start_date ?: ""}&" else "" +
-                                            if (tripSelected.start_time != null) "start_time=${tripSelected.start_time ?: ""}" else ""
+                                    if (tripSelected.start_date != null) "start_date=${tripSelected.start_date}&" else "" +
+                                            if (tripSelected.start_time != null) "start_time=${tripSelected.start_time}" else ""
 
                 println("fetching url ${url}")
 

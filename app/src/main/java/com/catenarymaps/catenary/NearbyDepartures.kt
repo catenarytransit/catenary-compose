@@ -487,7 +487,7 @@ fun NearbyDepartures(
                     )
                 )
             }
-            sorted = result
+            sorted = result.distinctBy { it.chateauId + it.routeId }
         }
     }
     Column(

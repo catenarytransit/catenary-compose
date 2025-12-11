@@ -166,6 +166,12 @@ fun StopScreen(
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
+    // --- Helper Functions ---
+    fun composeEventKey(ev: StopEvent): String {
+        val sched = ev.scheduled_departure ?: ev.scheduled_arrival ?: 0
+        return "${ev.chateau}|${ev.trip_id}|${ev.route_id}|${ev.headsign}|${ev.stop_id}|${ev.service_date}|${sched}"
+    }
+
     // --- State ---
     val pages = remember { mutableStateListOf<PageInfo>() }
     val eventIndex = remember { mutableStateMapOf<String, StopEventPageData>() }
@@ -174,11 +180,14 @@ fun StopScreen(
     var showPreviousDepartures by remember { mutableStateOf(false) }
     var currentPageHours by remember { mutableStateOf(12) }
     var flyToAlready by remember { mutableStateOf(false) }
+    val requestedShapes = remember { mutableStateListOf<String>() }
 
     // --- Derived State ---
     val mergedEvents by remember {
         derivedStateOf {
-            eventIndex.values.map { it.event }.sortedBy {
+            eventIndex.values.map { it.event }
+                .distinctBy { composeEventKey(it) }
+                .sortedBy {
                 it.realtime_departure ?: it.realtime_arrival ?: it.scheduled_departure
                 ?: it.scheduled_arrival ?: 0
             }
@@ -219,11 +228,7 @@ fun StopScreen(
         }
     }
 
-    // --- Helper Functions ---
-    fun composeEventKey(ev: StopEvent): String {
-        val sched = ev.scheduled_departure ?: ev.scheduled_arrival ?: 0
-        return "${ev.chateau}|${ev.trip_id}|${ev.stop_id}|${ev.service_date}|${sched}"
-    }
+
 
     fun chooseNextPageHours(count: Int): Int {
         return when {
@@ -266,7 +271,7 @@ fun StopScreen(
         val encodedChateau = URLEncoder.encode(chateau, "UTF-8")
 
         val url =
-            "https://birch.catenarymaps.org/departures_at_stop?stop_id=$encodedStopId&chateau_id=$encodedChateau&greater_than_time=$startSec&less_than_time=$endSec"
+            "https://birch.catenarymaps.org/departures_at_stop?stop_id=$encodedStopId&chateau_id=$encodedChateau&greater_than_time=$startSec&less_than_time=$endSec&include_shapes=false"
 
         try {
             val data = ktorClient.get(url).body<DeparturesAtStopResponse>()
@@ -287,6 +292,36 @@ fun StopScreen(
 
 
             page.loading = false
+        }
+    }
+
+    suspend fun fetchShape(chateauId: String, shapeId: String) {
+        val key = "${chateauId}|${shapeId}"
+        if (requestedShapes.contains(key)) return
+        requestedShapes.add(key)
+
+        val encodedChateau = URLEncoder.encode(chateauId, "UTF-8")
+        val encodedShape = URLEncoder.encode(shapeId, "UTF-8")
+        val url =
+            "https://birch.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline"
+
+        try {
+            val response = ktorClient.get(url).body<JsonObject>()
+            val polyline = (response["polyline"] as? JsonPrimitive)?.content
+
+            if (polyline != null) {
+                // Update dataMeta
+                dataMeta?.let { meta ->
+                    val currentShapesForChateau = meta.shapes[chateauId] ?: emptyMap()
+                    val newShapesForChateau = currentShapesForChateau + (shapeId to polyline)
+                    val newShapes = meta.shapes + (chateauId to newShapesForChateau)
+                    dataMeta = meta.copy(shapes = newShapes)
+                }
+            }
+        } catch (e: Exception) {
+            println("Error fetching shape: $e")
+            // Allow retry later or just leave it
+            requestedShapes.remove(key)
         }
     }
 
@@ -401,7 +436,12 @@ fun StopScreen(
         meta.routes.forEach { (chateauId, routes) ->
             routes.forEach { (routeId, route) ->
                 route.shapes_list?.forEach { shapeId ->
-                    meta.shapes[chateauId]?.get(shapeId)?.let { polyline ->
+                    val polyline = meta.shapes[chateauId]?.get(shapeId)
+                    if (polyline == null) {
+                        // Lazy fetch
+                        scope.launch { fetchShape(chateauId, shapeId) }
+                    }
+                    polyline?.let { pl ->
                         try {
                             val latLngs = com.google.maps.android.PolyUtil.decode(polyline)
                             val positions = latLngs.map { Position(it.longitude, it.latitude) }
