@@ -21,7 +21,9 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import com.google.maps.android.PolyUtil.decode as decodePolyutil
+import com.google.maps.android.PolyUtil.encode as encodePolyutil
 import androidx.compose.material3.CircularProgressIndicator
+
 import androidx.compose.material3.Icon
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -42,8 +44,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.datadog.android.core.internal.utils.JsonSerializer.safeMapValuesToJson
-import com.google.maps.android.PolyUtil.decode
+import com.google.maps.android.PolyUtil.encode
 import org.maplibre.spatialk.geojson.Feature
+
 import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.LineString
@@ -67,6 +70,10 @@ import java.util.Locale
 import kotlin.math.abs
 import androidx.compose.ui.platform.LocalConfiguration
 import kotlinx.serialization.json.JsonObject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 // --- Paging controls ---
 private const val OVERLAP_SECONDS = 5 * 60 // 5 min
@@ -89,7 +96,8 @@ data class StopRouteInfo(
     val text_color: String,
     val short_name: String? = null,
     val long_name: String? = null,
-    val shapes_list: List<String>? = null
+    val shapes_list: List<String>? = null,
+    val route_type: Int? = null
 )
 
 @Serializable
@@ -178,7 +186,7 @@ fun StopScreen(
     var dataMeta by remember { mutableStateOf<StopMeta?>(null) }
     var currentTime by remember { mutableStateOf(Instant.now().epochSecond) }
     var showPreviousDepartures by remember { mutableStateOf(false) }
-    var currentPageHours by remember { mutableStateOf(12) }
+    var currentPageHours by remember { mutableStateOf(1) }
     var flyToAlready by remember { mutableStateOf(false) }
     val requestedShapes = remember { mutableStateListOf<String>() }
 
@@ -233,18 +241,41 @@ fun StopScreen(
     fun chooseNextPageHours(count: Int): Int {
         return when {
             count >= THRESHOLD_HIGH -> 2
-            count <= THRESHOLD_LOW -> (currentPageHours * 2).coerceAtMost(24).coerceAtLeast(12)
-            else -> 12
+            count <= THRESHOLD_LOW -> (currentPageHours * 2).coerceAtMost(24)
+            else -> currentPageHours
         }
     }
 
     fun mergePageEvents(pageId: String, data: DeparturesAtStopResponse, refreshedAt: Long) {
         // Merge meta
         if (data.primary != null) {
-            val newRoutes = (dataMeta?.routes ?: emptyMap()) + (data.routes ?: emptyMap())
-            val newShapes = (dataMeta?.shapes ?: emptyMap()) + (data.shapes ?: emptyMap())
-            val newStops = (dataMeta?.alerts ?: emptyMap()) + (data.alerts ?: emptyMap())
-            dataMeta = StopMeta(data.primary, newRoutes, newShapes, newStops)
+            // Deep merge Routes
+            val mergedRoutes = (dataMeta?.routes ?: emptyMap()).toMutableMap()
+            data.routes?.forEach { (chateau, newRoutes) ->
+                val existing = mergedRoutes[chateau] ?: emptyMap()
+                mergedRoutes[chateau] = existing + newRoutes
+            }
+
+            // Deep merge Shapes
+            val mergedShapes = (dataMeta?.shapes ?: emptyMap()).toMutableMap()
+            data.shapes?.forEach { (chateau, newShapes) ->
+                val existing = mergedShapes[chateau] ?: emptyMap()
+                mergedShapes[chateau] = existing + newShapes
+            }
+
+            // Deep merge Alerts
+            val mergedAlerts = (dataMeta?.alerts ?: emptyMap()).toMutableMap()
+            data.alerts.forEach { (chateau, newAlerts) ->
+                val existing = mergedAlerts[chateau] ?: emptyMap()
+                mergedAlerts[chateau] = existing + newAlerts
+            }
+
+            // If we didn't have a primary before, use the new one.
+            // If we did, we probably want to keep the old one or update it. 
+            // Usually primary shouldn't change much, so taking the new one is fine.
+            val currentPrimary = dataMeta?.primary ?: data.primary
+
+            dataMeta = StopMeta(currentPrimary, mergedRoutes, mergedShapes, mergedAlerts)
         }
 
         // Merge events
@@ -295,33 +326,102 @@ fun StopScreen(
         }
     }
 
-    suspend fun fetchShape(chateauId: String, shapeId: String) {
+    suspend fun fetchShape(chateauId: String, shapeId: String, routeType: Int? = null) {
         val key = "${chateauId}|${shapeId}"
         if (requestedShapes.contains(key)) return
         requestedShapes.add(key)
 
-        val encodedChateau = URLEncoder.encode(chateauId, "UTF-8")
-        val encodedShape = URLEncoder.encode(shapeId, "UTF-8")
-        val url =
-            "https://birch.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline"
+        withContext(Dispatchers.Default) {
+            val encodedChateau = URLEncoder.encode(chateauId, "UTF-8")
+            val encodedShape = URLEncoder.encode(shapeId, "UTF-8")
 
-        try {
-            val response = ktorClient.get(url).body<JsonObject>()
-            val polyline = (response["polyline"] as? JsonPrimitive)?.content
+            // Heuristic: Route Type 2 (Rail) usually has long, complex shapes.
+            val isComplexRoute = routeType == 2
 
-            if (polyline != null) {
-                // Update dataMeta
-                dataMeta?.let { meta ->
-                    val currentShapesForChateau = meta.shapes[chateauId] ?: emptyMap()
-                    val newShapesForChateau = currentShapesForChateau + (shapeId to polyline)
-                    val newShapes = meta.shapes + (chateauId to newShapesForChateau)
-                    dataMeta = meta.copy(shapes = newShapes)
+            try {
+                val finalPolyline: String? = if (isComplexRoute) {
+                    val lat = dataMeta?.primary?.stop_lat
+                    val lon = dataMeta?.primary?.stop_lon
+
+                    if (lat != null && lon != null) {
+                        // println("Fetching complex shape for train route...")
+                        try {
+                            val cropRadius = 0.1
+                            val minX = lon - cropRadius
+                            val maxX = lon + cropRadius
+                            val minY = lat - cropRadius
+                            val maxY = lat + cropRadius
+
+                            coroutineScope {
+                                val highResDeferred = async {
+                                    val urlLocal =
+                                        "https://birchshapescustom.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline&simplify=10.0&min_x=$minX&max_x=$maxX&min_y=$minY&max_y=$maxY"
+                                    try {
+                                        val response = ktorClient.get(urlLocal).body<JsonObject>()
+                                        (response["polyline"] as? JsonPrimitive)?.content
+                                    } catch (e: Exception) {
+                                        // println("Failed to fetch local shape part: $e")
+                                        null
+                                    }
+                                }
+
+                                val lowResDeferred = async {
+                                    val urlGlobal =
+                                        "https://birchshapescustom.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline&simplify=100.0"
+                                    try {
+                                        val response = ktorClient.get(urlGlobal).body<JsonObject>()
+                                        (response["polyline"] as? JsonPrimitive)?.content
+                                    } catch (e: Exception) {
+                                        // println("Failed to fetch global shape part: $e")
+                                        null
+                                    }
+                                }
+
+                                val localPoly = highResDeferred.await()
+                                val globalPoly = lowResDeferred.await()
+
+                                if (localPoly != null && globalPoly != null) {
+                                    splicePolylines(globalPoly, localPoly)
+                                } else {
+                                    globalPoly ?: localPoly
+                                }
+                            }
+                        } catch (e: Exception) {
+                            // println("Complex fetch failed, falling back to simple: $e")
+                            null
+                        }
+                    } else {
+                        null
+                    }
+                } else {
+                    null
                 }
+
+                val polylineToCheck = if (finalPolyline == null) {
+                    val url =
+                        "https://birch.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline"
+                    val response = ktorClient.get(url).body<JsonObject>()
+                    (response["polyline"] as? JsonPrimitive)?.content
+                } else {
+                    finalPolyline
+                }
+
+                if (polylineToCheck != null) {
+                    // Update dataMeta (Thread-safe via Snapshot system, but keep in mind we are on Default dispatcher)
+                    dataMeta?.let { meta ->
+                        val currentShapesForChateau = meta.shapes[chateauId] ?: emptyMap()
+                        // If we already have this shape (maybe from another simultaneous fetch?), don't overwrite blindly? 
+                        // Actually, map + overwrites.
+                        val newShapesForChateau =
+                            currentShapesForChateau + (shapeId to polylineToCheck)
+                        val newShapes = meta.shapes + (chateauId to newShapesForChateau)
+                        dataMeta = meta.copy(shapes = newShapes)
+                    }
+                }
+            } catch (e: Exception) {
+                // println("Error fetching shape: $e")
+                requestedShapes.remove(key)
             }
-        } catch (e: Exception) {
-            println("Error fetching shape: $e")
-            // Allow retry later or just leave it
-            requestedShapes.remove(key)
         }
     }
 
@@ -331,7 +431,7 @@ fun StopScreen(
         eventIndex.clear()
         dataMeta = null
         flyToAlready = false
-        currentPageHours = 12
+        currentPageHours = 1
 
         val nowSec = Instant.now().epochSecond
         val start = nowSec - 30 * 60 // 30m back
@@ -378,13 +478,25 @@ fun StopScreen(
         }
     }
 
+    val isLoading by remember { derivedStateOf { pages.any { it.loading } } }
+
     // Infinite scroll
-    LaunchedEffect(lazyListState) {
+    LaunchedEffect(lazyListState, mergedEvents.size, isLoading) {
+        // Check if we need to load more because the list is empty or short (bottom visible)
         snapshotFlow { lazyListState.layoutInfo }
             .collect { layoutInfo ->
-                val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
-                if (lastVisibleItem != null && lastVisibleItem.index >= layoutInfo.totalItemsCount - 5) {
-                    if (pages.none { it.loading }) {
+                if (pages.none { it.loading }) {
+                    val totalItems = layoutInfo.totalItemsCount
+                    val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+
+                    // Condition 1: List is completely empty
+                    val isEmpty = totalItems == 0 && mergedEvents.isEmpty()
+
+                    // Condition 2: Not enough items to fill the screen (or close to bottom)
+                    // If totalItems is small, lastVisibleIndex will be totalItems - 1
+                    val isBottomVisible = totalItems > 0 && lastVisibleIndex >= totalItems - 2
+
+                    if (isEmpty || isBottomVisible) {
                         loadNextPage()
                     }
                 }
@@ -439,7 +551,7 @@ fun StopScreen(
                     val polyline = meta.shapes[chateauId]?.get(shapeId)
                     if (polyline == null) {
                         // Lazy fetch
-                        scope.launch { fetchShape(chateauId, shapeId) }
+                        scope.launch { fetchShape(chateauId, shapeId, route.route_type) }
                     }
                     polyline?.let { pl ->
                         try {
@@ -466,7 +578,7 @@ fun StopScreen(
     DisposableEffect(Unit) {
         onDispose {
             transitShapeForStopSource.value.setData(
-                GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>()))
+                GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>()))
             )
             stopsContextSource.value.setData(
                 GeoJsonData.Features(
@@ -479,13 +591,23 @@ fun StopScreen(
     // --- UI ---
     val meta = dataMeta
     if (meta == null) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 0.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                NavigationControls(onBack = onBack, onHome = onHome)
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
     } else {
         val zoneId = remember(meta.primary.timezone) {
@@ -650,6 +772,59 @@ fun StopScreen(
                 }
             }
         }
+    }
+}
+
+private fun splicePolylines(globalPoly: String, localPoly: String): String {
+    val globalPoints = com.google.maps.android.PolyUtil.decode(globalPoly)
+    val localPoints = com.google.maps.android.PolyUtil.decode(localPoly)
+
+    if (globalPoints.isEmpty()) return localPoly
+    if (localPoints.isEmpty()) return globalPoly
+
+    // Find indices in Global that match Local start/end
+    val startLocal = localPoints.first()
+    val endLocal = localPoints.last()
+
+    // Helper to find closest index
+    fun findClosest(
+        target: com.google.android.gms.maps.model.LatLng,
+        points: List<com.google.android.gms.maps.model.LatLng>
+    ): Int {
+        var minIdx = -1
+        var minDst = Double.MAX_VALUE
+        for (i in points.indices) {
+            val p = points[i]
+            val dist =
+                (p.latitude - target.latitude) * (p.latitude - target.latitude) + (p.longitude - target.longitude) * (p.longitude - target.longitude)
+            if (dist < minDst) {
+                minDst = dist
+                minIdx = i
+            }
+        }
+        return minIdx
+    }
+
+    val idxStart = findClosest(startLocal, globalPoints)
+    val idxEnd = findClosest(endLocal, globalPoints)
+
+    if (idxStart == -1 || idxEnd == -1) return globalPoly
+
+    // Normal case: Start comes before End
+    if (idxStart <= idxEnd) {
+        val result = ArrayList<com.google.android.gms.maps.model.LatLng>()
+        // Keep global up to start
+        result.addAll(globalPoints.subList(0, idxStart))
+        // Add local
+        result.addAll(localPoints)
+        // Keep global from end
+        if (idxEnd < globalPoints.size - 1) {
+            result.addAll(globalPoints.subList(idxEnd + 1, globalPoints.size))
+        }
+        return com.google.maps.android.PolyUtil.encode(result)
+    } else {
+        // Start is AFTER End in global. Fallback.
+        return globalPoly
     }
 }
 

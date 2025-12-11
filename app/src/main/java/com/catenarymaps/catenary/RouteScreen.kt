@@ -323,12 +323,22 @@ fun RouteScreen(
     }
 
     if (routeInfo == null) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp), contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                NavigationControls(onBack = onBack, onHome = onHome)
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp), contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
         return
     }

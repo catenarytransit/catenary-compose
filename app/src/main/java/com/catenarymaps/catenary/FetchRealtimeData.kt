@@ -256,7 +256,7 @@ fun fetchRealtimeData(
 
             try {
                 val rawresponse: String =
-                    ktorClient.post("https://birch.catenarymaps.org/bulk_realtime_fetch_v3") {
+                    ktorClient.post("https://birchrtandroid.catenarymaps.org/bulk_realtime_fetch_v3") {
                         contentType(ContentType.Application.Json)
                         setBody(requestBody)
                     }.body()
