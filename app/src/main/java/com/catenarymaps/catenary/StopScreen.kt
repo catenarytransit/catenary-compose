@@ -897,7 +897,8 @@ private fun StopScreenRow(
                 .fillMaxWidth()
                 .padding(top = 0.dp),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        )
+        {
             if (isCancelled) {
                 Text(
                     text = "Cancelled",
@@ -1011,6 +1012,13 @@ private fun StopScreenRow(
                     )
                 }
             }
+        }
+
+        if (!event.platform_string_realtime.isNullOrBlank()) {
+            Text(
+                text = "${stringResource(id = R.string.platform)} ${event.platform_string_realtime}",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
