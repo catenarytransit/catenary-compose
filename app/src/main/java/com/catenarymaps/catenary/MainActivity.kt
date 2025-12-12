@@ -2601,6 +2601,16 @@ class MainActivity : ComponentActivity() {
                                             )
                                         )
                                         catenaryStack = newStack
+                                    },
+                                    onStopClick = { chateauId, stopId ->
+                                        val newStack = ArrayDeque(catenaryStack)
+                                        newStack.addLast(
+                                            CatenaryStackEnum.StopStack(
+                                                chateau_id = chateauId,
+                                                stop_id = stopId
+                                            )
+                                        )
+                                        catenaryStack = newStack
                                     }
                                 )
                             } else {

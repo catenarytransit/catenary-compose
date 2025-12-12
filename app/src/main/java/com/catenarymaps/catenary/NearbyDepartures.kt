@@ -1,62 +1,62 @@
 package com.catenarymaps.catenary
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CenterFocusStrong
-import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.PinDrop
 import androidx.compose.material.icons.filled.RssFeed
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import java.lang.Integer.min
-import java.util.Locale
-import kotlin.math.*
-import kotlinx.serialization.SerializationException
-import okhttp3.ResponseBody
-import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.NearMe
-import androidx.compose.material.icons.filled.SortByAlpha
-import androidx.compose.material.icons.filled.Straighten
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.style.TextDecoration
-
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import android.content.Context
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
-
+import java.lang.Integer.min
+import java.util.Locale
+import java.util.concurrent.TimeUnit
+import kotlin.math.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
-import java.util.concurrent.TimeUnit
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.ResponseBody
 
 /* -------------------------------------------------------------------------- */
 /*  Data models that match the JSON payload (only the fields we actually use)  */
@@ -69,9 +69,7 @@ private data class NearbyResponse(
 )
 
 @Serializable
-private data class DebugInfo(
-    @SerialName("total_time_ms") val totalTimeMs: Long? = null
-)
+private data class DebugInfo(@SerialName("total_time_ms") val totalTimeMs: Long? = null)
 
 @Serializable
 private data class StopEntry(
@@ -92,7 +90,8 @@ private data class RouteGroup(
     @SerialName("long_name") val longName: String? = null,
     val color: String? = null,
     @SerialName("text_color") val textColor: String? = null,
-    // directions is a map keyed by headsign after consolidation server-side; we normalize on load
+    // directions is a map keyed by headsign after consolidation server-side; we normalize on
+    // load
     val directions: Map<String, Map<String, DirectionGroup>>
 )
 
@@ -128,7 +127,10 @@ data class TripClickResponse(
 
 /* -------------------------------- Utilities ------------------------------- */
 
-private enum class SortMode { ALPHA, DISTANCE }
+private enum class SortMode {
+    ALPHA,
+    DISTANCE
+}
 
 private data class Filters(
     val rail: Boolean = true,
@@ -183,9 +185,8 @@ private fun flattenDirections(
 
     // Build final map with trips sorted ascending by departure
     return merged.mapValues { (headsign, trips) ->
-        val sortedTrips = trips
-            .distinctBy { it.tripId + it.startDay + it.startTime }
-            .sortedBy { t ->
+        val sortedTrips =
+            trips.distinctBy { it.tripId + it.startDay + it.startTime }.sortedBy { t ->
                 t.departureRealtime ?: t.departureSchedule ?: Long.MAX_VALUE
             }
         DirectionGroup(headsign = headsign, trips = sortedTrips)
@@ -202,13 +203,14 @@ private fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Doub
 }
 
 // Rough mapping mirroring the JS filter buckets
-private fun isAllowedByFilter(routeType: Int, f: Filters): Boolean = when (routeType) {
-    3, 11, 700 -> f.bus
-    0, 1, 5, 7, 12, 900 -> f.metro
-    2, 106, 107, 101, 100, 102, 103 -> f.rail
-    4 -> f.other            // ferries
-    else -> true
-}
+private fun isAllowedByFilter(routeType: Int, f: Filters): Boolean =
+    when (routeType) {
+        3, 11, 700 -> f.bus
+        0, 1, 5, 7, 12, 900 -> f.metro
+        2, 106, 107, 101, 100, 102, 103 -> f.rail
+        4 -> f.other // ferries
+        else -> true
+    }
 
 private fun normalizeHex(c: String?): Color? {
     if (c.isNullOrBlank()) return null
@@ -219,21 +221,23 @@ private fun normalizeHex(c: String?): Color? {
         val g = (v shr 8) and 0xFF
         val b = v and 0xFF
         Color(r, g, b)
-    }.getOrNull()
+    }
+        .getOrNull()
 }
 
 /* ------------------------------ Networking -------------------------------- */
 
 private val json = Json {
     ignoreUnknownKeys = true
-    //isLenient = true
+    // isLenient = true
     explicitNulls = true
 }
 
 private val httpClient by lazy { OkHttpClient() }
 
 private val nearbyClient: OkHttpClient by lazy {
-    httpClient.newBuilder()
+    httpClient
+        .newBuilder()
         .callTimeout(45, TimeUnit.SECONDS)
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(45, TimeUnit.SECONDS)
@@ -246,14 +250,17 @@ private const val NEARBY_TAG = "NearbyDebug"
 private fun peekString(body: ResponseBody?, limit: Long = 200_000): String {
     if (body == null) return "<null body>"
     return try {
-        val peeked = body.source().peek()
-            .readByteArray(minOf(body.contentLength().takeIf { it >= 0 } ?: limit, limit))
+        val peeked =
+            body.source()
+                .peek()
+                .readByteArray(
+                    minOf(body.contentLength().takeIf { it >= 0 } ?: limit, limit)
+                )
         String(peeked)
     } catch (e: Throwable) {
         "<failed to peek: ${e.message}>"
     }
 }
-
 
 private fun logSerializationError(e: SerializationException, raw: String) {
     // kotlinx.serialization exceptions usually include a path like at path: $.foo[0].bar
@@ -261,7 +268,6 @@ private fun logSerializationError(e: SerializationException, raw: String) {
     // Log first 2k chars so we don’t spam Logcat
     val head = raw.take(2000)
     Log.e(NEARBY_TAG, "Body head (2k):\n$head")
-
 }
 
 private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
@@ -292,7 +298,10 @@ private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
                 }
 
                 if (rawBody.trimStart().startsWith("<")) {
-                    Log.e(NEARBY_TAG, "Body looks like HTML (unexpected):\n${rawBody.take(1000)}")
+                    Log.e(
+                        NEARBY_TAG,
+                        "Body looks like HTML (unexpected):\n${rawBody.take(1000)}"
+                    )
                     return@withContext null
                 }
 
@@ -313,7 +322,11 @@ private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
                 }
             }
         } catch (t: Throwable) {
-            Log.e(NEARBY_TAG, "Network error on ${Thread.currentThread().name}: ${t.message}", t)
+            Log.e(
+                NEARBY_TAG,
+                "Network error on ${Thread.currentThread().name}: ${t.message}",
+                t
+            )
             null
         }
     }
@@ -322,7 +335,7 @@ private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
 /**
  * NearbyDepartures screen to place in your home bottom sheet.
  *
- * @param userLocation  current GPS coordinate, or null while waiting
+ * @param userLocation current GPS coordinate, or null while waiting
  * @param pickedLocation coordinate for “pin” mode, or null if unused for now
  * @param usePickedLocation if true, query from [pickedLocation]; else from [userLocation]
  */
@@ -337,7 +350,8 @@ fun NearbyDepartures(
     onPinDrop: () -> Unit = {},
     onCenterPin: () -> Unit = {},
     onTripClick: (TripClickResponse) -> Unit = {},
-    onRouteClick: (chateauId: String, routeId: String) -> Unit = { _, _ -> }
+    onRouteClick: (chateauId: String, routeId: String) -> Unit = { _, _ -> },
+    onStopClick: (chateauId: String, stopId: String) -> Unit = { _, _ -> }
 ) {
     val applicationContext = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
@@ -345,9 +359,8 @@ fun NearbyDepartures(
             val firebaseAnalytics = FirebaseAnalytics.getInstance(applicationContext)
             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, "NearbyDeparturesScreen")
-                //param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
+                // param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
             }
-
         } catch (e: Exception) {
             // Log the error or handle it gracefully
             android.util.Log.e("GA", "Failed to log screen view", e)
@@ -366,11 +379,8 @@ fun NearbyDepartures(
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-
 
     var nowSec by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
 
@@ -384,9 +394,7 @@ fun NearbyDepartures(
     val context = LocalContext.current
     var filters by remember { mutableStateOf(FilterPreferences.loadFilters(context)) }
 
-    LaunchedEffect(filters) {
-        FilterPreferences.saveFilters(context, filters)
-    }
+    LaunchedEffect(filters) { FilterPreferences.saveFilters(context, filters) }
 
     var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
     var loading by remember { mutableStateOf(false) }
@@ -425,7 +433,8 @@ fun NearbyDepartures(
                 restartPolling()
             }
         } else if (!usePickedLocation && userLocation != null) {
-            // Switching back to GPS: keep current lock unless the user explicitly presses My Location.
+            // Switching back to GPS: keep current lock unless the user explicitly presses My
+            // Location.
             // No action here to avoid auto updates past the first GPS fix.
         }
     }
@@ -469,44 +478,54 @@ fun NearbyDepartures(
     }
 
     // derived + sorting
-    val filtered = remember(departureList, filters) {
-        departureList.filter { rg ->
-            rg.directions.isNotEmpty() && isAllowedByFilter(rg.routeType, filters)
+    val filtered =
+        remember(departureList, filters) {
+            departureList.filter { rg ->
+                rg.directions.isNotEmpty() && isAllowedByFilter(rg.routeType, filters)
+            }
         }
-    }
 
     var sorted by remember { mutableStateOf<List<RouteGroup>>(emptyList()) }
 
     LaunchedEffect(filtered, sortMode, lockedOrigin, stopsTable) {
         withContext(Dispatchers.Default) {
-            val result = when (sortMode) {
-                SortMode.ALPHA -> filtered.sortedWith(
-                    compareBy(
-                        { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) },
-                        { it.routeId }
-                    )
-                )
+            val result =
+                when (sortMode) {
+                    SortMode.ALPHA ->
+                        filtered.sortedWith(
+                            compareBy(
+                                {
+                                    (it.shortName ?: it.longName ?: "").lowercase(
+                                        Locale.UK
+                                    )
+                                },
+                                { it.routeId }
+                            )
+                        )
 
-                SortMode.DISTANCE -> filtered.sortedWith(
-                    compareBy(
-                        {
-                            val o = lockedOrigin
-                            if (o == null) Double.POSITIVE_INFINITY
-                            else tryDistanceForRouteGroup(it, o, stopsTable)
-                        },
-                        { (it.shortName ?: it.longName ?: "").lowercase(Locale.UK) }
-                    )
-                )
-            }
+                    SortMode.DISTANCE ->
+                        filtered.sortedWith(
+                            compareBy(
+                                {
+                                    val o = lockedOrigin
+                                    if (o == null) Double.POSITIVE_INFINITY
+                                    else tryDistanceForRouteGroup(it, o, stopsTable)
+                                },
+                                {
+                                    (it.shortName ?: it.longName ?: "").lowercase(
+                                        Locale.UK
+                                    )
+                                }
+                            )
+                        )
+                }
             sorted = result.distinctBy { it.chateauId + it.routeId }
         }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp)
-    ) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(horizontal = 12.dp)
+        .padding(bottom = 12.dp)) {
         TopRow(
             currentPickModeIsPin = usePickedLocation,
             onMyLocation = {
@@ -520,7 +539,8 @@ fun NearbyDepartures(
             },
             onPinDrop = {
                 onPinDrop()
-                // Parent will update pickedLocation; our LaunchedEffect(pickedLocation) will handle restart.
+                // Parent will update pickedLocation; our LaunchedEffect(pickedLocation) will
+                // handle restart.
             },
             onCenterPin = {
                 onCenterPin()
@@ -541,33 +561,36 @@ fun NearbyDepartures(
         }
 
         if (loading) {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
-            )
+            LinearProgressIndicator(modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp))
         } else {
-            //Spacer(Modifier.height(8.dp))
+            // Spacer(Modifier.height(8.dp))
         }
 
         FilterRow(filters = filters, onChange = { filters = it })
 
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(
-                        WindowInsets(
-                            bottom = WindowInsets.safeDrawing.getBottom(
-                                density = LocalDensity.current
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(
+                            WindowInsets(
+                                bottom =
+                                    WindowInsets.safeDrawing.getBottom(
+                                        density = LocalDensity.current
+                                    )
                             )
-                        )
-                    ),
+                        ),
             ) {
                 if (sorted.isEmpty() && firstLoadComplete && !loading) {
                     item {
                         Spacer(Modifier.height(8.dp))
-                        Text(stringResource(id = R.string.nearby_departures_no_departures), style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            stringResource(id = R.string.nearby_departures_no_departures),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
                 items(sorted, key = { it.chateauId + it.routeId }) { route ->
@@ -577,10 +600,10 @@ fun NearbyDepartures(
                         darkMode,
                         onTripClick,
                         onRouteClick,
+                        onStopClick,
                         nowSec = nowSec
                     )
                 }
-
             }
         }
     }
@@ -600,7 +623,8 @@ private fun TopRow(
     darkMode: Boolean
 ) {
     val primaryButtonColor =
-        if (darkMode) Color(0xFF00532F) else Color(0xFF48DC90) // Dark green for dark mode, light green for light mode
+        if (darkMode) Color(0xFF00532F)
+        else Color(0xFF48DC90) // Dark green for dark mode, light green for light mode
     Row(
         Modifier
             .fillMaxWidth()
@@ -610,32 +634,44 @@ private fun TopRow(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconButton(
                 onClick = onMyLocation,
-                modifier = Modifier
-                    .size(36.dp)
-                    .border(
-                        2.dp,
-                        Color(0xFF008744), // oklch(72.3% 0.219 149.579)
-                        RoundedCornerShape(8.dp)
-                    )
-                    .background(
-                        if (!currentPickModeIsPin) primaryButtonColor.copy(0.25f) else Color.Transparent,
-                        RoundedCornerShape(8.dp)
-                    )
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .border(
+                            2.dp,
+                            Color(0xFF008744), // oklch(72.3% 0.219 149.579)
+                            RoundedCornerShape(8.dp)
+                        )
+                        .background(
+                            if (!currentPickModeIsPin)
+                                primaryButtonColor.copy(0.25f)
+                            else Color.Transparent,
+                            RoundedCornerShape(8.dp)
+                        )
             ) { Icon(Icons.Default.NearMe, contentDescription = "My location") }
 
             Row(
-                modifier = Modifier
-                    .border(2.dp, Color(0xFFC9A2C8), RoundedCornerShape(8.dp)) // purple
-                    .clip(RoundedCornerShape(8.dp))
-                    .height(36.dp)
+                modifier =
+                    Modifier
+                        .border(
+                            2.dp,
+                            Color(0xFFC9A2C8),
+                            RoundedCornerShape(8.dp)
+                        ) // purple
+                        .clip(RoundedCornerShape(8.dp))
+                        .height(36.dp)
             ) {
                 TextButton(
                     modifier = Modifier.height(36.dp),
                     onClick = onPinDrop,
                     shape = RoundedCornerShape(0.dp),
-                    colors = ButtonDefaults.textButtonColors(
-                        containerColor = if (currentPickModeIsPin) Color(0xFFC9A2C8).copy(0.25f) else Color.Transparent
-                    ),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            containerColor =
+                                if (currentPickModeIsPin)
+                                    Color(0xFFC9A2C8).copy(0.25f)
+                                else Color.Transparent
+                        ),
                     contentPadding = PaddingValues(horizontal = 8.dp),
                 ) {
                     Icon(
@@ -677,47 +713,56 @@ private fun TopRow(
 
         // Sort toggle (A–Z | Distance)
         Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .height(42.dp)
-                .border(
-                    2.dp,
-
-                    MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(999.dp)
-                )
+            modifier =
+                Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .height(42.dp)
+                    .border(
+                        2.dp,
+                        MaterialTheme.colorScheme.outlineVariant,
+                        RoundedCornerShape(999.dp)
+                    )
         ) {
             TextButton(
                 onClick = { onSortChange(SortMode.ALPHA) },
-                colors = ButtonDefaults.textButtonColors(
-                    containerColor = if (sortMode == SortMode.ALPHA) MaterialTheme.colorScheme.primary.copy(
-                        0.3f
-                    ) else Color.Transparent
-                ),
-                modifier = Modifier
-                    .border(width = 0.dp, color = Color.Transparent)
-                    .fillMaxHeight(),
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        containerColor =
+                            if (sortMode == SortMode.ALPHA)
+                                MaterialTheme.colorScheme.primary.copy(0.3f)
+                            else Color.Transparent
+                    ),
+                modifier =
+                    Modifier
+                        .border(width = 0.dp, color = Color.Transparent)
+                        .fillMaxHeight(),
                 contentPadding = PaddingValues(horizontal = 6.dp)
             ) {
                 Icon(
-                    Icons.Default.SortByAlpha, contentDescription = "Sort by Alpha",
+                    Icons.Default.SortByAlpha,
+                    contentDescription = "Sort by Alpha",
                     Modifier.size(20.dp)
                 )
             }
 
             TextButton(
                 onClick = { onSortChange(SortMode.DISTANCE) },
-                colors = ButtonDefaults.textButtonColors(
-                    containerColor = if (sortMode == SortMode.DISTANCE) MaterialTheme.colorScheme.primary.copy(
-                        0.3f
-                    ) else Color.Transparent
-                ),
-                modifier = Modifier
-                    .border(width = 0.dp, color = Color.Transparent)
-                    .fillMaxHeight(),
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        containerColor =
+                            if (sortMode == SortMode.DISTANCE)
+                                MaterialTheme.colorScheme.primary.copy(0.3f)
+                            else Color.Transparent
+                    ),
+                modifier =
+                    Modifier
+                        .border(width = 0.dp, color = Color.Transparent)
+                        .fillMaxHeight(),
                 contentPadding = PaddingValues(horizontal = 6.dp)
             ) {
                 Icon(
-                    Icons.Default.Straighten, contentDescription = "Sort by Distance",
+                    Icons.Default.Straighten,
+                    contentDescription = "Sort by Distance",
                     Modifier.size(20.dp)
                 )
             }
@@ -726,33 +771,20 @@ private fun TopRow(
 }
 
 @Composable
-private fun FilterRow(
-    filters: Filters,
-    onChange: (Filters) -> Unit
-) {
-    //Spacer(Modifier.height(2.dp))
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        FilterChip(
-            stringResource(R.string.heading_intercity_rail),
-            filters.rail
-        ) { onChange(filters.copy(rail = !filters.rail)) }
-        FilterChip(
-            stringResource(R.string.heading_local_rail),
-            filters.metro
-        ) { onChange(filters.copy(metro = !filters.metro)) }
-        FilterChip(
-            stringResource(R.string.heading_bus),
-            filters.bus
-        ) { onChange(filters.copy(bus = !filters.bus)) }
+private fun FilterRow(filters: Filters, onChange: (Filters) -> Unit) {
+    // Spacer(Modifier.height(2.dp))
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilterChip(stringResource(R.string.heading_intercity_rail), filters.rail) {
+            onChange(filters.copy(rail = !filters.rail))
+        }
+        FilterChip(stringResource(R.string.heading_local_rail), filters.metro) {
+            onChange(filters.copy(metro = !filters.metro))
+        }
+        FilterChip(stringResource(R.string.heading_bus), filters.bus) {
+            onChange(filters.copy(bus = !filters.bus))
+        }
         FilterChip(stringResource(R.string.heading_other), filters.other) {
-            onChange(
-                filters.copy(
-                    other = !filters.other
-                )
-            )
+            onChange(filters.copy(other = !filters.other))
         }
     }
     Spacer(Modifier.height(0.dp))
@@ -765,7 +797,9 @@ private fun FilterChip(label: String, on: Boolean, onClick: () -> Unit) {
         shape = RoundedCornerShape(999.dp),
         tonalElevation = if (on) 4.dp else 16.dp,
         border = if (on) ButtonDefaults.outlinedButtonBorder else null,
-        color = if (on) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surfaceVariant
+        color =
+            if (on) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.surfaceVariant
     ) {
         Text(
             label,
@@ -782,6 +816,7 @@ private fun RouteGroupCard(
     darkMode: Boolean,
     onTripClick: (TripClickResponse) -> Unit,
     onRouteClick: (chateauId: String, routeId: String) -> Unit,
+    onStopClick: (chateauId: String, stopId: String) -> Unit,
     nowSec: Long
 ) {
     val bg = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (darkMode) 0.5f else 1f)
@@ -789,12 +824,13 @@ private fun RouteGroupCard(
     val lineCol = normalizeHex(route.color) ?: MaterialTheme.colorScheme.primary
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(bg)
-            .padding(8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(bg)
+                .padding(8.dp)
     ) {
         Row(
             modifier = Modifier.clickable { onRouteClick(route.chateauId, route.routeId) },
@@ -803,13 +839,13 @@ private fun RouteGroupCard(
         ) {
             Text(
                 text = route.shortName?.trim().orEmpty(),
-                color = if (darkMode) lightenColour(
-                    lineCol,
-                    minContrast = 6.0,
-                ) else darkenColour(
-                    lineCol,
-                    minContrast = 2.0
-                ),
+                color =
+                    if (darkMode)
+                        lightenColour(
+                            lineCol,
+                            minContrast = 6.0,
+                        )
+                    else darkenColour(lineCol, minContrast = 2.0),
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
                 textDecoration = TextDecoration.Underline
@@ -817,13 +853,9 @@ private fun RouteGroupCard(
 
             Text(
                 text = route.longName?.trim().orEmpty(),
-                color = if (darkMode) lightenColour(
-                    lineCol,
-                    minContrast = 4.5
-                ) else darkenColour(
-                    lineCol,
-                    minContrast = 2.0
-                ),
+                color =
+                    if (darkMode) lightenColour(lineCol, minContrast = 4.5)
+                    else darkenColour(lineCol, minContrast = 2.0),
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.titleMedium,
                 textDecoration = TextDecoration.Underline
@@ -833,38 +865,84 @@ private fun RouteGroupCard(
         // Directions
         val flatDirections = remember(route.directions) { flattenDirections(route.directions) }
 
-        flatDirections.entries
-            .sortedBy { it.value.headsign }
-            .forEach { (_, dir) ->
-                val visibleTrips = dir.trips.filter { t ->
+        flatDirections.entries.sortedBy { it.value.headsign }.forEach { (_, dir) ->
+            val visibleTrips =
+                dir.trips.filter { t ->
                     val dep = t.departureRealtime ?: t.departureSchedule ?: 0L
                     val now = System.currentTimeMillis() / 1000
                     dep in (now - 600)..(now + 64800)
                 }
 
-                // println("How many trips are visible ${dir.trips.count()} -> ${visibleTrips.count()}")
+            // println("How many trips are visible ${dir.trips.count()} -> ${visibleTrips.count()}")
 
-                if (visibleTrips.isEmpty()) return@forEach
+            if (visibleTrips.isEmpty()) return@forEach
 
-                Spacer(Modifier.height(4.dp))
+            Row(
+                modifier =
+                    Modifier
+                        .padding(start = 2.dp, bottom = 1.dp)
+                        .horizontalScroll(rememberScrollState()),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Filled.ChevronRight,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .offset(y = 0.dp)
+                )
                 Text(
-                    "› ${dir.headsign}",
+                    dir.headsign.replace("Underground Station", "").replace(" Station", ""),
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
+                    fontWeight = FontWeight.Medium
                 )
 
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                val firstTrip = dir.trips.firstOrNull()
+                if (firstTrip != null) {
+                    val stopName = stopsTable[route.chateauId]?.get(firstTrip.stopId)?.name
+                    if (stopName != null) {
+                        Spacer(Modifier.width(4.dp))
+                        Surface(
+                            shape = RoundedCornerShape(2.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier =
+                                Modifier
+                                    .offset(y = (-1).dp)
+                                    .clickable {
+                                        onStopClick(route.chateauId, firstTrip.stopId)
+                                    }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.PinDrop,
+                                    contentDescription = "Station",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    stopName.replace(" Station", ""),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(start = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    items(
+            ) {
+                items(
                         items = visibleTrips,
                         // Providing a stable key is crucial for performance and state preservation
                         key = { it.tripId + it.startDay + it.startTime }
-                    ) { trip ->
-                        TripPill(
+                ) { trip ->
+                    TripPill(
                             trip = trip,
                             chateauId = route.chateauId,
                             routeId = route.routeId,
@@ -873,10 +951,10 @@ private fun RouteGroupCard(
                             textCol = textCol,
                             onTripClick = onTripClick,
                             nowSec = nowSec
-                        )
-                    }
+                    )
                 }
             }
+        }
     }
 }
 
@@ -898,48 +976,50 @@ private fun TripPill(
     val tz = stop?.timezone ?: trip.tz
     val isPast = secondsLeft < 0
 
-    val contentAlpha = if (isPast) {
-        0.7f
-    } else 1.0f
+    val contentAlpha =
+        if (isPast) {
+            0.7f
+        } else 1.0f
 
     val hasRealtime = trip.departureRealtime != null
     val baseColor = if (hasRealtime) Color(0x00AB9B) else LocalContentColor.current
 
     val contentColor = baseColor.copy(alpha = contentAlpha)
 
-
     Surface(
         onClick = {
-
             onTripClick(
                 TripClickResponse(
                     tripId = trip.tripId,
                     stopId = trip.stopId,
                     chateauId = chateauId,
                     routeId = routeId,
-                    startDay = if (trip.startDay != null) trip.startDay.replace("-", "") else null
+                    startDay =
+                        if (trip.startDay != null) trip.startDay.replace("-", "")
+                        else null
                 )
             )
-
         },
         shape = RoundedCornerShape(6.dp),
         tonalElevation = 0.dp,
         color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Column(
-            modifier = Modifier
-                .widthIn(min = 76.dp)
-                .padding(horizontal = 8.dp, vertical = 2.dp),
+            modifier =
+                Modifier
+                    .widthIn(min = 76.dp)
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy((-4).dp)
         ) {
             if (trip.tripShortName != null && trip.tripShortName.isNotBlank()) {
                 Text(
                     trip.tripShortName,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(lineCol)
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(lineCol)
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
                     color = textCol,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1
@@ -971,8 +1051,6 @@ private fun TripPill(
                         )
                     }
                 }
-
-
             }
 
             // Wall-clock time
@@ -985,9 +1063,17 @@ private fun TripPill(
             }
 
             if (trip.cancelled == true) {
-                Text(stringResource(R.string.cancelled), color = Color.Red, style = MaterialTheme.typography.labelSmall)
+                Text(
+                    stringResource(R.string.cancelled),
+                    color = Color.Red,
+                    style = MaterialTheme.typography.labelSmall
+                )
             } else if (trip.deleted == true) {
-                Text(stringResource(R.string.deleted), color = Color.Red, style = MaterialTheme.typography.labelSmall)
+                Text(
+                    stringResource(R.string.deleted),
+                    color = Color.Red,
+                    style = MaterialTheme.typography.labelSmall
+                )
             }
 
             // If both schedule & realtime are available, show +/- delay
@@ -996,9 +1082,7 @@ private fun TripPill(
             if (sched != null && rt != null) {
                 val diff = rt - sched // seconds
                 if (diff != 0L) {
-                    DelayDiff(diff = diff,
-                        fontSizeOfPolarity = 12.sp
-                    )
+                    DelayDiff(diff = diff, fontSizeOfPolarity = 12.sp)
                 }
             }
 
@@ -1030,7 +1114,7 @@ private fun tryDistanceForRouteGroup(
 
     // println("for route group ${rg.routeId}")
     for (dir in flat.values) {
-        //println("for direction, ${dir.headsign} ${dir.trips.count()}")
+        // println("for direction, ${dir.headsign} ${dir.trips.count()}")
         val first = dir.trips.firstOrNull() ?: continue
         val s = stopsTable[rg.chateauId]?.get(first.stopId) ?: continue
         val lat = s.lat ?: s.latitude
@@ -1041,6 +1125,6 @@ private fun tryDistanceForRouteGroup(
         }
     }
 
-    //println("Distance is ${best}m")
+    // println("Distance is ${best}m")
     return best
 }
