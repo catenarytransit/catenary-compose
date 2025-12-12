@@ -782,50 +782,67 @@ private fun splicePolylines(globalPoly: String, localPoly: String): String {
     if (globalPoints.isEmpty()) return localPoly
     if (localPoints.isEmpty()) return globalPoly
 
-    // Find indices in Global that match Local start/end
     val startLocal = localPoints.first()
     val endLocal = localPoints.last()
 
-    // Helper to find closest index
-    fun findClosest(
-        target: com.google.android.gms.maps.model.LatLng,
-        points: List<com.google.android.gms.maps.model.LatLng>
-    ): Int {
-        var minIdx = -1
-        var minDst = Double.MAX_VALUE
-        for (i in points.indices) {
-            val p = points[i]
-            val dist =
-                (p.latitude - target.latitude) * (p.latitude - target.latitude) + (p.longitude - target.longitude) * (p.longitude - target.longitude)
-            if (dist < minDst) {
-                minDst = dist
-                minIdx = i
-            }
+    // We want to find indices (i, j) in globalPoints such that:
+    // 1. i <= j
+    // 2. dist(global[i], startLocal) + dist(global[j], endLocal) is minimized.
+    //
+    // Since globalPoints is usually not huge (< few thousand points), an O(N^2) or even optimized O(N) search is fine.
+    // We can do it in O(N) by keeping track of the best 'start' seen so far?
+    // Actually no, because the best global start matching local start might be at index 100,
+    // while a slightly worse start match is at index 10.
+    // If the best end match is at index 20, we MUST pick start=10, end=20.
+    // We can iterate j from 0..N. For each j, we want the best i <= j.
+    // Let best_start_idx[j] be the index k in 0..j that minimizes dist(global[k], startLocal).
+    // We can precompute this or compute on the fly.
+
+    var bestStartIdx = -1
+    var bestEndIdx = -1
+    var minTotalDist = Double.MAX_VALUE
+
+    // Track the best start index found so far as we iterate
+    var currentBestStartIdx = -1
+    var currentMinStartDist = Double.MAX_VALUE
+
+    for (j in globalPoints.indices) {
+        val p = globalPoints[j]
+
+        // 1. Update best start candidate up to current index j
+        val distToStart = (p.latitude - startLocal.latitude).let { it * it } +
+                (p.longitude - startLocal.longitude).let { it * it }
+
+        if (distToStart < currentMinStartDist) {
+            currentMinStartDist = distToStart
+            currentBestStartIdx = j
         }
-        return minIdx
+
+        // 2. Check if (currentBestStartIdx, j) is the global best pair
+        val distToEnd = (p.latitude - endLocal.latitude).let { it * it } +
+                (p.longitude - endLocal.longitude).let { it * it }
+
+        val totalDist = currentMinStartDist + distToEnd
+
+        if (totalDist < minTotalDist) {
+            minTotalDist = totalDist
+            bestStartIdx = currentBestStartIdx
+            bestEndIdx = j
+        }
     }
 
-    val idxStart = findClosest(startLocal, globalPoints)
-    val idxEnd = findClosest(endLocal, globalPoints)
+    if (bestStartIdx == -1 || bestEndIdx == -1) return globalPoly
 
-    if (idxStart == -1 || idxEnd == -1) return globalPoly
-
-    // Normal case: Start comes before End
-    if (idxStart <= idxEnd) {
-        val result = ArrayList<com.google.android.gms.maps.model.LatLng>()
-        // Keep global up to start
-        result.addAll(globalPoints.subList(0, idxStart))
-        // Add local
-        result.addAll(localPoints)
-        // Keep global from end
-        if (idxEnd < globalPoints.size - 1) {
-            result.addAll(globalPoints.subList(idxEnd + 1, globalPoints.size))
-        }
-        return com.google.maps.android.PolyUtil.encode(result)
-    } else {
-        // Start is AFTER End in global. Fallback.
-        return globalPoly
+    val result = ArrayList<com.google.android.gms.maps.model.LatLng>()
+    // Keep global up to start
+    result.addAll(globalPoints.subList(0, bestStartIdx))
+    // Add local
+    result.addAll(localPoints)
+    // Keep global from end
+    if (bestEndIdx < globalPoints.size - 1) {
+        result.addAll(globalPoints.subList(bestEndIdx + 1, globalPoints.size))
     }
+    return com.google.maps.android.PolyUtil.encode(result)
 }
 
 @Composable

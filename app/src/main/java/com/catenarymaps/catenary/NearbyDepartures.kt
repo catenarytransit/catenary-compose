@@ -56,6 +56,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.serialization.json.*
+import java.util.concurrent.TimeUnit
 
 /* -------------------------------------------------------------------------- */
 /*  Data models that match the JSON payload (only the fields we actually use)  */
@@ -231,6 +232,15 @@ private val json = Json {
 
 private val httpClient by lazy { OkHttpClient() }
 
+private val nearbyClient: OkHttpClient by lazy {
+    httpClient.newBuilder()
+        .callTimeout(45, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(45, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
+}
+
 private const val NEARBY_TAG = "NearbyDebug"
 
 private fun peekString(body: ResponseBody?, limit: Long = 200_000): String {
@@ -261,11 +271,12 @@ private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
             "Fetch nearby departures lat=$lat lon=$lon (thread=${Thread.currentThread().name})"
         )
 
-        val url = "https://birch.catenarymaps.org/nearbydeparturesfromcoordsv2?lat=$lat&lon=$lon"
+        val url =
+            "https://birch.catenarymaps.org/nearbydeparturesfromcoordsv2?lat=$lat&lon=$lon&limit_n_events_after_departure_time=32"
         val req = Request.Builder().url(url).get().build()
 
         try {
-            httpClient.newCall(req).execute().use { resp ->
+            nearbyClient.newCall(req).execute().use { resp ->
                 Log.d(NEARBY_TAG, "HTTP ${resp.code} ${resp.message}")
 
                 if (!resp.isSuccessful) {
