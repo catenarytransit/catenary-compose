@@ -1,247 +1,192 @@
 package com.catenarymaps.catenary
 
-import com.catenarymaps.catenary.NavigationControls
+import android.Manifest
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.net.Uri
 import android.os.Bundle
-import java.util.concurrent.atomic.AtomicBoolean
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
-import java.io.File
-import kotlinx.coroutines.Dispatchers
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.unit.dp
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.EaseOutCirc
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.splineBasedDecay
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.compose.material.icons.filled.AltRoute
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.SportsScore
-import androidx.compose.material.icons.filled.Subway
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Train
-import io.ktor.client.plugins.*
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import org.maplibre.compose.expressions.dsl.image
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.AltRoute
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.SportsScore
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Train
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
-import org.maplibre.spatialk.geojson.Position
-import kotlin.math.roundToInt
-import org.maplibre.compose.camera.CameraPosition
-import org.maplibre.compose.camera.CameraState
-import org.maplibre.compose.camera.rememberCameraState
-import org.maplibre.compose.expressions.dsl.const
-import org.maplibre.compose.map.MapOptions
-import org.maplibre.compose.map.MaplibreMap
-import org.maplibre.compose.map.OrnamentOptions
-import org.maplibre.compose.sources.GeoJsonData
-import org.maplibre.compose.sources.rememberGeoJsonSource
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import org.maplibre.compose.style.BaseStyle
-import org.maplibre.compose.layers.*;
-import org.maplibre.compose.sources.rememberVectorSource
-import org.maplibre.compose.expressions.value.*;
-import org.maplibre.compose.expressions.ast.*;
-import org.maplibre.compose.expressions.dsl.em;
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.material3.TextField
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.layout.ContentScale
-import android.os.Looper
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import org.maplibre.compose.expressions.dsl.all
-import org.maplibre.compose.expressions.dsl.any
-import org.maplibre.compose.expressions.dsl.coalesce
-import org.maplibre.compose.expressions.dsl.eq
-import org.maplibre.compose.expressions.dsl.interpolate
-import org.maplibre.compose.expressions.dsl.linear
-import org.maplibre.compose.expressions.dsl.step
-import org.maplibre.compose.expressions.dsl.zoom
-import com.google.android.gms.location.Priority
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.BaselineShift
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.zIndex
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import org.maplibre.spatialk.geojson.Point
-import org.maplibre.compose.expressions.dsl.Feature.get
-import org.maplibre.compose.expressions.value.ColorValue
-import org.maplibre.compose.expressions.dsl.plus
-import org.maplibre.compose.expressions.dsl.contains as dslcontains
-import org.maplibre.compose.expressions.value.TextUnitValue
-import org.maplibre.compose.map.RenderOptions
-import android.content.SharedPreferences
-import android.net.Uri
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.animateTo
-import org.maplibre.spatialk.geojson.FeatureCollection
-import org.maplibre.compose.sources.GeoJsonSource
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import org.maplibre.compose.expressions.value.EquatableValue
-import org.maplibre.compose.expressions.value.NumberValue
-import org.maplibre.compose.expressions.dsl.offset
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material.icons.filled.Route
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledIconToggleButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
 import com.datadog.android.compose.enableComposeActionTracking
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
+import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
 import com.google.android.gms.analytics.GoogleAnalytics
-import com.google.android.gms.analytics.Tracker
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
-import com.google.android.play.core.install.model.AppUpdateType
-import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.firebase.analytics.FirebaseAnalytics
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
 import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.serialization.kotlinx.json.json
+import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.double
-import kotlinx.serialization.json.jsonPrimitive
-import org.checkerframework.checker.units.qual.min
-import org.maplibre.compose.expressions.dsl.feature
-import org.maplibre.compose.expressions.dsl.neq
-import org.maplibre.compose.expressions.dsl.not
-import org.maplibre.compose.sources.GeoJsonOptions
-import org.maplibre.compose.util.ClickResult
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import co.touchlab.kermit.Logger.Companion.config
-import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.Dispatcher
-import okhttp3.OkHttp
-import okhttp3.OkHttpClient
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import org.json.JSONObject
-import org.maplibre.spatialk.geojson.Feature
-import org.maplibre.spatialk.geojson.LineString
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.lifecycleScope
-import io.ktor.client.request.get
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.Dispatcher
+import org.checkerframework.checker.units.qual.min
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.CameraState
+import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.expressions.ast.*
+import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.dsl.Feature.has
-import org.maplibre.compose.expressions.dsl.condition
-import org.maplibre.compose.expressions.dsl.switch
+import org.maplibre.compose.expressions.dsl.all
+import org.maplibre.compose.expressions.dsl.any
+import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.em
+import org.maplibre.compose.expressions.dsl.eq
+import org.maplibre.compose.expressions.dsl.feature
+import org.maplibre.compose.expressions.dsl.interpolate
+import org.maplibre.compose.expressions.dsl.linear
+import org.maplibre.compose.expressions.dsl.neq
+import org.maplibre.compose.expressions.dsl.not
+import org.maplibre.compose.expressions.dsl.offset
+import org.maplibre.compose.expressions.dsl.plus
+import org.maplibre.compose.expressions.dsl.step
+import org.maplibre.compose.expressions.dsl.zoom
+import org.maplibre.compose.expressions.value.*
+import org.maplibre.compose.expressions.value.ColorValue
+import org.maplibre.compose.expressions.value.EquatableValue
+import org.maplibre.compose.expressions.value.NumberValue
+import org.maplibre.compose.layers.*
+import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.map.OrnamentOptions
+import org.maplibre.compose.map.RenderOptions
+import org.maplibre.compose.sources.GeoJsonData
+import org.maplibre.compose.sources.GeoJsonOptions
+import org.maplibre.compose.sources.GeoJsonSource
+import org.maplibre.compose.sources.rememberGeoJsonSource
+import org.maplibre.compose.style.BaseStyle
+import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.BoundingBox
+import org.maplibre.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.Geometry
-import org.maplibre.spatialk.turf.measurement.distance
+import org.maplibre.spatialk.geojson.LineString
+import org.maplibre.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.Position
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
     return try {
@@ -270,56 +215,52 @@ private const val K_SHOW_ZOMBIE_BUSES = "show_zombie_buses"
 private const val K_USE_US_UNITS = "use_us_units"
 
 private fun SharedPreferences.putDouble(key: String, value: Double) =
-    edit().putLong(key, java.lang.Double.doubleToRawLongBits(value))
-        .apply()
+        edit().putLong(key, java.lang.Double.doubleToRawLongBits(value)).apply()
 
 private fun SharedPreferences.getDouble(key: String, default: Double = Double.NaN): Double {
     if (!contains(key)) return default
     return java.lang.Double.longBitsToDouble(getLong(key, 0L))
 }
 
-@Serializable
-data class StopPreviewRequest(
-    val chateaus: Map<String, List<String>>
-)
+@Serializable data class StopPreviewRequest(val chateaus: Map<String, List<String>>)
 
 @Serializable
 data class StopPreviewResponse(
-    @EncodeDefault val stops: Map<String, Map<String, StopPreviewDetail>> = emptyMap(),
-    @EncodeDefault val routes: Map<String, Map<String, RoutePreviewDetail>> = emptyMap()
+        @EncodeDefault val stops: Map<String, Map<String, StopPreviewDetail>> = emptyMap(),
+        @EncodeDefault val routes: Map<String, Map<String, RoutePreviewDetail>> = emptyMap()
 )
 
 @Serializable
 data class StopPreviewDetail(
-    val level_id: String? = null,
-    val platform_code: String? = null,
-    @EncodeDefault val routes: List<String> = emptyList()
+        val level_id: String? = null,
+        val platform_code: String? = null,
+        @EncodeDefault val routes: List<String> = emptyList()
 )
 
 @Serializable
 data class RoutePreviewDetail(
-    val color: String,
-    val text_color: String,
-    val short_name: String? = null,
-    val long_name: String? = null
+        val color: String,
+        val text_color: String,
+        val short_name: String? = null,
+        val long_name: String? = null
 )
 
 private data class SavedCamera(
-    val lat: Double,
-    val lon: Double,
-    val zoom: Double,
-    val bearing: Double,
-    val tilt: Double
+        val lat: Double,
+        val lon: Double,
+        val zoom: Double,
+        val bearing: Double,
+        val tilt: Double
 )
 
 private fun SharedPreferences.readSavedCamera(): SavedCamera? {
     if (!contains(K_LAT) || !contains(K_LON) || !contains(K_ZOOM)) return null
     return SavedCamera(
-        lat = getDouble(K_LAT),
-        lon = getDouble(K_LON),
-        zoom = getDouble(K_ZOOM),
-        bearing = getDouble(K_BEAR).takeIf { !it.isNaN() } ?: 0.0,
-        tilt = getDouble(K_TILT).takeIf { !it.isNaN() } ?: 0.0
+            lat = getDouble(K_LAT),
+            lon = getDouble(K_LON),
+            zoom = getDouble(K_ZOOM),
+            bearing = getDouble(K_BEAR).takeIf { !it.isNaN() } ?: 0.0,
+            tilt = getDouble(K_TILT).takeIf { !it.isNaN() } ?: 0.0
     )
 }
 
@@ -345,13 +286,15 @@ private fun SharedPreferences.readPinState(): PinState? {
 }
 
 private fun SharedPreferences.writePinState(pin: PinState) {
-    edit().apply {
-        putBoolean(K_PIN_ACTIVE, pin.active)
-        if (pin.active && pin.position != null) {
-            putLong(K_PIN_LAT, java.lang.Double.doubleToRawLongBits(pin.position.latitude))
-            putLong(K_PIN_LON, java.lang.Double.doubleToRawLongBits(pin.position.longitude))
-        }
-    }.apply()
+    edit()
+            .apply {
+                putBoolean(K_PIN_ACTIVE, pin.active)
+                if (pin.active && pin.position != null) {
+                    putLong(K_PIN_LAT, java.lang.Double.doubleToRawLongBits(pin.position.latitude))
+                    putLong(K_PIN_LON, java.lang.Double.doubleToRawLongBits(pin.position.longitude))
+                }
+            }
+            .apply()
 }
 
 object LayersPerCategory {
@@ -415,15 +358,12 @@ object LayersPerCategory {
 @Serializable
 // Top-level data structure for all layer settings
 data class AllLayerSettings(
-    var bus: LayerCategorySettings = LayerCategorySettings(),
-    var localrail: LayerCategorySettings = LayerCategorySettings(),
-    var intercityrail: LayerCategorySettings = LayerCategorySettings(
-        labelrealtimedots = LabelSettings(
-            trip = true
-        )
-    ),
-    var other: LayerCategorySettings = LayerCategorySettings(),
-    var more: MoreSettings = MoreSettings()
+        var bus: LayerCategorySettings = LayerCategorySettings(),
+        var localrail: LayerCategorySettings = LayerCategorySettings(),
+        var intercityrail: LayerCategorySettings =
+                LayerCategorySettings(labelrealtimedots = LabelSettings(trip = true)),
+        var other: LayerCategorySettings = LayerCategorySettings(),
+        var more: MoreSettings = MoreSettings()
 ) {
     // Helper to get a category by string key, useful for abstracting UI
     operator fun get(key: String): Any? {
@@ -436,75 +376,74 @@ data class AllLayerSettings(
             else -> null
         }
     }
-
-
 }
 
 // Read helper
-fun AllLayerSettings.category(tab: String): LayerCategorySettings? = when (tab) {
-    "bus" -> bus
-    "localrail" -> localrail
-    "intercityrail" -> intercityrail
-    "other" -> other
-    else -> null
-}
+fun AllLayerSettings.category(tab: String): LayerCategorySettings? =
+        when (tab) {
+            "bus" -> bus
+            "localrail" -> localrail
+            "intercityrail" -> intercityrail
+            "other" -> other
+            else -> null
+        }
 
 // Write helper
 fun AllLayerSettings.updateCategory(
-    tab: String,
-    transform: (LayerCategorySettings) -> LayerCategorySettings
-): AllLayerSettings = when (tab) {
-    "bus" -> copy(bus = transform(bus))
-    "localrail" -> copy(localrail = transform(localrail))
-    "intercityrail" -> copy(intercityrail = transform(intercityrail))
-    "other" -> copy(other = transform(other))
-    else -> this
-}
+        tab: String,
+        transform: (LayerCategorySettings) -> LayerCategorySettings
+): AllLayerSettings =
+        when (tab) {
+            "bus" -> copy(bus = transform(bus))
+            "localrail" -> copy(localrail = transform(localrail))
+            "intercityrail" -> copy(intercityrail = transform(intercityrail))
+            "other" -> copy(other = transform(other))
+            else -> this
+        }
 
 @Serializable
 // Label settings (route/trip/vehicle/etc.)
 data class LabelSettings(
-    var route: Boolean = true,
-    var trip: Boolean = false,
-    var vehicle: Boolean = false,
-    var headsign: Boolean = false,
-    var direction: Boolean = false,
-    var speed: Boolean = false,
-    var occupancy: Boolean = true,
-    var delay: Boolean = true
+        var route: Boolean = true,
+        var trip: Boolean = false,
+        var vehicle: Boolean = false,
+        var headsign: Boolean = false,
+        var direction: Boolean = false,
+        var speed: Boolean = false,
+        var occupancy: Boolean = true,
+        var delay: Boolean = true
 )
 
 @Serializable
 // Main category settings (bus/localrail/intercityrail/other)
 data class LayerCategorySettings(
-    var visiblerealtimedots: Boolean = true,
-    var labelshapes: Boolean = true,
-    var stops: Boolean = true,
-    var shapes: Boolean = true,
-    var labelstops: Boolean = true,
-    var labelrealtimedots: LabelSettings = LabelSettings()
+        var visiblerealtimedots: Boolean = true,
+        var labelshapes: Boolean = true,
+        var stops: Boolean = true,
+        var shapes: Boolean = true,
+        var labelstops: Boolean = true,
+        var labelrealtimedots: LabelSettings = LabelSettings()
 )
 
 @Serializable
 // Extra "more" settings
 data class FoamermodeSettings(
-    var infra: Boolean = false,
-    var maxspeed: Boolean = false,
-    var signalling: Boolean = false,
-    var electrification: Boolean = false,
-    var gauge: Boolean = false,
-    var dummy: Boolean = true
+        var infra: Boolean = false,
+        var maxspeed: Boolean = false,
+        var signalling: Boolean = false,
+        var electrification: Boolean = false,
+        var gauge: Boolean = false,
+        var dummy: Boolean = true
 )
 
 @Serializable
 data class MoreSettings(
-    var foamermode: FoamermodeSettings = FoamermodeSettings(),
-    var showstationentrances: Boolean = true,
-    var showstationart: Boolean = false,
-    var showbikelanes: Boolean = false,
-    var showcoords: Boolean = false
+        var foamermode: FoamermodeSettings = FoamermodeSettings(),
+        var showstationentrances: Boolean = true,
+        var showstationart: Boolean = false,
+        var showbikelanes: Boolean = false,
+        var showcoords: Boolean = false
 )
-
 
 // Layer Settings Persistence
 private const val K_LAYER_SETTINGS = "layer_settings_v1"
@@ -531,37 +470,42 @@ private fun SharedPreferences.readLayerSettings(): AllLayerSettings? {
     }
 }
 
-val STOP_SOURCES = mapOf(
-    "busstops" to "https://birch6.catenarymaps.org/busstops",
-    "stationfeatures" to "https://birch7.catenarymaps.org/station_features",
-    "railstops" to "https://birch5.catenarymaps.org/railstops",
-    "otherstops" to "https://birch8.catenarymaps.org/otherstops"
-)
+val STOP_SOURCES =
+        mapOf(
+                "busstops" to "https://birch6.catenarymaps.org/busstops",
+                "stationfeatures" to "https://birch7.catenarymaps.org/station_features",
+                "railstops" to "https://birch5.catenarymaps.org/railstops",
+                "otherstops" to "https://birch8.catenarymaps.org/otherstops"
+        )
 
 private const val TAG = "CatenaryDebug"
 var visibleChateaus: List<String> = emptyList()
 
 var railinframe by mutableStateOf(false)
 
-val easeOutSpec: AnimationSpec<Float> = tween(
-    durationMillis = 300, delayMillis = 0, easing = EaseOutCirc
-)
+val easeOutSpec: AnimationSpec<Float> =
+        tween(durationMillis = 300, delayMillis = 0, easing = EaseOutCirc)
 
-enum class SheetSnapPoint { Collapsed, PartiallyExpanded, Expanded }
+enum class SheetSnapPoint {
+    Collapsed,
+    PartiallyExpanded,
+    Expanded
+}
 
 @Serializable
 private data class RailCountResponse(
-    @SerialName("intercityrail_shapes") val intercityRailShapes: Int = 0,
-    @SerialName("metro_shapes") val metroShapes: Int = 0,
-    @SerialName("tram_shapes") val tramShapes: Int = 0
+        @SerialName("intercityrail_shapes") val intercityRailShapes: Int = 0,
+        @SerialName("metro_shapes") val metroShapes: Int = 0,
+        @SerialName("tram_shapes") val tramShapes: Int = 0
 )
 
 private var lastRailQueryTime = 0L
 
 private suspend fun fetchRailCountInBox(bounds: BoundingBox): RailCountResponse? {
     return try {
-        val url = "https://birch.catenarymaps.org/countrailinbox?min_y=${bounds.south - 0.03}" +
-                "&max_y=${bounds.north + 0.03}&min_x=${bounds.west - 0.03}&max_x=${bounds.east - 0.03}"
+        val url =
+                "https://birch.catenarymaps.org/countrailinbox?min_y=${bounds.south - 0.03}" +
+                        "&max_y=${bounds.north + 0.03}&min_x=${bounds.west - 0.03}&max_x=${bounds.east - 0.03}"
         ktorClient.get(url).body<RailCountResponse>()
     } catch (e: Exception) {
         Log.e(TAG, "Failed to fetch rail count in box", e)
@@ -569,47 +513,50 @@ private suspend fun fetchRailCountInBox(bounds: BoundingBox): RailCountResponse?
     }
 }
 
-
 private fun queryVisibleChateaus(
-    scope: CoroutineScope, camera: CameraState, mapSize: IntSize,
-    rtree: RTree<Int>?, features: List<Feature<Geometry?, ChateauProps>>
+        scope: CoroutineScope,
+        camera: CameraState,
+        mapSize: IntSize,
+        rtree: RTree<Int>?,
+        features: List<Feature<Geometry?, ChateauProps>>
 ) {
     scope.launch(kotlinx.coroutines.Dispatchers.Main) {
         val projection = camera.projection ?: return@launch
         if (mapSize.width == 0 || mapSize.height == 0) return@launch
 
         val density = Resources.getSystem().displayMetrics.density
-        val rect = DpRect(
-            left = 0.dp,
-            top = 0.dp,
-            right = (mapSize.width / density).dp,
-            bottom = (mapSize.height / density).dp
-        )
+        val rect =
+                DpRect(
+                        left = 0.dp,
+                        top = 0.dp,
+                        right = (mapSize.width / density).dp,
+                        bottom = (mapSize.height / density).dp
+                )
 
         val startTime = SystemClock.uptimeMillis()
-        //val featureschateauquery = projection.queryRenderedFeatures(
+        // val featureschateauquery = projection.queryRenderedFeatures(
         //   rect = rect, layerIds = setOf("chateaus_calc")
-        //)
+        // )
 
         val queryTime = SystemClock.uptimeMillis() - startTime
 
         var rtreeQueryTime = 0L
-        val featuresFromRtree = if (rtree != null) {
-            val boundingBox = projection.queryVisibleBoundingBox()
-            val startTimeRtree: Long
-            val result = withContext(Dispatchers.Default) {
-                startTimeRtree = SystemClock.uptimeMillis()
-                lookupChateaux(rtree, features, boundingBox)
-            }
-            rtreeQueryTime = SystemClock.uptimeMillis() - startTimeRtree
-            result
-        } else {
-            emptyList()
-        }
+        val featuresFromRtree =
+                if (rtree != null) {
+                    val boundingBox = projection.queryVisibleBoundingBox()
+                    val startTimeRtree: Long
+                    val result =
+                            withContext(Dispatchers.Default) {
+                                startTimeRtree = SystemClock.uptimeMillis()
+                                lookupChateaux(rtree, features, boundingBox)
+                            }
+                    rtreeQueryTime = SystemClock.uptimeMillis() - startTimeRtree
+                    result
+                } else {
+                    emptyList()
+                }
 
-
-        val rtreeNames = featuresFromRtree.map { it.properties.chateau }.distinct()
-            .sorted()
+        val rtreeNames = featuresFromRtree.map { it.properties.chateau }.distinct().sorted()
 
         visibleChateaus = rtreeNames
 
@@ -619,116 +566,105 @@ private fun queryVisibleChateaus(
 
 @Serializable
 data class VehiclePositionData(
-    val latitude: Double, val longitude: Double, val bearing: Float?, val speed: Float?
+        val latitude: Double,
+        val longitude: Double,
+        val bearing: Float?,
+        val speed: Float?
 )
 
-@Serializable
-data class VehicleDescriptor(
-    val id: String?, val label: String?
-)
+@Serializable data class VehicleDescriptor(val id: String?, val label: String?)
 
 @Serializable
 data class TripDescriptor(
-    val trip_id: String?,
-    val route_id: String?,
-    val trip_headsign: String?,
-    val trip_short_name: String?,
-    val start_time: String?,
-    val start_date: String?,
-    val delay: Int?
+        val trip_id: String?,
+        val route_id: String?,
+        val trip_headsign: String?,
+        val trip_short_name: String?,
+        val start_time: String?,
+        val start_date: String?,
+        val delay: Int?
 )
 
 @Serializable
 data class VehiclePosition(
-    val position: VehiclePositionData?,
-    val vehicle: VehicleDescriptor?,
-    val trip: TripDescriptor?,
-    val route_type: Int,
-    val timestamp: Long?,
-    val occupancy_status: Int?
+        val position: VehiclePositionData?,
+        val vehicle: VehicleDescriptor?,
+        val trip: TripDescriptor?,
+        val route_type: Int,
+        val timestamp: Long?,
+        val occupancy_status: Int?
 )
 
 @Serializable
 data class RouteCacheEntry(
-    val color: String,
-    val text_color: String,
-    val short_name: String?,
-    val long_name: String?,
-    val route_id: String,
-    val agency_id: String?,
+        val color: String,
+        val text_color: String,
+        val short_name: String?,
+        val long_name: String?,
+        val route_id: String,
+        val agency_id: String?,
 )
 
 @Serializable
 data class CategoryData(
-    val vehicle_positions: Map<String, VehiclePosition>?,
-    val last_updated_time_ms: Long,
-    val hash_of_routes: ULong
+        val vehicle_positions: Map<String, VehiclePosition>?,
+        val last_updated_time_ms: Long,
+        val hash_of_routes: ULong
 )
 
-@Serializable
-data class ChateauData(
-    val categories: Map<String, CategoryData?>
-)
+@Serializable data class ChateauData(val categories: Map<String, CategoryData?>)
 
-@Serializable
-data class BulkRealtimeResponse(
-    val chateaus: Map<String, ChateauData>
-)
+@Serializable data class BulkRealtimeResponse(val chateaus: Map<String, ChateauData>)
 
-@Serializable
-data class TileBounds(
-    val min_x: Int,
-    val max_x: Int,
-    val min_y: Int,
-    val max_y: Int
-)
+@Serializable data class TileBounds(val min_x: Int, val max_x: Int, val min_y: Int, val max_y: Int)
 
 @Serializable
 data class CategoryParams(
-    @EncodeDefault var hash_of_routes: ULong = ULong.MIN_VALUE,
-    @EncodeDefault var last_updated_time_ms: Long = 0
+        @EncodeDefault var hash_of_routes: ULong = ULong.MIN_VALUE,
+        @EncodeDefault var last_updated_time_ms: Long = 0
 )
 
-@Serializable
-data class ChateauFetchParams(
-    val category_params: Map<String, CategoryParams>
-)
+@Serializable data class ChateauFetchParams(val category_params: Map<String, CategoryParams>)
 
 @Serializable
 data class BulkRealtimeRequest(
-    val categories: List<String>, val chateaus: Map<String, ChateauFetchParams>
-)// 1. Create the OkHttp dispatcher
+        val categories: List<String>,
+        val chateaus: Map<String, ChateauFetchParams>
+) // 1. Create the OkHttp dispatcher
 
-val httpDispatcher = Dispatcher().apply {
-    maxRequests = Integer.MAX_VALUE
-    maxRequestsPerHost = Integer.MAX_VALUE
-}
+val httpDispatcher =
+        Dispatcher().apply {
+            maxRequests = Integer.MAX_VALUE
+            maxRequestsPerHost = Integer.MAX_VALUE
+        }
 
 // Ktor HTTP Client (initialize once)
-val ktorClient = HttpClient(CIO) {
-    install(ContentNegotiation) {
-        json(Json {
-            ignoreUnknownKeys = true
-            prettyPrint = true
-            isLenient = true
-            encodeDefaults = true
-        })
-    }
+val ktorClient =
+        HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json(
+                        Json {
+                            ignoreUnknownKeys = true
+                            prettyPrint = true
+                            isLenient = true
+                            encodeDefaults = true
+                        }
+                )
+            }
 
-    engine {
-        maxConnectionsCount = Int.MAX_VALUE
-        endpoint {
-            maxConnectionsPerRoute = Int.MAX_VALUE
-            pipelineMaxSize = Int.MAX_VALUE
-            connectAttempts = 5
+            engine {
+                maxConnectionsCount = Int.MAX_VALUE
+                endpoint {
+                    maxConnectionsPerRoute = Int.MAX_VALUE
+                    pipelineMaxSize = Int.MAX_VALUE
+                    connectAttempts = 5
+                }
+            }
         }
-    }
-}
 
 class MainActivity : ComponentActivity() {
 
-
-    //private var tracker: Tracker? = null
+    // private var tracker: Tracker? = null
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -737,9 +673,11 @@ class MainActivity : ComponentActivity() {
 
     private val layerSettings = mutableStateOf(AllLayerSettings())
 
-
     private fun queryAreAnyRailFeaturesVisible(
-        camera: CameraState, mapSize: IntSize, forceRun: Boolean = false, distance_m: Double = 0.0
+            camera: CameraState,
+            mapSize: IntSize,
+            forceRun: Boolean = false,
+            distance_m: Double = 0.0
     ) {
         println("query any rail features attempted")
         val now = SystemClock.uptimeMillis()
@@ -755,67 +693,80 @@ class MainActivity : ComponentActivity() {
             launch(kotlinx.coroutines.Dispatchers.IO) {
                 val responseFromRailCounting = fetchRailCountInBox(currentBoundingBox)
 
-
-
                 if (responseFromRailCounting != null) {
 
-
                     android.os.Handler(Looper.getMainLooper()).post {
-                        // This will queue the task to run when the main thread has processed other pending messages.
+                        // This will queue the task to run when the main thread has processed other
+                        // pending messages.
                         android.os.Handler(Looper.getMainLooper()).post {
                             val density = Resources.getSystem().displayMetrics.density
-                            val rect = DpRect(
-                                left = 0.dp,
-                                top = 0.dp,
-                                right = (mapSize.width / density).dp,
-                                bottom = (mapSize.height / density).dp
-                            )
+                            val rect =
+                                    DpRect(
+                                            left = 0.dp,
+                                            top = 0.dp,
+                                            right = (mapSize.width / density).dp,
+                                            bottom = (mapSize.height / density).dp
+                                    )
 
                             val layerSettingsValue = layerSettings.value
                             val intercityRailShapesCount =
-                                if (layerSettingsValue.intercityrail.shapes || layerSettingsValue.intercityrail.labelshapes) (responseFromRailCounting?.intercityRailShapes
-                                    ?: 0) else 0
+                                    if (layerSettingsValue.intercityrail.shapes ||
+                                                    layerSettingsValue.intercityrail.labelshapes
+                                    )
+                                            (responseFromRailCounting?.intercityRailShapes ?: 0)
+                                    else 0
                             val localRailShapesCount =
-                                if (layerSettingsValue.localrail.shapes || layerSettingsValue.localrail.labelshapes) {
-                                    (responseFromRailCounting?.metroShapes
-                                        ?: 0) + (responseFromRailCounting?.tramShapes ?: 0)
-                                } else {
-                                    0
-                                }
+                                    if (layerSettingsValue.localrail.shapes ||
+                                                    layerSettingsValue.localrail.labelshapes
+                                    ) {
+                                        (responseFromRailCounting?.metroShapes
+                                                ?: 0) + (responseFromRailCounting?.tramShapes ?: 0)
+                                    } else {
+                                        0
+                                    }
 
                             val metroRailShapesCount =
-                                if (layerSettingsValue.localrail.shapes || layerSettingsValue.localrail.labelshapes) {
-                                    (responseFromRailCounting?.metroShapes ?: 0)
-                                } else {
-                                    0
-                                }
-
+                                    if (layerSettingsValue.localrail.shapes ||
+                                                    layerSettingsValue.localrail.labelshapes
+                                    ) {
+                                        (responseFromRailCounting?.metroShapes ?: 0)
+                                    } else {
+                                        0
+                                    }
 
                             val waitStartTime = SystemClock.uptimeMillis()
 
                             val queryFeatureDotTimer = SystemClock.uptimeMillis()
 
-
-                            val featuresDotsCount = projection.queryRenderedFeatures(
-                                rect = rect, layerIds = setOf(
-                                    //   LayersPerCategory.Tram.Stops,
-                                    //   LayersPerCategory.Tram.Livedots,
-                                    LayersPerCategory.Metro.Stops,
-                                    LayersPerCategory.Metro.Livedots,
-                                    LayersPerCategory.IntercityRail.Stops,
-                                    LayersPerCategory.IntercityRail.Livedots,
-                                )
-                            ).size
+                            val featuresDotsCount =
+                                    projection.queryRenderedFeatures(
+                                                    rect = rect,
+                                                    layerIds =
+                                                            setOf(
+                                                                    //
+                                                                    // LayersPerCategory.Tram.Stops,
+                                                                    //
+                                                                    // LayersPerCategory.Tram.Livedots,
+                                                                    LayersPerCategory.Metro.Stops,
+                                                                    LayersPerCategory.Metro
+                                                                            .Livedots,
+                                                                    LayersPerCategory.IntercityRail
+                                                                            .Stops,
+                                                                    LayersPerCategory.IntercityRail
+                                                                            .Livedots,
+                                                            )
+                                            )
+                                            .size
 
                             val queryFeatureDotDuration =
-                                SystemClock.uptimeMillis() - queryFeatureDotTimer
-
+                                    SystemClock.uptimeMillis() - queryFeatureDotTimer
 
                             android.os.Handler(Looper.getMainLooper()).post {
                                 val handlerWaitTime1 = SystemClock.uptimeMillis() - waitStartTime
                                 val queryStartTime1 = SystemClock.uptimeMillis()
 
-                                //                val intercityRailFeaturesCount = projection.queryRenderedFeatures(
+                                //                val intercityRailFeaturesCount =
+                                // projection.queryRenderedFeatures(
                                 //                    rect = rect, layerIds = setOf(
                                 //                        LayersPerCategory.IntercityRail.Shapes,
                                 //                    )
@@ -826,33 +777,32 @@ class MainActivity : ComponentActivity() {
 
                                 android.os.Handler(Looper.getMainLooper()).post {
                                     val handlerWaitTime2 =
-                                        SystemClock.uptimeMillis() - waitStartTime2
+                                            SystemClock.uptimeMillis() - waitStartTime2
                                     val queryStartTime2 = SystemClock.uptimeMillis()
 
                                     val queryTime2 = SystemClock.uptimeMillis() - queryStartTime2
 
                                     val totalCount =
-                                        featuresDotsCount + intercityRailShapesCount + localRailShapesCount
+                                            featuresDotsCount +
+                                                    intercityRailShapesCount +
+                                                    localRailShapesCount
 
                                     Log.d(
-                                        TAG,
-                                        "after ${queryFeatureDotDuration} ms, total Count of rail items ${totalCount} with dots ${featuresDotsCount} and shapes ${intercityRailShapesCount} & ${metroRailShapesCount}"
+                                            TAG,
+                                            "after ${queryFeatureDotDuration} ms, total Count of rail items ${totalCount} with dots ${featuresDotsCount} and shapes ${intercityRailShapesCount} & ${metroRailShapesCount}"
                                     )
 
-
                                     val manyVisible =
-                                        featuresDotsCount >= 100 || intercityRailShapesCount + metroRailShapesCount >= 20
+                                            featuresDotsCount >= 100 ||
+                                                    intercityRailShapesCount +
+                                                            metroRailShapesCount >= 20
                                     railinframe = manyVisible
                                 }
                             }
-
                         }
-
                     }
                 }
             }
-
-
         }
     }
 
@@ -865,31 +815,31 @@ class MainActivity : ComponentActivity() {
     // Realtime Data State Holders
     // ChateauID -> RouteID -> Cache
     var realtimeVehicleRouteCache =
-        mutableStateOf<Map<String, Map<String, RouteCacheEntry>>>(emptyMap())
+            mutableStateOf<Map<String, Map<String, RouteCacheEntry>>>(emptyMap())
 
     var routeCacheAgenciesKnown = mutableStateOf<Map<String, List<String>>>(emptyMap())
 
     // ChateauID -> Category -> Timestamp
     var realtimeVehicleLocationsLastUpdated =
-        mutableStateOf<Map<String, Map<String, Long>>>(emptyMap())
+            mutableStateOf<Map<String, Map<String, Long>>>(emptyMap())
 
     // category -> chateau -> x -> y -> vehicle_id -> vehicle_data
     var realtimeVehicleLocationsStoreV2 =
-        mutableStateOf<Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>(
-            emptyMap()
-        )
+            mutableStateOf<
+                    Map<String, Map<String, Map<Int, Map<Int, Map<String, VehiclePosition>>>>>>(
+                    emptyMap()
+            )
 
     // chateau -> category -> TileBounds
     var previousTileBoundariesStore =
-        mutableStateOf<Map<String, Map<String, TileBounds>>>(emptyMap())
-
+            mutableStateOf<Map<String, Map<String, TileBounds>>>(emptyMap())
 
     // --- tune these as needed ---
     private val maxEntries = 8
     private val rtreeCacheName = "chateaux.rtree.json"
     private val geojsonCacheName = "chateaux.geojson"
     private val chateauxUrl =
-        "https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json"
+            "https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json"
 
     // If you kept the encode/decode helpers from the RTree file:
     private val json = Json {
@@ -903,7 +853,6 @@ class MainActivity : ComponentActivity() {
     // Current, in-memory data
     private var features: List<Feature<Geometry?, ChateauProps>> = emptyList()
     private var rtree: RTree<Int>? = null
-
 
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -959,7 +908,7 @@ class MainActivity : ComponentActivity() {
 
         val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, false)
         val trackingConsent =
-            if (initialDatadogConsent) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
+                if (initialDatadogConsent) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
 
         val initialGaConsent = prefs.getBoolean(K_GA_CONSENT, true)
 
@@ -970,12 +919,17 @@ class MainActivity : ComponentActivity() {
         try {
 
             firebaseAnalytics.setConsent(
-                mapOf(
-                    FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to if (initialGaConsent) FirebaseAnalytics.ConsentStatus.GRANTED else FirebaseAnalytics.ConsentStatus.DENIED,
-                    FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
-                    FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
-                    FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED
-                )
+                    mapOf(
+                            FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to
+                                    if (initialGaConsent) FirebaseAnalytics.ConsentStatus.GRANTED
+                                    else FirebaseAnalytics.ConsentStatus.DENIED,
+                            FirebaseAnalytics.ConsentType.AD_STORAGE to
+                                    FirebaseAnalytics.ConsentStatus.DENIED,
+                            FirebaseAnalytics.ConsentType.AD_USER_DATA to
+                                    FirebaseAnalytics.ConsentStatus.DENIED,
+                            FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to
+                                    FirebaseAnalytics.ConsentStatus.DENIED
+                    )
             )
             Log.d(TAG, "Initial Google Analytics opt-out state set to: $initialOptOut")
         } catch (e: Exception) {
@@ -987,50 +941,55 @@ class MainActivity : ComponentActivity() {
         val environmentName = "prod"
         val appVariantName = "catenary"
 
-        val configuration = com.datadog.android.core.configuration.Configuration.Builder(
-            clientToken = clientToken,
-            env = environmentName,
-            variant = appVariantName
-        )
-            .useSite(DatadogSite.US1)
-            .build()
+        val configuration =
+                com.datadog.android.core.configuration.Configuration.Builder(
+                                clientToken = clientToken,
+                                env = environmentName,
+                                variant = appVariantName
+                        )
+                        .useSite(DatadogSite.US1)
+                        .build()
         // Initialize with the saved consent state
         Datadog.initialize(this, configuration, trackingConsent)
 
-        val rumConfiguration = RumConfiguration.Builder(applicationId)
-            .trackUserInteractions()
-            .enableComposeActionTracking()
-            .build()
+        val rumConfiguration =
+                RumConfiguration.Builder(applicationId)
+                        .trackUserInteractions()
+                        .enableComposeActionTracking()
+                        .build()
         Rum.enable(rumConfiguration)
 
         fun fetchLocation(onSuccess: (Double, Double) -> Unit) {
             // Check permission
-            if (ContextCompat.checkSelfPermission(
-                    this, Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                            PackageManager.PERMISSION_GRANTED
             ) {
                 ActivityCompat.requestPermissions(
-                    this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1001
+                        this,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        1001
                 )
                 return
             }
 
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                location?.let {
-                    onSuccess(it.latitude, it.longitude)
-                }
+                location?.let { onSuccess(it.latitude, it.longitude) }
             }
         }
 
         // Optional: handle permission result
         fun onRequestPermissionsResult(
-            requestCode: Int, permissions: Array<String>, grantResults: IntArray
+                requestCode: Int,
+                permissions: Array<String>,
+                grantResults: IntArray
         ) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-            if (requestCode == 1001 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (requestCode == 1001 &&
+                            grantResults.isNotEmpty() &&
+                            grantResults[0] == PackageManager.PERMISSION_GRANTED
+            ) {
                 fetchLocation { lat, lon ->
                     // You could trigger a recomposition by setting state again
-
 
                 }
             }
@@ -1044,38 +1003,37 @@ class MainActivity : ComponentActivity() {
             // Prune maps keyed by ChateauID
             val currentCache = realtimeVehicleRouteCache.value
             val currentCacheKeys = currentCache.keys
-            if (currentCacheKeys.size != visibleSet.size || !currentCacheKeys.containsAll(visibleSet)) {
+            if (currentCacheKeys.size != visibleSet.size ||
+                            !currentCacheKeys.containsAll(visibleSet)
+            ) {
                 realtimeVehicleRouteCache.value = currentCache.filterKeys { it in visibleSet }
             }
 
             val currentLastUpdated = realtimeVehicleLocationsLastUpdated.value
             val currentLastUpdatedKeys = currentLastUpdated.keys
-            if (currentLastUpdatedKeys.size != visibleSet.size || !currentLastUpdatedKeys.containsAll(
-                    visibleSet
-                )
+            if (currentLastUpdatedKeys.size != visibleSet.size ||
+                            !currentLastUpdatedKeys.containsAll(visibleSet)
             ) {
                 realtimeVehicleLocationsLastUpdated.value =
-                    currentLastUpdated.filterKeys { it in visibleSet }
+                        currentLastUpdated.filterKeys { it in visibleSet }
             }
 
             val currentAgenciesKnown = routeCacheAgenciesKnown.value
             val currentAgenciesKnownKeys = currentAgenciesKnown.keys
-            if (currentAgenciesKnownKeys.size != visibleSet.size || !currentAgenciesKnownKeys.containsAll(
-                    visibleSet
-                )
+            if (currentAgenciesKnownKeys.size != visibleSet.size ||
+                            !currentAgenciesKnownKeys.containsAll(visibleSet)
             ) {
-                routeCacheAgenciesKnown.value =
-                    currentAgenciesKnown.filterKeys { it in visibleSet }
+                routeCacheAgenciesKnown.value = currentAgenciesKnown.filterKeys { it in visibleSet }
             }
 
             // Prune the 'realtimeVehicleLocations' map (which is keyed by Category first)
             val currentLocationsV2 = realtimeVehicleLocationsStoreV2.value
             // Early exit if no pruning is needed at all.
             if (currentLocationsV2.values.all { chateauMap ->
-                    chateauMap.keys.size == visibleSet.size && chateauMap.keys.containsAll(
-                        visibleSet
-                    )
-                }) {
+                        chateauMap.keys.size == visibleSet.size &&
+                                chateauMap.keys.containsAll(visibleSet)
+                    }
+            ) {
                 // All categories already have the correct set of chateaus, nothing to do.
             } else {
 
@@ -1096,17 +1054,13 @@ class MainActivity : ComponentActivity() {
 
             val currentTileBoundaries = previousTileBoundariesStore.value
             val currentTileBoundariesKeys = currentTileBoundaries.keys
-            if (currentTileBoundariesKeys.size != visibleSet.size || !currentTileBoundariesKeys.containsAll(
-                    visibleSet
-                )
+            if (currentTileBoundariesKeys.size != visibleSet.size ||
+                            !currentTileBoundariesKeys.containsAll(visibleSet)
             ) {
                 previousTileBoundariesStore.value =
-                    currentTileBoundaries.filterKeys { it in visibleSet }
+                        currentTileBoundaries.filterKeys { it in visibleSet }
             }
-
-
         }
-
 
         setContent {
             val context = LocalContext.current
@@ -1122,9 +1076,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
-                onDispose {
-                    lifecycleOwner.lifecycle.removeObserver(observer)
-                }
+                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
             }
 
             // --- Moved from onCreate ---
@@ -1134,46 +1086,45 @@ class MainActivity : ComponentActivity() {
             // Whenever layerSettings changes, save it to SharedPreferences.
             LaunchedEffect(layerSettings.value) {
                 prefs.writeLayerSettings(layerSettings.value)
-                //reset the timer for the rail visible settings
+                // reset the timer for the rail visible settings
 
                 lastRailQueryTime = 0L
             }
             // --- End of move ---
 
-
             val scope = rememberCoroutineScope()
             val snackbars = remember { SnackbarHostState() }
 
-            val appUpdateManager =
-                remember { AppUpdateManagerFactory.create(this.applicationContext) }
-
+            val appUpdateManager = remember {
+                AppUpdateManagerFactory.create(this.applicationContext)
+            }
 
             var stopsToHide by remember { mutableStateOf(emptySet<String>()) }
 
-            val transitShapeSourceRef =
-                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
-            val transitShapeDetourSourceRef =
-                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
-            val stopsContextSourceRef =
-                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
-            val transitShapeForStopSourceRef =
-                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
-            val majorDotsSourceRef =
-                remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
+            val transitShapeSourceRef = remember {
+                mutableStateOf<MutableState<GeoJsonSource>?>(null)
+            }
+            val transitShapeDetourSourceRef = remember {
+                mutableStateOf<MutableState<GeoJsonSource>?>(null)
+            }
+            val stopsContextSourceRef = remember {
+                mutableStateOf<MutableState<GeoJsonSource>?>(null)
+            }
+            val transitShapeForStopSourceRef = remember {
+                mutableStateOf<MutableState<GeoJsonSource>?>(null)
+            }
+            val majorDotsSourceRef = remember { mutableStateOf<MutableState<GeoJsonSource>?>(null) }
 
             val density = LocalDensity.current
             var pin by remember { mutableStateOf(initialPinState) }
 
             // Whenever pin state changes, save it to SharedPreferences.
-            LaunchedEffect(pin) {
-                prefs.writePinState(pin)
-            }
+            LaunchedEffect(pin) { prefs.writePinState(pin) }
 
             val searchViewModel: SearchViewModel = viewModel()
 
             // State to hold the chateaux R-tree index
             var chateauxIndex: Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? = null
-
 
             var catenaryStack by remember { mutableStateOf(ArrayDeque<CatenaryStackEnum>()) }
 
@@ -1193,15 +1144,12 @@ class MainActivity : ComponentActivity() {
 
             val usePickedLocation = pin.active && pin.position != null
             val pickedPair: Pair<Double, Double>? =
-                pin.position?.let { it.latitude to it.longitude }
+                    pin.position?.let { it.latitude to it.longitude }
 
             var mapSize by remember { mutableStateOf(IntSize.Zero) }
 
-            val (datadogConsent, setDatadogConsent) = remember {
-                mutableStateOf(
-                    initialDatadogConsent
-                )
-            }
+            val (datadogConsent, setDatadogConsent) =
+                    remember { mutableStateOf(initialDatadogConsent) }
 
             // vvv RENAME THIS from onConsentChanged to onDatadogConsentChanged vvv
             val onDatadogConsentChanged: (Boolean) -> Unit = { isChecked ->
@@ -1210,7 +1158,7 @@ class MainActivity : ComponentActivity() {
 
                 // Update Datadog SDK
                 val newConsent =
-                    if (isChecked) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
+                        if (isChecked) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
                 Datadog.setTrackingConsent(newConsent)
 
                 // Save to SharedPreferences
@@ -1231,12 +1179,17 @@ class MainActivity : ComponentActivity() {
                     GoogleAnalytics.getInstance(this).appOptOut = optOut
 
                     firebaseAnalytics.setConsent(
-                        mapOf(
-                            FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to if (isChecked) FirebaseAnalytics.ConsentStatus.GRANTED else FirebaseAnalytics.ConsentStatus.DENIED,
-                            FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
-                            FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
-                            FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED
-                        )
+                            mapOf(
+                                    FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to
+                                            if (isChecked) FirebaseAnalytics.ConsentStatus.GRANTED
+                                            else FirebaseAnalytics.ConsentStatus.DENIED,
+                                    FirebaseAnalytics.ConsentType.AD_STORAGE to
+                                            FirebaseAnalytics.ConsentStatus.DENIED,
+                                    FirebaseAnalytics.ConsentType.AD_USER_DATA to
+                                            FirebaseAnalytics.ConsentStatus.DENIED,
+                                    FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to
+                                            FirebaseAnalytics.ConsentStatus.DENIED
+                            )
                     )
 
                     Log.d(TAG, "Google Analytics consent set to: $isChecked (appOptOut: $optOut)")
@@ -1251,17 +1204,15 @@ class MainActivity : ComponentActivity() {
 
                 // Update Datadog SDK
                 val newConsent =
-                    if (isChecked) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
+                        if (isChecked) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
                 Datadog.setTrackingConsent(newConsent)
 
                 // Save to SharedPreferences
                 prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()
             }
 
-// Button actions (same behavior as your JS app)
-            val onMyLocation: () -> Unit = {
-                pin = pin.copy(active = false, position = null)
-            }
+            // Button actions (same behavior as your JS app)
+            val onMyLocation: () -> Unit = { pin = pin.copy(active = false, position = null) }
 
             val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             val saved = prefs.readSavedCamera()
@@ -1269,19 +1220,25 @@ class MainActivity : ComponentActivity() {
             // Camera
             // If there's a saved camera, start there. Otherwise, start somewhere neutral;
             // we'll jump to the user's location at zoom=13 as soon as get it.
-            val initialCamera = saved?.let {
-                CameraPosition(
-                    target = Position(it.lon, it.lat),
-                    zoom = it.zoom,
-                    bearing = it.bearing,
-                    tilt = it.tilt,
-                    padding = PaddingValues(0.dp)
-                )
-            } ?: CameraPosition(
-                target = Position(-118.250, 34.050), // temporary fallback until get location
-                zoom = 6.0,
-                padding = PaddingValues(0.dp)
-            )
+            val initialCamera =
+                    saved?.let {
+                        CameraPosition(
+                                target = Position(it.lon, it.lat),
+                                zoom = it.zoom,
+                                bearing = it.bearing,
+                                tilt = it.tilt,
+                                padding = PaddingValues(0.dp)
+                        )
+                    }
+                            ?: CameraPosition(
+                                    target =
+                                            Position(
+                                                    -118.250,
+                                                    34.050
+                                            ), // temporary fallback until get location
+                                    zoom = 6.0,
+                                    padding = PaddingValues(0.dp)
+                            )
 
             val camera = rememberCameraState(firstPosition = initialCamera)
             // State for settings from JS
@@ -1292,11 +1249,8 @@ class MainActivity : ComponentActivity() {
                 prefs.edit().putBoolean(K_SHOW_ZOMBIE_BUSES, showZombieBuses).apply()
             }
 
-            LaunchedEffect(usUnits) {
-                prefs.edit().putBoolean(K_USE_US_UNITS, usUnits).apply()
-            }
+            LaunchedEffect(usUnits) { prefs.edit().putBoolean(K_USE_US_UNITS, usUnits).apply() }
             val isDark = isSystemInDarkTheme()
-
 
             // Realtime Fetcher Logic
             val rtScope = rememberCoroutineScope()
@@ -1307,18 +1261,19 @@ class MainActivity : ComponentActivity() {
                     while (true) {
                         delay(1_000L) // 1 second refresh interval
                         fetchRealtimeData(
-                            scope = rtScope,
-                            zoom = camera.position.zoom,
-                            settings = layerSettings.value,
-                            isFetchingRealtimeData = isFetchingRealtimeData,
-                            visibleChateaus = visibleChateaus,
-                            realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
-                            ktorClient = ktorClient,
-                            realtimeVehicleRouteCache = realtimeVehicleRouteCache,
-                            routeCacheAgenciesKnown = routeCacheAgenciesKnown,
-                            camera = camera,
-                            previousTileBoundariesStore = previousTileBoundariesStore,
-                            realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2
+                                scope = rtScope,
+                                zoom = camera.position.zoom,
+                                settings = layerSettings.value,
+                                isFetchingRealtimeData = isFetchingRealtimeData,
+                                visibleChateaus = visibleChateaus,
+                                realtimeVehicleLocationsLastUpdated =
+                                        realtimeVehicleLocationsLastUpdated,
+                                ktorClient = ktorClient,
+                                realtimeVehicleRouteCache = realtimeVehicleRouteCache,
+                                routeCacheAgenciesKnown = routeCacheAgenciesKnown,
+                                camera = camera,
+                                previousTileBoundariesStore = previousTileBoundariesStore,
+                                realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2
                         )
                     }
                 }
@@ -1331,59 +1286,65 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
             var currentLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
             // Start live location updates and keep currentLocation in sync
-            val hasFinePermission = ContextCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+            val hasFinePermission =
+                    ContextCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
 
             DisposableEffect(hasFinePermission) {
                 if (!hasFinePermission) {
                     // Request permission if needed; you can keep your existing request flow
                     ActivityCompat.requestPermissions(
-                        this@MainActivity,
-                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        1001
+                            this@MainActivity,
+                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                            1001
                     )
-                    onDispose { }
+                    onDispose {}
                 } else {
-                    // Build a request: high accuracy, ~5s desired interval, 2s min, and 5m min distance
-                    val request = LocationRequest.Builder(
-                        Priority.PRIORITY_HIGH_ACCURACY, /* intervalMillis = */ 5_000L
-                    )
+                    // Build a request: high accuracy, ~5s desired interval, 2s min, and 5m min
+                    // distance
+                    val request =
+                            LocationRequest.Builder(
+                                            Priority.PRIORITY_HIGH_ACCURACY,
+                                            /* intervalMillis = */ 5_000L
+                                    )
+                                    .setMinUpdateIntervalMillis(2_000L)
+                                    .setMinUpdateDistanceMeters(5f)
+                                    .build()
 
-                        .setMinUpdateIntervalMillis(2_000L)
-                        .setMinUpdateDistanceMeters(5f)
-                        .build()
+                    val callback =
+                            object : LocationCallback() {
+                                override fun onLocationResult(result: LocationResult) {
+                                    val loc = result.lastLocation ?: return
+                                    currentLocation = loc.latitude to loc.longitude
+                                    // If you want to follow the user, you can animate the camera
+                                    // here (optional):
 
-                    val callback = object : LocationCallback() {
-                        override fun onLocationResult(result: LocationResult) {
-                            val loc = result.lastLocation ?: return
-                            currentLocation = loc.latitude to loc.longitude
-                            // If you want to follow the user, you can animate the camera here (optional):
-
-                            // camera.animateTo(camera.position.copy(target = Position(loc.longitude, loc.latitude)))
-                        }
-                    }
+                                    // camera.animateTo(camera.position.copy(target =
+                                    // Position(loc.longitude, loc.latitude)))
+                                }
+                            }
 
                     // Start updates on the main looper
                     fusedLocationClient.requestLocationUpdates(
-                        request, callback, Looper.getMainLooper()
+                            request,
+                            callback,
+                            Looper.getMainLooper()
                     )
 
                     // Stop updates when this composable leaves composition
-                    onDispose {
-                        fusedLocationClient.removeLocationUpdates(callback)
-                    }
+                    onDispose { fusedLocationClient.removeLocationUpdates(callback) }
                 }
             }
 
             val onPinDrop: () -> Unit = {
-                //val proj = camera.projection
+                // val proj = camera.projection
 
                 println("on pin drop triggered")
 
@@ -1391,44 +1352,38 @@ class MainActivity : ComponentActivity() {
 
                     // val centerDp = with(density) {
                     // DpOffset((mapSize.width / 2f).toDp(), (mapSize.height / 2f).toDp())
-                    //val pos = proj.positionFromScreenLocation(centerDp)
+                    // val pos = proj.positionFromScreenLocation(centerDp)
                     val camerapos = camera.position
-                    val pos = Position(
-                        latitude = camerapos.target.latitude, longitude = camerapos.target.longitude
-                    )
+                    val pos =
+                            Position(
+                                    latitude = camerapos.target.latitude,
+                                    longitude = camerapos.target.longitude
+                            )
                     pin = PinState(active = true, position = pos)
-
-
                 } else {
 
-
                     pin = pin.copy(active = true, position = pin.position)
-
                 }
-
-
             }
 
             val onCenterPin: () -> Unit = {
                 println("on centre pin dropped")
 
                 val camerapos = camera.position
-                val pos = Position(
-                    latitude = camerapos.target.latitude, longitude = camerapos.target.longitude
-                )
+                val pos =
+                        Position(
+                                latitude = camerapos.target.latitude,
+                                longitude = camerapos.target.longitude
+                        )
 
                 pin = PinState(active = true, position = pos)
-
             }
-
 
             val geoLock = rememberGeoLockController()
 
             // Launch location fetch once
             LaunchedEffect(Unit) {
-                fetchLocation { lat, lon ->
-                    currentLocation = lat to lon
-                }
+                fetchLocation { lat, lon -> currentLocation = lat to lon }
 
                 // While we're here, fetch the chateaux index
 
@@ -1442,14 +1397,11 @@ class MainActivity : ComponentActivity() {
                 if (!hadSavedView && !didInitialFollow && currentLocation != null) {
                     val (lat, lon) = currentLocation!!
 
-
-
-
                     camera.animateTo(
-                        camera.position.copy(
-                            target = Position(lon, lat),
-                            zoom = 13.0   // 👈 requested default zoom
-                        )
+                            camera.position.copy(
+                                    target = Position(lon, lat),
+                                    zoom = 13.0 // 👈 requested default zoom
+                            )
                     )
                     didInitialFollow = true
                 }
@@ -1462,10 +1414,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-
             val styleUri =
-                if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json"
-                else "https://maps.catenarymaps.org/light-style.json"
+                    if (isSystemInDarkTheme()) "https://maps.catenarymaps.org/dark-style.json"
+                    else "https://maps.catenarymaps.org/light-style.json"
 
             var searchQuery by remember { mutableStateOf("") }
 
@@ -1480,26 +1431,26 @@ class MainActivity : ComponentActivity() {
                     // Remember the AppUpdateManager to pass to the snackbar action
 
                     CheckForAppUpdate(
-                        onFlexibleUpdateDownloaded = {
-                            // Show a snackbar when the update is ready
-                            scope.launch {
-                                val message = context.getString(R.string.update_downloaded)
-                                val actionLabel = context.getString(R.string.restart)
-                                val result = snackbars.showSnackbar(
-                                    message = message,
-                                    actionLabel = actionLabel,
-                                    duration = SnackbarDuration.Indefinite
-                                )
-                                if (result == SnackbarResult.ActionPerformed) {
-                                    // User clicked "RESTART", complete the update
-                                    appUpdateManager.completeUpdate()
+                            onFlexibleUpdateDownloaded = {
+                                // Show a snackbar when the update is ready
+                                scope.launch {
+                                    val message = context.getString(R.string.update_downloaded)
+                                    val actionLabel = context.getString(R.string.restart)
+                                    val result =
+                                            snackbars.showSnackbar(
+                                                    message = message,
+                                                    actionLabel = actionLabel,
+                                                    duration = SnackbarDuration.Indefinite
+                                            )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        // User clicked "RESTART", complete the update
+                                        appUpdateManager.completeUpdate()
+                                    }
                                 }
                             }
-                        }
                     )
 
                     val screenHeightPx = with(density) { maxHeight.toPx() }
-
 
                     val focusManager = LocalFocusManager.current
 
@@ -1507,41 +1458,40 @@ class MainActivity : ComponentActivity() {
                     val isWideLayout = maxWidth >= 600.dp
                     val contentWidthFraction = if (isWideLayout) 0.5f else 1f
                     val searchAlignment =
-                        if (isWideLayout) Alignment.TopStart else Alignment.TopCenter
+                            if (isWideLayout) Alignment.TopStart else Alignment.TopCenter
                     val sheetAlignment =
-                        if (isWideLayout) Alignment.BottomStart else Alignment.BottomCenter
+                            if (isWideLayout) Alignment.BottomStart else Alignment.BottomCenter
 
                     val configuration = LocalConfiguration.current
                     val isLandscape =
-                        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+                            configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val bottomInset = WindowInsets.safeDrawing.getBottom(density)
                     val collapsedHandleHeight = with(density) { 64.dp.toPx() }
                     val collapsedAnchor = screenHeightPx - collapsedHandleHeight - bottomInset
 
-                    val anchors = DraggableAnchors<SheetSnapPoint> {
-                        SheetSnapPoint.Collapsed at collapsedAnchor
-                        SheetSnapPoint.PartiallyExpanded at screenHeightPx / 2f - bottomInset
-                        SheetSnapPoint.Expanded at with(density) { 60.dp.toPx() }
-                    }
-
+                    val anchors =
+                            DraggableAnchors<SheetSnapPoint> {
+                                SheetSnapPoint.Collapsed at collapsedAnchor
+                                SheetSnapPoint.PartiallyExpanded at
+                                        screenHeightPx / 2f - bottomInset
+                                SheetSnapPoint.Expanded at with(density) { 60.dp.toPx() }
+                            }
 
                     val draggableState = remember {
                         AnchoredDraggableState(
-                            initialValue = SheetSnapPoint.PartiallyExpanded,
-                            anchors = anchors,
-                            positionalThreshold = { with(density) { 128.dp.toPx() } },
-                            velocityThreshold = { with(density) { 128.dp.toPx() } },
-                            snapAnimationSpec = easeOutSpec,
-                            decayAnimationSpec = splineBasedDecay(density),
+                                initialValue = SheetSnapPoint.PartiallyExpanded,
+                                anchors = anchors,
+                                positionalThreshold = { with(density) { 128.dp.toPx() } },
+                                velocityThreshold = { with(density) { 128.dp.toPx() } },
+                                snapAnimationSpec = easeOutSpec,
+                                decayAnimationSpec = splineBasedDecay(density),
                         )
                     }
 
                     // When screen size / insets change (rotation, etc.), refresh the anchors
                     // so the sheet snaps correctly with the new height.
-                    LaunchedEffect(anchors) {
-                        draggableState.updateAnchors(anchors)
-                    }
+                    LaunchedEffect(anchors) { draggableState.updateAnchors(anchors) }
 
                     val sheetIsExpanded by remember {
                         derivedStateOf { draggableState.currentValue == SheetSnapPoint.Expanded }
@@ -1550,14 +1500,14 @@ class MainActivity : ComponentActivity() {
                     // State for layers panel visibility
                     var showLayersPanel by remember { mutableStateOf(false) }
 
-
                     // Track map size
                     var mapSize by remember { mutableStateOf(IntSize.Zero) }
 
                     // 1) Helper: are we half or more?
                     val sheetHalfOrMore by remember {
                         derivedStateOf {
-                            draggableState.currentValue == SheetSnapPoint.PartiallyExpanded || draggableState.currentValue == SheetSnapPoint.Expanded
+                            draggableState.currentValue == SheetSnapPoint.PartiallyExpanded ||
+                                    draggableState.currentValue == SheetSnapPoint.Expanded
                         }
                     }
 
@@ -1569,45 +1519,39 @@ class MainActivity : ComponentActivity() {
 
                         when {
                             // Rule A: full-width content + bottom sheet half or more
-                            contentWidthFraction == 1f && sheetHalfOrMore -> PaddingValues(bottom = halfHeightDp)
+                            contentWidthFraction == 1f && sheetHalfOrMore ->
+                                    PaddingValues(bottom = halfHeightDp)
 
-                            // Rule B: 0.5 content width + (search focused OR bottom sheet half or more)
-                            contentWidthFraction == 0.5f && (isSearchFocused || sheetHalfOrMore) -> PaddingValues(
-                                start = halfWidthDp
-                            )
-
+                            // Rule B: 0.5 content width + (search focused OR bottom sheet half or
+                            // more)
+                            contentWidthFraction == 0.5f && (isSearchFocused || sheetHalfOrMore) ->
+                                    PaddingValues(start = halfWidthDp)
                             else -> PaddingValues(0.dp)
                         }
                     }
 
                     // 3) Apply padding to the camera when it changes
                     LaunchedEffect(desiredPadding) {
-
-
                         geoLock.beginInternalMove()
 
                         try {
                             teleportCamera(
-                                camera,
-                                geoLock,
-                                lat = camera.position.target.latitude,
-                                lon = camera.position.target.longitude,
-                                zoom = camera.position.zoom,
-                                padding = desiredPadding
+                                    camera,
+                                    geoLock,
+                                    lat = camera.position.target.latitude,
+                                    lon = camera.position.target.longitude,
+                                    zoom = camera.position.zoom,
+                                    padding = desiredPadding
                             )
                         } finally {
                             geoLock.endInternalMove()
                         }
-
-
                     }
 
                     /** idle detection state for move/zoom end */
                     var lastCameraPos by remember { mutableStateOf<CameraPosition?>(null) }
                     var lastMoveAt by remember { mutableStateOf(0L) }
-                    var lastQueriedPos by remember {
-                        mutableStateOf<CameraPosition?>(null)
-                    }
+                    var lastQueriedPos by remember { mutableStateOf<CameraPosition?>(null) }
                     var lastQueriedPosOfRailChecker by remember {
                         mutableStateOf<CameraPosition?>(null)
                     }
@@ -1623,389 +1567,502 @@ class MainActivity : ComponentActivity() {
 
                     val vehicleLayerIds = remember {
                         setOf(
-                            LayersPerCategory.Bus.Livedots,
-                            LayersPerCategory.Bus.Labeldots,
-                            LayersPerCategory.Other.Livedots,
-                            LayersPerCategory.Other.Labeldots,
-                            LayersPerCategory.IntercityRail.Livedots,
-                            LayersPerCategory.IntercityRail.Labeldots,
-                            LayersPerCategory.Metro.Livedots,
-                            LayersPerCategory.Metro.Labeldots,
-                            LayersPerCategory.Tram.Livedots,
-                            LayersPerCategory.Tram.Labeldots,
+                                LayersPerCategory.Bus.Livedots,
+                                LayersPerCategory.Bus.Labeldots,
+                                LayersPerCategory.Other.Livedots,
+                                LayersPerCategory.Other.Labeldots,
+                                LayersPerCategory.IntercityRail.Livedots,
+                                LayersPerCategory.IntercityRail.Labeldots,
+                                LayersPerCategory.Metro.Livedots,
+                                LayersPerCategory.Metro.Labeldots,
+                                LayersPerCategory.Tram.Livedots,
+                                LayersPerCategory.Tram.Labeldots,
                         )
                     }
                     val routeLayerIds = remember {
                         setOf(
-                            LayersPerCategory.Bus.Shapes,
-                            LayersPerCategory.Bus.LabelShapes,
-                            LayersPerCategory.Other.Shapes,
-                            LayersPerCategory.Other.LabelShapes,
-                            LayersPerCategory.Other.FerryShapes,
-                            LayersPerCategory.IntercityRail.Shapes,
-                            LayersPerCategory.IntercityRail.LabelShapes,
-                            LayersPerCategory.Metro.Shapes,
-                            LayersPerCategory.Metro.LabelShapes,
-                            LayersPerCategory.Tram.Shapes,
-                            LayersPerCategory.Tram.LabelShapes
+                                LayersPerCategory.Bus.Shapes,
+                                LayersPerCategory.Bus.LabelShapes,
+                                LayersPerCategory.Other.Shapes,
+                                LayersPerCategory.Other.LabelShapes,
+                                LayersPerCategory.Other.FerryShapes,
+                                LayersPerCategory.IntercityRail.Shapes,
+                                LayersPerCategory.IntercityRail.LabelShapes,
+                                LayersPerCategory.Metro.Shapes,
+                                LayersPerCategory.Metro.LabelShapes,
+                                LayersPerCategory.Tram.Shapes,
+                                LayersPerCategory.Tram.LabelShapes
                         )
                     }
                     val stopLayerIds = remember {
                         setOf(
-                            LayersPerCategory.Bus.Stops,
-                            LayersPerCategory.Bus.LabelStops,
-                            LayersPerCategory.Other.Stops,
-                            LayersPerCategory.Other.LabelStops,
-                            LayersPerCategory.IntercityRail.Stops,
-                            LayersPerCategory.IntercityRail.LabelStops,
-                            LayersPerCategory.Metro.Stops,
-                            LayersPerCategory.Metro.LabelStops,
-                            LayersPerCategory.Tram.Stops,
-                            LayersPerCategory.Tram.LabelStops
+                                LayersPerCategory.Bus.Stops,
+                                LayersPerCategory.Bus.LabelStops,
+                                LayersPerCategory.Other.Stops,
+                                LayersPerCategory.Other.LabelStops,
+                                LayersPerCategory.IntercityRail.Stops,
+                                LayersPerCategory.IntercityRail.LabelStops,
+                                LayersPerCategory.Metro.Stops,
+                                LayersPerCategory.Metro.LabelStops,
+                                LayersPerCategory.Tram.Stops,
+                                LayersPerCategory.Tram.LabelStops
                         )
                     }
 
                     MaplibreMap(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .onSizeChanged { newSize -> mapSize = newSize },
-                        baseStyle = BaseStyle.Uri(styleUri),
-                        cameraState = camera,
-                        onMapClick = { latlng, screenPos ->
-                            println("map clicked")
+                            modifier =
+                                    Modifier.fillMaxSize().onSizeChanged { newSize ->
+                                        mapSize = newSize
+                                    },
+                            baseStyle = BaseStyle.Uri(styleUri),
+                            cameraState = camera,
+                            onMapClick = { latlng, screenPos ->
+                                println("map clicked")
 
-                            val projection = camera.projection ?: run {
-                                Log.w(TAG, "Map clicked, but projection is not ready.")
-                                return@MaplibreMap ClickResult.Pass
-                            }
+                                val projection =
+                                        camera.projection
+                                                ?: run {
+                                                    Log.w(
+                                                            TAG,
+                                                            "Map clicked, but projection is not ready."
+                                                    )
+                                                    return@MaplibreMap ClickResult.Pass
+                                                }
 
-                            geoLock.deactivate()
+                                geoLock.deactivate()
 
-                            val clickPaddingDp = 5.dp
-                            val clickRect = DpRect(
-                                left = screenPos.x - clickPaddingDp,
-                                top = screenPos.y - clickPaddingDp,
-                                right = screenPos.x + clickPaddingDp,
-                                bottom = screenPos.y + clickPaddingDp
-                            )
+                                val clickPaddingDp = 5.dp
+                                val clickRect =
+                                        DpRect(
+                                                left = screenPos.x - clickPaddingDp,
+                                                top = screenPos.y - clickPaddingDp,
+                                                right = screenPos.x + clickPaddingDp,
+                                                bottom = screenPos.y + clickPaddingDp
+                                        )
 
-                            // --- Query each layer group separately ---
-                            // The returned 'Feature' is spatialk.geojson.Feature
-                            val vehicleFeatures =
-                                projection.queryRenderedFeatures(clickRect, vehicleLayerIds)
-                            val routeFeatures =
-                                projection.queryRenderedFeatures(clickRect, routeLayerIds)
-                            val stopFeatures =
-                                projection.queryRenderedFeatures(clickRect, stopLayerIds)
+                                // --- Query each layer group separately ---
+                                // The returned 'Feature' is spatialk.geojson.Feature
+                                val vehicleFeatures =
+                                        projection.queryRenderedFeatures(clickRect, vehicleLayerIds)
+                                val routeFeatures =
+                                        projection.queryRenderedFeatures(clickRect, routeLayerIds)
+                                val stopFeatures =
+                                        projection.queryRenderedFeatures(clickRect, stopLayerIds)
 
-                            if (vehicleFeatures.isEmpty() && routeFeatures.isEmpty() && stopFeatures.isEmpty()) {
-                                Log.d(TAG, "Map click detected, but no features found.")
-                                return@MaplibreMap ClickResult.Pass
-                            }
+                                if (vehicleFeatures.isEmpty() &&
+                                                routeFeatures.isEmpty() &&
+                                                stopFeatures.isEmpty()
+                                ) {
+                                    Log.d(TAG, "Map click detected, but no features found.")
+                                    return@MaplibreMap ClickResult.Pass
+                                }
 
-                            Log.d(
-                                TAG,
-                                "Found ${vehicleFeatures.size} vehicles, ${routeFeatures.size} routes, ${stopFeatures.size} stops."
-                            )
-
-                            // --- Process each feature list ---
-                            val selectionOptions = mutableListOf<MapSelectionOption>()
-                            selectionOptions.addAll(processVehicleClicks(vehicleFeatures))
-                            selectionOptions.addAll(processRouteClicks(routeFeatures))
-                            selectionOptions.addAll(processStopClicks(stopFeatures))
-
-                            // If we found items, update the stack and open the sheet
-                            if (selectionOptions.isNotEmpty()) {
-                                val newStack = ArrayDeque(catenaryStack)
-                                newStack.addLast(
-                                    CatenaryStackEnum.MapSelectionScreen(
-                                        selectionOptions
-                                    )
+                                Log.d(
+                                        TAG,
+                                        "Found ${vehicleFeatures.size} vehicles, ${routeFeatures.size} routes, ${stopFeatures.size} stops."
                                 )
-                                catenaryStack = newStack // Update state
 
-                                scope.launch {
-                                    draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
-                                }
-                            }
-                            ClickResult.Pass
-                        },
-                        options = MapOptions(
-                            ornamentOptions = OrnamentOptions(
-                                isLogoEnabled = false,
-                                isAttributionEnabled = true,
-                                isCompassEnabled = false,
-                                isScaleBarEnabled = false,
+                                // --- Process each feature list ---
+                                val selectionOptions = mutableListOf<MapSelectionOption>()
+                                selectionOptions.addAll(processVehicleClicks(vehicleFeatures))
+                                selectionOptions.addAll(processRouteClicks(routeFeatures))
+                                selectionOptions.addAll(processStopClicks(stopFeatures))
 
-                                ), renderOptions = RenderOptions(
+                                // If we found items, update the stack and open the sheet
+                                if (selectionOptions.isNotEmpty()) {
+                                    val newStack = ArrayDeque(catenaryStack)
+                                    newStack.addLast(
+                                            CatenaryStackEnum.MapSelectionScreen(selectionOptions)
+                                    )
+                                    catenaryStack = newStack // Update state
 
-                            )
-                        ),
-                        zoomRange = 2f..20f,
-                        pitchRange = 0f..20f,
-
-                        // 2) Map done loading
-                        onMapLoadFinished = {
-                            queryVisibleChateaus(
-                                scope, camera, mapSize,
-                                rtree, features
-                            )
-                            val pos = camera.position
-
-                            readDeeplink(
-                                initial_uri,
-                                catenaryStack,
-                                camera,
-                                reassigncatenarystack = { it ->
-                                    catenaryStack = it
-                                }
-                            )
-
-                            val now = SystemClock.uptimeMillis()
-
-                            fetchRealtimeData(
-                                scope = rtScope,
-                                zoom = pos.zoom,
-                                settings = layerSettings.value,
-                                isFetchingRealtimeData = isFetchingRealtimeData,
-                                visibleChateaus = visibleChateaus,
-                                realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
-                                ktorClient = ktorClient,
-                                realtimeVehicleRouteCache = realtimeVehicleRouteCache,
-                                camera = camera,
-                                previousTileBoundariesStore = previousTileBoundariesStore,
-                                realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2,
-                                routeCacheAgenciesKnown = routeCacheAgenciesKnown
-                            )
-                            queryVisibleChateaus(
-                                scope, camera, mapSize,
-                                rtree, features
-                            )
-                            queryAreAnyRailFeaturesVisible(camera, mapSize, forceRun = true)
-                            lastFetchedAt = now
-                        },
-                        // 3) Use onFrame to detect camera idle -> covers move end & zoom end
-
-                        onFrame = {
-                            val now = SystemClock.uptimeMillis()
-                            val pos = camera.position
-
-                            if (lastCameraPos == null) {
-
-                            }
-
-                            if (lastCameraPos == null || lastCameraPos != pos) {
-                                lastCameraPos = pos
-                                lastMoveAt = now
-
-
-                                // Only drop the lock if this wasn't an internal move we initiated.
-                                if (!geoLock.isInternalMove() && geoLock.isActive()) {
-                                    //println("deactivate camera ${geoLock.isInternalMove()}")
-
-                                    //println("current ${pos.target.latitude} ${pos.target.longitude} last set ${geoLock.getInternalPos()?.latitude} ${geoLock.getInternalPos()?.longitude}")
-
-                                    // Compare floating point numbers with a small tolerance (epsilon)
-                                    // to avoid deactivating the lock from tiny precision differences.
-                                    val epsilon = 1e-6
-                                    val internalPos = geoLock.getInternalPos()
-                                    val currentLoc = currentLocation
-                                    if (internalPos == null || kotlin.math.abs(pos.target.latitude - internalPos.latitude) > epsilon || kotlin.math.abs(
-                                            pos.target.longitude - internalPos.longitude
-                                        ) > epsilon
-                                    ) {
-                                        if (currentLoc == null || kotlin.math.abs(pos.target.latitude - currentLoc.first) > epsilon || kotlin.math.abs(
-                                                pos.target.longitude - currentLoc.second
-                                            ) > epsilon
-                                        ) {
-                                            geoLock.deactivate()
-                                        }
+                                    scope.launch {
+                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
                                     }
                                 }
+                                ClickResult.Pass
+                            },
+                            options =
+                                    MapOptions(
+                                            ornamentOptions =
+                                                    OrnamentOptions(
+                                                            isLogoEnabled = false,
+                                                            isAttributionEnabled = true,
+                                                            isCompassEnabled = false,
+                                                            isScaleBarEnabled = false,
+                                                    ),
+                                            renderOptions = RenderOptions()
+                                    ),
+                            zoomRange = 2f..20f,
+                            pitchRange = 0f..20f,
 
-                                if (geoLock.isActive()) lastPosByLock = pos
-                            }
+                            // 2) Map done loading
+                            onMapLoadFinished = {
+                                queryVisibleChateaus(scope, camera, mapSize, rtree, features)
+                                val pos = camera.position
 
-                            if (now - lastMoveAt >= idleDebounceMs) {
-                                if (lastQueriedPos != pos) {
-                                    // Compute distance moved in metres
+                                readDeeplink(
+                                        initial_uri,
+                                        catenaryStack,
+                                        camera,
+                                        reassigncatenarystack = { it -> catenaryStack = it }
+                                )
 
-                                    //  val startTime = System.nanoTime()
-                                    val distanceMovedOfRailChecker =
-                                        lastQueriedPosOfRailChecker?.target?.let {
-                                            haversineDistance(
-                                                it.latitude,
-                                                it.longitude,
-                                                pos.target.latitude,
-                                                pos.target.longitude
-                                            )
-                                        } ?: 0.0
-                                    //val endTime = System.nanoTime()
-                                    //val durationMs = (endTime - startTime) / 1_000_000.0
-                                    // Log.d(TAG, "Haversine distance calculation took ${String.format("%.3f", durationMs)} ms")
+                                val now = SystemClock.uptimeMillis()
 
-                                    val zoomMovedOfRailChecker = kotlin.math.abs(
-                                        pos.zoom - (lastQueriedPosOfRailChecker?.zoom ?: 0.0)
-                                    )
+                                fetchRealtimeData(
+                                        scope = rtScope,
+                                        zoom = pos.zoom,
+                                        settings = layerSettings.value,
+                                        isFetchingRealtimeData = isFetchingRealtimeData,
+                                        visibleChateaus = visibleChateaus,
+                                        realtimeVehicleLocationsLastUpdated =
+                                                realtimeVehicleLocationsLastUpdated,
+                                        ktorClient = ktorClient,
+                                        realtimeVehicleRouteCache = realtimeVehicleRouteCache,
+                                        camera = camera,
+                                        previousTileBoundariesStore = previousTileBoundariesStore,
+                                        realtimeVehicleLocationsStoreV2 =
+                                                realtimeVehicleLocationsStoreV2,
+                                        routeCacheAgenciesKnown = routeCacheAgenciesKnown
+                                )
+                                queryVisibleChateaus(scope, camera, mapSize, rtree, features)
+                                queryAreAnyRailFeaturesVisible(camera, mapSize, forceRun = true)
+                                lastFetchedAt = now
+                            },
+                            // 3) Use onFrame to detect camera idle -> covers move end & zoom end
 
-                                    Log.d(
-                                        TAG, "Map idle." +
-                                                " Moved ${
+                            onFrame = {
+                                val now = SystemClock.uptimeMillis()
+                                val pos = camera.position
+
+                                if (lastCameraPos == null) {}
+
+                                if (lastCameraPos == null || lastCameraPos != pos) {
+                                    lastCameraPos = pos
+                                    lastMoveAt = now
+
+                                    // Only drop the lock if this wasn't an internal move we
+                                    // initiated.
+                                    if (!geoLock.isInternalMove() && geoLock.isActive()) {
+                                        // println("deactivate camera ${geoLock.isInternalMove()}")
+
+                                        // println("current ${pos.target.latitude}
+                                        // ${pos.target.longitude} last set
+                                        // ${geoLock.getInternalPos()?.latitude}
+                                        // ${geoLock.getInternalPos()?.longitude}")
+
+                                        // Compare floating point numbers with a small tolerance
+                                        // (epsilon)
+                                        // to avoid deactivating the lock from tiny precision
+                                        // differences.
+                                        val epsilon = 1e-6
+                                        val internalPos = geoLock.getInternalPos()
+                                        val currentLoc = currentLocation
+                                        if (internalPos == null ||
+                                                        kotlin.math.abs(
+                                                                pos.target.latitude -
+                                                                        internalPos.latitude
+                                                        ) > epsilon ||
+                                                        kotlin.math.abs(
+                                                                pos.target.longitude -
+                                                                        internalPos.longitude
+                                                        ) > epsilon
+                                        ) {
+                                            if (currentLoc == null ||
+                                                            kotlin.math.abs(
+                                                                    pos.target.latitude -
+                                                                            currentLoc.first
+                                                            ) > epsilon ||
+                                                            kotlin.math.abs(
+                                                                    pos.target.longitude -
+                                                                            currentLoc.second
+                                                            ) > epsilon
+                                            ) {
+                                                geoLock.deactivate()
+                                            }
+                                        }
+                                    }
+
+                                    if (geoLock.isActive()) lastPosByLock = pos
+                                }
+
+                                if (now - lastMoveAt >= idleDebounceMs) {
+                                    if (lastQueriedPos != pos) {
+                                        // Compute distance moved in metres
+
+                                        //  val startTime = System.nanoTime()
+                                        val distanceMovedOfRailChecker =
+                                                lastQueriedPosOfRailChecker?.target?.let {
+                                                    haversineDistance(
+                                                            it.latitude,
+                                                            it.longitude,
+                                                            pos.target.latitude,
+                                                            pos.target.longitude
+                                                    )
+                                                }
+                                                        ?: 0.0
+                                        // val endTime = System.nanoTime()
+                                        // val durationMs = (endTime - startTime) / 1_000_000.0
+                                        // Log.d(TAG, "Haversine distance calculation took
+                                        // ${String.format("%.3f", durationMs)} ms")
+
+                                        val zoomMovedOfRailChecker =
+                                                kotlin.math.abs(
+                                                        pos.zoom -
+                                                                (lastQueriedPosOfRailChecker?.zoom
+                                                                        ?: 0.0)
+                                                )
+
+                                        Log.d(
+                                                TAG,
+                                                "Map idle." +
+                                                        " Moved ${
                                                     String.format(
                                                         "%.2f",
                                                         distanceMovedOfRailChecker
                                                     )
                                                 }m since last idle."
-                                    )
-
-                                    if (camera.projection != null && mapSize != IntSize.Zero) {
-                                        queryVisibleChateaus(
-                                            scope, camera, mapSize,
-                                            rtree, features
                                         )
 
-                                        if (railinframe) {
-                                            if (distanceMovedOfRailChecker > 20000 || zoomMovedOfRailChecker > 3) {
-                                                if (pos.zoom > 6) {
+                                        if (camera.projection != null && mapSize != IntSize.Zero) {
+                                            queryVisibleChateaus(
+                                                    scope,
+                                                    camera,
+                                                    mapSize,
+                                                    rtree,
+                                                    features
+                                            )
+
+                                            if (railinframe) {
+                                                if (distanceMovedOfRailChecker > 20000 ||
+                                                                zoomMovedOfRailChecker > 3
+                                                ) {
+                                                    if (pos.zoom > 6) {
+                                                        queryAreAnyRailFeaturesVisible(
+                                                                camera,
+                                                                mapSize,
+                                                                distance_m =
+                                                                        distanceMovedOfRailChecker
+                                                        )
+                                                        lastQueriedPosOfRailChecker = pos
+                                                    }
+                                                }
+                                            } else {
+                                                if (distanceMovedOfRailChecker > 500 ||
+                                                                zoomMovedOfRailChecker > 1
+                                                ) {
                                                     queryAreAnyRailFeaturesVisible(
-                                                        camera, mapSize,
-                                                        distance_m = distanceMovedOfRailChecker
+                                                            camera,
+                                                            mapSize,
+                                                            distance_m = distanceMovedOfRailChecker
                                                     )
                                                     lastQueriedPosOfRailChecker = pos
                                                 }
                                             }
-                                        } else {
-                                            if (distanceMovedOfRailChecker > 500 || zoomMovedOfRailChecker > 1) {
-                                                queryAreAnyRailFeaturesVisible(
-                                                    camera, mapSize,
-                                                    distance_m = distanceMovedOfRailChecker
+
+                                            lastQueriedPos = pos
+
+                                            if (now - lastFetchedAt >= fetchDebounceMs) {
+                                                fetchRealtimeData(
+                                                        scope = rtScope,
+                                                        zoom = pos.zoom,
+                                                        settings = layerSettings.value,
+                                                        isFetchingRealtimeData =
+                                                                isFetchingRealtimeData,
+                                                        visibleChateaus = visibleChateaus,
+                                                        realtimeVehicleLocationsLastUpdated =
+                                                                realtimeVehicleLocationsLastUpdated,
+                                                        ktorClient = ktorClient,
+                                                        realtimeVehicleRouteCache =
+                                                                realtimeVehicleRouteCache,
+                                                        camera = camera,
+                                                        previousTileBoundariesStore =
+                                                                previousTileBoundariesStore,
+                                                        realtimeVehicleLocationsStoreV2 =
+                                                                realtimeVehicleLocationsStoreV2,
+                                                        routeCacheAgenciesKnown =
+                                                                routeCacheAgenciesKnown
                                                 )
-                                                lastQueriedPosOfRailChecker = pos
+                                                lastFetchedAt = now
                                             }
                                         }
+                                    }
 
-
-                                        lastQueriedPos = pos
-
-                                        if (now - lastFetchedAt >= fetchDebounceMs) {
-                                            fetchRealtimeData(
-                                                scope = rtScope,
-                                                zoom = pos.zoom,
-                                                settings = layerSettings.value,
-                                                isFetchingRealtimeData = isFetchingRealtimeData,
-                                                visibleChateaus = visibleChateaus,
-                                                realtimeVehicleLocationsLastUpdated = realtimeVehicleLocationsLastUpdated,
-                                                ktorClient = ktorClient,
-                                                realtimeVehicleRouteCache = realtimeVehicleRouteCache,
-                                                camera = camera,
-                                                previousTileBoundariesStore = previousTileBoundariesStore,
-                                                realtimeVehicleLocationsStoreV2 = realtimeVehicleLocationsStoreV2,
-                                                routeCacheAgenciesKnown = routeCacheAgenciesKnown
-                                            )
-                                            lastFetchedAt = now
-                                        }
+                                    // 👇 Persist the camera view while idle (throttled)
+                                    if ((now - lastSavedAt) >= saveThrottleMs &&
+                                                    (lastSavedPos == null || lastSavedPos != pos)
+                                    ) {
+                                        prefsMemo.writeCamera(pos)
+                                        lastSavedPos = pos
+                                        lastSavedAt = now
+                                        Log.d(
+                                                TAG,
+                                                "Saved camera: lat=${pos.target.latitude}, lon=${pos.target.longitude}, zoom=${pos.zoom}"
+                                        )
                                     }
                                 }
-
-                                // 👇 Persist the camera view while idle (throttled)
-                                if ((now - lastSavedAt) >= saveThrottleMs &&
-                                    (lastSavedPos == null || lastSavedPos != pos)
-                                ) {
-                                    prefsMemo.writeCamera(pos)
-                                    lastSavedPos = pos
-                                    lastSavedAt = now
-                                    Log.d(
-                                        TAG,
-                                        "Saved camera: lat=${pos.target.latitude}, lon=${pos.target.longitude}, zoom=${pos.zoom}"
-                                    )
-                                }
                             }
-
-
-                        })
-
-                    {
+                    ) {
                         val busDotsSrc: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    "bus_dots",
-                                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            "bus_dots",
+                                            GeoJsonData.Features(
+                                                    FeatureCollection(
+                                                            emptyList<
+                                                                    Feature<
+                                                                            Point,
+                                                                            Map<String, Any>>>()
+                                                    )
+                                            ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
 
                         val metroDotsSrc: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    "metro_dots",
-                                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            "metro_dots",
+                                            GeoJsonData.Features(
+                                                    FeatureCollection(
+                                                            emptyList<
+                                                                    Feature<
+                                                                            Point,
+                                                                            Map<String, Any>>>()
+                                                    )
+                                            ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
                         val railDotsSrc: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    "rail_dots",
-                                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            "rail_dots",
+                                            GeoJsonData.Features(
+                                                    FeatureCollection(
+                                                            emptyList<
+                                                                    Feature<
+                                                                            Point,
+                                                                            Map<String, Any>>>()
+                                                    )
+                                            ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
                         val otherDotsSrc: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    "other_dots",
-                                    GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            "other_dots",
+                                            GeoJsonData.Features(
+                                                    FeatureCollection(
+                                                            emptyList<
+                                                                    Feature<
+                                                                            Point,
+                                                                            Map<String, Any>>>()
+                                                    )
+                                            ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
 
                         val transitShapeSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    id = "transit_shape_context",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            id = "transit_shape_context",
+                                            data =
+                                                    GeoJsonData.Features(
+                                                            FeatureCollection(
+                                                                    emptyList<
+                                                                            Feature<
+                                                                                    LineString,
+                                                                                    Map<
+                                                                                            String,
+                                                                                            Any>>>()
+                                                            )
+                                                    ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
                         val transitShapeDetourSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    id = "transit_shape_context_detour",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            id = "transit_shape_context_detour",
+                                            data =
+                                                    GeoJsonData.Features(
+                                                            FeatureCollection(
+                                                                    emptyList<
+                                                                            Feature<
+                                                                                    LineString,
+                                                                                    Map<
+                                                                                            String,
+                                                                                            Any>>>()
+                                                            )
+                                                    ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
                         val transitShapeForStopSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    id = "transit_shape_context_for_stop",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            id = "transit_shape_context_for_stop",
+                                            data =
+                                                    GeoJsonData.Features(
+                                                            FeatureCollection(
+                                                                    emptyList<
+                                                                            Feature<
+                                                                                    LineString,
+                                                                                    Map<
+                                                                                            String,
+                                                                                            Any>>>()
+                                                            )
+                                                    ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
                         val stopsContextSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    id = "stops_context",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            id = "stops_context",
+                                            data =
+                                                    GeoJsonData.Features(
+                                                            FeatureCollection(
+                                                                    emptyList<
+                                                                            Feature<
+                                                                                    LineString,
+                                                                                    Map<
+                                                                                            String,
+                                                                                            Any>>>()
+                                                            )
+                                                    ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
                         val majorDotsSource: MutableState<GeoJsonSource> = remember {
                             mutableStateOf(
-                                GeoJsonSource(
-                                    id = "majordots_context",
-                                    data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())),
-                                    GeoJsonOptions()
-                                )
+                                    GeoJsonSource(
+                                            id = "majordots_context",
+                                            data =
+                                                    GeoJsonData.Features(
+                                                            FeatureCollection(
+                                                                    emptyList<
+                                                                            Feature<
+                                                                                    LineString,
+                                                                                    Map<
+                                                                                            String,
+                                                                                            Any>>>()
+                                                            )
+                                                    ),
+                                            GeoJsonOptions()
+                                    )
                             )
                         }
 
@@ -2039,7 +2096,8 @@ class MainActivity : ComponentActivity() {
                         DisposableEffect(transitShapeDetourSource) {
                             transitShapeDetourSourceRef.value = transitShapeDetourSource
                             onDispose {
-                                if (transitShapeDetourSourceRef.value === transitShapeDetourSource) {
+                                if (transitShapeDetourSourceRef.value === transitShapeDetourSource
+                                ) {
                                     transitShapeDetourSourceRef.value = null
                                 }
                             }
@@ -2048,114 +2106,125 @@ class MainActivity : ComponentActivity() {
                         DisposableEffect(transitShapeForStopSource) {
                             transitShapeForStopSourceRef.value = transitShapeForStopSource
                             onDispose {
-                                if (transitShapeForStopSourceRef.value === transitShapeForStopSource) {
+                                if (transitShapeForStopSourceRef.value === transitShapeForStopSource
+                                ) {
                                     transitShapeForStopSourceRef.value = null
                                 }
                             }
                         }
 
-
                         // Source + layers
-                        val chateausSource = rememberGeoJsonSource(
-                            data = GeoJsonData.Uri("https://birch.catenarymaps.org/getchateaus")
-                        )
+                        val chateausSource =
+                                rememberGeoJsonSource(
+                                        data =
+                                                GeoJsonData.Uri(
+                                                        "https://birch.catenarymaps.org/getchateaus"
+                                                )
+                                )
 
                         FillLayer(
-                            id = "chateaus_calc", source = chateausSource, opacity = const(0.0f)
+                                id = "chateaus_calc",
+                                source = chateausSource,
+                                opacity = const(0.0f)
                         )
 
-                        AddShapes(
-                            layerSettings = layerSettings.value,
-                            railInFrame = railinframe
-                        )
+                        AddShapes(layerSettings = layerSettings.value, railInFrame = railinframe)
 
-                        AddStops(
-                            layerSettings = layerSettings.value
-                        )
+                        AddStops(layerSettings = layerSettings.value)
 
                         // --- Detour Line ---
                         LineLayer(
-                            id = "contextlinebackingdetour",
-                            source = transitShapeDetourSource.value,
-                            color = const(Color(0xFFFB9CAC)),
-                            width = interpolate(
-                                linear(),
-                                zoom(),
-                                7.0 to const(3.dp),
-                                14.0 to const(6.dp)
-                            ),
-                            opacity = const(0.5f),
-                            minZoom = 3f
+                                id = "contextlinebackingdetour",
+                                source = transitShapeDetourSource.value,
+                                color = const(Color(0xFFFB9CAC)),
+                                width =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                7.0 to const(3.dp),
+                                                14.0 to const(6.dp)
+                                        ),
+                                opacity = const(0.5f),
+                                minZoom = 3f
                         )
                         LineLayer(
-                            id = "contextlinedetour",
-                            source = transitShapeDetourSource.value,
-                            color = get("color").cast(),
-                            width = interpolate(
-                                linear(),
-                                zoom(),
-                                7.0 to const(3.2.dp),
-                                14.0 to const(5.dp)
-                            ),
-                            dasharray = const(listOf(1f, 2f)),
-                            opacity = const(0.9f),
-                            minZoom = 3f
-                        )
-
-// --- Main Trip Shape Line ---
-                        LineLayer(
-                            id = "contextlinebacking",
-                            source = transitShapeSource.value,
-                            color = if (isDark) const(Color(0xFF111133)) else const(Color.White), // Themable
-                            width = interpolate(
-                                linear(),
-                                zoom(),
-                                7.0 to const(4.dp),
-                                14.0 to const(8.dp)
-                            ),
-                            opacity = const(0.9f),
-                            minZoom = 3f
-                        )
-                        LineLayer(
-                            id = "contextline",
-                            source = transitShapeSource.value,
-                            color = get("color").cast(),
-                            width = interpolate(
-                                linear(),
-                                zoom(),
-                                7.0 to const(3.5.dp),
-                                14.0 to const(6.dp)
-                            ),
-                            minZoom = 3f
+                                id = "contextlinedetour",
+                                source = transitShapeDetourSource.value,
+                                color = get("color").cast(),
+                                width =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                7.0 to const(3.2.dp),
+                                                14.0 to const(5.dp)
+                                        ),
+                                dasharray = const(listOf(1f, 2f)),
+                                opacity = const(0.9f),
+                                minZoom = 3f
                         )
 
-// --- Shape for Stop (if needed) ---
+                        // --- Main Trip Shape Line ---
                         LineLayer(
-                            id = "contextlinebackingforstop",
-                            source = transitShapeForStopSource.value,
-                            color = if (isDark) const(Color(0xFF111133)) else const(Color.White),
-                            width = interpolate(
-                                linear(),
-                                zoom(),
-                                7.0 to const(4.dp),
-                                11.0 to const(5.dp),
-                                14.0 to const(7.dp)
-                            ),
-                            opacity = const(0.8f),
-                            minZoom = 3f
+                                id = "contextlinebacking",
+                                source = transitShapeSource.value,
+                                color =
+                                        if (isDark) const(Color(0xFF111133))
+                                        else const(Color.White), // Themable
+                                width =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                7.0 to const(4.dp),
+                                                14.0 to const(8.dp)
+                                        ),
+                                opacity = const(0.9f),
+                                minZoom = 3f
                         )
                         LineLayer(
-                            id = "contextlineforstop",
-                            source = transitShapeForStopSource.value,
-                            color = get("color").cast(),
-                            width = interpolate(
-                                linear(),
-                                zoom(),
-                                7.0 to const(2.8.dp),
-                                11.0 to const(4.dp),
-                                14.0 to const(5.dp)
-                            ),
-                            minZoom = 3f
+                                id = "contextline",
+                                source = transitShapeSource.value,
+                                color = get("color").cast(),
+                                width =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                7.0 to const(3.5.dp),
+                                                14.0 to const(6.dp)
+                                        ),
+                                minZoom = 3f
+                        )
+
+                        // --- Shape for Stop (if needed) ---
+                        LineLayer(
+                                id = "contextlinebackingforstop",
+                                source = transitShapeForStopSource.value,
+                                color =
+                                        if (isDark) const(Color(0xFF111133))
+                                        else const(Color.White),
+                                width =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                7.0 to const(4.dp),
+                                                11.0 to const(5.dp),
+                                                14.0 to const(7.dp)
+                                        ),
+                                opacity = const(0.8f),
+                                minZoom = 3f
+                        )
+                        LineLayer(
+                                id = "contextlineforstop",
+                                source = transitShapeForStopSource.value,
+                                color = get("color").cast(),
+                                width =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                7.0 to const(2.8.dp),
+                                                11.0 to const(4.dp),
+                                                14.0 to const(5.dp)
+                                        ),
+                                minZoom = 3f
                         )
 
                         // --- Context Stops (from stops_context source) ---
@@ -2163,455 +2232,546 @@ class MainActivity : ComponentActivity() {
                         // TODO: load the 'cancelledstops' image into the map style
                         // Bus Stops
                         CircleLayer(
-                            id = "contextbusstops",
-                            source = stopsContextSource.value,
-                            color = const(Color.White),
-                            radius = interpolate(
-                                linear(),
-                                zoom(),
-                                8.0 to const(1.dp),
-                                10.0 to const(2.dp),
-                                13.0 to const(4.dp)
-                            ),
-                            strokeColor = const(Color(0xFF1A1A1A)),
-                            strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
-                            strokeOpacity = const(0.9f),
-                            opacity = interpolate(
-                                linear(),
-                                zoom(),
-                                11.0 to const(0.7f),
-                                12.0 to const(1.0f)
-                            ),
-                            filter = all(
-                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
-                                    .eq(const(3)),
-                                (get("cancelled").cast<BooleanValue>().neq(const(true))
-                                        )
-                            ),
-                            minZoom = 9.5f
+                                id = "contextbusstops",
+                                source = stopsContextSource.value,
+                                color = const(Color.White),
+                                radius =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                8.0 to const(1.dp),
+                                                10.0 to const(2.dp),
+                                                13.0 to const(4.dp)
+                                        ),
+                                strokeColor = const(Color(0xFF1A1A1A)),
+                                strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                                strokeOpacity = const(0.9f),
+                                opacity =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                11.0 to const(0.7f),
+                                                12.0 to const(1.0f)
+                                        ),
+                                filter =
+                                        all(
+                                                get("stop_route_type")
+                                                        .cast<NumberValue<EquatableValue>>()
+                                                        .eq(const(3)),
+                                                (get("cancelled")
+                                                        .cast<BooleanValue>()
+                                                        .neq(const(true)))
+                                        ),
+                                minZoom = 9.5f
                         )
                         SymbolLayer(
-                            id = "contextbusstops_label",
-                            source = stopsContextSource.value,
-                            textField = get("label").cast(),
-                            textSize = interpolate(
-                                linear(),
-                                zoom(),
-                                11.0 to const(0.625f.em),
-                                14.0 to const(0.8125f.em)
-                            ), // 10px -> 13px
-                            textFont = step(
-                                zoom(),
-                                const(listOf("Barlow-Regular")),
-                                13.0 to const(listOf("Barlow-Medium"))
-                            ),
-                            textColor = if (isDark) const(Color.White) else const(Color(0xFF1A1A1A)),
-                            textHaloColor = if (isDark) const(Color(0xFF1A1A1A)) else const(
-                                Color(
-                                    0xFFDADADA
-                                )
-                            ),
-                            textAnchor = const(SymbolAnchor.Left),
-                            textHaloWidth = const(1.dp),
-                            textRadialOffset = const(0.3f.em),
-                            filter = get("stop_route_type").cast<NumberValue<EquatableValue>>()
-                                .eq(const(3)),
-                            minZoom = 12.5f
+                                id = "contextbusstops_label",
+                                source = stopsContextSource.value,
+                                textField = get("label").cast(),
+                                textSize =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                11.0 to const(0.625f.em),
+                                                14.0 to const(0.8125f.em)
+                                        ), // 10px -> 13px
+                                textFont =
+                                        step(
+                                                zoom(),
+                                                const(listOf("Barlow-Regular")),
+                                                13.0 to const(listOf("Barlow-Medium"))
+                                        ),
+                                textColor =
+                                        if (isDark) const(Color.White)
+                                        else const(Color(0xFF1A1A1A)),
+                                textHaloColor =
+                                        if (isDark) const(Color(0xFF1A1A1A))
+                                        else const(Color(0xFFDADADA)),
+                                textAnchor = const(SymbolAnchor.Left),
+                                textHaloWidth = const(1.dp),
+                                textRadialOffset = const(0.3f.em),
+                                filter =
+                                        get("stop_route_type")
+                                                .cast<NumberValue<EquatableValue>>()
+                                                .eq(const(3)),
+                                minZoom = 12.5f
                         )
 
-// Metro Stops
+                        // Metro Stops
                         CircleLayer(
-                            id = "contextmetrostops",
-                            source = stopsContextSource.value,
-                            color = const(Color.White),
-                            radius = interpolate(
-                                linear(),
-                                zoom(),
-                                8.0 to const(1.3.dp),
-                                10.0 to const(3.dp),
-                                13.0 to const(5.dp)
-                            ),
-                            strokeColor = const(Color(0xFF1A1A1A)),
-                            strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
-                            filter = all(
-                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
-                                    .neq(const(3)),
-                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
-                                    .neq(const(2))
-                            ),
-                            minZoom = 6f
+                                id = "contextmetrostops",
+                                source = stopsContextSource.value,
+                                color = const(Color.White),
+                                radius =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                8.0 to const(1.3.dp),
+                                                10.0 to const(3.dp),
+                                                13.0 to const(5.dp)
+                                        ),
+                                strokeColor = const(Color(0xFF1A1A1A)),
+                                strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                                filter =
+                                        all(
+                                                get("stop_route_type")
+                                                        .cast<NumberValue<EquatableValue>>()
+                                                        .neq(const(3)),
+                                                get("stop_route_type")
+                                                        .cast<NumberValue<EquatableValue>>()
+                                                        .neq(const(2))
+                                        ),
+                                minZoom = 6f
                         )
                         SymbolLayer(
-                            id = "contextmetrostops_label",
-                            source = stopsContextSource.value,
-                            textField = get("label").cast(),
-                            textSize = interpolate(
-                                linear(),
-                                zoom(),
-                                6.0 to const(0.28125f.em),
-                                8.0 to const(0.5625f.em),
-                                9.0 to const(0.75f.em)
-                            ), // 4.5px -> 9px -> 12px
-                            textFont = const(listOf("Barlow-Medium")),
-                            textAnchor = const(SymbolAnchor.Left),
-                            textColor = if (isDark) const(Color.White) else const(Color(0xFF1A1A1A)),
-                            textHaloColor = if (isDark) const(Color(0xFF1A1A1A)) else const(
-                                Color(
-                                    0xFFDADADA
-                                )
-                            ),
-                            textHaloWidth = const(1.dp),
-                            textRadialOffset = const(0.2f.em),
-                            filter = all(
-                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
-                                    .neq(const(3)),
-                                get("stop_route_type").cast<NumberValue<EquatableValue>>()
-                                    .neq(const(2))
-                            ),
-                            minZoom = 9f
+                                id = "contextmetrostops_label",
+                                source = stopsContextSource.value,
+                                textField = get("label").cast(),
+                                textSize =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                6.0 to const(0.28125f.em),
+                                                8.0 to const(0.5625f.em),
+                                                9.0 to const(0.75f.em)
+                                        ), // 4.5px -> 9px -> 12px
+                                textFont = const(listOf("Barlow-Medium")),
+                                textAnchor = const(SymbolAnchor.Left),
+                                textColor =
+                                        if (isDark) const(Color.White)
+                                        else const(Color(0xFF1A1A1A)),
+                                textHaloColor =
+                                        if (isDark) const(Color(0xFF1A1A1A))
+                                        else const(Color(0xFFDADADA)),
+                                textHaloWidth = const(1.dp),
+                                textRadialOffset = const(0.2f.em),
+                                filter =
+                                        all(
+                                                get("stop_route_type")
+                                                        .cast<NumberValue<EquatableValue>>()
+                                                        .neq(const(3)),
+                                                get("stop_route_type")
+                                                        .cast<NumberValue<EquatableValue>>()
+                                                        .neq(const(2))
+                                        ),
+                                minZoom = 9f
                         )
 
-// Rail Stops
+                        // Rail Stops
                         CircleLayer(
-                            id = "contextrailstops",
-                            source = stopsContextSource.value,
-                            color = const(Color.White),
-                            radius = interpolate(
-                                linear(),
-                                zoom(),
-                                8.0 to const(3.dp),
-                                10.0 to const(4.dp),
-                                13.0 to const(5.dp)
-                            ),
-                            strokeColor = const(Color(0xFF1A1A1A)),
-                            strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
-                            filter = get("stop_route_type").cast<NumberValue<EquatableValue>>()
-                                .eq(const(2)),
-                            minZoom = 4f
+                                id = "contextrailstops",
+                                source = stopsContextSource.value,
+                                color = const(Color.White),
+                                radius =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                8.0 to const(3.dp),
+                                                10.0 to const(4.dp),
+                                                13.0 to const(5.dp)
+                                        ),
+                                strokeColor = const(Color(0xFF1A1A1A)),
+                                strokeWidth = step(zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                                filter =
+                                        get("stop_route_type")
+                                                .cast<NumberValue<EquatableValue>>()
+                                                .eq(const(2)),
+                                minZoom = 4f
                         )
                         SymbolLayer(
-                            id = "contextrailstops_label",
-                            source = stopsContextSource.value,
-                            textField = get("label").cast(),
-                            textSize = interpolate(
-                                linear(),
-                                zoom(),
-                                4.0 to const(0.5625f.em),
-                                6.0 to const(0.625f.em),
-                                10.0 to const(0.875f.em)
-                            ), // 9px -> 10px -> 14px
-                            textFont = step(
-                                zoom(),
-                                const(listOf("Barlow-Regular")),
-                                6.0 to const(listOf("Barlow-Medium"))
-                            ),
-                            textAnchor = const(SymbolAnchor.Left),
-                            textColor = if (isDark) const(Color.White) else const(Color(0xFF1A1A1A)),
-                            textHaloColor = if (isDark) const(Color(0xFF1A1A1A)) else const(
-                                Color(
-                                    0xFFDADADA
-                                )
-                            ),
-                            textHaloWidth = const(1.dp),
-                            textRadialOffset = const(0.2f.em),
-                            filter = get("stop_route_type").cast<NumberValue<EquatableValue>>()
-                                .eq(const(2)),
-                            minZoom = 3f
+                                id = "contextrailstops_label",
+                                source = stopsContextSource.value,
+                                textField = get("label").cast(),
+                                textSize =
+                                        interpolate(
+                                                linear(),
+                                                zoom(),
+                                                4.0 to const(0.5625f.em),
+                                                6.0 to const(0.625f.em),
+                                                10.0 to const(0.875f.em)
+                                        ), // 9px -> 10px -> 14px
+                                textFont =
+                                        step(
+                                                zoom(),
+                                                const(listOf("Barlow-Regular")),
+                                                6.0 to const(listOf("Barlow-Medium"))
+                                        ),
+                                textAnchor = const(SymbolAnchor.Left),
+                                textColor =
+                                        if (isDark) const(Color.White)
+                                        else const(Color(0xFF1A1A1A)),
+                                textHaloColor =
+                                        if (isDark) const(Color(0xFF1A1A1A))
+                                        else const(Color(0xFFDADADA)),
+                                textHaloWidth = const(1.dp),
+                                textRadialOffset = const(0.2f.em),
+                                filter =
+                                        get("stop_route_type")
+                                                .cast<NumberValue<EquatableValue>>()
+                                                .eq(const(2)),
+                                minZoom = 3f
                         )
 
                         val locationsV2 = realtimeVehicleLocationsStoreV2.value
                         val cache = realtimeVehicleRouteCache.value
 
                         AddLiveDots(
-                            isDark = isDark,
-                            usUnits = usUnits,
-                            showZombieBuses = showZombieBuses,
-                            layerSettings = layerSettings.value,
-                            vehicleLocationsV2 = locationsV2,
-                            routeCache = cache,
-                            busDotsSrc = busDotsSrc,
-                            metroDotsSrc = metroDotsSrc,
-                            railDotsSrc = railDotsSrc,
-                            otherDotsSrc = otherDotsSrc,
-                            railInFrame = railinframe
+                                isDark = isDark,
+                                usUnits = usUnits,
+                                showZombieBuses = showZombieBuses,
+                                layerSettings = layerSettings.value,
+                                vehicleLocationsV2 = locationsV2,
+                                routeCache = cache,
+                                busDotsSrc = busDotsSrc,
+                                metroDotsSrc = metroDotsSrc,
+                                railDotsSrc = railDotsSrc,
+                                otherDotsSrc = otherDotsSrc,
+                                railInFrame = railinframe
                         )
 
                         // Layers for BUS
                         LiveDotLayers(
-                            category = "bus",
-                            source = busDotsSrc.value,                // <- persistent source
-                            settings = layerSettings.value.bus.labelrealtimedots,
-                            isVisible = layerSettings.value.bus.visiblerealtimedots,
-                            baseFilter = if (showZombieBuses) all(
-                                applyFilterToLiveDots.value
-                            ) else all(
-                                feature.has("trip_id"),
-                                get("trip_id").cast<StringValue>().neq(const("")),
-                                applyFilterToLiveDots.value
-                            ),
-                            bearingFilter = all(
-                                applyFilterToLiveDots.value,
-                                get("has_bearing").cast<BooleanValue>().eq(const(true)),
-                                if (showZombieBuses) all() else all(
-                                    feature.has("trip_id"),
-                                    get("trip_id").cast<StringValue>().neq(const(""))
-                                )
-                            ),
-                            usUnits = usUnits,
-                            isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.Bus,
-                            railInFrame = railinframe
+                                category = "bus",
+                                source = busDotsSrc.value, // <- persistent source
+                                settings = layerSettings.value.bus.labelrealtimedots,
+                                isVisible = layerSettings.value.bus.visiblerealtimedots,
+                                baseFilter =
+                                        if (showZombieBuses) all(applyFilterToLiveDots.value)
+                                        else
+                                                all(
+                                                        feature.has("trip_id"),
+                                                        get("trip_id")
+                                                                .cast<StringValue>()
+                                                                .neq(const("")),
+                                                        applyFilterToLiveDots.value
+                                                ),
+                                bearingFilter =
+                                        all(
+                                                applyFilterToLiveDots.value,
+                                                get("has_bearing")
+                                                        .cast<BooleanValue>()
+                                                        .eq(const(true)),
+                                                if (showZombieBuses) all()
+                                                else
+                                                        all(
+                                                                feature.has("trip_id"),
+                                                                get("trip_id")
+                                                                        .cast<StringValue>()
+                                                                        .neq(const(""))
+                                                        )
+                                        ),
+                                usUnits = usUnits,
+                                isDark = isDark,
+                                layerIdPrefix = LayersPerCategory.Bus,
+                                railInFrame = railinframe
                         )
 
-// Layers for METRO/TRAM share the metro source but are filtered
+                        // Layers for METRO/TRAM share the metro source but are filtered
                         LiveDotLayers(
-                            category = "metro",
-                            source = metroDotsSrc.value,
-                            settings = layerSettings.value.localrail.labelrealtimedots,
-                            isVisible = layerSettings.value.localrail.visiblerealtimedots,
-                            baseFilter = all(
-                                applyFilterToLiveDots.value,
-                                any(rtEq(1), rtEq(12)), if (showZombieBuses) all() else all(
-                                    feature.has("trip_id"),
-                                    get("trip_id").cast<StringValue>().neq(const("")),
-
-                                    )
-                            ),
-                            bearingFilter = all(
-                                applyFilterToLiveDots.value,
-                                any(rtEq(1), rtEq(12)),
-                                get("has_bearing").cast<BooleanValue>().eq(const(true))
-                            ),
-                            usUnits = usUnits,
-                            isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.Metro,
-                            railInFrame = railinframe
+                                category = "metro",
+                                source = metroDotsSrc.value,
+                                settings = layerSettings.value.localrail.labelrealtimedots,
+                                isVisible = layerSettings.value.localrail.visiblerealtimedots,
+                                baseFilter =
+                                        all(
+                                                applyFilterToLiveDots.value,
+                                                any(rtEq(1), rtEq(12)),
+                                                if (showZombieBuses) all()
+                                                else
+                                                        all(
+                                                                feature.has("trip_id"),
+                                                                get("trip_id")
+                                                                        .cast<StringValue>()
+                                                                        .neq(const("")),
+                                                        )
+                                        ),
+                                bearingFilter =
+                                        all(
+                                                applyFilterToLiveDots.value,
+                                                any(rtEq(1), rtEq(12)),
+                                                get("has_bearing")
+                                                        .cast<BooleanValue>()
+                                                        .eq(const(true))
+                                        ),
+                                usUnits = usUnits,
+                                isDark = isDark,
+                                layerIdPrefix = LayersPerCategory.Metro,
+                                railInFrame = railinframe
                         )
 
                         LiveDotLayers(
-                            category = "tram",
-                            source = metroDotsSrc.value,  // re-uses metro source, different filter via layerIdPrefix branch
-                            settings = layerSettings.value.localrail.labelrealtimedots,
-                            isVisible = layerSettings.value.localrail.visiblerealtimedots,
-                            baseFilter = all(
-                                applyFilterToLiveDots.value,
-                                any(rtEq(0), rtEq(5)), if (showZombieBuses) all() else all(
-                                    feature.has("trip_id"),
-                                    get("trip_id").cast<StringValue>().neq(const(""))
-                                )
-                            ),
-                            bearingFilter = all(
-                                applyFilterToLiveDots.value,
-                                any(rtEq(0), rtEq(5)),
-                                get("has_bearing").cast<BooleanValue>().eq(const(true))
-                            ),
-                            usUnits = usUnits,
-                            isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.Tram,
-                            railInFrame = railinframe
+                                category = "tram",
+                                source =
+                                        metroDotsSrc
+                                                .value, // re-uses metro source, different filter
+                                // via layerIdPrefix branch
+                                settings = layerSettings.value.localrail.labelrealtimedots,
+                                isVisible = layerSettings.value.localrail.visiblerealtimedots,
+                                baseFilter =
+                                        all(
+                                                applyFilterToLiveDots.value,
+                                                any(rtEq(0), rtEq(5)),
+                                                if (showZombieBuses) all()
+                                                else
+                                                        all(
+                                                                feature.has("trip_id"),
+                                                                get("trip_id")
+                                                                        .cast<StringValue>()
+                                                                        .neq(const(""))
+                                                        )
+                                        ),
+                                bearingFilter =
+                                        all(
+                                                applyFilterToLiveDots.value,
+                                                any(rtEq(0), rtEq(5)),
+                                                get("has_bearing")
+                                                        .cast<BooleanValue>()
+                                                        .eq(const(true))
+                                        ),
+                                usUnits = usUnits,
+                                isDark = isDark,
+                                layerIdPrefix = LayersPerCategory.Tram,
+                                railInFrame = railinframe
                         )
 
-// Layers for INTERCITY
+                        // Layers for INTERCITY
                         LiveDotLayers(
-                            category = "intercityrail",
-                            source = railDotsSrc.value,
-                            settings = (layerSettings.value["intercityrail"] as LayerCategorySettings).labelrealtimedots,
-                            isVisible = (layerSettings.value["intercityrail"] as LayerCategorySettings).visiblerealtimedots,
-                            baseFilter = all(
-                                applyFilterToLiveDots.value,
-                                isIntercity(), if (showZombieBuses) all() else all(
-                                    feature.has("trip_id"),
-                                    get("trip_id").cast<StringValue>().neq(const(""))
-                                )
-                            ),
-                            bearingFilter = all(
-                                applyFilterToLiveDots.value,
-                                isIntercity(),
-                                get("has_bearing").cast<BooleanValue>().eq(const(true))
-                            ),
-                            usUnits = usUnits,
-                            isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.IntercityRail,
-                            railInFrame = railinframe
+                                category = "intercityrail",
+                                source = railDotsSrc.value,
+                                settings =
+                                        (layerSettings.value["intercityrail"] as
+                                                        LayerCategorySettings)
+                                                .labelrealtimedots,
+                                isVisible =
+                                        (layerSettings.value["intercityrail"] as
+                                                        LayerCategorySettings)
+                                                .visiblerealtimedots,
+                                baseFilter =
+                                        all(
+                                                applyFilterToLiveDots.value,
+                                                isIntercity(),
+                                                if (showZombieBuses) all()
+                                                else
+                                                        all(
+                                                                feature.has("trip_id"),
+                                                                get("trip_id")
+                                                                        .cast<StringValue>()
+                                                                        .neq(const(""))
+                                                        )
+                                        ),
+                                bearingFilter =
+                                        all(
+                                                applyFilterToLiveDots.value,
+                                                isIntercity(),
+                                                get("has_bearing")
+                                                        .cast<BooleanValue>()
+                                                        .eq(const(true))
+                                        ),
+                                usUnits = usUnits,
+                                isDark = isDark,
+                                layerIdPrefix = LayersPerCategory.IntercityRail,
+                                railInFrame = railinframe
                         )
 
-// Layers for OTHER
+                        // Layers for OTHER
                         LiveDotLayers(
-                            category = "other",
-                            source = otherDotsSrc.value,
-                            settings = (layerSettings.value["other"] as LayerCategorySettings).labelrealtimedots,
-                            isVisible = (layerSettings.value["other"] as LayerCategorySettings).visiblerealtimedots,
-                            baseFilter = if (showZombieBuses) all(applyFilterToLiveDots.value) else all(
-                                applyFilterToLiveDots.value,
-                                feature.has("trip_id"),
-                                get("trip_id").cast<StringValue>().neq(const(""))
-                            ),
-                            bearingFilter = all(
-                                applyFilterToLiveDots.value,
-                                get("has_bearing").cast<BooleanValue>().eq(const(true)),
-                                if (showZombieBuses) all() else all(
-                                    feature.has("trip_id"),
-                                    get("trip_id").cast<StringValue>().neq(const(""))
-                                )
-                            ),
-                            usUnits = usUnits,
-                            isDark = isDark,
-                            layerIdPrefix = LayersPerCategory.Other,
-                            railInFrame = railinframe
+                                category = "other",
+                                source = otherDotsSrc.value,
+                                settings =
+                                        (layerSettings.value["other"] as LayerCategorySettings)
+                                                .labelrealtimedots,
+                                isVisible =
+                                        (layerSettings.value["other"] as LayerCategorySettings)
+                                                .visiblerealtimedots,
+                                baseFilter =
+                                        if (showZombieBuses) all(applyFilterToLiveDots.value)
+                                        else
+                                                all(
+                                                        applyFilterToLiveDots.value,
+                                                        feature.has("trip_id"),
+                                                        get("trip_id")
+                                                                .cast<StringValue>()
+                                                                .neq(const(""))
+                                                ),
+                                bearingFilter =
+                                        all(
+                                                applyFilterToLiveDots.value,
+                                                get("has_bearing")
+                                                        .cast<BooleanValue>()
+                                                        .eq(const(true)),
+                                                if (showZombieBuses) all()
+                                                else
+                                                        all(
+                                                                feature.has("trip_id"),
+                                                                get("trip_id")
+                                                                        .cast<StringValue>()
+                                                                        .neq(const(""))
+                                                        )
+                                        ),
+                                usUnits = usUnits,
+                                isDark = isDark,
+                                layerIdPrefix = LayersPerCategory.Other,
+                                railInFrame = railinframe
                         )
-
 
                         // Show a dot for the user's current location
                         if (currentLocation != null) {
                             val (lat, lon) = currentLocation!!
 
-                            val userLocationSource = rememberGeoJsonSource(
-                                data = GeoJsonData.Features(
-                                    Point(Position(lon, lat))
-                                )
-                            )
+                            val userLocationSource =
+                                    rememberGeoJsonSource(
+                                            data = GeoJsonData.Features(Point(Position(lon, lat)))
+                                    )
 
                             CircleLayer(
-                                id = "user-location-dot",
-                                source = userLocationSource,
-                                radius = interpolate(
-                                    type = linear(),
-                                    input = zoom(),
-                                    0 to const(3.dp),
-                                    12 to const(6.dp),
-                                    15 to const(8.dp)
-                                ),
-                                color = const(Color(0xFF1D4ED8)),
-                                strokeColor = const(Color.White),
-                                strokeWidth = const(2.dp),
-                                minZoom = 0f,
-                                visible = true
+                                    id = "user-location-dot",
+                                    source = userLocationSource,
+                                    radius =
+                                            interpolate(
+                                                    type = linear(),
+                                                    input = zoom(),
+                                                    0 to const(3.dp),
+                                                    12 to const(6.dp),
+                                                    15 to const(8.dp)
+                                            ),
+                                    color = const(Color(0xFF1D4ED8)),
+                                    strokeColor = const(Color.White),
+                                    strokeWidth = const(2.dp),
+                                    minZoom = 0f,
+                                    visible = true
                             )
                         }
 
                         // draggable pin section
 
-
                         DraggablePinLayers(pin = pin)
-
-
                     }
 
                     DraggablePinOverlay(
-                        camera = camera,
-                        mapSize = mapSize,
-                        pin = pin,
-                        onActivatePin = { pin = pin.copy(active = true) },
-
-                        onDragEndCommit = { newPos ->
-                            // Update Compose state
-                            pin = pin.copy(position = newPos, active = true)
-                        })
-
+                            camera = camera,
+                            mapSize = mapSize,
+                            pin = pin,
+                            onActivatePin = { pin = pin.copy(active = true) },
+                            onDragEndCommit = { newPos ->
+                                // Update Compose state
+                                pin = pin.copy(position = newPos, active = true)
+                            }
+                    )
 
                     // Main Draggable Bottom Sheet
                     val sheetModifier =
-                        Modifier
-                            .fillMaxWidth(contentWidthFraction)
-                            .align(Alignment.BottomStart)
+                            Modifier.fillMaxWidth(contentWidthFraction).align(Alignment.BottomStart)
 
                     Surface(
-                        modifier = sheetModifier
-                            .offset {
-                                IntOffset(
-                                    x = 0, y = draggableState.requireOffset().roundToInt()
-                                )
-                            }
-                            .anchoredDraggable(
-                                state = draggableState, orientation = Orientation.Vertical
-                            ),
-                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                        shadowElevation = 8.dp) {
+                            modifier =
+                                    sheetModifier
+                                            .offset {
+                                                IntOffset(
+                                                        x = 0,
+                                                        y =
+                                                                draggableState
+                                                                        .requireOffset()
+                                                                        .roundToInt()
+                                                )
+                                            }
+                                            .anchoredDraggable(
+                                                    state = draggableState,
+                                                    orientation = Orientation.Vertical
+                                            ),
+                            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                            shadowElevation = 8.dp
+                    ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight()
-                                .padding( // This padding ensures content doesn't get clipped at the bottom
-                                    bottom = with(LocalDensity.current) {
-
-
-                                        ((draggableState.requireOffset())).toDp()
-                                            .coerceAtLeast(0.dp).coerceAtMost(
-                                                with(LocalDensity.current) {
-                                                    maxHeight.times(0.9f)
-                                                })
-                                    }),
-
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                modifier =
+                                        Modifier.fillMaxWidth()
+                                                .fillMaxHeight()
+                                                .padding( // This padding ensures content doesn't
+                                                        // get clipped at the bottom
+                                                        bottom =
+                                                                with(LocalDensity.current) {
+                                                                    ((draggableState
+                                                                                    .requireOffset()))
+                                                                            .toDp()
+                                                                            .coerceAtLeast(0.dp)
+                                                                            .coerceAtMost(
+                                                                                    with(
+                                                                                            LocalDensity
+                                                                                                    .current
+                                                                                    ) {
+                                                                                        maxHeight
+                                                                                                .times(
+                                                                                                        0.9f
+                                                                                                )
+                                                                                    }
+                                                                            )
+                                                                }
+                                                ),
+                                horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .padding(vertical = 10.dp)
-                                    .width(40.dp)
-                                    .height(4.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                            alpha = 0.4f
-                                        )
-                                    )
+                                    modifier =
+                                            Modifier.padding(vertical = 10.dp)
+                                                    .width(40.dp)
+                                                    .height(4.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                            MaterialTheme.colorScheme
+                                                                    .onSurfaceVariant.copy(
+                                                                    alpha = 0.4f
+                                                            )
+                                                    )
                             )
-
 
                             if (catenaryStack.isEmpty()) {
 
                                 NearbyDepartures(
-                                    userLocation = currentLocation,
-                                    pickedLocation = pickedPair,
-                                    usePickedLocation = usePickedLocation,
-                                    pin = pin,
-                                    //usePickedLocation = false,
-                                    darkMode = isSystemInDarkTheme(),
-                                    onMyLocation = {
-                                        // Mimic JS “my_location_press()”: exit pin mode
-                                        pin = pin.copy(active = false)
-                                    },
-                                    onPinDrop = {
-                                        onPinDrop()
-                                    },
-                                    onCenterPin = {
-                                        onCenterPin()
-                                    },
-                                    onTripClick = { r ->
-                                        val newStack = ArrayDeque(catenaryStack)
-                                        newStack.addLast(
-                                            CatenaryStackEnum.SingleTrip(
-                                                chateau_id = r.chateauId!!,
-                                                trip_id = r.tripId,
-                                                route_id = r.routeId,
-                                                start_time = null,
-                                                start_date = r.startDay,
-                                                vehicle_id = null,
-                                                route_type = r.routeType
+                                        userLocation = currentLocation,
+                                        pickedLocation = pickedPair,
+                                        usePickedLocation = usePickedLocation,
+                                        pin = pin,
+                                        // usePickedLocation = false,
+                                        darkMode = isSystemInDarkTheme(),
+                                        onMyLocation = {
+                                            // Mimic JS “my_location_press()”: exit pin mode
+                                            pin = pin.copy(active = false)
+                                        },
+                                        onPinDrop = { onPinDrop() },
+                                        onCenterPin = { onCenterPin() },
+                                        onTripClick = { r ->
+                                            val newStack = ArrayDeque(catenaryStack)
+                                            newStack.addLast(
+                                                    CatenaryStackEnum.SingleTrip(
+                                                            chateau_id = r.chateauId!!,
+                                                            trip_id = r.tripId,
+                                                            route_id = r.routeId,
+                                                            start_time = null,
+                                                            start_date = r.startDay,
+                                                            vehicle_id = null,
+                                                            route_type = r.routeType
+                                                    )
                                             )
-                                        )
-                                        catenaryStack = newStack
-                                    },
-                                    onRouteClick = { chateauId, routeId ->
-                                        val newStack = ArrayDeque(catenaryStack)
-                                        newStack.addLast(
-                                            CatenaryStackEnum.RouteStack(
-                                                chateau_id = chateauId,
-                                                route_id = routeId
+                                            catenaryStack = newStack
+                                        },
+                                        onRouteClick = { chateauId, routeId ->
+                                            val newStack = ArrayDeque(catenaryStack)
+                                            newStack.addLast(
+                                                    CatenaryStackEnum.RouteStack(
+                                                            chateau_id = chateauId,
+                                                            route_id = routeId
+                                                    )
                                             )
-                                        )
-                                        catenaryStack = newStack
-                                    },
-                                    onStopClick = { chateauId, stopId ->
-                                        val newStack = ArrayDeque(catenaryStack)
-                                        newStack.addLast(
-                                            CatenaryStackEnum.StopStack(
-                                                chateau_id = chateauId,
-                                                stop_id = stopId
+                                            catenaryStack = newStack
+                                        },
+                                        onStopClick = { chateauId, stopId ->
+                                            val newStack = ArrayDeque(catenaryStack)
+                                            newStack.addLast(
+                                                    CatenaryStackEnum.StopStack(
+                                                            chateau_id = chateauId,
+                                                            stop_id = stopId
+                                                    )
                                             )
-                                        )
-                                        catenaryStack = newStack
-                                    }
+                                            catenaryStack = newStack
+                                        }
                                 )
                             } else {
                                 // Handle other stack states
@@ -2624,145 +2784,152 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
-                                val onHome: () -> Unit = {
-                                    catenaryStack = ArrayDeque()
-                                }
+                                val onHome: () -> Unit = { catenaryStack = ArrayDeque() }
                                 Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-
 
                                     // Render the current stack screen
                                     when (currentScreen) {
                                         is CatenaryStackEnum.SingleTrip -> {
-                                            if (transitShapeSourceRef.value != null
-                                                && transitShapeDetourSourceRef.value != null &&
-                                                stopsContextSourceRef.value != null
+                                            if (transitShapeSourceRef.value != null &&
+                                                            transitShapeDetourSourceRef.value !=
+                                                                    null &&
+                                                            stopsContextSourceRef.value != null
                                             ) {
 
                                                 SingleTripInfoScreen(
-                                                    tripSelected = currentScreen,
-                                                    onStopClick = { stopStack ->
-                                                        val newStack = ArrayDeque(catenaryStack)
-                                                        newStack.addLast(stopStack)
-                                                        catenaryStack = newStack
-                                                    },
-                                                    onBlockClick = { blockStack ->
-                                                        val newStack = ArrayDeque(catenaryStack)
-                                                        newStack.addLast(blockStack)
-                                                        catenaryStack = newStack
-                                                    },
-                                                    onRouteClick = { routeStack ->
-                                                        val newStack = ArrayDeque(catenaryStack)
-                                                        newStack.addLast(routeStack)
-                                                        catenaryStack = newStack
-                                                    },
-                                                    usUnits = usUnits,
-                                                    // --- Pass the .value of the sources ---
-                                                    transitShapeSource = transitShapeSourceRef.value!!,
-                                                    transitShapeDetourSource = transitShapeDetourSourceRef.value!!,
-                                                    stopsContextSource = stopsContextSourceRef.value!!,
-                                                    majorDotsSource = majorDotsSourceRef.value!!,
-                                                    // Pass the state setter
-                                                    onSetStopsToHide = { newSet ->
-                                                        stopsToHide = newSet
-                                                    },
-                                                    applyFilterToLiveDots = applyFilterToLiveDots,
-                                                    onBack = onBack,
-                                                    onHome = onHome
+                                                        tripSelected = currentScreen,
+                                                        onStopClick = { stopStack ->
+                                                            val newStack = ArrayDeque(catenaryStack)
+                                                            newStack.addLast(stopStack)
+                                                            catenaryStack = newStack
+                                                        },
+                                                        onBlockClick = { blockStack ->
+                                                            val newStack = ArrayDeque(catenaryStack)
+                                                            newStack.addLast(blockStack)
+                                                            catenaryStack = newStack
+                                                        },
+                                                        onRouteClick = { routeStack ->
+                                                            val newStack = ArrayDeque(catenaryStack)
+                                                            newStack.addLast(routeStack)
+                                                            catenaryStack = newStack
+                                                        },
+                                                        usUnits = usUnits,
+                                                        // --- Pass the .value of the sources ---
+                                                        transitShapeSource =
+                                                                transitShapeSourceRef.value!!,
+                                                        transitShapeDetourSource =
+                                                                transitShapeDetourSourceRef.value!!,
+                                                        stopsContextSource =
+                                                                stopsContextSourceRef.value!!,
+                                                        majorDotsSource =
+                                                                majorDotsSourceRef.value!!,
+                                                        // Pass the state setter
+                                                        onSetStopsToHide = { newSet ->
+                                                            stopsToHide = newSet
+                                                        },
+                                                        applyFilterToLiveDots =
+                                                                applyFilterToLiveDots,
+                                                        onBack = onBack,
+                                                        onHome = onHome
                                                 )
                                             }
-
                                         }
-
                                         is CatenaryStackEnum.MapSelectionScreen -> {
                                             MapSelectionScreen(
-                                                screenData = currentScreen,
-                                                onStackPush = { newScreenData ->
-                                                    val newStack = ArrayDeque(catenaryStack)
-                                                    newStack.addLast(newScreenData)
-                                                    catenaryStack = newStack
-                                                },
-                                                onBack = onBack,
-                                                onHome = onHome
-                                            )
-                                        }
-
-                                        is CatenaryStackEnum.SettingsStack -> {
-                                            SettingsScreen(
-                                                datadogConsent = datadogConsent,
-                                                onDatadogConsentChanged = onDatadogConsentChanged,
-                                                gaConsent = gaConsent,
-                                                onGaConsentChanged = onGaConsentChanged,
-                                                onBack = onBack,
-                                                onHome = onHome
-                                            )
-                                        }
-
-                                        is CatenaryStackEnum.RouteStack -> {
-                                            if (transitShapeSourceRef.value != null && stopsContextSourceRef.value != null) {
-                                                RouteScreen(
                                                     screenData = currentScreen,
-                                                    transitShapeSource = transitShapeSourceRef.value!!,
-                                                    stopsContextSource = stopsContextSourceRef.value!!,
-                                                    onStopClick = { stopStack ->
+                                                    onStackPush = { newScreenData ->
                                                         val newStack = ArrayDeque(catenaryStack)
-                                                        newStack.addLast(stopStack)
+                                                        newStack.addLast(newScreenData)
                                                         catenaryStack = newStack
                                                     },
-                                                    onTripClick = { tripStack ->
-                                                        val newStack = ArrayDeque(catenaryStack)
-                                                        newStack.addLast(tripStack)
-                                                        catenaryStack = newStack
-                                                    },
-                                                    onSetStopsToHide = { newSet ->
-                                                        stopsToHide = newSet
-                                                    },
-                                                    camera = camera,
-                                                    desiredPadding = desiredPadding,
                                                     onBack = onBack,
                                                     onHome = onHome
+                                            )
+                                        }
+                                        is CatenaryStackEnum.SettingsStack -> {
+                                            SettingsScreen(
+                                                    datadogConsent = datadogConsent,
+                                                    onDatadogConsentChanged =
+                                                            onDatadogConsentChanged,
+                                                    gaConsent = gaConsent,
+                                                    onGaConsentChanged = onGaConsentChanged,
+                                                    onBack = onBack,
+                                                    onHome = onHome
+                                            )
+                                        }
+                                        is CatenaryStackEnum.RouteStack -> {
+                                            if (transitShapeSourceRef.value != null &&
+                                                            stopsContextSourceRef.value != null
+                                            ) {
+                                                RouteScreen(
+                                                        screenData = currentScreen,
+                                                        transitShapeSource =
+                                                                transitShapeSourceRef.value!!,
+                                                        stopsContextSource =
+                                                                stopsContextSourceRef.value!!,
+                                                        onStopClick = { stopStack ->
+                                                            val newStack = ArrayDeque(catenaryStack)
+                                                            newStack.addLast(stopStack)
+                                                            catenaryStack = newStack
+                                                        },
+                                                        onTripClick = { tripStack ->
+                                                            val newStack = ArrayDeque(catenaryStack)
+                                                            newStack.addLast(tripStack)
+                                                            catenaryStack = newStack
+                                                        },
+                                                        onSetStopsToHide = { newSet ->
+                                                            stopsToHide = newSet
+                                                        },
+                                                        camera = camera,
+                                                        desiredPadding = desiredPadding,
+                                                        onBack = onBack,
+                                                        onHome = onHome
                                                 )
-
                                             }
                                         }
-
                                         is CatenaryStackEnum.StopStack -> {
                                             // Check all 4 refs now
                                             if (transitShapeSourceRef.value != null &&
-                                                transitShapeDetourSourceRef.value != null &&
-                                                stopsContextSourceRef.value != null &&
-                                                transitShapeForStopSourceRef.value != null // <-- Added this check
+                                                            transitShapeDetourSourceRef.value !=
+                                                                    null &&
+                                                            stopsContextSourceRef.value != null &&
+                                                            transitShapeForStopSourceRef.value !=
+                                                                    null // <-- Added this check
                                             ) {
                                                 StopScreen(
-                                                    screenData = currentScreen,
-                                                    onTripClick = { tripStack ->
-                                                        val newStack = ArrayDeque(catenaryStack)
-                                                        newStack.addLast(tripStack)
-                                                        catenaryStack = newStack
-                                                    },
-                                                    // Pass the .value of the sources
-                                                    transitShapeForStopSource = transitShapeForStopSourceRef.value!!,
-                                                    stopsContextSource = stopsContextSourceRef.value!!,
-                                                    transitShapeSource = transitShapeSourceRef.value!!,
-                                                    camera = camera,
-                                                    onSetStopsToHide = { newSet ->
-                                                        stopsToHide = newSet
-                                                    },
-                                                    geoLock = geoLock,
-                                                    onBack = onBack,
-                                                    onHome = onHome
+                                                        screenData = currentScreen,
+                                                        onTripClick = { tripStack ->
+                                                            val newStack = ArrayDeque(catenaryStack)
+                                                            newStack.addLast(tripStack)
+                                                            catenaryStack = newStack
+                                                        },
+                                                        // Pass the .value of the sources
+                                                        transitShapeForStopSource =
+                                                                transitShapeForStopSourceRef
+                                                                        .value!!,
+                                                        stopsContextSource =
+                                                                stopsContextSourceRef.value!!,
+                                                        transitShapeSource =
+                                                                transitShapeSourceRef.value!!,
+                                                        camera = camera,
+                                                        onSetStopsToHide = { newSet ->
+                                                            stopsToHide = newSet
+                                                        },
+                                                        geoLock = geoLock,
+                                                        onBack = onBack,
+                                                        onHome = onHome
                                                 )
                                             }
                                         }
-
                                         is CatenaryStackEnum.BlockStack -> {
                                             BlockScreen(
-                                                chateau = currentScreen.chateau_id,
-                                                blockId = currentScreen.block_id,
-                                                serviceDate = currentScreen.service_date,
-                                                catenaryStack = catenaryStack,
-                                                onStackChange = { catenaryStack = it },
-                                                onBack = onBack,
-                                                onHome = onHome
+                                                    chateau = currentScreen.chateau_id,
+                                                    blockId = currentScreen.block_id,
+                                                    serviceDate = currentScreen.service_date,
+                                                    catenaryStack = catenaryStack,
+                                                    onStackChange = { catenaryStack = it },
+                                                    onBack = onBack,
+                                                    onHome = onHome
                                             )
                                         }
                                         // TODO: Add 'when' branches for other stack types
@@ -2781,323 +2948,353 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-
                     val layerButtonColor =
-                        if (isSystemInDarkTheme()) Color.DarkGray else Color.White
+                            if (isSystemInDarkTheme()) Color.DarkGray else Color.White
                     val layerButtonContentColor =
-                        if (isSystemInDarkTheme()) Color.White else Color.Black
-
+                            if (isSystemInDarkTheme()) Color.White else Color.Black
 
                     var searchBarBottomPx by remember { mutableStateOf(0) }
 
                     AnimatedVisibility(
-                        visible = !sheetIsExpanded, // hide when sheet is fully expanded
-                        modifier = Modifier
-                            .align(searchAlignment)
-                            .fillMaxWidth(contentWidthFraction)
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
-                            .padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                            .zIndex(3f),
-                        enter = slideInVertically(initialOffsetY = { -it / 2 }), // subtle drop-in
-                        exit = slideOutVertically(targetOffsetY = { -it })      // swipe up & out
+                            visible = !sheetIsExpanded, // hide when sheet is fully expanded
+                            modifier =
+                                    Modifier.align(searchAlignment)
+                                            .fillMaxWidth(contentWidthFraction)
+                                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                                            .padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                                            .zIndex(3f),
+                            enter =
+                                    slideInVertically(
+                                            initialOffsetY = { -it / 2 }
+                                    ), // subtle drop-in
+                            exit = slideOutVertically(targetOffsetY = { -it }) // swipe up & out
                     ) {
                         Column(horizontalAlignment = Alignment.Start) {
                             Box(
-                                modifier = Modifier.onGloballyPositioned { coords ->
-                                    val bottom = coords.positionInRoot().y + coords.size.height
-                                    // searchBarBottomPx = bottom.toInt() // (keep if needed)
-                                }) {
+                                    modifier =
+                                            Modifier.onGloballyPositioned { coords ->
+                                                val bottom =
+                                                        coords.positionInRoot().y +
+                                                                coords.size.height
+                                                // searchBarBottomPx = bottom.toInt() // (keep if
+                                                // needed)
+                                            }
+                            ) {
 
                                 // === UPDATE SearchBarCatenary call ===
                                 SearchBarCatenary(
-                                    searchQuery = searchQuery,
-                                    onValueChange = { newQuery ->
-                                        searchQuery = newQuery
+                                        searchQuery = searchQuery,
+                                        onValueChange = { newQuery ->
+                                            searchQuery = newQuery
 
-                                        // This line should now resolve (Error 1)
-                                        searchViewModel.onSearchQueryChanged(
-                                            query = newQuery,
-                                            userLocation = currentLocation,
-                                            mapCenter = camera.position.target,
-                                            context = context
-                                        )
-                                    },
-                                    onFocusChange = { isFocused -> isSearchFocused = isFocused },
-                                    onSettingsClick = {
-                                        val newStack = ArrayDeque(catenaryStack)
-                                        newStack.addLast(CatenaryStackEnum.SettingsStack())
-                                        catenaryStack = newStack
+                                            // This line should now resolve (Error 1)
+                                            searchViewModel.onSearchQueryChanged(
+                                                    query = newQuery,
+                                                    userLocation = currentLocation,
+                                                    mapCenter = camera.position.target,
+                                                    context = context
+                                            )
+                                        },
+                                        onFocusChange = { isFocused ->
+                                            isSearchFocused = isFocused
+                                        },
+                                        onSettingsClick = {
+                                            val newStack = ArrayDeque(catenaryStack)
+                                            newStack.addLast(CatenaryStackEnum.SettingsStack())
+                                            catenaryStack = newStack
 
-                                        // Open the sheet to see the settings
-                                        scope.launch {
-                                            draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                            // Open the sheet to see the settings
+                                            scope.launch {
+                                                draggableState.animateTo(
+                                                        SheetSnapPoint.PartiallyExpanded
+                                                )
+                                            }
+                                            focusManager.clearFocus()
                                         }
-                                        focusManager.clearFocus()
-                                    })
+                                )
                             }
                         }
                     }
 
                     AnimatedVisibility(
-                        visible = !(sheetIsExpanded && contentWidthFraction == 1f) && !(isSearchFocused && contentWidthFraction == 1f),
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
-                            .padding(
-                                top = if (contentWidthFraction == 1.0f) 64.dp else 16.dp,
-                                end = 16.dp
-                            )
-                            .zIndex(3f) // keep above map
+                            visible =
+                                    !(sheetIsExpanded && contentWidthFraction == 1f) &&
+                                            !(isSearchFocused && contentWidthFraction == 1f),
+                            modifier =
+                                    Modifier.align(Alignment.TopEnd)
+                                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                                            .padding(
+                                                    top =
+                                                            if (contentWidthFraction == 1.0f) 64.dp
+                                                            else 16.dp,
+                                                    end = 16.dp
+                                            )
+                                            .zIndex(3f) // keep above map
                     ) {
                         FloatingActionButton(
-                            onClick = { showLayersPanel = !showLayersPanel },
-                            modifier = Modifier.size(36.dp),
-                            shape = CircleShape,
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.onSurface,
+                                onClick = { showLayersPanel = !showLayersPanel },
+                                modifier = Modifier.size(36.dp),
+                                shape = CircleShape,
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
                         ) {
                             Icon(
-                                Icons.Filled.Layers,
-                                contentDescription = "Toggle Layers",
-                                Modifier.size(24.dp)
+                                    Icons.Filled.Layers,
+                                    contentDescription = "Toggle Layers",
+                                    Modifier.size(24.dp)
                             )
                         }
                     }
 
-                    //Compass Screen
+                    // Compass Screen
                     AnimatedVisibility(
-                        visible = !(sheetIsExpanded && contentWidthFraction == 1f) && !(isSearchFocused && contentWidthFraction == 1f),
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
-                            .padding(
-                                top = if (contentWidthFraction == 1.0f) 110.dp else 64.dp,
-                                end = 16.dp
-                            )
-                            .zIndex(3f) // keep above map
+                            visible =
+                                    !(sheetIsExpanded && contentWidthFraction == 1f) &&
+                                            !(isSearchFocused && contentWidthFraction == 1f),
+                            modifier =
+                                    Modifier.align(Alignment.TopEnd)
+                                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                                            .padding(
+                                                    top =
+                                                            if (contentWidthFraction == 1.0f) 110.dp
+                                                            else 64.dp,
+                                                    end = 16.dp
+                                            )
+                                            .zIndex(3f) // keep above map
                     ) {
                         FloatingActionButton(
-                            onClick = {
-                                scope.launch {
-                                    camera.animateTo(
-                                        camera.position.copy(
-                                            bearing = 0.0
-                                        )
-                                    )
-                                }
-                            },
-                            modifier = Modifier.size(36.dp),
-                            shape = CircleShape,
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.onSurface,
+                                onClick = {
+                                    scope.launch {
+                                        camera.animateTo(camera.position.copy(bearing = 0.0))
+                                    }
+                                },
+                                modifier = Modifier.size(36.dp),
+                                shape = CircleShape,
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
                         ) {
                             Image(
-                                painter = painterResource(id = if (isDark) R.drawable.compass_dark else R.drawable.compass_light),
-                                contentDescription = "Set to North",
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .rotate(-camera.position.bearing.toFloat())
+                                    painter =
+                                            painterResource(
+                                                    id =
+                                                            if (isDark) R.drawable.compass_dark
+                                                            else R.drawable.compass_light
+                                            ),
+                                    contentDescription = "Set to North",
+                                    modifier =
+                                            Modifier.size(24.dp)
+                                                    .rotate(-camera.position.bearing.toFloat())
                             )
                         }
                     }
 
-                    //Floating geolocation button
+                    // Floating geolocation button
 
                     // Sizing we’ll use
                     val fabSize = 56.dp
                     val fabMargin = 16.dp
 
-// Drawer geometry
-                    val sheetOffsetPx =
-                        draggableState.requireOffset()            // top Y of the bottom sheet
+                    // Drawer geometry
+                    val sheetOffsetPx = draggableState.requireOffset() // top Y of the bottom sheet
                     val fabYAboveSheet =
-                        with(density) { (sheetOffsetPx - fabSize.toPx() - fabMargin.toPx()).roundToInt() }
+                            with(density) {
+                                (sheetOffsetPx - fabSize.toPx() - fabMargin.toPx()).roundToInt()
+                            }
                     val fabBottomMarginWhenFull =
-                        with(density) { (maxHeight.toPx() - sheetOffsetPx + fabMargin.toPx()).roundToInt() }
+                            with(density) {
+                                (maxHeight.toPx() - sheetOffsetPx + fabMargin.toPx()).roundToInt()
+                            }
 
                     val fabModifier =
-                        if (contentWidthFraction == 1f) {
-                            // Full-width sheet -> float *above* the drawer and move with it
-                            Modifier
-                                .align(Alignment.TopEnd)
-                                .offset {
-                                    IntOffset(x = -with(density) {
-                                        fabMargin.toPx().roundToInt()
-                                    }, y = fabYAboveSheet.coerceAtLeast(0))
-                                }
-                                .zIndex(4f)
-                        } else {
-                            // Half-width sheet -> keep it in the bottom-right corner (not over the drawer)
-                            Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(end = 16.dp, bottom = 16.dp)
-                                .zIndex(4f)
-                        }
+                            if (contentWidthFraction == 1f) {
+                                // Full-width sheet -> float *above* the drawer and move with it
+                                Modifier.align(Alignment.TopEnd)
+                                        .offset {
+                                            IntOffset(
+                                                    x =
+                                                            -with(density) {
+                                                                fabMargin.toPx().roundToInt()
+                                                            },
+                                                    y = fabYAboveSheet.coerceAtLeast(0)
+                                            )
+                                        }
+                                        .zIndex(4f)
+                            } else {
+                                // Half-width sheet -> keep it in the bottom-right corner (not over
+                                // the drawer)
+                                Modifier.align(Alignment.BottomEnd)
+                                        .padding(end = 16.dp, bottom = 16.dp)
+                                        .zIndex(4f)
+                            }
 
                     AnimatedVisibility(
-                        visible = isWideLayout || !(isSearchFocused || sheetIsExpanded),
-                        modifier = fabModifier,
-                        enter = slideInVertically(initialOffsetY = { it / 2 }),
-                        exit = slideOutVertically(targetOffsetY = { it })
+                            visible = isWideLayout || !(isSearchFocused || sheetIsExpanded),
+                            modifier = fabModifier,
+                            enter = slideInVertically(initialOffsetY = { it / 2 }),
+                            exit = slideOutVertically(targetOffsetY = { it })
                     ) {
                         FloatingActionButton(
-                            onClick = {
-                                val loc = currentLocation
-                                if (loc == null) {
-                                    scope.launch { snackbars.showSnackbar("Location unavailable") }
-                                    return@FloatingActionButton
-                                }
-                                // Activate lock and teleport *now*
-                                geoLock.activate()
-                                scope.launch {
-                                    teleportCamera(
-                                        camera = camera,
-                                        controller = geoLock,
-                                        lat = loc.first,
-                                        lon = loc.second,
-                                        zoom = 16.0 // pick your desired snap zoom
-                                    )
-                                }
-                                println("Geolock state ${geoLock.isActive()}")
-                                // scope.launch { snackbars.showSnackbar("Following your location") }
-                            },
-                            shape = CircleShape,
-                            containerColor = if (geoLock.isActive()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                            contentColor = if (geoLock.isActive()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                        ) {
-                            Icon(Icons.Filled.MyLocation, contentDescription = "My Location")
-                        }
+                                onClick = {
+                                    val loc = currentLocation
+                                    if (loc == null) {
+                                        scope.launch {
+                                            snackbars.showSnackbar("Location unavailable")
+                                        }
+                                        return@FloatingActionButton
+                                    }
+                                    // Activate lock and teleport *now*
+                                    geoLock.activate()
+                                    scope.launch {
+                                        teleportCamera(
+                                                camera = camera,
+                                                controller = geoLock,
+                                                lat = loc.first,
+                                                lon = loc.second,
+                                                zoom = 16.0 // pick your desired snap zoom
+                                        )
+                                    }
+                                    println("Geolock state ${geoLock.isActive()}")
+                                    // scope.launch { snackbars.showSnackbar("Following your
+                                    // location") }
+                                },
+                                shape = CircleShape,
+                                containerColor =
+                                        if (geoLock.isActive()) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.surface,
+                                contentColor =
+                                        if (geoLock.isActive()) MaterialTheme.colorScheme.onPrimary
+                                        else MaterialTheme.colorScheme.onSurface,
+                        ) { Icon(Icons.Filled.MyLocation, contentDescription = "My Location") }
                     }
 
                     // The results overlay that shows when the searchbar is focused.
-// On tablets (contentWidthFraction < 1f) it covers the left pane,
-// on phones it covers the full window.
+                    // On tablets (contentWidthFraction < 1f) it covers the left pane,
+                    // on phones it covers the full window.
                     AnimatedVisibility(
-                        visible = isSearchFocused,
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .zIndex(2f), // below the bar (z=3), above the map/sheet
-                        enter = slideInVertically(initialOffsetY = { -it }),
-                        exit = slideOutVertically(targetOffsetY = { -it }),
+                            visible = isSearchFocused,
+                            modifier =
+                                    Modifier.align(Alignment.TopStart)
+                                            .zIndex(2f), // below the bar (z=3), above the map/sheet
+                            enter = slideInVertically(initialOffsetY = { -it }),
+                            exit = slideOutVertically(targetOffsetY = { -it }),
                     ) {
-                        val overlayBase = if (contentWidthFraction < 1f) {
-                            Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth(contentWidthFraction)
-                        } else {
-                            Modifier.fillMaxSize()
-                        }
+                        val overlayBase =
+                                if (contentWidthFraction < 1f) {
+                                    Modifier.fillMaxHeight().fillMaxWidth(contentWidthFraction)
+                                } else {
+                                    Modifier.fillMaxSize()
+                                }
 
                         SearchResultsOverlay(
-                            modifier = overlayBase,
-                            viewModel = searchViewModel,
-                            currentLocation = currentLocation,
-                            onNominatimClick = { result ->
-                                geoLock.deactivate()
-
-                                val pos = Position(result.lon.toDouble(), result.lat.toDouble())
-
-                                // === FIX for Error 3 ===
-                                scope.launch {
-
+                                modifier = overlayBase,
+                                viewModel = searchViewModel,
+                                currentLocation = currentLocation,
+                                onCypressClick = { result ->
                                     geoLock.deactivate()
 
-                                    camera.animateTo(
-                                        camera.position.copy(
-                                            target = pos,
-                                            zoom = 14.0
+                                    val lon = result.geometry.coordinates[0]
+                                    val lat = result.geometry.coordinates[1]
+                                    val pos = Position(lon, lat)
+
+                                    // === FIX for Error 3 ===
+                                    scope.launch {
+                                        geoLock.deactivate()
+
+                                        camera.animateTo(
+                                                camera.position.copy(target = pos, zoom = 14.0)
                                         )
+                                    }
+                                    // === FIX for Error 4 ===
+                                    focusManager.clearFocus() // This should now resolve
+                                },
+                                onRouteClick = { ranking, routeInfo, agency ->
+                                    geoLock.deactivate()
+
+                                    val newStack = ArrayDeque(catenaryStack)
+                                    newStack.addLast(
+                                            CatenaryStackEnum.RouteStack(
+                                                    chateau_id = routeInfo.chateau,
+                                                    route_id = routeInfo.routeId
+                                            )
                                     )
-                                }
-                                // === FIX for Error 4 ===
-                                focusManager.clearFocus() // This should now resolve
-                            },
-                            onRouteClick = { ranking, routeInfo, agency ->
-                                geoLock.deactivate()
+                                    catenaryStack = newStack
 
-                                val newStack = ArrayDeque(catenaryStack)
-                                newStack.addLast(
-                                    CatenaryStackEnum.RouteStack(
-                                        chateau_id = routeInfo.chateau,
-                                        route_id = routeInfo.routeId
+                                    scope.launch {
+                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                    }
+                                    focusManager.clearFocus()
+                                },
+                                onStopClick = { chateau, gtfsId, ranking, stopInfo ->
+                                    geoLock.deactivate()
+
+                                    val pos = Position(stopInfo.point.x, stopInfo.point.y)
+
+                                    val newStack = ArrayDeque(catenaryStack)
+                                    newStack.addLast(
+                                            CatenaryStackEnum.StopStack(
+                                                    chateau_id = chateau,
+                                                    stop_id = gtfsId
+                                            )
                                     )
-                                )
-                                catenaryStack = newStack
+                                    catenaryStack = newStack
 
-                                scope.launch {
-                                    draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                    scope.launch {
+                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                    }
+                                    focusManager.clearFocus()
                                 }
-                                focusManager.clearFocus()
-                            },
-                            onStopClick = { chateau, gtfsId, ranking, stopInfo ->
-                                geoLock.deactivate()
-
-                                val pos = Position(stopInfo.point.x, stopInfo.point.y)
-
-                                val newStack = ArrayDeque(catenaryStack)
-                                newStack.addLast(
-                                    CatenaryStackEnum.StopStack(
-                                        chateau_id = chateau,
-                                        stop_id = gtfsId
-                                    )
-                                )
-                                catenaryStack = newStack
-
-                                scope.launch {
-                                    draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
-                                }
-                                focusManager.clearFocus()
-                            }
                         )
                     }
 
                     // Layers Panel
                     AnimatedVisibility(
-                        visible = showLayersPanel,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .zIndex(5f), // Ensure it's on top
-                        enter = slideInVertically(initialOffsetY = { it }),
-                        exit = slideOutVertically(targetOffsetY = { it })
+                            visible = showLayersPanel,
+                            modifier =
+                                    Modifier.align(Alignment.BottomCenter)
+                                            .zIndex(5f), // Ensure it's on top
+                            enter = slideInVertically(initialOffsetY = { it }),
+                            exit = slideOutVertically(targetOffsetY = { it })
                     ) {
 
                         // UPDATED Layers Panel with "More" tab
                         var selectedTab by remember { mutableStateOf("intercityrail") }
-                        val tabs =
-                            listOf("intercityrail", "localrail", "bus", "other", "more")
+                        val tabs = listOf("intercityrail", "localrail", "bus", "other", "more")
 
                         Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 100.dp, max = 700.dp),
-                            shadowElevation = 8.dp,
-                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                                modifier =
+                                        Modifier.fillMaxWidth()
+                                                .heightIn(min = 100.dp, max = 700.dp),
+                                shadowElevation = 8.dp,
+                                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .windowInsetsPadding(
-                                        WindowInsets(
-                                            bottom = WindowInsets.safeContent.getBottom(
-                                                density
-                                            )
-                                        )
-                                    )
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                    modifier =
+                                            Modifier.windowInsetsPadding(
+                                                            WindowInsets(
+                                                                    bottom =
+                                                                            WindowInsets.safeContent
+                                                                                    .getBottom(
+                                                                                            density
+                                                                                    )
+                                                            )
+                                                    )
+                                                    .fillMaxWidth()
+                                                    .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        stringResource(id = R.string.layers),
-                                        style = MaterialTheme.typography.headlineSmall
+                                            stringResource(id = R.string.layers),
+                                            style = MaterialTheme.typography.headlineSmall
                                     )
                                     IconButton(onClick = { showLayersPanel = false }) {
                                         Icon(
-                                            Icons.Filled.Close, contentDescription = "Close Layers"
+                                                Icons.Filled.Close,
+                                                contentDescription = "Close Layers"
                                         )
                                     }
                                 }
@@ -3105,25 +3302,30 @@ class MainActivity : ComponentActivity() {
                                 // Tab Row
                                 TabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
                                     tabs.forEachIndexed { index, title ->
-                                        val textResId = when (title) {
-                                            "intercityrail" -> R.string.heading_intercity_rail
-                                            "localrail" -> R.string.heading_local_rail
-                                            "bus" -> R.string.heading_bus
-                                            "other" -> R.string.heading_other
-                                            "more" -> R.string.heading_more
-                                            else -> R.string.app_name // Fallback, though should not happen
-                                        }
+                                        val textResId =
+                                                when (title) {
+                                                    "intercityrail" ->
+                                                            R.string.heading_intercity_rail
+                                                    "localrail" -> R.string.heading_local_rail
+                                                    "bus" -> R.string.heading_bus
+                                                    "other" -> R.string.heading_other
+                                                    "more" -> R.string.heading_more
+                                                    else -> R.string.app_name // Fallback, though
+                                                // should not happen
+                                                }
                                         Tab(
-                                            selected = selectedTab == title,
-                                            onClick = { selectedTab = title },
-                                            text = {
-                                                Text(
-                                                    text = stringResource(textResId),
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                            }
+                                                selected = selectedTab == title,
+                                                onClick = { selectedTab = title },
+                                                text = {
+                                                    Text(
+                                                            text = stringResource(textResId),
+                                                            style =
+                                                                    MaterialTheme.typography
+                                                                            .bodySmall,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
                                         )
                                     }
                                 }
@@ -3131,159 +3333,194 @@ class MainActivity : ComponentActivity() {
                                 Spacer(modifier = Modifier.height(16.dp))
 
                                 // Content for Vehicle Tabs
-                                if (selectedTab in listOf(
-                                        "intercityrail", "localrail", "bus", "other"
-                                    )
+                                if (selectedTab in
+                                                listOf("intercityrail", "localrail", "bus", "other")
                                 ) {
                                     val currentSettings = layerSettings.value.category(selectedTab)
                                     currentSettings?.let { settings ->
 
                                         // Row 1: Shapes, Labels, Stops, Stop Labels
                                         Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceEvenly
                                         ) {
                                             LayerToggleButton(
-                                                name = "Shapes",
-                                                padding = 0.dp,
-                                                icon = {
-                                                    Image(
-                                                        painter = painterResource(id = R.drawable.routesicon),
-                                                        contentDescription = "Shape",
-                                                        modifier = Modifier
-                                                            .height(48.dp),
-                                                        contentScale = ContentScale.Fit
-                                                    )
-                                                },
-                                                isActive = settings.shapes,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(shapes = !cat.shapes)
-                                                        }
+                                                    name = "Shapes",
+                                                    padding = 0.dp,
+                                                    icon = {
+                                                        Image(
+                                                                painter =
+                                                                        painterResource(
+                                                                                id =
+                                                                                        R.drawable
+                                                                                                .routesicon
+                                                                        ),
+                                                                contentDescription = "Shape",
+                                                                modifier = Modifier.height(48.dp),
+                                                                contentScale = ContentScale.Fit
+                                                        )
+                                                    },
+                                                    isActive = settings.shapes,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(shapes = !cat.shapes)
+                                                                }
 
-
-                                                    queryAreAnyRailFeaturesVisible(
-                                                        camera, mapSize,
-                                                        forceRun = true
-                                                    )
-                                                }
+                                                        queryAreAnyRailFeaturesVisible(
+                                                                camera,
+                                                                mapSize,
+                                                                forceRun = true
+                                                        )
+                                                    }
                                             )
                                             LayerToggleButton(
-                                                name = "Shape Labels",
-                                                padding = 0.dp,
-                                                icon = {
-                                                    Image(
-                                                        painter = painterResource(id = R.drawable.labelsicon),
-                                                        contentDescription = "Shape Label",
-                                                        modifier = Modifier
-                                                            .height(48.dp),
-                                                        contentScale = ContentScale.Fit
-                                                    )
-                                                }, // Placeholder
-                                                isActive = settings.labelshapes,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(labelshapes = !cat.labelshapes)
-                                                        }
+                                                    name = "Shape Labels",
+                                                    padding = 0.dp,
+                                                    icon = {
+                                                        Image(
+                                                                painter =
+                                                                        painterResource(
+                                                                                id =
+                                                                                        R.drawable
+                                                                                                .labelsicon
+                                                                        ),
+                                                                contentDescription = "Shape Label",
+                                                                modifier = Modifier.height(48.dp),
+                                                                contentScale = ContentScale.Fit
+                                                        )
+                                                    }, // Placeholder
+                                                    isActive = settings.labelshapes,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelshapes =
+                                                                                    !cat.labelshapes
+                                                                    )
+                                                                }
 
-                                                    queryAreAnyRailFeaturesVisible(
-                                                        camera, mapSize,
-                                                        forceRun = true
-                                                    )
-                                                }
+                                                        queryAreAnyRailFeaturesVisible(
+                                                                camera,
+                                                                mapSize,
+                                                                forceRun = true
+                                                        )
+                                                    }
                                             )
                                             LayerToggleButton(
-                                                name = "Stops",
-                                                padding = 0.dp,
-                                                icon = {
-                                                    Image(
-                                                        painter = painterResource(id = R.drawable.stopsicon),
-                                                        contentDescription = "Stops",
-                                                        modifier = Modifier
-                                                            .height(48.dp),
-                                                        contentScale = ContentScale.Fit
-                                                    )
-                                                },
-                                                isActive = settings.stops,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(stops = !cat.stops)
-                                                        }
+                                                    name = "Stops",
+                                                    padding = 0.dp,
+                                                    icon = {
+                                                        Image(
+                                                                painter =
+                                                                        painterResource(
+                                                                                id =
+                                                                                        R.drawable
+                                                                                                .stopsicon
+                                                                        ),
+                                                                contentDescription = "Stops",
+                                                                modifier = Modifier.height(48.dp),
+                                                                contentScale = ContentScale.Fit
+                                                        )
+                                                    },
+                                                    isActive = settings.stops,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(stops = !cat.stops)
+                                                                }
 
-                                                    queryAreAnyRailFeaturesVisible(
-                                                        camera, mapSize,
-                                                    )
-                                                }
-
+                                                        queryAreAnyRailFeaturesVisible(
+                                                                camera,
+                                                                mapSize,
+                                                        )
+                                                    }
                                             )
                                             LayerToggleButton(
-                                                name = "Stop Labels",
-                                                padding = 0.dp,
-                                                icon = {
-                                                    Image(
-                                                        painter = painterResource(id = if (isDark) R.drawable.dark_stop_name else R.drawable.light_stop_name),
-                                                        contentDescription = "Stops Label",
-                                                        modifier = Modifier
-                                                            .height(48.dp),
-                                                        contentScale = ContentScale.Fit
-                                                    )
-                                                },
-                                                isActive = settings.labelstops,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(labelstops = !cat.labelstops)
-                                                        }
+                                                    name = "Stop Labels",
+                                                    padding = 0.dp,
+                                                    icon = {
+                                                        Image(
+                                                                painter =
+                                                                        painterResource(
+                                                                                id =
+                                                                                        if (isDark)
+                                                                                                R.drawable
+                                                                                                        .dark_stop_name
+                                                                                        else
+                                                                                                R.drawable
+                                                                                                        .light_stop_name
+                                                                        ),
+                                                                contentDescription = "Stops Label",
+                                                                modifier = Modifier.height(48.dp),
+                                                                contentScale = ContentScale.Fit
+                                                        )
+                                                    },
+                                                    isActive = settings.labelstops,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelstops =
+                                                                                    !cat.labelstops
+                                                                    )
+                                                                }
 
-                                                    queryAreAnyRailFeaturesVisible(
-                                                        camera, mapSize,
-                                                    )
-                                                }
+                                                        queryAreAnyRailFeaturesVisible(
+                                                                camera,
+                                                                mapSize,
+                                                        )
+                                                    }
                                             )
 
                                             LayerToggleButton(
-                                                name = "Vehicles",
-                                                padding = 0.dp,
-                                                icon = {
-                                                    Image(
-                                                        painter = painterResource(id = R.drawable.vehiclesicon),
-                                                        contentDescription = "Stops Label",
-                                                        modifier = Modifier
-                                                            .height(48.dp),
-                                                        contentScale = ContentScale.Fit
-                                                    )
-                                                },
-                                                isActive = settings.visiblerealtimedots,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(visiblerealtimedots = !cat.visiblerealtimedots)
-                                                        }
+                                                    name = "Vehicles",
+                                                    padding = 0.dp,
+                                                    icon = {
+                                                        Image(
+                                                                painter =
+                                                                        painterResource(
+                                                                                id =
+                                                                                        R.drawable
+                                                                                                .vehiclesicon
+                                                                        ),
+                                                                contentDescription = "Stops Label",
+                                                                modifier = Modifier.height(48.dp),
+                                                                contentScale = ContentScale.Fit
+                                                        )
+                                                    },
+                                                    isActive = settings.visiblerealtimedots,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            visiblerealtimedots =
+                                                                                    !cat.visiblerealtimedots
+                                                                    )
+                                                                }
 
-                                                    queryAreAnyRailFeaturesVisible(
-                                                        camera, mapSize,
-                                                    )
-                                                }
+                                                        queryAreAnyRailFeaturesVisible(
+                                                                camera,
+                                                                mapSize,
+                                                        )
+                                                    }
                                             )
                                         }
 
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            "Vehicle Labels",
-                                            style = MaterialTheme.typography.titleMedium
+                                                "Vehicle Labels",
+                                                style = MaterialTheme.typography.titleMedium
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -3292,166 +3529,219 @@ class MainActivity : ComponentActivity() {
 
                                         // Row 3: Label Toggles (First row from JS)
                                         Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceEvenly
                                         ) {
                                             VehicleLabelToggleButton(
-                                                name = stringResource(id = R.string.route), // Corresponds to $_('showroute')
-                                                icon = Icons.Filled.Route, // Corresponds to symbol="route"
-                                                isActive = labelSettings.route,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(
-                                                                labelrealtimedots = cat.labelrealtimedots.copy(
-                                                                    route = !cat.labelrealtimedots.route
-                                                                )
-                                                            )
-                                                        }
-                                                }
+                                                    name =
+                                                            stringResource(
+                                                                    id = R.string.route
+                                                            ), // Corresponds to $_('showroute')
+                                                    icon = Icons.Filled.Route, // Corresponds to
+                                                    // symbol="route"
+                                                    isActive = labelSettings.route,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelrealtimedots =
+                                                                                    cat.labelrealtimedots
+                                                                                            .copy(
+                                                                                                    route =
+                                                                                                            !cat.labelrealtimedots
+                                                                                                                    .route
+                                                                                            )
+                                                                    )
+                                                                }
+                                                    }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = stringResource(id = R.string.trip), // Corresponds to $_('showtrip')
-                                                icon = Icons.Filled.AltRoute, // Corresponds to symbol="mode_of_travel"
-                                                isActive = labelSettings.trip,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(
-                                                                labelrealtimedots = cat.labelrealtimedots.copy(
-                                                                    trip = !cat.labelrealtimedots.trip
-                                                                )
-                                                            )
-                                                        }
-                                                }
+                                                    name =
+                                                            stringResource(
+                                                                    id = R.string.trip
+                                                            ), // Corresponds to $_('showtrip')
+                                                    icon = Icons.Filled.AltRoute, // Corresponds to
+                                                    // symbol="mode_of_travel"
+                                                    isActive = labelSettings.trip,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelrealtimedots =
+                                                                                    cat.labelrealtimedots
+                                                                                            .copy(
+                                                                                                    trip =
+                                                                                                            !cat.labelrealtimedots
+                                                                                                                    .trip
+                                                                                            )
+                                                                    )
+                                                                }
+                                                    }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = stringResource(id = R.string.vehicle), // Corresponds to $_('showvehicle')
-                                                icon = Icons.Filled.Train, // Corresponds to symbol="train"
-                                                isActive = labelSettings.vehicle,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(
-                                                                labelrealtimedots = cat.labelrealtimedots.copy(
-                                                                    vehicle = !cat.labelrealtimedots.vehicle
-                                                                )
-                                                            )
-                                                        }
-                                                }
+                                                    name =
+                                                            stringResource(
+                                                                    id = R.string.vehicle
+                                                            ), // Corresponds to $_('showvehicle')
+                                                    icon = Icons.Filled.Train, // Corresponds to
+                                                    // symbol="train"
+                                                    isActive = labelSettings.vehicle,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelrealtimedots =
+                                                                                    cat.labelrealtimedots
+                                                                                            .copy(
+                                                                                                    vehicle =
+                                                                                                            !cat.labelrealtimedots
+                                                                                                                    .vehicle
+                                                                                            )
+                                                                    )
+                                                                }
+                                                    }
+                                            )
 
-                                            )
-
                                             VehicleLabelToggleButton(
-                                                name = stringResource(id = R.string.headsign), // Corresponds to $_('headsign')
-                                                icon = Icons.Filled.SportsScore, // Corresponds to symbol="sports_score"
-                                                isActive = labelSettings.headsign,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(
-                                                                labelrealtimedots = cat.labelrealtimedots.copy(
-                                                                    headsign = !cat.labelrealtimedots.headsign
-                                                                )
-                                                            )
-                                                        }
-                                                }
-                                            )
-                                            VehicleLabelToggleButton(
-                                                name = stringResource(id = R.string.speed),
-                                                icon = Icons.Filled.Speed, // Corresponds to symbol="speed"
-                                                isActive = labelSettings.speed,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(
-                                                                labelrealtimedots = cat.labelrealtimedots.copy(
-                                                                    speed = !cat.labelrealtimedots.speed
-                                                                )
-                                                            )
-                                                        }
-                                                }
+                                                    name =
+                                                            stringResource(
+                                                                    id = R.string.headsign
+                                                            ), // Corresponds to $_('headsign')
+                                                    icon =
+                                                            Icons.Filled
+                                                                    .SportsScore, // Corresponds to
+                                                    // symbol="sports_score"
+                                                    isActive = labelSettings.headsign,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelrealtimedots =
+                                                                                    cat.labelrealtimedots
+                                                                                            .copy(
+                                                                                                    headsign =
+                                                                                                            !cat.labelrealtimedots
+                                                                                                                    .headsign
+                                                                                            )
+                                                                    )
+                                                                }
+                                                    }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = stringResource(id = R.string.occupancy),
-                                                icon = Icons.Filled.Group, // Corresponds to symbol="group"
-                                                isActive = labelSettings.occupancy,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(
-                                                                labelrealtimedots = cat.labelrealtimedots.copy(
-                                                                    occupancy = !cat.labelrealtimedots.occupancy
-                                                                )
-                                                            )
-                                                        }
-                                                }
+                                                    name = stringResource(id = R.string.speed),
+                                                    icon = Icons.Filled.Speed, // Corresponds to
+                                                    // symbol="speed"
+                                                    isActive = labelSettings.speed,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelrealtimedots =
+                                                                                    cat.labelrealtimedots
+                                                                                            .copy(
+                                                                                                    speed =
+                                                                                                            !cat.labelrealtimedots
+                                                                                                                    .speed
+                                                                                            )
+                                                                    )
+                                                                }
+                                                    }
                                             )
                                             VehicleLabelToggleButton(
-                                                name = stringResource(id = R.string.delay), // Corresponds to $_('delay')
-                                                icon = Icons.Filled.Timer, // Corresponds to symbol="timer"
-                                                isActive = labelSettings.delay,
-                                                onToggle = {
-                                                    layerSettings.value =
-                                                        layerSettings.value.updateCategory(
-                                                            selectedTab
-                                                        ) { cat ->
-                                                            cat.copy(
-                                                                labelrealtimedots = cat.labelrealtimedots.copy(
-                                                                    delay = !cat.labelrealtimedots.delay
-                                                                )
-                                                            )
-                                                        }
-                                                }
+                                                    name = stringResource(id = R.string.occupancy),
+                                                    icon = Icons.Filled.Group, // Corresponds to
+                                                    // symbol="group"
+                                                    isActive = labelSettings.occupancy,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelrealtimedots =
+                                                                                    cat.labelrealtimedots
+                                                                                            .copy(
+                                                                                                    occupancy =
+                                                                                                            !cat.labelrealtimedots
+                                                                                                                    .occupancy
+                                                                                            )
+                                                                    )
+                                                                }
+                                                    }
+                                            )
+                                            VehicleLabelToggleButton(
+                                                    name =
+                                                            stringResource(
+                                                                    id = R.string.delay
+                                                            ), // Corresponds to $_('delay')
+                                                    icon = Icons.Filled.Timer, // Corresponds to
+                                                    // symbol="timer"
+                                                    isActive = labelSettings.delay,
+                                                    onToggle = {
+                                                        layerSettings.value =
+                                                                layerSettings.value.updateCategory(
+                                                                        selectedTab
+                                                                ) { cat ->
+                                                                    cat.copy(
+                                                                            labelrealtimedots =
+                                                                                    cat.labelrealtimedots
+                                                                                            .copy(
+                                                                                                    delay =
+                                                                                                            !cat.labelrealtimedots
+                                                                                                                    .delay
+                                                                                            )
+                                                                    )
+                                                                }
+                                                    }
                                             )
                                         }
-
-
                                     }
                                 }
 
                                 // Content for "More" Tab
                                 if (selectedTab == "more") {
                                     Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { showZombieBuses = !showZombieBuses }
-                                            .padding(vertical = 4.dp)
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier =
+                                                    Modifier.fillMaxWidth()
+                                                            .clickable {
+                                                                showZombieBuses = !showZombieBuses
+                                                            }
+                                                            .padding(vertical = 4.dp)
                                     ) {
                                         Checkbox(
-                                            checked = showZombieBuses,
-                                            onCheckedChange = { showZombieBuses = it })
+                                                checked = showZombieBuses,
+                                                onCheckedChange = { showZombieBuses = it }
+                                        )
                                         Text(
-                                            "Show vehicles without trip info",
-                                            style = MaterialTheme.typography.bodyMedium
+                                                "Show vehicles without trip info",
+                                                style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
                                     Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { usUnits = !usUnits }
-                                            .padding(vertical = 4.dp)
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier =
+                                                    Modifier.fillMaxWidth()
+                                                            .clickable { usUnits = !usUnits }
+                                                            .padding(vertical = 4.dp)
                                     ) {
                                         Checkbox(
-                                            checked = usUnits,
-                                            onCheckedChange = { usUnits = it })
+                                                checked = usUnits,
+                                                onCheckedChange = { usUnits = it }
+                                        )
                                         Text(
-                                            "Use US Units (mph)",
-                                            style = MaterialTheme.typography.bodyMedium
+                                                "Use US Units (mph)",
+                                                style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
                                 }
@@ -3460,28 +3750,32 @@ class MainActivity : ComponentActivity() {
                     }
 
                     SnackbarHost(
-                        hostState = snackbars,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .zIndex(10f)
-                            .windowInsetsPadding(
-                                WindowInsets(
-                                    bottom = WindowInsets.safeContent.getBottom(
-                                        density
-                                    )
-                                )
-                            )
+                            hostState = snackbars,
+                            modifier =
+                                    Modifier.align(Alignment.BottomCenter)
+                                            .zIndex(10f)
+                                            .windowInsetsPadding(
+                                                    WindowInsets(
+                                                            bottom =
+                                                                    WindowInsets.safeContent
+                                                                            .getBottom(density)
+                                                    )
+                                            )
                     )
                 }
             }
         }
     }
 
-    // --- recompute strategy: try network; if that fails but we have cached GeoJSON, recompute from that ---
+    // --- recompute strategy: try network; if that fails but we have cached GeoJSON, recompute from
+    // that ---
 
-    private suspend fun recomputePreferNetworkOrCached(): Triple<RTree<Int>, List<Feature<Geometry?, ChateauProps>>, String>? {
+    private suspend fun recomputePreferNetworkOrCached():
+            Triple<RTree<Int>, List<Feature<Geometry?, ChateauProps>>, String>? {
         // try network
-        fetchAndBuildFromNetwork()?.let { return it }
+        fetchAndBuildFromNetwork()?.let {
+            return it
+        }
 
         // fallback: if cached raw geojson exists, recompute rtree from it
         val cachedGeo = readTextFile(geojsonCacheName)
@@ -3496,65 +3790,73 @@ class MainActivity : ComponentActivity() {
     // --- cache I/O ---
 
     private suspend fun saveToCache(tree: RTree<Int>, rawGeojson: String) =
-        withContext(Dispatchers.IO) {
-            // Save RTree<Int> as JSON
-            val rtreeJson = json.encodeToStringRTree(tree)
-            writeTextFile(rtreeCacheName, rtreeJson)
-            writeTextFile(geojsonCacheName, rawGeojson)
-            Log.d("Chateaux", "Cache saved (${rtreeCacheName}, ${geojsonCacheName})")
-        }
-
-    private suspend fun loadFromCache(): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? =
-        withContext(Dispatchers.IO) {
-            val rtreeJson = readTextFile(rtreeCacheName) ?: return@withContext null
-            val rawGeo = readTextFile(geojsonCacheName) ?: return@withContext null
-
-            // Rebuild features from raw GeoJSON (keeps cache format simple + stable)
-            val fc: FeatureCollection<Geometry?, ChateauProps> = parseChateaux(rawGeo)
-
-            // Decode RTree<Int>
-            val tree: RTree<Int> = try {
-                json.decodeFromStringRTree<Int>(rtreeJson)
-            } catch (e: Exception) {
-                Log.w("Chateaux", "Failed to decode cached RTree; will be recomputed", e)
-                // If RTree decoding fails, rebuild it from the cached GeoJSON so we still warm-start.
-                val (rebuilt, _) = buildRTreeIds(fc, maxEntries)
-                rebuilt
+            withContext(Dispatchers.IO) {
+                // Save RTree<Int> as JSON
+                val rtreeJson = json.encodeToStringRTree(tree)
+                writeTextFile(rtreeCacheName, rtreeJson)
+                writeTextFile(geojsonCacheName, rawGeojson)
+                Log.d("Chateaux", "Cache saved (${rtreeCacheName}, ${geojsonCacheName})")
             }
 
-            val list = fc.features as List<Feature<Geometry?, ChateauProps>>
-            return@withContext tree to list
-        }
+    private suspend fun loadFromCache(): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? =
+            withContext(Dispatchers.IO) {
+                val rtreeJson = readTextFile(rtreeCacheName) ?: return@withContext null
+                val rawGeo = readTextFile(geojsonCacheName) ?: return@withContext null
+
+                // Rebuild features from raw GeoJSON (keeps cache format simple + stable)
+                val fc: FeatureCollection<Geometry?, ChateauProps> = parseChateaux(rawGeo)
+
+                // Decode RTree<Int>
+                val tree: RTree<Int> =
+                        try {
+                            json.decodeFromStringRTree<Int>(rtreeJson)
+                        } catch (e: Exception) {
+                            Log.w(
+                                    "Chateaux",
+                                    "Failed to decode cached RTree; will be recomputed",
+                                    e
+                            )
+                            // If RTree decoding fails, rebuild it from the cached GeoJSON so we
+                            // still warm-start.
+                            val (rebuilt, _) = buildRTreeIds(fc, maxEntries)
+                            rebuilt
+                        }
+
+                val list = fc.features as List<Feature<Geometry?, ChateauProps>>
+                return@withContext tree to list
+            }
 
     // --- network build (fresh) ---
 
     private suspend fun fetchAndBuildFromNetwork():
             Triple<RTree<Int>, List<Feature<Geometry?, ChateauProps>>, String>? =
-        withContext(Dispatchers.IO) {
-            try {
-                val raw = http.get(chateauxUrl).body<String>()
-                val fc = parseChateaux(raw)
-                val (tree, list) = buildRTreeIds(fc, maxEntries)
-                Triple(tree, list, raw)
-            } catch (e: Exception) {
-                Log.w("Chateaux", "Network fetch/build failed", e)
-                null
+            withContext(Dispatchers.IO) {
+                try {
+                    val raw = http.get(chateauxUrl).body<String>()
+                    val fc = parseChateaux(raw)
+                    val (tree, list) = buildRTreeIds(fc, maxEntries)
+                    Triple(tree, list, raw)
+                } catch (e: Exception) {
+                    Log.w("Chateaux", "Network fetch/build failed", e)
+                    null
+                }
             }
-        }
 
     // --- tiny file helpers ---
 
-    private suspend fun writeTextFile(name: String, content: String) = withContext(Dispatchers.IO) {
-        File(filesDir, name).writeText(content)
-    }
+    private suspend fun writeTextFile(name: String, content: String) =
+            withContext(Dispatchers.IO) { File(filesDir, name).writeText(content) }
 
-    private suspend fun readTextFile(name: String): String? = withContext(Dispatchers.IO) {
-        val f = File(filesDir, name)
-        if (f.exists()) f.readText() else null
-    }
+    private suspend fun readTextFile(name: String): String? =
+            withContext(Dispatchers.IO) {
+                val f = File(filesDir, name)
+                if (f.exists()) f.readText() else null
+            }
 
     // Helper to get string property from spatialk.geojson.Feature
-    private fun org.maplibre.spatialk.geojson.Feature<*, JsonObject?>.getString(key: String): String? {
+    private fun org.maplibre.spatialk.geojson.Feature<*, JsonObject?>.getString(
+            key: String
+    ): String? {
         // Check for null primitive or string "null"
         return this.properties?.get(key)?.jsonPrimitive?.content?.takeIf { it != "null" }
     }
@@ -3565,13 +3867,9 @@ class MainActivity : ComponentActivity() {
         return this.properties?.get(key)?.jsonPrimitive?.double?.toInt()
     }
 
-    /**
-     * Processes a list of clicked features known to be VEHICLES.
-     */
+    /** Processes a list of clicked features known to be VEHICLES. */
     private fun processVehicleClicks(
-        features: List<org.maplibre.spatialk.geojson.Feature<
-                *, JsonObject?
-                >>
+            features: List<org.maplibre.spatialk.geojson.Feature<*, JsonObject?>>
     ): List<MapSelectionOption> {
         val selectedVehiclesKeyUnique = mutableSetOf<String>()
 
@@ -3582,41 +3880,37 @@ class MainActivity : ComponentActivity() {
 
             try {
                 MapSelectionOption(
-                    MapSelectionSelector.VehicleMapSelector(
-                        chateau_id = f.getString("chateau") ?: "",
-                        vehicle_id = f.getString("vehicleIdLabel"),
-                        route_id = f.getString("routeId"),
-                        headsign = f.getString("headsign") ?: "",
-                        triplabel = f.getString("tripIdLabel"),
-                        colour = f.getString("color") ?: "#FFFFFF",
-                        route_short_name = f.getString("route_short_name"),
-                        route_long_name = f.getString("route_long_name"),
-                        route_type = f.getString("routeType")?.toIntOrNull() ?: 3,
-                        trip_short_name = f.getString("trip_short_name"),
-                        text_colour = f.getString("text_color") ?: "#000000",
-                        gtfs_id = f.getString("rt_id") ?: "", // JS maps rt_id to gtfs_id
-                        trip_id = f.getString("trip_id"),
-                        start_time = f.getString("start_time"),
-                        start_date = f.getString("start_date")
-                    )
+                        MapSelectionSelector.VehicleMapSelector(
+                                chateau_id = f.getString("chateau") ?: "",
+                                vehicle_id = f.getString("vehicleIdLabel"),
+                                route_id = f.getString("routeId"),
+                                headsign = f.getString("headsign") ?: "",
+                                triplabel = f.getString("tripIdLabel"),
+                                colour = f.getString("color") ?: "#FFFFFF",
+                                route_short_name = f.getString("route_short_name"),
+                                route_long_name = f.getString("route_long_name"),
+                                route_type = f.getString("routeType")?.toIntOrNull() ?: 3,
+                                trip_short_name = f.getString("trip_short_name"),
+                                text_colour = f.getString("text_color") ?: "#000000",
+                                gtfs_id = f.getString("rt_id") ?: "", // JS maps rt_id to gtfs_id
+                                trip_id = f.getString("trip_id"),
+                                start_time = f.getString("start_time"),
+                                start_date = f.getString("start_date")
+                        )
                 )
             } catch (e: Exception) {
                 Log.e(
-                    TAG,
-                    "Failed to parse VehicleMapSelector: ${e.message} for props ${f.properties}"
+                        TAG,
+                        "Failed to parse VehicleMapSelector: ${e.message} for props ${f.properties}"
                 )
                 null
             }
         }
     }
 
-    /**
-     * Processes a list of clicked features known to be ROUTES.
-     */
+    /** Processes a list of clicked features known to be ROUTES. */
     private fun processRouteClicks(
-        features: List<org.maplibre.spatialk.geojson.Feature<*,
-                JsonObject?
-                >>
+            features: List<org.maplibre.spatialk.geojson.Feature<*, JsonObject?>>
     ): List<MapSelectionOption> {
         val selectedRoutesKeyUnique = mutableSetOf<String>()
 
@@ -3631,27 +3925,27 @@ class MainActivity : ComponentActivity() {
 
             try {
                 MapSelectionOption(
-                    MapSelectionSelector.RouteMapSelector(
-                        chateau_id = f.getString("chateau") ?: "",
-                        route_id = routesProp.split(',').first().removeSurrounding("\""),
-                        colour = "#${f.getString("color") ?: "FFFFFF"}",
-                        name = f.getString("route_label")
-                    )
+                        MapSelectionSelector.RouteMapSelector(
+                                chateau_id = f.getString("chateau") ?: "",
+                                route_id = routesProp.split(',').first().removeSurrounding("\""),
+                                colour = "#${f.getString("color") ?: "FFFFFF"}",
+                                name = f.getString("route_label")
+                        )
                 )
             } catch (e: Exception) {
                 Log.e(
-                    TAG,
-                    "Failed to parse RouteMapSelector: ${e.message} for props ${f.properties}"
+                        TAG,
+                        "Failed to parse RouteMapSelector: ${e.message} for props ${f.properties}"
                 )
                 null
             }
         }
     }
 
-    /**
-     * Processes a list of clicked features known to be STOPS.
-     */
-    private fun processStopClicks(features: List<org.maplibre.spatialk.geojson.Feature<*, JsonObject?>>): List<MapSelectionOption> {
+    /** Processes a list of clicked features known to be STOPS. */
+    private fun processStopClicks(
+            features: List<org.maplibre.spatialk.geojson.Feature<*, JsonObject?>>
+    ): List<MapSelectionOption> {
         val selectedStopsKeyUnique = mutableSetOf<String>()
 
         return features.mapNotNull { f ->
@@ -3661,16 +3955,17 @@ class MainActivity : ComponentActivity() {
 
             try {
                 MapSelectionOption(
-                    MapSelectionSelector.StopMapSelector(
-                        chateau_id = f.getString("chateau") ?: "",
-                        stop_id = f.getString("gtfs_id") ?: "", // JS maps gtfs_id to stop_id
-                        stop_name = f.getString("displayname") ?: "Unknown Stop"
-                    )
+                        MapSelectionSelector.StopMapSelector(
+                                chateau_id = f.getString("chateau") ?: "",
+                                stop_id = f.getString("gtfs_id")
+                                                ?: "", // JS maps gtfs_id to stop_id
+                                stop_name = f.getString("displayname") ?: "Unknown Stop"
+                        )
                 )
             } catch (e: Exception) {
                 Log.e(
-                    TAG,
-                    "Failed to parse StopMapSelector: ${e.message} for props ${f.properties}"
+                        TAG,
+                        "Failed to parse StopMapSelector: ${e.message} for props ${f.properties}"
                 )
                 null
             }
@@ -3678,32 +3973,33 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
-fun LayerTabs(
-    selectedTab: String, onTabSelected: (String) -> Unit
-) {
+fun LayerTabs(selectedTab: String, onTabSelected: (String) -> Unit) {
     val tabs = listOf("intercityrail", "localrail", "bus", "other")
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         tabs.forEach { tab ->
             val isSelected = tab == selectedTab
             Box(
-                modifier = Modifier
-                    .background(
-                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                        else MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    .padding(vertical = 8.dp, horizontal = 12.dp)
-                    .clickable { onTabSelected(tab) }) {
+                    modifier =
+                            Modifier.background(
+                                            if (isSelected)
+                                                    MaterialTheme.colorScheme.primary.copy(
+                                                            alpha = 0.2f
+                                                    )
+                                            else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .padding(vertical = 8.dp, horizontal = 12.dp)
+                                    .clickable { onTabSelected(tab) }
+            ) {
                 Text(
-                    text = tab.replaceFirstChar { it.uppercase() },
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        text = tab.replaceFirstChar { it.uppercase() },
+                        color =
+                                if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -3711,22 +4007,18 @@ fun LayerTabs(
 }
 
 private fun circleInside(dark: Boolean) = if (dark) Color(0xFF1C2636) else Color(0xFFFFFFFF)
+
 private fun circleOutside(dark: Boolean) = if (dark) Color(0xFFFFFFFF) else Color(0xFF1C2636)
 
 /** JS: bus_stop_stop_color(darkMode) */
-private fun busStopStrokeColorExpr(dark: Boolean)
-        : Expression<ColorValue> {
+private fun busStopStrokeColorExpr(dark: Boolean): Expression<ColorValue> {
     return if (dark) {
         // ['step', ['zoom'], '#e0e0e0', 14, '#dddddd']
 
-
         step(
-            zoom(),
-            const(Color(0xFFE0E0E0)),
-            *arrayOf(
-                0 to const(Color(0xFFE0E0E0)),
-                14 to const(Color(0xFFDDDDDD))
-            )
+                zoom(),
+                const(Color(0xFFE0E0E0)),
+                *arrayOf(0 to const(Color(0xFFE0E0E0)), 14 to const(Color(0xFFDDDDDD)))
         )
     } else {
         const(Color(0xFF333333))
