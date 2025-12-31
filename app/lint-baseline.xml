@@ -1,0 +1,3490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.13.1" type="baseline" client="gradle" dependencies="false" name="AGP (8.13.1)" variant="all" version="8.13.1">
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                    String.format(&quot;%.1f km&quot;, distanceMetres / 1000)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SearchComposables.kt"
+            line="312"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                    String.format(&quot;%.0f m&quot;, distanceMetres)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SearchComposables.kt"
+            line="314"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="RedundantLabel"
+        message="Redundant label can be removed"
+        errorLine1="            android:label=&quot;@string/app_name&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="21"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="    android:width=&quot;415dp&quot;"
+        errorLine2="                   ~~~~~">
+        <location
+            file="src/main/res/drawable/compass_dark.xml"
+            line="2"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="    android:width=&quot;415dp&quot;"
+        errorLine2="                   ~~~~~">
+        <location
+            file="src/main/res/drawable/compass_light.xml"
+            line="2"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="    android:width=&quot;211dp&quot;"
+        errorLine2="                   ~~~~~">
+        <location
+            file="src/main/res/drawable/labelsicon.xml"
+            line="2"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="    android:width=&quot;213dp&quot;"
+        errorLine2="                   ~~~~~">
+        <location
+            file="src/main/res/drawable/routesicon.xml"
+            line="2"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="    android:height=&quot;205dp&quot;"
+        errorLine2="                    ~~~~~">
+        <location
+            file="src/main/res/drawable/stopsicon.xml"
+            line="3"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of com.google.firebase:firebase-bom than 34.5.0 is available: 34.6.0"
+        errorLine1="firebaseBom = &quot;34.5.0&quot;"
+        errorLine2="              ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="11"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.9.4 is available: 2.10.0"
+        errorLine1="lifecycleRuntimeKtx = &quot;2.9.4&quot;"
+        errorLine2="                      ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="25"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.9.4 is available: 2.10.0"
+        errorLine1="lifecycleRuntimeKtx = &quot;2.9.4&quot;"
+        errorLine2="                      ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="25"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.11.0 is available: 1.12.0"
+        errorLine1="activityCompose = &quot;1.11.0&quot;"
+        errorLine2="                  ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="26"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2025.11.00 is available: 2025.11.01"
+        errorLine1="composeBom = &quot;2025.11.00&quot;"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="27"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose.ui:ui-unit than 1.9.4 is available: 1.9.5"
+        errorLine1="uiUnit = &quot;1.9.4&quot;"
+        errorLine2="         ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="36"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.maplibre.gl:android-sdk than 12.0.1 is available: 12.1.3"
+        errorLine1="androidSdk = &quot;12.0.1&quot;"
+        errorLine2="             ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="4"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of com.datadoghq:dd-sdk-android-rum than 3.2.0 is available: 3.3.0"
+        errorLine1="ddSdkAndroidRum = &quot;3.2.0&quot;"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="9"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of com.datadoghq:dd-sdk-android-compose than 3.2.0 is available: 3.3.0"
+        errorLine1="ddSdkAndroidRumVersion = &quot;3.2.0&quot;"
+        errorLine2="                         ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="10"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of com.datadoghq:dd-sdk-android-rum than 3.2.0 is available: 3.3.0"
+        errorLine1="ddSdkAndroidRumVersion = &quot;3.2.0&quot;"
+        errorLine2="                         ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="10"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.maplibre.spatialk:geojson than 0.5.0 is available: 0.6.1"
+        errorLine1="geojson = &quot;0.5.0&quot;"
+        errorLine2="          ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="12"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.maplibre.spatialk:turf than 0.5.0 is available: 0.6.1"
+        errorLine1="geojson = &quot;0.5.0&quot;"
+        errorLine2="          ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="12"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.maplibre.gl:android-sdk than 12.0.1 is available: 12.1.3"
+        errorLine1="maplibreAndroidSdk = &quot;12.0.1&quot;"
+        errorLine2="                     ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="28"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of com.squareup.okhttp3:okhttp than 5.3.0 is available: 5.3.2"
+        errorLine1="okhttp = &quot;5.3.0&quot;"
+        errorLine2="         ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="31"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.maplibre.spatialk:units than 0.5.0 is available: 0.6.1"
+        errorLine1="units = &quot;0.5.0&quot;"
+        errorLine2="        ~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="35"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.maplibre.compose:maplibre-compose than 0.12.0 is available: 0.12.1"
+        errorLine1="maplibre-compose = { module = &quot;org.maplibre.compose:maplibre-compose&quot;, version = &quot;0.12.0&quot; }"
+        errorLine2="                                                                                 ~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="79"
+            column="82"/>
+    </issue>
+
+    <issue
+        id="SimilarGradleDependency"
+        message="There are multiple dependencies org.maplibre.gl:android-sdk but with different version"
+        errorLine1="android-sdk = { module = &quot;org.maplibre.gl:android-sdk&quot;, version.ref = &quot;androidSdk&quot; }"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="41"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="SimilarGradleDependency"
+        message="There are multiple dependencies org.maplibre.gl:android-sdk but with different version"
+        errorLine1="android-sdk-v1201 = { module = &quot;org.maplibre.gl:android-sdk&quot;, version.ref = &quot;maplibreAndroidSdk&quot; }"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="42"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="SimilarGradleDependency"
+        message="There are multiple dependencies com.datadoghq:dd-sdk-android-rum but with different version"
+        errorLine1="dd-sdk-android-rum = { module = &quot;com.datadoghq:dd-sdk-android-rum&quot;, version.ref = &quot;ddSdkAndroidRum&quot; }"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="52"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="SimilarGradleDependency"
+        message="There are multiple dependencies com.datadoghq:dd-sdk-android-rum but with different version"
+        errorLine1="dd-sdk-android-rum-v320 = { module = &quot;com.datadoghq:dd-sdk-android-rum&quot;, version.ref = &quot;ddSdkAndroidRumVersion&quot; }"
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="53"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="SimilarGradleDependency"
+        message="There are multiple dependencies org.jetbrains.kotlinx:kotlinx-serialization-json but with different version"
+        errorLine1="kotlinx-serialization-json = { module = &quot;org.jetbrains.kotlinx:kotlinx-serialization-json&quot;, version.ref = &quot;kotlinxSerializationJson&quot; }"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="72"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="SimilarGradleDependency"
+        message="There are multiple dependencies org.jetbrains.kotlinx:kotlinx-serialization-json but with different version"
+        errorLine1="kotlinx-serialization-json-v163 = { module = &quot;org.jetbrains.kotlinx:kotlinx-serialization-json&quot;, version.ref = &quot;kotlinxSerializationJsonVersion&quot; }"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/AndroidStudioProjects/CatenaryCompose/gradle/libs.versions.toml"
+            line="73"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                    GoogleAnalytics.getInstance(this).appOptOut = optOut"
+        errorLine2="                                    ~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1231"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                    GoogleAnalytics.getInstance(this).appOptOut = optOut"
+        errorLine2="                                                      ~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1231"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                    GoogleAnalytics.getInstance(this).appOptOut = optOut"
+        errorLine2="                                                      ~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1231"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="ConfigurationScreenWidthHeight"
+        message="Using Configuration.screenHeightDp instead of LocalWindowInfo.current.containerSize"
+        errorLine1="                remember(configuration) { (configuration.screenHeightDp * 0.8f).dp }"
+        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/AlertsBox.kt"
+            line="151"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="ConfigurationScreenWidthHeight"
+        message="Using Configuration.screenWidthDp instead of LocalWindowInfo.current.containerSize"
+        errorLine1="    val isTablet = (cfg.screenWidthDp >= 768)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="3744"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="MissingColorAlphaChannel"
+        message="Missing Color alpha channel"
+        errorLine1="                    .background(Color(0x8e51ff).copy(alpha = 0.8f))"
+        errorLine2="                                      ~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/DraggablePinOverlay.kt"
+            line="137"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="MissingColorAlphaChannel"
+        message="Missing Color alpha channel"
+        errorLine1="    val baseColor = if (hasRealtime) Color(0x00AB9B) else LocalContentColor.current"
+        errorLine2="                                           ~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="895"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/CatenaryClock.kt"
+            line="24"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MutableCollectionMutableState"
+        message="Creating a MutableState object with a mutable collection type"
+        errorLine1="            var catenaryStack by remember { mutableStateOf(ArrayDeque&lt;CatenaryStackEnum>()) }"
+        errorLine2="                                            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1178"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="MissingQuantity"
+        message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="63"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MissingQuantity"
+        message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="63"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MissingQuantity"
+        message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="63"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;app_name&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;app_name&quot;>Catenary&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="2"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;platform&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;platform&quot;>Platform&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="3"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;layers&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;layers&quot;>Layers&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="4"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy&quot;>Occupancy&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="5"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;headsign&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;headsign&quot;>Headsign&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_unknown_cause&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_unknown_cause&quot;>Unknown cause&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="7"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;hidepreviousstops&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;hidepreviousstops&quot;>Hide previous stops&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="8"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings&quot;>Settings&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="9"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;trip&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;trip&quot;>Trip&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="10"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;fleet&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;fleet&quot;>Fleet&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="11"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;lastupdated&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;lastupdated&quot;>Last updated&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="12"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;now&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;now&quot;>Now&lt;/string>"
+        errorLine2="            ~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="13"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;speed&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;speed&quot;>Speed&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="14"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;searchhere&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;searchhere&quot;>Search here&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="15"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;early&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;early&quot;>Early&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="16"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;late&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;late&quot;>Late&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="17"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;ontime&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;ontime&quot;>On time&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="18"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;previous_departures&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;previous_departures&quot;>Previous departures&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="19"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;no_departures_found&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;no_departures_found&quot;>No departures found&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="20"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;load_more&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;load_more&quot;>Load more&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="21"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;arrival&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;arrival&quot;>Arrival&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;departure&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;departure&quot;>Departure&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="23"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;no_headsign&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;no_headsign&quot;>No headsign&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="24"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;directions&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;directions&quot;>Directions&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;vehicles&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;vehicles&quot;>Vehicles&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="26"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;stops&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;stops&quot;>Stops&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="27"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;next_stop&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;next_stop&quot;>Next stop&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="28"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status&quot;>Occupancy&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status_empty&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status_empty&quot;>Empty&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="30"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status_many_seats_available&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status_many_seats_available&quot;>Many seats available&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="31"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status_few_seats_available&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status_few_seats_available&quot;>Few seats available&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="32"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status_standing_room_only&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status_standing_room_only&quot;>Standing room only&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="33"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status_crushed_standing_room_only&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status_crushed_standing_room_only&quot;>Crushed standing room only&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="34"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status_full&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status_full&quot;>Full&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="35"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status_no_data&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status_no_data&quot;>No data&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_status_not_boardable&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_boardable&quot;>Not boardable&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="38"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_other_cause&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_other_cause&quot;>Other cause&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="39"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_technical_problem&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_technical_problem&quot;>Technical problem&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="40"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_labour_strike&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_labour_strike&quot;>Strike&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="41"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_demonstration_street_blockage&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_demonstration_street_blockage&quot;>Demonstration&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="42"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_accident&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_accident&quot;>Accident&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="43"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_holiday&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_holiday&quot;>Holiday&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="44"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_weather&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_weather&quot;>Weather&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="45"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_maintenance&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_maintenance&quot;>Maintenance&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="46"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_construction&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_construction&quot;>Construction&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="47"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_police_activity&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_police_activity&quot;>Police activity&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="48"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_cause_medical_emergency&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_cause_medical_emergency&quot;>Medical emergency&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="49"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_no_service&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_no_service&quot;>No service&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="50"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_reduced_service&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_reduced_service&quot;>Reduced service&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="51"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_significant_delays&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_significant_delays&quot;>Significant delays&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="52"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_detour&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_detour&quot;>Detour&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="53"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_additional_service&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_additional_service&quot;>Additional service&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="54"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_modified_service&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_modified_service&quot;>Modified service&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="55"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_other_effect&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_other_effect&quot;>Other effect&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="56"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_unknown_effect&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_unknown_effect&quot;>Unknown effect&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="57"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_stop_moved&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_stop_moved&quot;>Stop moved&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="58"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;alert_effect_no_effect&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;alert_effect_no_effect&quot;>No effect&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="59"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;starting_time&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;starting_time&quot;>Starting&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="61"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;ending_time&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;ending_time&quot;>Ending&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="62"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;service_alerts&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="63"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;heading_intercity_rail&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;heading_intercity_rail&quot;>Rail&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="67"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;heading_local_rail&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;heading_local_rail&quot;>Metro/Tram&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="68"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;heading_bus&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;heading_bus&quot;>Bus&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="69"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;heading_other&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;heading_other&quot;>Other&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="70"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;vehicle&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;vehicle&quot;>Vehicle&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="71"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;delay&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;delay&quot;>Delay&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="72"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;route&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;route&quot;>Route&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="73"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;cancelled&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;cancelled&quot;>Cancelled&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="74"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;deleted&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;deleted&quot;>Deleted&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="75"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;heading_more&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;heading_more&quot;>More&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="76"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;update_downloaded&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;update_downloaded&quot;>An update has just been downloaded.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="77"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;restart&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;restart&quot;>Restart&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="78"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_datadog_analytics_title&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_datadog_analytics_title&quot;>Datadog Analytics&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="80"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_datadog_analytics_description&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_datadog_analytics_description&quot;>Enables intensive, detailed tracking to help developers find and fix bugs.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="81"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_disable_datadog_tracking&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_disable_datadog_tracking&quot;>Disable Datadog Tracking&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="82"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_enable_datadog_tracking&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_enable_datadog_tracking&quot;>Enable Datadog Tracking&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="83"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_google_analytics_title&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_google_analytics_title&quot;>Google Analytics&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="84"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_google_analytics_description&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_google_analytics_description&quot;>Enables basic analytics about feature usage.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="85"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_disable_google_analytics&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_disable_google_analytics&quot;>Disable Google Analytics&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="86"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_enable_google_analytics&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_enable_google_analytics&quot;>Enable Google Analytics&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="87"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;settings_test_crash&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;settings_test_crash&quot;>Test crash&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="88"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;block_screen_block_id&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;block_screen_block_id&quot;>Block: %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="90"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;block_screen_duration&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;block_screen_duration&quot;>Duration: &lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="91"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;block_screen_layover&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;block_screen_layover&quot;>Layover: &lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="92"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;block_screen_error&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;block_screen_error&quot;>Error loading data.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="93"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;block&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;pt&quot; (Portuguese), &quot;bg&quot; (Bulgarian), &quot;el&quot; (Greek), &quot;it&quot; (Italian), &quot;hu&quot; (Hungarian), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;uk&quot; (Ukrainian), &quot;ja&quot; (Japanese), &quot;sk&quot; (Slovak), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;block&quot;>Block&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="95"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;nearby_departures_no_departures&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;nearby_departures_no_departures&quot;>No departures.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="96"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;route_screen_to&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;route_screen_to&quot;>To: %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="98"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;single_trip_info_screen_error&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;single_trip_info_screen_error&quot;>Error: %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="100"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;single_trip_info_screen_hide_previous_stops&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;single_trip_info_screen_hide_previous_stops&quot;>Hide previous stops&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="101"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;single_trip_info_screen_show_previous_stops&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;single_trip_info_screen_show_previous_stops&quot;>Show %1$d previous stops&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="102"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;stop_screen_label&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;stop_screen_label&quot;>%1$s: &lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="105"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;vehicle_info_loading&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="107"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;vehicle_info_model&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;vehicle_info_model&quot;> %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="108"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;vehicle_info_years&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;vehicle_info_years&quot;> %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="109"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;vehicle_info_engine&quot; is not translated in &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;vehicle_info_engine&quot;> %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;occupancy_percentage&quot; is not translated in &quot;de&quot; (German), &quot;no&quot; (Norwegian), &quot;fi&quot; (Finnish), &quot;ru&quot; (Russian), &quot;sv&quot; (Swedish), &quot;ko&quot; (Korean), &quot;pt&quot; (Portuguese), &quot;bg&quot; (Bulgarian), &quot;el&quot; (Greek), &quot;en&quot; (English), &quot;it&quot; (Italian), &quot;hu&quot; (Hungarian), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;uk&quot; (Ukrainian), &quot;ja&quot; (Japanese), &quot;sk&quot; (Slovak), &quot;pl&quot; (Polish), &quot;da&quot; (Danish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;inc&quot; (Indic languages)"
+        errorLine1="    &lt;string name=&quot;occupancy_percentage&quot;>Occupancy percentage&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="111"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;hu&quot; (Hungarian) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Nem fogad utasokat&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hu/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;it&quot; (Italian) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Non accetta passeggeri&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;nl&quot; (Dutch) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Accepteert geen passagiers&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;no&quot; (Norwegian) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Tar ikke imot passasjerer&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-no/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;pl&quot; (Polish) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Nie przyjmuje pasażerów&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;pt&quot; (Portuguese) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Não aceita passageiros&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;ro&quot; (Romanian) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Nu acceptă pasageri&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ro/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;ru&quot; (Russian) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Пассажиров не принимает&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;sk&quot; (Slovak) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Neprijíma cestujúcich&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-sk/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;sv&quot; (Swedish) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Tar inte emot passagerare&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-sv/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;uk&quot; (Ukrainian) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>Пасажирів не приймає&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-uk/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;ja&quot; (Japanese) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>乗客受付停止&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;ko&quot; (Korean) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>승객을 받지 않음&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ko-rKR/strings.xml"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;zh&quot; (Chinese) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>不接客&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;zh&quot; (Chinese) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>不接受乘客&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rHK/strings.xml"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;zh&quot; (Chinese) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot;>不接受乘客&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;occupancy_status_not_accepting_passengers&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;fr&quot; (French) here"
+        errorLine1="    &lt;string name=&quot;occupancy_status_not_accepting_passengers&quot; translatable=&quot;false&quot;>n\&apos;accepte pas les passagers&lt;/string>"
+        errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="37"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;hu&quot; (Hungarian) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Akadálymentesítési probléma&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hu/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;it&quot; (Italian) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Problema di accessibilità&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;nl&quot; (Dutch) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Toegankelijkheidsprobleem&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;no&quot; (Norwegian) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Tilgjengelighetsproblem&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-no/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;pl&quot; (Polish) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Problem z dostępnością&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;pt&quot; (Portuguese) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Problema de acessibilidade&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;ro&quot; (Romanian) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Problemă de accesibilitate&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ro/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;ru&quot; (Russian) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Проблема с доступностью&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;sk&quot; (Slovak) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Problém s prístupnosťou&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-sk/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;sv&quot; (Swedish) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Tillgänglighetsproblem&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-sv/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;uk&quot; (Ukrainian) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>Проблема з доступністю&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-uk/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;ja&quot; (Japanese) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>アクセシビリティの問題&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="61"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;ko&quot; (Korean) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>접근성 문제&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ko-rKR/strings.xml"
+            line="61"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;zh&quot; (Chinese) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>无障碍问题&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="61"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;zh&quot; (Chinese) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>無障礙問題&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rHK/strings.xml"
+            line="61"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;zh&quot; (Chinese) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot;>無障礙問題&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="61"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;alert_effect_accessibility_issue&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;fr&quot; (French) here"
+        errorLine1="    &lt;string name=&quot;alert_effect_accessibility_issue&quot; translatable=&quot;false&quot;>Problème d\&apos;accessibilité&lt;/string>"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="61"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            android.util.Log.e(&quot;GA&quot;, &quot;Failed to log screen view&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/BlockScreen.kt"
+            line="149"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d(&quot;ChateauxIndex&quot;, &quot;Built chateaux index in ${t1 - t0} ms&quot;)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/ChateauxIndex.kt"
+            line="92"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d(&quot;InAppUpdate&quot;, &quot;Update flow finished with RESULT_OK&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/CheckForAppUpdate.kt"
+            line="38"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d(&quot;InAppUpdate&quot;, &quot;Update flow finished with code: ${result.resultCode}&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/CheckForAppUpdate.kt"
+            line="40"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d("
+        errorLine2="            ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/CheckForAppUpdate.kt"
+            line="73"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.d(&quot;InAppUpdate&quot;, &quot;Launching $updateType update flow.&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/CheckForAppUpdate.kt"
+            line="99"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.d(&quot;InAppUpdate&quot;, &quot;No update available.&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/CheckForAppUpdate.kt"
+            line="102"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(&quot;InAppUpdate&quot;, &quot;Failed to check for update.&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/CheckForAppUpdate.kt"
+            line="105"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.e(TAG, &quot;Could not query visible bounding box&quot;, e)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/FetchRealtimeData.kt"
+            line="105"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d(TAG, &quot;Skipping fetch, another one is already in progress.&quot;)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/FetchRealtimeData.kt"
+            line="180"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(TAG, &quot;Failed to fetch realtime data (Client Error ${e.response.status}): $errorBody&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/FetchRealtimeData.kt"
+            line="280"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(TAG, &quot;Failed to fetch realtime data (Server Error ${e.response.status}): $errorBody&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/FetchRealtimeData.kt"
+            line="283"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(TAG, &quot;An unexpected error occurred: ${e.message}&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/FetchRealtimeData.kt"
+            line="285"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.e(&quot;LayerSettings&quot;, &quot;Failed to serialize and save layer settings&quot;, e)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="518"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="    Log.d(&quot;LayerSettings&quot;, &quot;Saved layer settings to SharedPreferences.&quot;)"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="520"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.e(&quot;LayerSettings&quot;, &quot;Failed to deserialize layer settings&quot;, e)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="529"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.e(TAG, &quot;Failed to fetch rail count in box&quot;, e)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="567"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d(TAG, &quot;Visible chateaus query ${rtreeNames.joinToString(limit = 100)}&quot;)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="616"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                                    Log.d("
+        errorLine2="                                    ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="837"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.d(&quot;Chateaux&quot;, &quot;Loaded cache: ${features.size} features&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="921"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.d(&quot;Chateaux&quot;, &quot;No cache found&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="924"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.d(&quot;Chateaux&quot;, &quot;Recomputed index: ${features.size} features&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="933"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d(TAG, &quot;Initial Google Analytics opt-out state set to: $initialOptOut&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="980"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(TAG, &quot;Failed to set initial GA opt-out: ${e.message}&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="982"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d(TAG, &quot;Pruning data. Keeping ${visibleSet.size} chateaus.&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1042"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.d(TAG, &quot;Google Analytics consent set to: $isChecked (appOptOut: $optOut)&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1242"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.e(TAG, &quot;Failed to set GA opt-out on toggle: ${e.message}&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1244"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                                Log.w(TAG, &quot;Map clicked, but projection is not ready.&quot;)"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1678"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                                Log.d(TAG, &quot;Map click detected, but no features found.&quot;)"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1702"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                            Log.d("
+        errorLine2="                            ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1706"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                                    Log.d("
+        errorLine2="                                    ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1851"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                                    Log.d("
+        errorLine2="                                    ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1917"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d(&quot;Chateaux&quot;, &quot;Cache saved (${rtreeCacheName}, ${geojsonCacheName})&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="3494"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.w(&quot;Chateaux&quot;, &quot;Failed to decode cached RTree; will be recomputed&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="3509"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.w(&quot;Chateaux&quot;, &quot;Network fetch/build failed&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="3530"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e("
+        errorLine2="                ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="3594"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e("
+        errorLine2="                ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="3632"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e("
+        errorLine2="                ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="3661"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="    Log.e(NEARBY_TAG, &quot;JSON decode failed: ${e.message}&quot;)"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="250"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="    Log.e(NEARBY_TAG, &quot;Body head (2k):\n$head&quot;)"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="253"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d("
+        errorLine2="        ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="259"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.d(NEARBY_TAG, &quot;HTTP ${resp.code} ${resp.message}&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="269"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.e(NEARBY_TAG, &quot;Unsuccessful (${resp.code}). Body preview:\n$preview&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="273"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.e(NEARBY_TAG, &quot;Empty body&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="279"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.e(NEARBY_TAG, &quot;Body looks like HTML (unexpected):\n${rawBody.take(1000)}&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="284"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.d(NEARBY_TAG, &quot;Body length: ${rawBody.length} chars&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="288"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                        Log.d("
+        errorLine2="                        ^">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="293"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(NEARBY_TAG, &quot;Network error on ${Thread.currentThread().name}: ${t.message}&quot;, t)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="305"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            android.util.Log.e(&quot;GA&quot;, &quot;Failed to log screen view&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="342"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            android.util.Log.e(&quot;GA&quot;, &quot;Failed to log screen view&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/RouteScreen.kt"
+            line="191"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            android.util.Log.e(&quot;GA&quot;, &quot;Failed to log screen view&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SelectionScreen.kt"
+            line="309"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.e(&quot;MapSelectionScreen&quot;, &quot;Failed to fetch stop preview: ${e.message}&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SelectionScreen.kt"
+            line="335"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(&quot;SingleTripViewModel&quot;, &quot;Error fetching initial trip: ${e.message}&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SingleTripInfoModel.kt"
+            line="111"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(&quot;SingleTripViewModel&quot;, &quot;Error fetching RT update: ${e.message}&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SingleTripInfoModel.kt"
+            line="155"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(&quot;SingleTripViewModel&quot;, &quot;Error fetching vehicle info: ${e.message}&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SingleTripInfoModel.kt"
+            line="175"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            android.util.Log.e(&quot;GA&quot;, &quot;Failed to log screen view&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SingleTripInfoScreen.kt"
+            line="112"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                android.util.Log.e(&quot;GA&quot;, &quot;Failed to log trip details view&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SingleTripInfoScreen.kt"
+            line="176"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;previous&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;single_trip_info_screen_show_previous_stops&quot;>Show %1$d previous stops&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-en/strings.xml"
+            line="98"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;previous&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;single_trip_info_screen_show_previous_stops&quot;>Show %1$d previous stops&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="102"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;ja&quot; (Japanese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="64"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;ko&quot; (Korean) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-ko-rKR/strings.xml"
+            line="64"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="64"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-zh-rHK/strings.xml"
+            line="64"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;service_alerts&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="64"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; `SDK_INT` is always >= 27"
+        errorLine1="    return if (Build.VERSION.SDK_INT >= 24) cfg.locales[0]"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/DiffTime.kt"
+            line="25"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 27. Merge all the resources in this folder into `mipmap-anydpi`.">
+        <location
+            file="src/main/res/mipmap-anydpi-v26"/>
+    </issue>
+
+    <issue
+        id="VectorPath"
+        message="Very long vector path (5459 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector."
+        errorLine1="        android:pathData=&quot;M23.26,68H20.24V59.74C20.24,59.51 20.25,59.23 20.25,58.9C20.26,58.56 20.27,58.21 20.28,57.86C20.3,57.51 20.31,57.18 20.32,56.9C20.25,56.98 20.1,57.13 19.88,57.34C19.67,57.54 19.47,57.72 19.28,57.88L17.64,59.2L16.18,57.38L20.78,53.72H23.26V68ZM28.66,68L34.02,56.26H26.98V53.72H37.23V55.62L31.83,68H28.66ZM44.05,65.82C44.38,65.82 44.69,65.79 45,65.72C45.31,65.66 45.62,65.58 45.93,65.48V67.7C45.61,67.84 45.21,67.96 44.74,68.05C44.27,68.15 43.75,68.2 43.19,68.2C42.54,68.2 41.96,68.09 41.44,67.88C40.92,67.67 40.51,67.3 40.21,66.78C39.92,66.25 39.78,65.52 39.78,64.58V59.32H38.35V58.06L39.99,57.06L40.85,54.76H42.75V57.08H45.81V59.32H42.75V64.58C42.75,65 42.87,65.31 43.11,65.52C43.35,65.72 43.66,65.82 44.05,65.82ZM51.12,52.8V55.9C51.12,56.44 51.1,56.96 51.06,57.44C51.03,57.93 51.01,58.28 50.99,58.48H51.14C51.38,58.1 51.65,57.79 51.97,57.56C52.3,57.33 52.66,57.15 53.05,57.04C53.44,56.93 53.86,56.88 54.31,56.88C55.09,56.88 55.78,57.02 56.37,57.3C56.95,57.57 57.41,58 57.73,58.6C58.06,59.18 58.22,59.94 58.22,60.88V68H55.24V61.62C55.24,60.84 55.1,60.25 54.81,59.86C54.53,59.46 54.09,59.26 53.49,59.26C52.89,59.26 52.42,59.4 52.07,59.68C51.73,59.95 51.48,60.36 51.34,60.9C51.19,61.43 51.12,62.09 51.12,62.86V68H48.14V52.8H51.12ZM75.15,64.04C75.15,64.88 74.94,65.62 74.53,66.24C74.12,66.87 73.52,67.35 72.73,67.69C71.95,68.03 71,68.2 69.88,68.2C69.39,68.2 68.9,68.16 68.43,68.1C67.96,68.03 67.51,67.94 67.07,67.81C66.64,67.68 66.23,67.52 65.84,67.34V64.52C66.52,64.82 67.22,65.09 67.95,65.33C68.68,65.57 69.4,65.7 70.12,65.7C70.61,65.7 71.01,65.63 71.31,65.5C71.61,65.37 71.84,65.19 71.97,64.96C72.11,64.74 72.18,64.47 72.18,64.18C72.18,63.82 72.06,63.52 71.82,63.26C71.58,63.01 71.24,62.77 70.82,62.55C70.4,62.33 69.93,62.09 69.4,61.84C69.07,61.68 68.71,61.49 68.32,61.27C67.93,61.04 67.56,60.77 67.21,60.44C66.86,60.12 66.57,59.72 66.34,59.26C66.12,58.79 66.01,58.23 66.01,57.58C66.01,56.73 66.2,56 66.59,55.39C66.98,54.79 67.54,54.32 68.26,54.01C68.99,53.68 69.85,53.52 70.84,53.52C71.58,53.52 72.29,53.61 72.96,53.78C73.64,53.95 74.34,54.2 75.08,54.52L74.1,56.88C73.44,56.61 72.85,56.4 72.33,56.26C71.81,56.11 71.28,56.04 70.74,56.04C70.36,56.04 70.04,56.1 69.78,56.22C69.51,56.34 69.31,56.51 69.17,56.73C69.03,56.95 68.96,57.2 68.96,57.48C68.96,57.82 69.06,58.11 69.26,58.34C69.46,58.57 69.76,58.79 70.16,59.01C70.56,59.22 71.06,59.47 71.66,59.76C72.39,60.1 73.01,60.46 73.53,60.84C74.05,61.21 74.45,61.65 74.73,62.16C75.01,62.66 75.15,63.29 75.15,64.04ZM82.1,65.82C82.43,65.82 82.74,65.79 83.05,65.72C83.36,65.66 83.67,65.58 83.97,65.48V67.7C83.66,67.84 83.26,67.96 82.78,68.05C82.31,68.15 81.8,68.2 81.24,68.2C80.59,68.2 80,68.09 79.48,67.88C78.97,67.67 78.56,67.3 78.26,66.78C77.97,66.25 77.82,65.52 77.82,64.58V59.32H76.4V58.06L78.04,57.06L78.9,54.76H80.8V57.08H83.86V59.32H80.8V64.58C80.8,65 80.92,65.31 81.15,65.52C81.39,65.72 81.71,65.82 82.1,65.82ZM92.79,53.72L87.47,68H84.77L90.09,53.72H92.79ZM108.31,64.04C108.31,64.88 108.11,65.62 107.69,66.24C107.29,66.87 106.69,67.35 105.9,67.69C105.12,68.03 104.17,68.2 103.05,68.2C102.55,68.2 102.07,68.16 101.59,68.1C101.12,68.03 100.67,67.94 100.23,67.81C99.8,67.68 99.39,67.52 99,67.34V64.52C99.68,64.82 100.38,65.09 101.11,65.33C101.84,65.57 102.57,65.7 103.28,65.7C103.78,65.7 104.17,65.63 104.47,65.5C104.78,65.37 105,65.19 105.14,64.96C105.27,64.74 105.34,64.47 105.34,64.18C105.34,63.82 105.22,63.52 104.98,63.26C104.74,63.01 104.41,62.77 103.98,62.55C103.57,62.33 103.1,62.09 102.57,61.84C102.24,61.68 101.88,61.49 101.48,61.27C101.09,61.04 100.72,60.77 100.37,60.44C100.02,60.12 99.73,59.72 99.5,59.26C99.28,58.79 99.17,58.23 99.17,57.58C99.17,56.73 99.37,56 99.76,55.39C100.15,54.79 100.7,54.32 101.43,54.01C102.15,53.68 103.01,53.52 104,53.52C104.75,53.52 105.45,53.61 106.12,53.78C106.8,53.95 107.51,54.2 108.24,54.52L107.27,56.88C106.61,56.61 106.02,56.4 105.5,56.26C104.98,56.11 104.45,56.04 103.91,56.04C103.53,56.04 103.21,56.1 102.94,56.22C102.67,56.34 102.47,56.51 102.33,56.73C102.2,56.95 102.13,57.2 102.13,57.48C102.13,57.82 102.23,58.11 102.42,58.34C102.62,58.57 102.92,58.79 103.32,59.01C103.72,59.22 104.22,59.47 104.82,59.76C105.55,60.1 106.18,60.46 106.69,60.84C107.21,61.21 107.61,61.65 107.89,62.16C108.17,62.66 108.31,63.29 108.31,64.04ZM116.94,68L113.51,56.8H113.42C113.43,57.07 113.45,57.47 113.48,58.01C113.51,58.54 113.54,59.11 113.56,59.72C113.59,60.32 113.6,60.87 113.6,61.36V68H110.9V53.72H115.02L118.4,64.64H118.46L122.04,53.72H126.16V68H123.34V61.24C123.34,60.79 123.35,60.28 123.36,59.69C123.38,59.1 123.4,58.55 123.43,58.02C123.45,57.49 123.47,57.09 123.49,56.82H123.4L119.72,68H116.94ZM135.83,56.04C135.25,56.04 134.74,56.15 134.29,56.38C133.84,56.6 133.47,56.92 133.16,57.35C132.87,57.77 132.64,58.28 132.48,58.88C132.32,59.48 132.25,60.15 132.25,60.9C132.25,61.91 132.37,62.77 132.62,63.49C132.87,64.2 133.26,64.74 133.79,65.12C134.32,65.49 135,65.68 135.83,65.68C136.41,65.68 136.99,65.61 137.57,65.48C138.15,65.35 138.79,65.16 139.47,64.92V67.46C138.84,67.72 138.22,67.91 137.61,68.02C136.99,68.14 136.31,68.2 135.55,68.2C134.08,68.2 132.87,67.89 131.91,67.29C130.97,66.68 130.27,65.82 129.81,64.73C129.36,63.63 129.13,62.35 129.13,60.88C129.13,59.8 129.28,58.81 129.57,57.91C129.86,57.01 130.29,56.24 130.86,55.58C131.43,54.92 132.13,54.41 132.96,54.05C133.79,53.7 134.75,53.52 135.83,53.52C136.54,53.52 137.25,53.61 137.96,53.79C138.68,53.97 139.36,54.21 140.01,54.52L139.03,56.98C138.5,56.73 137.96,56.51 137.42,56.32C136.88,56.13 136.35,56.04 135.83,56.04Z&quot;"
+        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/drawable/stoplabels.xml"
+            line="7"
+            column="27"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var currentTime by remember { mutableStateOf(System.currentTimeMillis() / 1000) }"
+        errorLine2="                                  ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/BlockScreen.kt"
+            line="153"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="                    var lastMoveAt by remember { mutableStateOf(0L) }"
+        errorLine2="                                                 ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1607"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="                    var lastSavedAt by remember { mutableStateOf(0L) }"
+        errorLine2="                                                  ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1617"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="                    var lastFetchedAt by remember { mutableStateOf(0L) }"
+        errorLine2="                                                    ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1621"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="                    var searchBarBottomPx by remember { mutableStateOf(0) }"
+        errorLine2="                                                        ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="2781"
+            column="57"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var nowSec by remember { mutableStateOf(System.currentTimeMillis() / 1000) }"
+        errorLine2="                             ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="364"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var pollSession by remember { mutableStateOf(0) }"
+        errorLine2="                                  ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="393"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="            var currentTime by remember { mutableStateOf(System.currentTimeMillis() / 1000) }"
+        errorLine2="                                          ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SingleTripInfoScreen.kt"
+            line="501"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var now by remember { mutableStateOf(System.currentTimeMillis()) }"
+        errorLine2="                          ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SingleTripInfoScreen.kt"
+            line="765"
+            column="27"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var currentTime by remember { mutableStateOf(Instant.now().epochSecond) }"
+        errorLine2="                                  ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/StopScreen.kt"
+            line="170"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var currentPageHours by remember { mutableStateOf(12) }"
+        errorLine2="                                       ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/StopScreen.kt"
+            line="172"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.cancelledstop` appears to be unused">
+        <location
+            file="src/main/res/drawable/cancelledstop.png"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.catenary_logo` appears to be unused"
+        errorLine1="&lt;selector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/catenary_logo.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.purple_200` appears to be unused"
+        errorLine1="    &lt;color name=&quot;purple_200&quot;>#FFBB86FC&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="3"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.purple_500` appears to be unused"
+        errorLine1="    &lt;color name=&quot;purple_500&quot;>#FF6200EE&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="4"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.purple_700` appears to be unused"
+        errorLine1="    &lt;color name=&quot;purple_700&quot;>#FF3700B3&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="5"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.teal_200` appears to be unused"
+        errorLine1="    &lt;color name=&quot;teal_200&quot;>#FF03DAC5&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="6"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.teal_700` appears to be unused"
+        errorLine1="    &lt;color name=&quot;teal_700&quot;>#FF018786&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="7"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.black` appears to be unused"
+        errorLine1="    &lt;color name=&quot;black&quot;>#FF000000&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="8"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.white` appears to be unused"
+        errorLine1="    &lt;color name=&quot;white&quot;>#FFFFFFFF&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="9"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.pattern` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/pattern.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.pointing` appears to be unused">
+        <location
+            file="src/main/res/drawable/pointing.png"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.pointing_shell_light` appears to be unused">
+        <location
+            file="src/main/res/drawable/pointing_shell_light.png"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.station_enter` appears to be unused">
+        <location
+            file="src/main/res/drawable/station_enter.png"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.stoplabels` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/stoplabels.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.hidepreviousstops` appears to be unused"
+        errorLine1="    &lt;string name=&quot;hidepreviousstops&quot;>Hide previous stops&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="8"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.fleet` appears to be unused"
+        errorLine1="    &lt;string name=&quot;fleet&quot;>Fleet&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="11"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.now` appears to be unused"
+        errorLine1="    &lt;string name=&quot;now&quot;>Now&lt;/string>"
+        errorLine2="            ~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="13"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.route_screen_to` appears to be unused"
+        errorLine1="    &lt;string name=&quot;route_screen_to&quot;>To: %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="98"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.single_trip_info_screen_error` appears to be unused"
+        errorLine1="    &lt;string name=&quot;single_trip_info_screen_error&quot;>Error: %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="100"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.vehicle_info_loading` appears to be unused"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="107"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.vehicle_info_model` appears to be unused"
+        errorLine1="    &lt;string name=&quot;vehicle_info_model&quot;> %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="108"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.vehicle_info_years` appears to be unused"
+        errorLine1="    &lt;string name=&quot;vehicle_info_years&quot;> %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="109"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.vehicle_info_engine` appears to be unused"
+        errorLine1="    &lt;string name=&quot;vehicle_info_engine&quot;> %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-en/strings.xml"
+            line="100"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-bg/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-da/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-el/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-fi/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-hu/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-no/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-sv/strings.xml"
+            line="105"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>読み込み中...&lt;/string>"
+        errorLine2="                                        ~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="106"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>로딩 중...&lt;/string>"
+        errorLine2="                                        ~~~~~~~">
+        <location
+            file="src/main/res/values-ko-rKR/strings.xml"
+            line="106"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-ro/strings.xml"
+            line="106"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>加载中...&lt;/string>"
+        errorLine2="                                        ~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="106"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>載入中...&lt;/string>"
+        errorLine2="                                        ~~~~~~">
+        <location
+            file="src/main/res/values-zh-rHK/strings.xml"
+            line="106"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>載入中...&lt;/string>"
+        errorLine2="                                        ~~~~~~">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="106"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="107"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="107"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="107"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-sk/strings.xml"
+            line="107"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values-uk/strings.xml"
+            line="107"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;vehicle_info_loading&quot;>...&lt;/string>"
+        errorLine2="                                        ~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="107"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="MonochromeLauncherIcon"
+        message="The application adaptive icon is missing a monochrome tag"
+        errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/mipmap-anydpi-v26/ic_launcher.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="MonochromeLauncherIcon"
+        message="The application adaptive roundIcon is missing a monochrome tag"
+        errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/cancelledstop.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/cancelledstop.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/dark_stop_name.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/dark_stop_name.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/light_stop_name.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/light_stop_name.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/logo.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/logo.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/pointing.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/pointing.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/pointing50percent.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/pointing50percent.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/pointing_shell.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/pointing_shell.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/pointing_shell_light.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/pointing_shell_light.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/station_enter.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/station_enter.png"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="        Color(android.graphics.Color.parseColor(&quot;#$cleanColor&quot;))"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="249"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="    edit().putLong(key, java.lang.Double.doubleToRawLongBits(value))"
+        errorLine2="    ~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="273"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="    edit().apply {"
+        errorLine2="    ~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="348"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        edit().putString(K_LAYER_SETTINGS, settingsJson).apply()"
+        errorLine2="        ~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="516"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1217"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putBoolean(K_GA_CONSENT, isChecked).apply()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1227"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1258"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putBoolean(K_SHOW_ZOMBIE_BUSES, showZombieBuses).apply()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1292"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putBoolean(K_USE_US_UNITS, usUnits).apply()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/MainActivity.kt"
+            line="1296"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        with(prefs.edit()) {"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/NearbyDepartures.kt"
+            line="148"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="            Color(parseColor(&quot;$colorStr&quot;))"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SearchComposables.kt"
+            line="392"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="        Color(android.graphics.Color.parseColor(tripColorStr))"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/catenarymaps/catenary/SingleTripInfoScreen.kt"
+            line="611"
+            column="15"/>
+    </issue>
+
+</issues>
