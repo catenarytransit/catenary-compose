@@ -242,7 +242,8 @@ data class RoutePreviewDetail(
         val color: String,
         val text_color: String,
         val short_name: String? = null,
-        val long_name: String? = null
+        val long_name: String? = null,
+        val agency_id: String? = null,
 )
 
 private data class SavedCamera(
@@ -1611,9 +1612,11 @@ class MainActivity : ComponentActivity() {
 
                     MaplibreMap(
                             modifier =
-                                    Modifier.fillMaxSize().onSizeChanged { newSize ->
-                                        mapSize = newSize
-                                    },
+                                    Modifier
+                                        .fillMaxSize()
+                                        .onSizeChanged { newSize ->
+                                            mapSize = newSize
+                                        },
                             baseStyle = BaseStyle.Uri(styleUri),
                             cameraState = camera,
                             onMapClick = { latlng, screenPos ->
@@ -2660,52 +2663,55 @@ class MainActivity : ComponentActivity() {
 
                     // Main Draggable Bottom Sheet
                     val sheetModifier =
-                            Modifier.fillMaxWidth(contentWidthFraction).align(Alignment.BottomStart)
+                            Modifier
+                                .fillMaxWidth(contentWidthFraction)
+                                .align(Alignment.BottomStart)
 
                     Surface(
                             modifier =
                                     sheetModifier
-                                            .offset {
-                                                IntOffset(
-                                                        x = 0,
-                                                        y =
-                                                                draggableState
-                                                                        .requireOffset()
-                                                                        .roundToInt()
-                                                )
-                                            }
-                                            .anchoredDraggable(
-                                                    state = draggableState,
-                                                    orientation = Orientation.Vertical
-                                            ),
+                                        .offset {
+                                            IntOffset(
+                                                x = 0,
+                                                y =
+                                                    draggableState
+                                                        .requireOffset()
+                                                        .roundToInt()
+                                            )
+                                        }
+                                        .anchoredDraggable(
+                                            state = draggableState,
+                                            orientation = Orientation.Vertical
+                                        ),
                             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                             shadowElevation = 8.dp
                     ) {
                         Column(
                                 modifier =
-                                        Modifier.fillMaxWidth()
-                                                .fillMaxHeight()
-                                                .padding( // This padding ensures content doesn't
-                                                        // get clipped at the bottom
-                                                        bottom =
-                                                                with(LocalDensity.current) {
-                                                                    ((draggableState
-                                                                                    .requireOffset()))
-                                                                            .toDp()
-                                                                            .coerceAtLeast(0.dp)
-                                                                            .coerceAtMost(
-                                                                                    with(
-                                                                                            LocalDensity
-                                                                                                    .current
-                                                                                    ) {
-                                                                                        maxHeight
-                                                                                                .times(
-                                                                                                        0.9f
-                                                                                                )
-                                                                                    }
-                                                                            )
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .fillMaxHeight()
+                                            .padding( // This padding ensures content doesn't
+                                                // get clipped at the bottom
+                                                bottom =
+                                                    with(LocalDensity.current) {
+                                                        ((draggableState
+                                                            .requireOffset()))
+                                                            .toDp()
+                                                            .coerceAtLeast(0.dp)
+                                                            .coerceAtMost(
+                                                                with(
+                                                                    LocalDensity
+                                                                        .current
+                                                                ) {
+                                                                    maxHeight
+                                                                        .times(
+                                                                            0.9f
+                                                                        )
                                                                 }
-                                                ),
+                                                            )
+                                                    }
+                                            ),
                                 horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
