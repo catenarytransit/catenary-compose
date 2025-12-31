@@ -59,6 +59,10 @@ fun StationScreenTrainRow(
 ) {
     val rtTime = if (event.last_stop == true) event.realtime_arrival else event.realtime_departure
     val schedTime = if (event.last_stop == true) event.scheduled_arrival else event.scheduled_departure
+    
+    // Only show seconds if the scheduled time isn't on an exact minute
+    val effectiveShowSeconds = showSeconds && (schedTime?.rem(60) != 0L)
+    
     val agencyId = routeInfo?.agency_id
     val agencyName = if (agencyId != null) agencies?.get(agencyId)?.agency_name else null
     val showRouteName = event.chateau != "nationalrailuk" || 
@@ -83,7 +87,7 @@ fun StationScreenTrainRow(
                     FormattedTimeText(
                         timezone = zoneId.id,
                         timeSeconds = schedTime,
-                        showSeconds = showSeconds,
+                        showSeconds = effectiveShowSeconds,
                         style = MaterialTheme.typography.labelSmall,
                         textDecoration = TextDecoration.LineThrough,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
@@ -100,16 +104,16 @@ fun StationScreenTrainRow(
                         FormattedTimeText(
                             timezone = zoneId.id,
                             timeSeconds = schedTime,
-                            showSeconds = showSeconds,
+                            showSeconds = effectiveShowSeconds,
                             style = MaterialTheme.typography.labelSmall, // xs
                             textDecoration = TextDecoration.LineThrough,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        DelayDiff(diff = rtTime - schedTime, show_seconds = showSeconds, use_symbol_sign = useSymbolSign)
+                        DelayDiff(diff = rtTime - schedTime, show_seconds = effectiveShowSeconds, use_symbol_sign = useSymbolSign)
                         FormattedTimeText(
                             timezone = zoneId.id,
                             timeSeconds = rtTime,
-                            showSeconds = showSeconds,
+                            showSeconds = effectiveShowSeconds,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), // font-medium
                             color = if (isPast) MaterialTheme.colorScheme.primary.copy(alpha=0.7f) else MaterialTheme.colorScheme.primary
                         )
@@ -118,7 +122,7 @@ fun StationScreenTrainRow(
                         FormattedTimeText(
                             timezone = zoneId.id,
                             timeSeconds = rtTime,
-                            showSeconds = showSeconds,
+                            showSeconds = effectiveShowSeconds,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                             color = if (isPast) MaterialTheme.colorScheme.primary.copy(alpha=0.7f) else MaterialTheme.colorScheme.primary
                         )
@@ -127,7 +131,7 @@ fun StationScreenTrainRow(
                     FormattedTimeText(
                         timezone = zoneId.id,
                         timeSeconds = schedTime,
-                        showSeconds = showSeconds,
+                        showSeconds = effectiveShowSeconds,
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isPast) MaterialTheme.colorScheme.onSurface.copy(alpha=0.7f) else MaterialTheme.colorScheme.onSurface
                     )
@@ -139,7 +143,7 @@ fun StationScreenTrainRow(
                      SelfUpdatingDiffTimer(
                          targetTimeSeconds = target,
                          showBrackets = false,
-                         showSeconds = showSeconds,
+                         showSeconds = effectiveShowSeconds,
                          showDays = false,
                          numSize = 12.sp,
                          showPlus = false
