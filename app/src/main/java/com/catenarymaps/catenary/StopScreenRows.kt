@@ -136,8 +136,8 @@ fun StationScreenTrainRow(
                 // Countdown
                  val target = rtTime ?: schedTime
                  if (target != null) {
-                     DiffTimer(
-                         diff = (target - currentTime).toDouble(),
+                     SelfUpdatingDiffTimer(
+                         targetTimeSeconds = target,
                          showBrackets = false,
                          showSeconds = showSeconds,
                          showDays = false,
@@ -362,10 +362,9 @@ fun StopScreenRow(
                  
                  Column(horizontalAlignment = Alignment.End) {
                      // Countdown
-                     val diff = (rtTime ?: schedTime ?: 0) - currentTime
                      if ((rtTime ?: schedTime) != null) {
-                         DiffTimer(
-                             diff = diff.toDouble(),
+                         SelfUpdatingDiffTimer(
+                             targetTimeSeconds = rtTime ?: schedTime ?: 0,
                              showBrackets = false,
                              showSeconds = showSeconds,
                              showDays = false,

@@ -870,6 +870,7 @@ fun StopScreen(
                                  currentTime = currentTime,
                                  zoneId = zoneId,
                                  locale = locale,
+                                 showSeconds = false,
                                  modifier = Modifier.clickable {
                                      onTripClick(
                                         CatenaryStackEnum.SingleTrip(

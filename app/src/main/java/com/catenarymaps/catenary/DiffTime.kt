@@ -70,6 +70,53 @@ private fun secMarking(locale: Locale): String {
     }
 }
 
+// ---------- Self-Updating Timer Component ----------
+/**
+ * A self-updating countdown timer that automatically refreshes every second.
+ * Use this for countdown displays that need to update in real-time.
+ *
+ * @param targetTimeSeconds The target Unix timestamp in seconds to count down to (or from if in the past)
+ */
+@Composable
+fun SelfUpdatingDiffTimer(
+    targetTimeSeconds: Long,
+    showBrackets: Boolean = true,
+    showSeconds: Boolean = false,
+    showDays: Boolean = false,
+    showPlus: Boolean = false,
+    numSize: TextUnit = 14.sp,
+    unitSize: TextUnit = 12.sp,
+    bracketSize: TextUnit = 14.sp,
+    numberFontWeight: FontWeight = FontWeight.Normal,
+    unitFontWeight: FontWeight = FontWeight.Normal,
+    color: Color = Color.Unspecified
+) {
+    var currentTimeSeconds by remember { mutableStateOf(java.time.Instant.now().epochSecond) }
+    
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentTimeSeconds = java.time.Instant.now().epochSecond
+            kotlinx.coroutines.delay(1000L)
+        }
+    }
+    
+    val diff = (targetTimeSeconds - currentTimeSeconds).toDouble()
+    
+    DiffTimer(
+        diff = diff,
+        showBrackets = showBrackets,
+        showSeconds = showSeconds,
+        showDays = showDays,
+        showPlus = showPlus,
+        numSize = numSize,
+        unitSize = unitSize,
+        bracketSize = bracketSize,
+        numberFontWeight = numberFontWeight,
+        unitFontWeight = unitFontWeight,
+        color = color
+    )
+}
+
 // ---------- Compose Timer Component ----------
 @Composable
 fun DiffTimer(
