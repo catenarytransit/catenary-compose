@@ -76,6 +76,8 @@
     <string name="heading_more">More</string>
     <string name="update_downloaded">An update has just been downloaded.</string>
     <string name="restart">Restart</string>
+    <string name="stop_cancelled">Stop Cancelled</string>
+    <string name="last_stop">Last Stop</string>
 
     <string name="settings_datadog_analytics_title">Datadog Analytics</string>
     <string name="settings_datadog_analytics_description">Enables intensive, detailed tracking to help developers find and fix bugs.</string>
