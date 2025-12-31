@@ -627,30 +627,44 @@ fun StopScreen(
         onSetStopsToHide(emptySet()) // Clear stop hiding
 
         // Build and set shape lines for this stop
+        // Optimization: Limit shapes to prevent OOM on large stations
+        val MAX_SHAPES = 20
         val features = mutableListOf<Feature<LineString, JsonObject>>()
-        meta.routes.forEach { (chateauId, routes) ->
-            routes.forEach { (routeId, route) ->
-                route.shapes_list?.forEach { shapeId ->
-                    val polyline = meta.shapes[chateauId]?.get(shapeId)
-                    if (polyline == null) {
-                        // Lazy fetch
-                        scope.launch { fetchShape(chateauId, shapeId, route.route_type) }
-                    }
-                    polyline?.let { pl ->
-                        try {
-                            val latLngs = com.google.maps.android.PolyUtil.decode(polyline)
-                            val positions = latLngs.map { Position(it.longitude, it.latitude) }
-                            val lineString = LineString(positions)
-                            features.add(
-                                Feature(
-                                    lineString,
-                                    properties = JsonObject(mapOf("color" to JsonPrimitive(route.color)))
-                                )
-                            )
-                        } catch (e: Exception) {
-                            // ignore invalid polyline
-                        }
-                    }
+        
+        // Only show shapes for routes that have departures in the current view
+        val relevantRouteIds = mergedEvents.map { it.route_id }.toSet()
+        
+        var shapeCount = 0
+        outerLoop@ for ((chateauId, routes) in meta.routes) {
+            for ((routeId, route) in routes) {
+                if (shapeCount >= MAX_SHAPES) break@outerLoop
+                
+                // Skip routes with no current departures
+                if (!relevantRouteIds.contains(routeId)) continue
+                
+                // Take only the first shape per route to reduce memory usage
+                val shapeId = route.shapes_list?.firstOrNull() ?: continue
+                val polyline = meta.shapes[chateauId]?.get(shapeId)
+                
+                if (polyline == null) {
+                    // Lazy fetch
+                    scope.launch { fetchShape(chateauId, shapeId, route.route_type) }
+                    continue
+                }
+                
+                try {
+                    val latLngs = com.google.maps.android.PolyUtil.decode(polyline)
+                    val positions = latLngs.map { Position(it.longitude, it.latitude) }
+                    val lineString = LineString(positions)
+                    features.add(
+                        Feature(
+                            lineString,
+                            properties = JsonObject(mapOf("color" to JsonPrimitive(route.color)))
+                        )
+                    )
+                    shapeCount++
+                } catch (e: Exception) {
+                    // ignore invalid polyline
                 }
             }
         }
