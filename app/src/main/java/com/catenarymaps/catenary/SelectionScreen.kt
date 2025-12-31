@@ -69,6 +69,10 @@ import com.google.android.gms.analytics.GoogleAnalytics
 import com.google.android.gms.analytics.HitBuilders
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
+import coil.ImageLoader
 
 @Composable
 fun VehicleSelectionItem(
@@ -228,25 +232,82 @@ fun StopSelectionItem(
 
                 // Route Badges
                 if (routeData != null && previewData.routes.isNotEmpty()) {
-                    FlowRow(
-                        modifier = Modifier.padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        previewData.routes.forEach { routeId ->
-                            routeData[routeId]?.let { route ->
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(parseColor(route.color, Color.Black))
-                                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = route.short_name ?: route.long_name ?: routeId,
-                                        color = parseColor(route.text_color, Color.White),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontSize = 10.sp, // Svelte: text-xs
-                                    )
+                    val isNationalRail = option.chateau_id == "nationalrailuk"
+                    val handledRoutes = mutableSetOf<String>()
+
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (isNationalRail) {
+                            val agencyGroups = mapOf(
+                                "GW" to Pair("Great Western Railway", "GreaterWesternRailway.svg"),
+                                "SW" to Pair("South Western Railway", "SouthWesternRailway.svg"),
+                                "SN" to Pair("Southern", "SouthernIcon.svg"),
+                                "CC" to Pair("c2c", "c2c_logo.svg"),
+                                "LE" to Pair("Greater Anglia", null)
+                            )
+
+                            agencyGroups.forEach { (agencyId, info) ->
+                                val name = info.first
+                                val icon = info.second
+                                val matchingRoutes = previewData.routes.filter { routeData[it]?.agency_id == agencyId }
+
+                                if (matchingRoutes.isNotEmpty()) {
+                                    handledRoutes.addAll(matchingRoutes)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant) // Matches bg-gray-200/800 roughly
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        if (icon != null) {
+                                            val context = LocalContext.current
+                                            val imageLoader = remember(context) {
+                                                ImageLoader.Builder(context)
+                                                    .components { add(SvgDecoder.Factory()) }
+                                                    .build()
+                                            }
+                                            AsyncImage(
+                                                model = ImageRequest.Builder(context)
+                                                    .data("https://maps.catenarymaps.org/agencyicons/$icon")
+                                                    .decoderFactory(SvgDecoder.Factory())
+                                                    .build(),
+                                                imageLoader = imageLoader,
+                                                contentDescription = name,
+                                                modifier = Modifier
+                                                    .size(12.dp)
+                                                    .padding(end = 4.dp)
+                                            )
+                                        }
+                                        Text(text = name, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
+                            }
+                        }
+
+                        val remainingRoutes = previewData.routes.filter { !handledRoutes.contains(it) }
+
+                        if (remainingRoutes.isNotEmpty()) {
+                            FlowRow(
+                                modifier = Modifier.padding(top = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                remainingRoutes.forEach { routeId ->
+                                    routeData[routeId]?.let { route ->
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(parseColor(route.color, Color.Black))
+                                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = route.short_name ?: route.long_name ?: routeId,
+                                                color = parseColor(route.text_color, Color.White),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 10.sp,
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
