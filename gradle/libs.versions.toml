@@ -5,6 +5,7 @@ androidSdk = "12.3.0"
 appcompat = "1.7.1"
 appUpdate = "2.1.0"
 coreSplashscreen = "1.2.0"
+coil = "2.7.0"
 ddSdkAndroidGradlePlugin = "1.21.0"
 ddSdkAndroidRum = "3.4.0"
 ddSdkAndroidRumVersion = "3.4.0"
@@ -47,6 +48,8 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
 app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdate" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 dd-sdk-android-compose = { module = "com.datadoghq:dd-sdk-android-compose", version.ref = "ddSdkAndroidRumVersion" }
 dd-sdk-android-gradle-plugin = { module = "com.datadoghq:dd-sdk-android-gradle-plugin", version.ref = "ddSdkAndroidGradlePlugin" }
 dd-sdk-android-rum = { module = "com.datadoghq:dd-sdk-android-rum", version.ref = "ddSdkAndroidRum" }

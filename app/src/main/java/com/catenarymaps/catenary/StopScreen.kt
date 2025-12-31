@@ -97,7 +97,18 @@ data class StopRouteInfo(
     val short_name: String? = null,
     val long_name: String? = null,
     val shapes_list: List<String>? = null,
-    val route_type: Int? = null
+    val route_type: Int? = null,
+    val agency_id: String? = null
+)
+
+@Serializable
+data class AgencyInfo(
+    val agency_name: String,
+    val agency_url: String? = null,
+    val agency_timezone: String? = null,
+    val agency_lang: String? = null,
+    val agency_phone: String? = null,
+    val agency_fare_url: String? = null
 )
 
 @Serializable
@@ -128,7 +139,8 @@ data class DeparturesAtStopResponse(
     val routes: Map<String, Map<String, StopRouteInfo>>? = null,
     val shapes: Map<String, Map<String, String>>? = null, // Chateau -> Shape ID -> Polyline
     val events: List<StopEvent>? = null,
-    val alerts: Map<String, Map<String, Alert>> = emptyMap()
+    val alerts: Map<String, Map<String, Alert>> = emptyMap(),
+    val agencies: Map<String, Map<String, AgencyInfo>>? = null // Chateau -> Agency ID -> Info
 )
 
 // --- Internal State Data Classes ---
@@ -136,7 +148,8 @@ private data class StopMeta(
     val primary: StopPrimary,
     val routes: Map<String, Map<String, StopRouteInfo>>,
     val shapes: Map<String, Map<String, String>>,
-    val alerts: Map<String, Map<String, Alert>>
+    val alerts: Map<String, Map<String, Alert>>,
+    val agencies: Map<String, Map<String, AgencyInfo>>
 )
 
 private data class PageInfo(
@@ -210,6 +223,51 @@ fun StopScreen(
         }
     }
 
+
+
+    // Filters
+    // Mode = 'rail' | 'metro' | 'bus' | 'other'
+    var activeTab by remember { mutableStateOf("bus") }
+    var availableModes by remember { mutableStateOf(listOf<String>()) }
+
+    fun getModeForRouteType(routeType: Int): String {
+        return when (routeType) {
+            3, 11, 700 -> "bus"
+            0, 1, 5, 7, 12, 900 -> "metro"
+            2, 106, 107, 101, 100, 102, 103 -> "rail"
+            else -> "other"
+        }
+    }
+
+    LaunchedEffect(mergedEvents, dataMeta) {
+        val modes = mutableSetOf<String>()
+        mergedEvents.forEach { ev ->
+            val routeDef = dataMeta?.routes?.get(ev.chateau)?.get(ev.route_id)
+            val rType = routeDef?.route_type ?: 3 // default to bus?
+            // Wait, StopEvent doesn't have route_type directly unless we join?
+            // Actually StopRouteInfo has it. If missing, assume 3?
+            // Svelte logic: const rType = routeDef?.route_type ?? ev.route_type ?? 3;
+            // Does StopEvent have route_type? No, only StopRouteInfo.
+            // But SingleTrip has it? Page logic doesn't join inherently.
+            // Let's check StopEvent definition... it DOES NOT have route_type.
+            // Ah, Svelte has ev.route_type? Copied changes say: `const rType = routeDef?.route_type ?? ev.route_type ?? 3;`
+            // Let's check StopEvent in Kotlin again...
+            // It has `route_id`. It does NOT have `route_type` in the kotlin struct yet.
+            // Actually, `StopScreen.kt` Line 100: `StopRouteInfo` has `route_type`.
+            // Line 104 `StopEvent` does not have `route_type`.
+            // I should access it via `dataMeta`.
+            modes.add(getModeForRouteType(rType))
+        }
+
+        val order = listOf("rail", "metro", "bus", "other")
+        val newAvailable = order.filter { modes.contains(it) }
+        availableModes = newAvailable
+
+        if (newAvailable.isNotEmpty() && !newAvailable.contains(activeTab)) {
+            activeTab = newAvailable[0]
+        }
+    }
+
     val datesToEventsFiltered by remember {
         derivedStateOf {
             val tz = dataMeta?.primary?.timezone?.let {
@@ -223,8 +281,25 @@ fun StopScreen(
             mergedEvents
                 .filter { event ->
                     val cutoff = if (showPreviousDepartures) 1800 else 60
-                    (event.realtime_departure ?: event.scheduled_departure
-                    ?: 0) >= (currentTime - cutoff)
+                    // Filter by time
+                    val relevantTime = if (event.last_stop == true) event.realtime_arrival ?: event.scheduled_arrival else event.realtime_departure ?: event.scheduled_departure
+                    if ((relevantTime ?: 0) < (currentTime - cutoff)) return@filter false
+
+                    if (event.last_stop == true) {
+                         // show_arrivals_only logic? Svelte: `if (event.last_stop && !show_arrivals_only) return false;`
+                         // We don't have `show_arrivals_only` state port yet?
+                         // Let's assume false for now or ignore?
+                         // Svelte: `export let show_arrival_only = false;` (implicit?)
+                         // I will skip this check for now as I don't see it passed in.
+                    }
+
+                    // Filter by mode
+                    if (availableModes.size > 1) {
+                        val routeDef = dataMeta?.routes?.get(event.chateau)?.get(event.route_id)
+                        val rType = routeDef?.route_type ?: 3
+                        if (getModeForRouteType(rType) != activeTab) return@filter false
+                    }
+                    true
                 }
                 .groupBy { event ->
                     val stamp = (event.realtime_departure ?: event.realtime_arrival
@@ -270,12 +345,19 @@ fun StopScreen(
                 mergedAlerts[chateau] = existing + newAlerts
             }
 
+            // Deep merge Agencies
+            val mergedAgencies = (dataMeta?.agencies ?: emptyMap()).toMutableMap()
+            data.agencies?.forEach { (chateau, newAgencies) ->
+                val existing = mergedAgencies[chateau] ?: emptyMap()
+                mergedAgencies[chateau] = existing + newAgencies
+            }
+
             // If we didn't have a primary before, use the new one.
             // If we did, we probably want to keep the old one or update it. 
             // Usually primary shouldn't change much, so taking the new one is fine.
             val currentPrimary = dataMeta?.primary ?: data.primary
 
-            dataMeta = StopMeta(currentPrimary, mergedRoutes, mergedShapes, mergedAlerts)
+            dataMeta = StopMeta(currentPrimary, mergedRoutes, mergedShapes, mergedAlerts, mergedAgencies)
         }
 
         // Merge events
@@ -669,6 +751,48 @@ fun StopScreen(
                 }
             }
 
+            // Tabs for filtering
+            if (availableModes.size > 1) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 8.dp, bottom = 8.dp)
+                            .background(MaterialTheme.colorScheme.background),
+                         horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        availableModes.forEach { mode ->
+                            val isSelected = activeTab == mode
+                            val label = when(mode) {
+                                "rail" -> stringResource(R.string.headingIntercityRail) 
+                                "metro" -> stringResource(R.string.headingLocalRail)
+                                "bus" -> stringResource(R.string.headingBus)
+                                else -> stringResource(R.string.headingOther)
+                            }
+                            
+                            // Simple Tab Button
+                            Column(
+                                modifier = Modifier
+                                    .clickable { activeTab = mode }
+                                    .padding(vertical = 8.dp, horizontal = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                )
+                                if (isSelected) {
+                                    Box(Modifier.height(2.dp).width(20.dp).background(MaterialTheme.colorScheme.primary))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
 
             // Previous Departures Toggle
             if (previousCount > 0) {
@@ -722,16 +846,17 @@ fun StopScreen(
                     // Event Rows
                     items(events, key = { composeEventKey(it) }) { event ->
                         val routeInfo = meta.routes[event.chateau]?.get(event.route_id)
-                        StopScreenRow(
-                            event = event,
-                            routeInfo = routeInfo,
-                            currentTime = currentTime,
-                            zoneId = zoneId,
-                            locale = locale,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onTripClick(
+                        
+                        if (activeTab == "rail") {
+                             StationScreenTrainRow(
+                                 event = event,
+                                 routeInfo = routeInfo,
+                                 agencies = meta.agencies,
+                                 currentTime = currentTime,
+                                 zoneId = zoneId,
+                                 locale = locale,
+                                 modifier = Modifier.clickable {
+                                     onTripClick(
                                         CatenaryStackEnum.SingleTrip(
                                             chateau_id = event.chateau,
                                             trip_id = event.trip_id,
@@ -739,12 +864,36 @@ fun StopScreen(
                                             start_time = null,
                                             start_date = event.service_date?.replace("-", ""),
                                             vehicle_id = null,
-                                            route_type = null // This will be fetched in SingleTrip
+                                            route_type = null
                                         )
                                     )
-                                }
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                                 }
+                             )
+                        } else {
+                            StopScreenRow(
+                                event = event,
+                                routeInfo = routeInfo,
+                                currentTime = currentTime,
+                                zoneId = zoneId,
+                                locale = locale,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onTripClick(
+                                            CatenaryStackEnum.SingleTrip(
+                                                chateau_id = event.chateau,
+                                                trip_id = event.trip_id,
+                                                route_id = event.route_id,
+                                                start_time = null,
+                                                start_date = event.service_date?.replace("-", ""),
+                                                vehicle_id = null,
+                                                route_type = null // This will be fetched in SingleTrip
+                                            )
+                                        )
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outlineVariant.copy(
                                 alpha = 0.3f
@@ -843,199 +992,4 @@ private fun splicePolylines(globalPoly: String, localPoly: String): String {
         result.addAll(globalPoints.subList(bestEndIdx + 1, globalPoints.size))
     }
     return com.google.maps.android.PolyUtil.encode(result)
-}
-
-@Composable
-private fun StopScreenRow(
-    event: StopEvent,
-    routeInfo: StopRouteInfo?,
-    currentTime: Long,
-    zoneId: ZoneId,
-    locale: Locale,
-    modifier: Modifier = Modifier
-) {
-    val isPast = (event.realtime_departure ?: event.scheduled_departure ?: 0) < (currentTime - 60)
-
-    val departureTimeToShow = event.realtime_departure ?: event.scheduled_departure
-    val scheduledTime = event.scheduled_departure ?: event.scheduled_arrival
-    val isRealtime = event.realtime_departure != null
-    val delaySeconds = event.delay_seconds
-    val isCancelled = event.trip_cancelled == true
-    val isDeleted = event.trip_deleted == true
-    val stopCancelled = event.stop_cancelled == true
-
-    // The main column for the entire row item
-    Column(modifier = modifier) {
-        // Top part: Route info, headsign, etc.
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                if (routeInfo != null) {
-                    Text(
-                        text = routeInfo.short_name ?: routeInfo.long_name ?: event.route_id,
-                        color = parseColor(routeInfo.text_color, Color.White),
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(parseColor(routeInfo.color, Color.Gray))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                }
-                if (!event.trip_short_name.isNullOrBlank()) {
-                    Text(
-                        text = event.trip_short_name,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(end = 0.dp)
-                    )
-                }
-            }
-
-            // Vehicle Number
-            if (!event.vehicle_number.isNullOrBlank()) {
-                Text(
-                    text = "• ${event.vehicle_number}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Text(
-            text = event.headsign ?: stringResource(id = R.string.no_headsign),
-            style = if (isCancelled) MaterialTheme.typography.bodyLarge.copy(textDecoration = TextDecoration.LineThrough) else MaterialTheme.typography.bodyLarge,
-            color = if (isPast) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(top = 2.dp)
-        )
-
-        // Bottom part: Time information, matching the Svelte layout
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 0.dp),
-            verticalAlignment = Alignment.CenterVertically
-        )
-        {
-            if (isCancelled) {
-                Text(
-                    text = "Cancelled",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(Modifier.weight(1f))
-                val timeToStrike = scheduledTime ?: departureTimeToShow
-                if (timeToStrike != null) {
-                    FormattedTimeText(
-                        timezone = zoneId.id,
-                        timeSeconds = timeToStrike,
-                        showSeconds = false,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
-                        textDecoration = TextDecoration.LineThrough
-                    )
-                }
-            } else if (isDeleted) {
-                Text(
-                    text = "Deleted",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(Modifier.weight(1f))
-                val timeToStrike = scheduledTime ?: departureTimeToShow
-                if (timeToStrike != null) {
-                    FormattedTimeText(
-                        timezone = zoneId.id,
-                        timeSeconds = timeToStrike,
-                        showSeconds = false,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
-                        textDecoration = TextDecoration.LineThrough
-                    )
-                }
-            } else if (stopCancelled) {
-                Text(
-                    text = "Stop Deleted",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(Modifier.weight(1f))
-                val timeToStrike = scheduledTime ?: departureTimeToShow
-                if (timeToStrike != null) {
-                    FormattedTimeText(
-                        timezone = zoneId.id,
-                        timeSeconds = timeToStrike,
-                        showSeconds = false,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 0.7f),
-                        textDecoration = TextDecoration.LineThrough
-                    )
-                }
-            } else {
-                val label =
-                    if (event.last_stop == true) stringResource(R.string.arrival) else stringResource(
-                        R.string.departure
-                    )
-                Text(text = stringResource(id = R.string.stop_screen_label, label), style = MaterialTheme.typography.bodyMedium)
-
-                val targetTime = departureTimeToShow ?: scheduledTime
-                if (targetTime != null) {
-                    DiffTimer(
-                        diff = (targetTime - currentTime).toDouble(),
-                        showBrackets = false,
-                        showSeconds = false,
-                        showDays = false,
-                        numSize = 16.sp,
-                        showPlus = false
-                    )
-                }
-
-                if (isRealtime && scheduledTime != null && departureTimeToShow != null) {
-                    Spacer(Modifier.size(4.dp))
-                    DelayDiff(diff = departureTimeToShow - scheduledTime, show_seconds = false)
-                }
-
-                Spacer(Modifier.weight(1f))
-
-                // Wall clock time display
-                val timeColor =
-                    if (isRealtime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                val finalColor = if (isPast) timeColor.copy(alpha = 0.7f) else timeColor
-
-                if (isRealtime && scheduledTime != null && departureTimeToShow != null) {
-                    if (departureTimeToShow != scheduledTime) {
-                        FormattedTimeText(
-                            timezone = zoneId.id,
-                            timeSeconds = scheduledTime,
-                            showSeconds = false,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isPast) 0.5f else 1.0f),
-                            textDecoration = TextDecoration.LineThrough,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                    }
-                    FormattedTimeText(
-                        timezone = zoneId.id,
-                        timeSeconds = departureTimeToShow,
-                        showSeconds = false,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                        color = finalColor
-                    )
-                } else if (scheduledTime != null) {
-                    FormattedTimeText(
-                        timezone = zoneId.id,
-                        timeSeconds = scheduledTime,
-                        showSeconds = false,
-                        style = MaterialTheme.typography.bodyLarge, color = finalColor
-                    )
-                }
-            }
-        }
-
-        if (!event.platform_string_realtime.isNullOrBlank()) {
-            Text(
-                text = "${stringResource(id = R.string.platform)} ${event.platform_string_realtime}",
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-    }
 }

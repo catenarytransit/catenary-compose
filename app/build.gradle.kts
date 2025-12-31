@@ -107,6 +107,8 @@ dependencies {
     implementation(libs.firebase.crashlytics.ndk)
     implementation(libs.google.firebase.analytics)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 }
 
 datadog {
