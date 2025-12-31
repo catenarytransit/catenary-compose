@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -764,10 +765,10 @@ fun StopScreen(
                         availableModes.forEach { mode ->
                             val isSelected = activeTab == mode
                             val label = when(mode) {
-                                "rail" -> stringResource(R.string.headingIntercityRail) 
-                                "metro" -> stringResource(R.string.headingLocalRail)
-                                "bus" -> stringResource(R.string.headingBus)
-                                else -> stringResource(R.string.headingOther)
+                                "rail" -> stringResource(R.string.heading_intercity_rail) 
+                                "metro" -> stringResource(R.string.heading_local_rail)
+                                "bus" -> stringResource(R.string.heading_bus)
+                                else -> stringResource(R.string.heading_other)
                             }
                             
                             // Simple Tab Button
@@ -851,7 +852,7 @@ fun StopScreen(
                              StationScreenTrainRow(
                                  event = event,
                                  routeInfo = routeInfo,
-                                 agencies = meta.agencies,
+                                 agencies = meta.agencies?.get(event.chateau),
                                  currentTime = currentTime,
                                  zoneId = zoneId,
                                  locale = locale,

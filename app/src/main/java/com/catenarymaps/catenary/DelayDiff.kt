@@ -20,7 +20,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 
 @Composable
-fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: TextUnit = 12.sp) {
+fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: TextUnit = 12.sp, use_symbol_sign: Boolean = false) {
     val isDark = isSystemInDarkTheme()
 
     val textColor by remember(diff) {
@@ -54,35 +54,45 @@ fun DelayDiff(diff: Long, show_seconds: Boolean = false, fontSizeOfPolarity: Tex
     val s = remainder - h * 3600 - m * 60
 
     Row {
-        if (diff < 0) {
+        if (!use_symbol_sign) {
+             if (diff < 0) {
+                Text(
+                    text = stringResource(id = R.string.early),
+                    fontSize = fontSizeOfPolarity,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
+            } else if (diff > 0) {
+                Text(
+                    text = stringResource(id = R.string.late),
+                    fontSize = fontSizeOfPolarity,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
+            } else {
+                Text(
+                    text = stringResource(id = R.string.ontime),
+                    fontSize = fontSizeOfPolarity,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF58A738),
+                    modifier = Modifier.alignByBaseline()
+                )
+            }
             Text(
-                text = stringResource(id = R.string.early),
+                text = " ",
                 fontSize = fontSizeOfPolarity,
-                color = textColor,
-                modifier = Modifier.alignByBaseline()
-            )
-        } else if (diff > 0) {
-            Text(
-                text = stringResource(id = R.string.late),
-                fontSize = fontSizeOfPolarity,
-                color = textColor,
                 modifier = Modifier.alignByBaseline()
             )
         } else {
-            Text(
-                text = stringResource(id = R.string.ontime),
-                fontSize = fontSizeOfPolarity,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF58A738),
-                modifier = Modifier.alignByBaseline()
-            )
+             // Symbol Sign Mode: +/-
+             if (diff > 0) {
+                 Text("+", fontSize = fontSizeOfPolarity, color = textColor, modifier = Modifier.alignByBaseline())
+             } else if (diff < 0) {
+                 Text("-", fontSize = fontSizeOfPolarity, color = textColor, modifier = Modifier.alignByBaseline())
+             }
+             // For 0/OnTime in symbol mode, maybe show nothing or check user req in previous conversation?
+             // User conv said: "+, -, and nothing for on-time."
         }
-
-        Text(
-            text = " ",
-            fontSize = fontSizeOfPolarity,
-            modifier = Modifier.alignByBaseline()
-        )
 
         if (diff != 0L) {
             if (h > 0) {
