@@ -235,8 +235,8 @@ fun StationScreenTrainRow(
         ) {
             if (!event.platform_string_realtime.isNullOrBlank()) {
                 Text(
-                    text = stringResource(R.string.platform) + " " + event.platform_string_realtime.replace("Track", "").trim(),
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    text = event.platform_string_realtime.replace("Track", "").trim(),
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
