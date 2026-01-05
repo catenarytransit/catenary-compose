@@ -907,7 +907,7 @@ class MainActivity : ComponentActivity() {
         // --- Load Layer Settings ---
         val initialLayerSettings = prefs.readLayerSettings() ?: AllLayerSettings()
 
-        val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, false)
+        val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, true)
         val trackingConsent =
                 if (initialDatadogConsent) TrackingConsent.GRANTED else TrackingConsent.NOT_GRANTED
 
@@ -937,8 +937,8 @@ class MainActivity : ComponentActivity() {
             Log.e(TAG, "Failed to set initial GA opt-out: ${e.message}")
         }
 
-        val applicationId = "5201846b-e68a-4388-a47c-a9508e3f3dc2"
-        val clientToken = "pub6a98d8da258f8b43df56ceb1c6203a16"
+        val applicationId = "fc6e17a4-7831-40a6-8af1-90260f2f2e44"
+        val clientToken = "puba920e8b5d25e3fa797bc5877e050ec9d"
         val environmentName = "prod"
         val appVariantName = "catenary"
 
@@ -948,7 +948,7 @@ class MainActivity : ComponentActivity() {
                                 env = environmentName,
                                 variant = appVariantName
                         )
-                        .useSite(DatadogSite.US1)
+                    .useSite(DatadogSite.EU1)
                         .build()
         // Initialize with the saved consent state
         Datadog.initialize(this, configuration, trackingConsent)
@@ -2716,16 +2716,17 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Box(
                                     modifier =
-                                            Modifier.padding(vertical = 10.dp)
-                                                    .width(40.dp)
-                                                    .height(4.dp)
-                                                    .clip(CircleShape)
-                                                    .background(
-                                                            MaterialTheme.colorScheme
-                                                                    .onSurfaceVariant.copy(
-                                                                    alpha = 0.4f
-                                                            )
-                                                    )
+                                            Modifier
+                                                .padding(vertical = 10.dp)
+                                                .width(40.dp)
+                                                .height(4.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    MaterialTheme.colorScheme
+                                                        .onSurfaceVariant.copy(
+                                                            alpha = 0.4f
+                                                        )
+                                                )
                             )
 
                             if (catenaryStack.isEmpty()) {
@@ -2964,11 +2965,12 @@ class MainActivity : ComponentActivity() {
                     AnimatedVisibility(
                             visible = !sheetIsExpanded, // hide when sheet is fully expanded
                             modifier =
-                                    Modifier.align(searchAlignment)
-                                            .fillMaxWidth(contentWidthFraction)
-                                            .windowInsetsPadding(WindowInsets.safeDrawing)
-                                            .padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                                            .zIndex(3f),
+                                    Modifier
+                                        .align(searchAlignment)
+                                        .fillMaxWidth(contentWidthFraction)
+                                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                                        .padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                                        .zIndex(3f),
                             enter =
                                     slideInVertically(
                                             initialOffsetY = { -it / 2 }
@@ -3027,15 +3029,16 @@ class MainActivity : ComponentActivity() {
                                     !(sheetIsExpanded && contentWidthFraction == 1f) &&
                                             !(isSearchFocused && contentWidthFraction == 1f),
                             modifier =
-                                    Modifier.align(Alignment.TopEnd)
-                                            .windowInsetsPadding(WindowInsets.safeDrawing)
-                                            .padding(
-                                                    top =
-                                                            if (contentWidthFraction == 1.0f) 64.dp
-                                                            else 16.dp,
-                                                    end = 16.dp
-                                            )
-                                            .zIndex(3f) // keep above map
+                                    Modifier
+                                        .align(Alignment.TopEnd)
+                                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                                        .padding(
+                                            top =
+                                                if (contentWidthFraction == 1.0f) 64.dp
+                                                else 16.dp,
+                                            end = 16.dp
+                                        )
+                                        .zIndex(3f) // keep above map
                     ) {
                         FloatingActionButton(
                                 onClick = { showLayersPanel = !showLayersPanel },
@@ -3058,15 +3061,16 @@ class MainActivity : ComponentActivity() {
                                     !(sheetIsExpanded && contentWidthFraction == 1f) &&
                                             !(isSearchFocused && contentWidthFraction == 1f),
                             modifier =
-                                    Modifier.align(Alignment.TopEnd)
-                                            .windowInsetsPadding(WindowInsets.safeDrawing)
-                                            .padding(
-                                                    top =
-                                                            if (contentWidthFraction == 1.0f) 110.dp
-                                                            else 64.dp,
-                                                    end = 16.dp
-                                            )
-                                            .zIndex(3f) // keep above map
+                                    Modifier
+                                        .align(Alignment.TopEnd)
+                                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                                        .padding(
+                                            top =
+                                                if (contentWidthFraction == 1.0f) 110.dp
+                                                else 64.dp,
+                                            end = 16.dp
+                                        )
+                                        .zIndex(3f) // keep above map
                     ) {
                         FloatingActionButton(
                                 onClick = {
@@ -3088,8 +3092,9 @@ class MainActivity : ComponentActivity() {
                                             ),
                                     contentDescription = "Set to North",
                                     modifier =
-                                            Modifier.size(24.dp)
-                                                    .rotate(-camera.position.bearing.toFloat())
+                                            Modifier
+                                                .size(24.dp)
+                                                .rotate(-camera.position.bearing.toFloat())
                             )
                         }
                     }
@@ -3114,23 +3119,25 @@ class MainActivity : ComponentActivity() {
                     val fabModifier =
                             if (contentWidthFraction == 1f) {
                                 // Full-width sheet -> float *above* the drawer and move with it
-                                Modifier.align(Alignment.TopEnd)
-                                        .offset {
-                                            IntOffset(
-                                                    x =
-                                                            -with(density) {
-                                                                fabMargin.toPx().roundToInt()
-                                                            },
-                                                    y = fabYAboveSheet.coerceAtLeast(0)
-                                            )
-                                        }
-                                        .zIndex(4f)
+                                Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset {
+                                        IntOffset(
+                                            x =
+                                                -with(density) {
+                                                    fabMargin.toPx().roundToInt()
+                                                },
+                                            y = fabYAboveSheet.coerceAtLeast(0)
+                                        )
+                                    }
+                                    .zIndex(4f)
                             } else {
                                 // Half-width sheet -> keep it in the bottom-right corner (not over
                                 // the drawer)
-                                Modifier.align(Alignment.BottomEnd)
-                                        .padding(end = 16.dp, bottom = 16.dp)
-                                        .zIndex(4f)
+                                Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(end = 16.dp, bottom = 16.dp)
+                                    .zIndex(4f)
                             }
 
                     AnimatedVisibility(
@@ -3179,14 +3186,17 @@ class MainActivity : ComponentActivity() {
                     AnimatedVisibility(
                             visible = isSearchFocused,
                             modifier =
-                                    Modifier.align(Alignment.TopStart)
-                                            .zIndex(2f), // below the bar (z=3), above the map/sheet
+                                    Modifier
+                                        .align(Alignment.TopStart)
+                                        .zIndex(2f), // below the bar (z=3), above the map/sheet
                             enter = slideInVertically(initialOffsetY = { -it }),
                             exit = slideOutVertically(targetOffsetY = { -it }),
                     ) {
                         val overlayBase =
                                 if (contentWidthFraction < 1f) {
-                                    Modifier.fillMaxHeight().fillMaxWidth(contentWidthFraction)
+                                    Modifier
+                                        .fillMaxHeight()
+                                        .fillMaxWidth(contentWidthFraction)
                                 } else {
                                     Modifier.fillMaxSize()
                                 }
@@ -3256,8 +3266,9 @@ class MainActivity : ComponentActivity() {
                     AnimatedVisibility(
                             visible = showLayersPanel,
                             modifier =
-                                    Modifier.align(Alignment.BottomCenter)
-                                            .zIndex(5f), // Ensure it's on top
+                                    Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .zIndex(5f), // Ensure it's on top
                             enter = slideInVertically(initialOffsetY = { it }),
                             exit = slideOutVertically(targetOffsetY = { it })
                     ) {
@@ -3268,24 +3279,26 @@ class MainActivity : ComponentActivity() {
 
                         Surface(
                                 modifier =
-                                        Modifier.fillMaxWidth()
-                                                .heightIn(min = 100.dp, max = 700.dp),
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 100.dp, max = 700.dp),
                                 shadowElevation = 8.dp,
                                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                         ) {
                             Column(
                                     modifier =
-                                            Modifier.windowInsetsPadding(
-                                                            WindowInsets(
-                                                                    bottom =
-                                                                            WindowInsets.safeContent
-                                                                                    .getBottom(
-                                                                                            density
-                                                                                    )
-                                                            )
+                                            Modifier
+                                                .windowInsetsPadding(
+                                                    WindowInsets(
+                                                        bottom =
+                                                            WindowInsets.safeContent
+                                                                .getBottom(
+                                                                    density
+                                                                )
                                                     )
-                                                    .fillMaxWidth()
-                                                    .padding(16.dp),
+                                                )
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Row(
@@ -3719,11 +3732,12 @@ class MainActivity : ComponentActivity() {
                                     Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier =
-                                                    Modifier.fillMaxWidth()
-                                                            .clickable {
-                                                                showZombieBuses = !showZombieBuses
-                                                            }
-                                                            .padding(vertical = 4.dp)
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable {
+                                                            showZombieBuses = !showZombieBuses
+                                                        }
+                                                        .padding(vertical = 4.dp)
                                     ) {
                                         Checkbox(
                                                 checked = showZombieBuses,
@@ -3737,9 +3751,10 @@ class MainActivity : ComponentActivity() {
                                     Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier =
-                                                    Modifier.fillMaxWidth()
-                                                            .clickable { usUnits = !usUnits }
-                                                            .padding(vertical = 4.dp)
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable { usUnits = !usUnits }
+                                                        .padding(vertical = 4.dp)
                                     ) {
                                         Checkbox(
                                                 checked = usUnits,
@@ -3758,15 +3773,16 @@ class MainActivity : ComponentActivity() {
                     SnackbarHost(
                             hostState = snackbars,
                             modifier =
-                                    Modifier.align(Alignment.BottomCenter)
-                                            .zIndex(10f)
-                                            .windowInsetsPadding(
-                                                    WindowInsets(
-                                                            bottom =
-                                                                    WindowInsets.safeContent
-                                                                            .getBottom(density)
-                                                    )
+                                    Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .zIndex(10f)
+                                        .windowInsetsPadding(
+                                            WindowInsets(
+                                                bottom =
+                                                    WindowInsets.safeContent
+                                                        .getBottom(density)
                                             )
+                                        )
                     )
                 }
             }
@@ -3984,22 +4000,25 @@ fun LayerTabs(selectedTab: String, onTabSelected: (String) -> Unit) {
     val tabs = listOf("intercityrail", "localrail", "bus", "other")
 
     Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         tabs.forEach { tab ->
             val isSelected = tab == selectedTab
             Box(
                     modifier =
-                            Modifier.background(
-                                            if (isSelected)
-                                                    MaterialTheme.colorScheme.primary.copy(
-                                                            alpha = 0.2f
-                                                    )
-                                            else MaterialTheme.colorScheme.surfaceVariant
-                                    )
-                                    .padding(vertical = 8.dp, horizontal = 12.dp)
-                                    .clickable { onTabSelected(tab) }
+                            Modifier
+                                .background(
+                                    if (isSelected)
+                                        MaterialTheme.colorScheme.primary.copy(
+                                            alpha = 0.2f
+                                        )
+                                    else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                                .padding(vertical = 8.dp, horizontal = 12.dp)
+                                .clickable { onTabSelected(tab) }
             ) {
                 Text(
                         text = tab.replaceFirstChar { it.uppercase() },

@@ -125,9 +125,9 @@ fun DiffTimer(
     showSeconds: Boolean = false,
     showDays: Boolean = false,
     showPlus: Boolean = false,
-    numSize: TextUnit = 14.sp, // if (large) 18.sp else 14.sp
-    unitSize: TextUnit = 12.sp, //if (large) 14.sp else 12.sp
-    bracketSize: TextUnit = 14.sp, // if (large) 18.sp else 14.sp
+    numSize: TextUnit = 14.sp,
+    unitSize: TextUnit = 12.sp,
+    bracketSize: TextUnit = 14.sp,
     numberFontWeight: FontWeight = FontWeight.Normal,
     unitFontWeight: FontWeight = FontWeight.Normal,
     color: Color = Color.Unspecified
@@ -135,7 +135,7 @@ fun DiffTimer(
     val context = LocalContext.current
     val locale = remember { currentLocale(context) }
 
-    // Compute d/h/m/s
+    // Fix: Unified types to Int to avoid "intersection of Number & Comparable" warning
     val (d, h, m, s) = remember(diff, showDays) {
         var remainder = floor(abs(diff))
         var days = 0
@@ -147,7 +147,9 @@ fun DiffTimer(
         remainder -= hours * 3600
         val mins = floor(remainder / 60).toInt()
         remainder -= mins * 60
-        val secs = remainder
+
+        // Explicitly convert to Int here so the array is Array<Int>
+        val secs = remainder.toInt()
         arrayOf(days, hours, mins, secs)
     }
 
@@ -156,7 +158,6 @@ fun DiffTimer(
         diff > 0 && showPlus -> "+"
         else -> ""
     }
-
 
     Row(modifier = Modifier, verticalAlignment = Alignment.Bottom) {
         if (showBrackets) {
@@ -170,7 +171,8 @@ fun DiffTimer(
             )
         }
 
-        if ((d as Int) > 0) {
+        // Note: usage of 'as Int' is no longer required as d, h, m, s are inferred as Int
+        if (d > 0) {
             Text(
                 "$d", fontSize = numSize, fontWeight = numberFontWeight,
                 modifier = Modifier.alignByBaseline(), color = color
@@ -184,7 +186,7 @@ fun DiffTimer(
             )
         }
 
-        if ((h as Int) > 0) {
+        if (h > 0) {
             Text(
                 "$h", modifier = Modifier.alignByBaseline(),
                 fontSize = numSize, fontWeight = numberFontWeight, color = color
@@ -199,7 +201,7 @@ fun DiffTimer(
         }
 
         val showM =
-            (h as Int) > 0 || ((m as Int) > 0 || (!showSeconds && (m as Int) >= 0 && diff != 0.0))
+            h > 0 || (m > 0 || (!showSeconds && m >= 0 && diff != 0.0))
         if (showM) {
             Text(
                 "$m",
@@ -219,7 +221,7 @@ fun DiffTimer(
 
         if (showSeconds) {
             Text(
-                (s as Double).toInt().toString(),
+                s.toString(), // Removed unsafe cast (s as Double)
                 modifier = Modifier.alignByBaseline(),
                 fontSize = numSize,
                 fontWeight = numberFontWeight,
