@@ -30,7 +30,7 @@ android {
 
     defaultConfig {
         applicationId = "com.catenarymaps.catenary"
-        minSdk = 27
+        minSdk = 23
         targetSdk = 36
         versionCode = 190
         versionName = "2.0.88"
@@ -47,11 +47,13 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        // Enable Java 8 desugaring
+        isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
     buildFeatures {
         compose = true
@@ -109,6 +111,9 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+
+    // Enable Java 8 desugaring
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 }
 
 datadog {

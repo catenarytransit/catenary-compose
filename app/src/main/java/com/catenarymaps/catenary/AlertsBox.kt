@@ -56,6 +56,8 @@ import java.util.TimeZone
 
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.core.os.ConfigurationCompat
+
 @Serializable
 data class AlertTranslation(
     val text: String,
@@ -96,7 +98,8 @@ fun AlertsBox(
 
     val alertColor = Color(0xFFF99C24)
 
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)
+        .get(0) ?: Locale.getDefault()
     val localeCode = remember(locale) {
         if (locale.language.startsWith("en")) "en-CA" else locale.toLanguageTag()
     }

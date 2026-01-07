@@ -1,5 +1,8 @@
 package com.catenarymaps.catenary
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.core.os.ConfigurationCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -714,7 +717,8 @@ fun StopScreen(
                 ZoneId.systemDefault()
             }
         }
-        val locale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
+        val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)
+            .get(0) ?: Locale.getDefault()
         val dateHeaderFormatter = remember(locale) {
             DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).withZone(zoneId)
         }
