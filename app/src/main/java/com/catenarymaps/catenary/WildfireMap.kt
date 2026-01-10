@@ -8,7 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.delay
@@ -27,6 +29,7 @@ import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
+import org.maplibre.compose.expressions.dsl.offset
 
 private const val TAG = "WildfireMap"
 
@@ -101,6 +104,7 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
     
     val fireNamesSource = remember(fireNamesData) {
         GeoJsonSource(
+            id = "firenames",
             data = GeoJsonData.Features(fireNamesData),
             options = GeoJsonOptions()
         )
@@ -189,7 +193,7 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "firenameslabelwd",
         source = fireNamesSource,
         minZoom = 5.5f,
-        iconImage = const("fireicon"), // Image must be registered or available in style
+        iconImage = image(painterResource(R.drawable.fire_1f525)), // Image must be registered or available in style
         iconSize = interpolate(
             linear(),
             get("ha").cast<NumberValue<Number>>(),
@@ -199,7 +203,10 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
             5000.0 to const(0.06f)
         ),
         textField = get("name").cast<StringValue>() + const(" ") + get("ha_rounded").cast<StringValue>() + const("ha"),
-        textOffset = const(DpOffsetValue(0.dp, 1.5.dp)), // Check if DpOffsetValue is correct constructor or if we need offset() DSL
+        textOffset = offset(
+            0.em,
+            1.5.em
+        ), // Check if DpOffsetValue is correct constructor or if we need offset() DSL
         textAnchor = const(SymbolAnchor.Top),
         textSize = interpolate(
             linear(),
