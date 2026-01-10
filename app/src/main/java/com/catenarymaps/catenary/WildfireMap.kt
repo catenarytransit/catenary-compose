@@ -13,12 +13,9 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
-import org.maplibre.compose.expressions.dsl.concat
-import org.maplibre.compose.expressions.dsl.const
-import org.maplibre.compose.expressions.dsl.interpolate
-import org.maplibre.compose.expressions.dsl.linear
-import org.maplibre.compose.expressions.dsl.zoom
+import org.maplibre.compose.expressions.dsl.*
 import org.maplibre.compose.expressions.dsl.Feature.get
+import org.maplibre.compose.expressions.value.*
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.layers.SymbolLayer
@@ -28,7 +25,6 @@ import org.maplibre.compose.sources.GeoJsonSource
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.FeatureCollection
-import org.maplibre.spatialk.geojson.Geometry
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 
@@ -70,7 +66,7 @@ fun createFirePointFeatures(fires: List<WatchdutyFireData>): FeatureCollection<P
                 properties = mapOf(
                     "name" to (fire.name ?: "Unknown Fire"),
                     "acreage" to (fire.data?.acreage?.toString() ?: "0"),
-                    "ha" to ha,
+                    "ha" to ha, // Double
                     "ha_rounded" to String.format("%.1f", ha),
                     "containment" to (fire.data?.containment?.toString() ?: "0")
                 )
@@ -81,15 +77,6 @@ fun createFirePointFeatures(fires: List<WatchdutyFireData>): FeatureCollection<P
 
 @Composable
 fun WildfireMapLayers(darkMode: Boolean = false) {
-    // 1. Sources without dynamic data loaded via explicit Ktor calls could be Uri sources,
-    // but the original code had setIntervals to refresh them.
-    // We can use rememberGeoJsonSource with Uri which might not auto-refresh unless key changes,
-    // OR we can manually fetch and update data like the original code did.
-    // Given the periodic updates, manual fetch into a state is better for strict parity.
-
-    // However, existing simple sources in MainActivity just use GeoJsonData.Uri.
-    // Let's use GeoJsonData.Uri for simpler static-ish sources, and manual for WatchDuty.
-
     val evacuationCaSource = rememberGeoJsonSource(
         id = "evacuation_ca_fire",
         data = GeoJsonData.Uri(EVACUATION_CA_FIRE_URL),
@@ -114,12 +101,7 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         options = GeoJsonOptions()
     )
 
-    // WatchDuty is dynamic and processed
     var fireNamesData by remember { mutableStateOf<FeatureCollection<Point, Map<String, Any>>>(FeatureCollection(emptyList())) }
-    
-    // We need to construct the Source object.
-    // Since FeatureCollection is immutable property of the source data state usually...
-    // referencing usage in MainActivity: mutableStateOf(GeoJsonSource(..., GeoJsonData.Features(...)))
     
     val fireNamesSource = remember(fireNamesData) {
         GeoJsonSource(
@@ -132,7 +114,6 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
     LaunchedEffect(Unit) {
         while (true) {
             try {
-                // Fetch WatchDuty events
                 val watchdutyResponse = ktorClient.get(WATCHDUTY_EVENTS_URL).body<List<WatchdutyFireData>>()
                 fireNamesData = createFirePointFeatures(watchdutyResponse)
             } catch (e: Exception) {
@@ -149,8 +130,8 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "evacuation_ca_fire_bounds",
         source = evacuationCaSource,
         minZoom = 5f,
-        fillColor = const(Color(0xFFDD3300)), 
-        fillOpacity = interpolate(
+        color = const(Color(0xFFDD3300)), 
+        opacity = interpolate(
             linear(),
             zoom(),
             9.0 to const(0.3f),
@@ -164,12 +145,15 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "evacuation_ca_fire_txt",
         source = evacuationCaSource,
         minZoom = 6f,
-        textField = get("STATUS"),
+        textField = get("STATUS").cast<StringValue>(),
         textSize = interpolate(
             linear(),
             zoom(),
-            7.0 to const(8f),
-            9.0 to const(13f)
+            7.0 to const(0.8f).em, // 8px approx 0.8em if base is 10? Assuming em unit.
+            // Original: 8, 13. MapLibre default is usually 16px? 
+            // AddShapes uses 0.5em ~ 8px.
+            // Let's use em to match consistency.
+            9.0 to const(1.3f).em
         ),
         textFont = const(listOf("NotoSans-Bold")),
         textColor = const(if (darkMode) Color(0xFFCCAAAA) else Color(0xFFCC0000))
@@ -180,8 +164,8 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "los_angeles_city_fire_evac_bounds",
         source = laEvacSource,
         minZoom = 5f,
-        fillColor = const(Color(0xFFDD3300)),
-        fillOpacity = interpolate(
+        color = const(Color(0xFFDD3300)),
+        opacity = interpolate(
             linear(),
             zoom(),
             9.0 to const(0.2f),
@@ -194,12 +178,12 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "los_angeles_city_fire_evac_txt",
         source = laEvacSource,
         minZoom = 6f,
-        textField = get("Label"),
+        textField = get("Label").cast<StringValue>(),
         textSize = interpolate(
             linear(),
             zoom(),
-            7.0 to const(8f),
-            9.0 to const(12.5f)
+            7.0 to const(0.8f).em,
+            9.0 to const(1.25f).em
         ),
         textFont = const(listOf("NotoSans-Bold")),
         textColor = const(if (darkMode) Color(0xFFCCAAAA) else Color(0xFFCC0000))
@@ -210,23 +194,23 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "firenameslabelwd",
         source = fireNamesSource,
         minZoom = 5.5f,
-        iconImage = const("fireicon"), // Note: Image must be loaded in the map style or via addImage
+        iconImage = const("fireicon"), // Image must be registered or available in style
         iconSize = interpolate(
             linear(),
-            get("ha"),
+            get("ha").cast<NumberValue<Double>>(),
             0.0 to const(0.03f),
             100.0 to const(0.04f),
             1000.0 to const(0.05f),
             5000.0 to const(0.06f)
         ),
-        textField = concat(get("name"), const(" "), get("ha_rounded"), const("ha")),
-        textOffset = const(listOf(0f, 1.5f)),
-        textAnchor = const("top"),
+        textField = get("name").cast<StringValue>() + const(" ") + get("ha_rounded").cast<StringValue>() + const("ha"),
+        textOffset = const(DpOffsetValue(0.dp, 1.5.dp)), // Check if DpOffsetValue is correct constructor or if we need offset() DSL
+        textAnchor = const(SymbolAnchor.Top),
         textSize = interpolate(
             linear(),
             zoom(),
-            6.0 to const(6f),
-            12.0 to const(14f)
+            6.0 to const(0.6f).em,
+            12.0 to const(1.4f).em
         ),
         textFont = const(listOf("NotoSans-Medium")),
         textIgnorePlacement = const(true),
@@ -239,26 +223,26 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "modis",
         source = modisSource,
         minZoom = 5f,
-        circleColor = interpolate(
+        color = interpolate(
             linear(),
-            get("BRIGHTNESS"),
+            get("BRIGHTNESS").cast<NumberValue<Double>>(),
             310.64 to const(Color(0xFFFF751F)),
             508.63 to const(Color(0xFFFF1A1A))
         ),
-        circleOpacity = interpolate(
+        opacity = interpolate(
             linear(),
-            get("BRIGHTNESS"),
+            get("BRIGHTNESS").cast<NumberValue<Double>>(),
             310.64 to const(0.3f),
             508.63 to const(0.5f)
         ),
-        circleRadius = interpolate(
+        radius = interpolate(
             linear(),
             zoom(),
-            5.0 to const(1f),
-            9.0 to const(5f),
-            12.0 to const(15f),
-            15.0 to const(22f),
-            22.0 to const(50f)
+            5.0 to const(1.dp),
+            9.0 to const(5.dp),
+            12.0 to const(15.dp),
+            15.0 to const(22.dp),
+            22.0 to const(50.dp)
         )
     )
 
@@ -267,27 +251,27 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "viirs_nw",
         source = viirsSource,
         minZoom = 5f,
-        circleColor = interpolate(
+        color = interpolate(
             linear(),
-            get("frp"),
+            get("frp").cast<NumberValue<Double>>(),
             3.0 to const(Color(0xFFFF751F)),
             100.0 to const(Color(0xFFFF1A1A))
         ),
-        circleOpacity = interpolate(
+        opacity = interpolate(
             linear(),
-            get("frp"),
+            get("frp").cast<NumberValue<Double>>(),
             3.0 to const(0.1f),
             10.0 to const(0.3f),
             100.0 to const(0.4f)
         ),
-        circleRadius = interpolate(
+        radius = interpolate(
             linear(),
             zoom(),
-            5.0 to const(0.3f),
-            9.0 to const(1.6f),
-            12.0 to const(5f),
-            15.0 to const(13f),
-            22.0 to const(16f)
+            5.0 to const(0.3.dp),
+            9.0 to const(1.6.dp),
+            12.0 to const(5.dp),
+            15.0 to const(13.dp),
+            22.0 to const(16.dp)
         )
     )
 }
