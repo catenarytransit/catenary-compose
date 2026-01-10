@@ -97,9 +97,10 @@ fun AddStops(
                         has("osm_station_id").not(),
                         (rtEq(12))
                 )
-        val isTram = all(any(any(rtEq(0), childrenRtEq(0)), rtEq(5)), isMetro().not(),
-                        has("osm_station_id").not()
-                )
+        val isTram = all(
+                any(any(rtEq(0), childrenRtEq(0)), rtEq(5)), isMetro().not(),
+                has("osm_station_id").not()
+        )
         val isIntercity = rtEq(2)
 
         // String pieces for label fields
@@ -692,7 +693,12 @@ fun AddStops(
                 textField = get("name").cast(),
                 textSize = intercityLabelSize,
                 textOffset = offset(0.em, 0.2.em),
-                textFont = step(input = zoom(), barlowRegular, 10 to barlowMedium, 13 to barlowBold),
+                textFont = step(
+                        input = zoom(),
+                        barlowRegular,
+                        10 to barlowMedium,
+                        13 to barlowBold
+                ),
                 textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
                 textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
                 textHaloWidth = const(1.dp),

@@ -71,114 +71,115 @@ private const val THRESHOLD_LOW = 40
 // --- Data Models for API Response ---
 @Serializable
 data class StopPrimary(
-        val stop_name: String,
-        val stop_lon: Double,
-        val stop_lat: Double,
-        val timezone: String
+    val stop_name: String,
+    val stop_lon: Double,
+    val stop_lat: Double,
+    val timezone: String
 )
 
 @Serializable
 data class StopRouteInfo(
-        val color: String,
-        val text_color: String,
-        val short_name: String? = null,
-        val long_name: String? = null,
-        val shapes_list: List<String>? = null,
-        val route_type: Int? = null,
-        val agency_id: String? = null
+    val color: String,
+    val text_color: String,
+    val short_name: String? = null,
+    val long_name: String? = null,
+    val shapes_list: List<String>? = null,
+    val route_type: Int? = null,
+    val agency_id: String? = null
 )
 
 @Serializable
 data class AgencyInfo(
-        val agency_name: String,
-        val agency_url: String? = null,
-        val agency_timezone: String? = null,
-        val agency_lang: String? = null,
-        val agency_phone: String? = null,
-        val agency_fare_url: String? = null
+    val agency_name: String,
+    val agency_url: String? = null,
+    val agency_timezone: String? = null,
+    val agency_lang: String? = null,
+    val agency_phone: String? = null,
+    val agency_fare_url: String? = null
 )
 
 @Serializable
 data class StopEvent(
-        val chateau: String,
-        val trip_id: String? = null,
-        val route_id: String,
-        val service_date: String? = null,
-        val headsign: String? = null,
-        val stop_id: String,
-        val scheduled_departure: Long? = null,
-        val realtime_departure: Long? = null,
-        val scheduled_arrival: Long? = null,
-        val realtime_arrival: Long? = null,
-        val trip_short_name: String? = null,
-        val last_stop: Boolean? = false,
-        val platform_string_realtime: String? = null,
-        val vehicle_number: String? = null,
-        val delay_seconds: Long? = null,
-        val trip_cancelled: Boolean,
-        val stop_cancelled: Boolean,
-        val trip_deleted: Boolean,
+    val chateau: String,
+    val trip_id: String? = null,
+    val route_id: String,
+    val service_date: String? = null,
+    val headsign: String? = null,
+    val stop_id: String,
+    val scheduled_departure: Long? = null,
+    val realtime_departure: Long? = null,
+    val scheduled_arrival: Long? = null,
+    val realtime_arrival: Long? = null,
+    val trip_short_name: String? = null,
+    val last_stop: Boolean? = false,
+    val platform_string_realtime: String? = null,
+    val vehicle_number: String? = null,
+    val delay_seconds: Long? = null,
+    val trip_cancelled: Boolean,
+    val stop_cancelled: Boolean,
+    val trip_deleted: Boolean,
 )
 
 @Serializable
 data class DeparturesAtStopResponse(
-        val primary: StopPrimary? = null,
-        val routes: Map<String, Map<String, StopRouteInfo>>? = null,
-        val shapes: Map<String, Map<String, String>>? = null, // Chateau -> Shape ID -> Polyline
-        val events: List<StopEvent>? = null,
-        val alerts: Map<String, Map<String, Alert>> = emptyMap(),
-        val agencies: Map<String, Map<String, AgencyInfo>>? = null // Chateau -> Agency ID -> Info
+    val primary: StopPrimary? = null,
+    val routes: Map<String, Map<String, StopRouteInfo>>? = null,
+    val shapes: Map<String, Map<String, String>>? = null, // Chateau -> Shape ID -> Polyline
+    val events: List<StopEvent>? = null,
+    val alerts: Map<String, Map<String, Alert>> = emptyMap(),
+    val agencies: Map<String, Map<String, AgencyInfo>>? = null // Chateau -> Agency ID -> Info
 )
 
 // --- Internal State Data Classes ---
 private data class StopMeta(
-        val primary: StopPrimary,
-        val routes: Map<String, Map<String, StopRouteInfo>>,
-        val shapes: Map<String, Map<String, String>>,
-        val alerts: Map<String, Map<String, Alert>>,
-        val agencies: Map<String, Map<String, AgencyInfo>>
+    val primary: StopPrimary,
+    val routes: Map<String, Map<String, StopRouteInfo>>,
+    val shapes: Map<String, Map<String, String>>,
+    val alerts: Map<String, Map<String, Alert>>,
+    val agencies: Map<String, Map<String, AgencyInfo>>
 )
 
 private data class PageInfo(
-        val id: String,
-        val startSec: Long,
-        val endSec: Long,
-        var refreshedAt: Long = 0,
-        var loading: Boolean = false,
-        var error: String? = null
+    val id: String,
+    val startSec: Long,
+    val endSec: Long,
+    var refreshedAt: Long = 0,
+    var loading: Boolean = false,
+    var error: String? = null
 )
 
 private data class StopEventPageData(
-        val event: StopEvent,
-        val pageId: String,
-        val refreshedAt: Long
+    val event: StopEvent,
+    val pageId: String,
+    val refreshedAt: Long
 )
 
 @Serializable
 data class OsmStationLookupResponse(
-        val found: Boolean,
-        val osm_station_id: String?,
-        val osm_station_info: OsmStationInfo?
+    val found: Boolean,
+    val osm_station_id: String?,
+    val osm_station_info: OsmStationInfo?
 )
 
-@Serializable data class OsmStationInfo(val name: String?, val mode_type: String?)
+@Serializable
+data class OsmStationInfo(val name: String?, val mode_type: String?)
 
 // Main Composable
 @Composable
 fun StopScreen(
-        screenData: CatenaryStackEnum,
-        catenaryStack: ArrayDeque<CatenaryStackEnum>,
-        reassigncatenarystack: (ArrayDeque<CatenaryStackEnum>) -> Unit,
-        ktorClient: HttpClient,
-        onTripClick: (CatenaryStackEnum.SingleTrip) -> Unit,
-        transitShapeForStopSource: MutableState<GeoJsonSource>,
-        stopsContextSource: MutableState<GeoJsonSource>,
-        transitShapeSource: MutableState<GeoJsonSource>,
-        camera: CameraState,
-        onSetStopsToHide: (Set<String>) -> Unit,
-        geoLock: GeoLockController,
-        onBack: () -> Unit,
-        onHome: () -> Unit
+    screenData: CatenaryStackEnum,
+    catenaryStack: ArrayDeque<CatenaryStackEnum>,
+    reassigncatenarystack: (ArrayDeque<CatenaryStackEnum>) -> Unit,
+    ktorClient: HttpClient,
+    onTripClick: (CatenaryStackEnum.SingleTrip) -> Unit,
+    transitShapeForStopSource: MutableState<GeoJsonSource>,
+    stopsContextSource: MutableState<GeoJsonSource>,
+    transitShapeSource: MutableState<GeoJsonSource>,
+    camera: CameraState,
+    onSetStopsToHide: (Set<String>) -> Unit,
+    geoLock: GeoLockController,
+    onBack: () -> Unit,
+    onHome: () -> Unit
 ) {
     // Determine strict types or nulls
     val stopData = screenData as? CatenaryStackEnum.StopStack
@@ -206,19 +207,19 @@ fun StopScreen(
             try {
                 // "https://birch.catenarymaps.org/osm_station_lookup?chateau_id=${chateau}&gtfs_stop_id=${stop_id}"
                 val lookupUrl =
-                        "https://birch.catenarymaps.org/osm_station_lookup?chateau_id=${stopData.chateau_id}&gtfs_stop_id=${stopData.stop_id}"
+                    "https://birch.catenarymaps.org/osm_station_lookup?chateau_id=${stopData.chateau_id}&gtfs_stop_id=${stopData.stop_id}"
                 val response: OsmStationLookupResponse = ktorClient.get(lookupUrl).body()
 
                 if (response.found && response.osm_station_id != null) {
                     println(
-                            "Found OSM station ${response.osm_station_id} for stop ${stopData.stop_id}, redirecting..."
+                        "Found OSM station ${response.osm_station_id} for stop ${stopData.stop_id}, redirecting..."
                     )
                     val newStackItem =
-                            CatenaryStackEnum.OsmStationStack(
-                                    osm_station_id = response.osm_station_id,
-                                    station_name = response.osm_station_info?.name,
-                                    mode_type = response.osm_station_info?.mode_type
-                            )
+                        CatenaryStackEnum.OsmStationStack(
+                            osm_station_id = response.osm_station_id,
+                            station_name = response.osm_station_info?.name,
+                            mode_type = response.osm_station_info?.mode_type
+                        )
 
                     // Replace current item in stack
                     val newStack = ArrayDeque(catenaryStack)
@@ -264,8 +265,8 @@ fun StopScreen(
         derivedStateOf {
             eventIndex.values.map { it.event }.distinctBy { composeEventKey(it) }.sortedBy {
                 it.realtime_departure
-                        ?: it.realtime_arrival ?: it.scheduled_departure ?: it.scheduled_arrival
-                                ?: 0
+                    ?: it.realtime_arrival ?: it.scheduled_departure ?: it.scheduled_arrival
+                    ?: 0
             }
         }
     }
@@ -321,51 +322,51 @@ fun StopScreen(
     val datesToEventsFiltered by remember {
         derivedStateOf {
             val tz =
-                    dataMeta?.primary?.timezone?.let {
-                        try {
-                            ZoneId.of(it)
-                        } catch (e: Exception) {
-                            ZoneId.systemDefault()
-                        }
+                dataMeta?.primary?.timezone?.let {
+                    try {
+                        ZoneId.of(it)
+                    } catch (e: Exception) {
+                        ZoneId.systemDefault()
                     }
-                            ?: ZoneId.systemDefault()
+                }
+                    ?: ZoneId.systemDefault()
 
             mergedEvents
-                    .filter { event ->
-                        val cutoff = if (showPreviousDepartures) 1800 else 60
-                        // Filter by time
-                        val relevantTime =
-                                if (event.last_stop == true)
-                                        event.realtime_arrival ?: event.scheduled_arrival
-                                else event.realtime_departure ?: event.scheduled_departure
-                        if ((relevantTime ?: 0) < (currentTime - cutoff)) return@filter false
+                .filter { event ->
+                    val cutoff = if (showPreviousDepartures) 1800 else 60
+                    // Filter by time
+                    val relevantTime =
+                        if (event.last_stop == true)
+                            event.realtime_arrival ?: event.scheduled_arrival
+                        else event.realtime_departure ?: event.scheduled_departure
+                    if ((relevantTime ?: 0) < (currentTime - cutoff)) return@filter false
 
-                        if (event.last_stop == true) {
-                            // show_arrivals_only logic? Svelte: `if (event.last_stop &&
-                            // !show_arrivals_only) return false;`
-                            // We don't have `show_arrivals_only` state port yet?
-                            // Let's assume false for now or ignore?
-                            // Svelte: `export let show_arrival_only = false;` (implicit?)
-                            // I will skip this check for now as I don't see it passed in.
-                        }
+                    if (event.last_stop == true) {
+                        // show_arrivals_only logic? Svelte: `if (event.last_stop &&
+                        // !show_arrivals_only) return false;`
+                        // We don't have `show_arrivals_only` state port yet?
+                        // Let's assume false for now or ignore?
+                        // Svelte: `export let show_arrival_only = false;` (implicit?)
+                        // I will skip this check for now as I don't see it passed in.
+                    }
 
-                        // Filter by mode
-                        if (availableModes.size > 1) {
-                            val routeDef = dataMeta?.routes?.get(event.chateau)?.get(event.route_id)
-                            val rType = routeDef?.route_type ?: 3
-                            if (getModeForRouteType(rType) != activeTab) return@filter false
-                        }
-                        true
+                    // Filter by mode
+                    if (availableModes.size > 1) {
+                        val routeDef = dataMeta?.routes?.get(event.chateau)?.get(event.route_id)
+                        val rType = routeDef?.route_type ?: 3
+                        if (getModeForRouteType(rType) != activeTab) return@filter false
                     }
-                    .groupBy { event ->
-                        val stamp =
-                                (event.realtime_departure
-                                        ?: event.realtime_arrival ?: event.scheduled_departure
-                                                ?: event.scheduled_arrival ?: 0) * 1000
-                        Instant.ofEpochMilli(stamp).atZone(tz).toLocalDate()
-                    }
-                    .toList()
-                    .sortedBy { it.first }
+                    true
+                }
+                .groupBy { event ->
+                    val stamp =
+                        (event.realtime_departure
+                            ?: event.realtime_arrival ?: event.scheduled_departure
+                            ?: event.scheduled_arrival ?: 0) * 1000
+                    Instant.ofEpochMilli(stamp).atZone(tz).toLocalDate()
+                }
+                .toList()
+                .sortedBy { it.first }
         }
     }
 
@@ -414,13 +415,13 @@ fun StopScreen(
             val currentPrimary = dataMeta?.primary ?: data.primary
 
             dataMeta =
-                    StopMeta(
-                            currentPrimary,
-                            mergedRoutes,
-                            mergedShapes,
-                            mergedAlerts,
-                            mergedAgencies
-                    )
+                StopMeta(
+                    currentPrimary,
+                    mergedRoutes,
+                    mergedShapes,
+                    mergedAlerts,
+                    mergedAgencies
+                )
         }
 
         // Merge events
@@ -443,17 +444,17 @@ fun StopScreen(
         page.error = null
 
         val useUrl =
-                if (osmStackData != null) {
-                    "https://birch.catenarymaps.org/departures_at_osm_station?station_id=${key}&start_time=${startSec}&end_time=${endSec}"
-                } else {
-                    "https://birchdeparturesfromstop.catenarymaps.org/departures_at_stop?chateau_id=${chateauId}&stop_id=${key}&start_time=${startSec}&end_time=${endSec}&include_shapes=false"
-                }
+            if (osmStackData != null) {
+                "https://birch.catenarymaps.org/departures_at_osm_station?station_id=${key}&start_time=${startSec}&end_time=${endSec}"
+            } else {
+                "https://birchdeparturesfromstop.catenarymaps.org/departures_at_stop?chateau_id=${chateauId}&stop_id=${key}&start_time=${startSec}&end_time=${endSec}&include_shapes=false"
+            }
 
         try {
             val responseString = ktorClient.get(useUrl).body<String>()
             val data =
-                    Json { ignoreUnknownKeys = true }
-                            .decodeFromString<DeparturesAtStopResponse>(responseString)
+                Json { ignoreUnknownKeys = true }
+                    .decodeFromString<DeparturesAtStopResponse>(responseString)
             val refreshedAt = Instant.now().epochSecond
             mergePageEvents(id, data, refreshedAt)
             currentPageHours = chooseNextPageHours(data.events?.size ?: 0)
@@ -480,75 +481,75 @@ fun StopScreen(
 
             try {
                 val finalPolyline: String? =
-                        if (isComplexRoute) {
-                            val lat = dataMeta?.primary?.stop_lat
-                            val lon = dataMeta?.primary?.stop_lon
+                    if (isComplexRoute) {
+                        val lat = dataMeta?.primary?.stop_lat
+                        val lon = dataMeta?.primary?.stop_lon
 
-                            if (lat != null && lon != null) {
-                                // println("Fetching complex shape for train route...")
-                                try {
-                                    val cropRadius = 0.1
-                                    val minX = lon - cropRadius
-                                    val maxX = lon + cropRadius
-                                    val minY = lat - cropRadius
-                                    val maxY = lat + cropRadius
+                        if (lat != null && lon != null) {
+                            // println("Fetching complex shape for train route...")
+                            try {
+                                val cropRadius = 0.1
+                                val minX = lon - cropRadius
+                                val maxX = lon + cropRadius
+                                val minY = lat - cropRadius
+                                val maxY = lat + cropRadius
 
-                                    coroutineScope {
-                                        val highResDeferred = async {
-                                            val urlLocal =
-                                                    "https://birchshapescustom.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline&simplify=10.0&min_x=$minX&max_x=$maxX&min_y=$minY&max_y=$maxY"
-                                            try {
-                                                val response =
-                                                        ktorClient.get(urlLocal).body<JsonObject>()
-                                                (response["polyline"] as? JsonPrimitive)?.content
-                                            } catch (e: Exception) {
-                                                // println("Failed to fetch local shape part: $e")
-                                                null
-                                            }
-                                        }
-
-                                        val lowResDeferred = async {
-                                            val urlGlobal =
-                                                    "https://birchshapescustom.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline&simplify=100.0"
-                                            try {
-                                                val response =
-                                                        ktorClient.get(urlGlobal).body<JsonObject>()
-                                                (response["polyline"] as? JsonPrimitive)?.content
-                                            } catch (e: Exception) {
-                                                // println("Failed to fetch global shape part: $e")
-                                                null
-                                            }
-                                        }
-
-                                        val localPoly = highResDeferred.await()
-                                        val globalPoly = lowResDeferred.await()
-
-                                        if (localPoly != null && globalPoly != null) {
-                                            splicePolylines(globalPoly, localPoly)
-                                        } else {
-                                            globalPoly ?: localPoly
+                                coroutineScope {
+                                    val highResDeferred = async {
+                                        val urlLocal =
+                                            "https://birchshapescustom.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline&simplify=10.0&min_x=$minX&max_x=$maxX&min_y=$minY&max_y=$maxY"
+                                        try {
+                                            val response =
+                                                ktorClient.get(urlLocal).body<JsonObject>()
+                                            (response["polyline"] as? JsonPrimitive)?.content
+                                        } catch (e: Exception) {
+                                            // println("Failed to fetch local shape part: $e")
+                                            null
                                         }
                                     }
-                                } catch (e: Exception) {
-                                    // println("Complex fetch failed, falling back to simple: $e")
-                                    null
+
+                                    val lowResDeferred = async {
+                                        val urlGlobal =
+                                            "https://birchshapescustom.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline&simplify=100.0"
+                                        try {
+                                            val response =
+                                                ktorClient.get(urlGlobal).body<JsonObject>()
+                                            (response["polyline"] as? JsonPrimitive)?.content
+                                        } catch (e: Exception) {
+                                            // println("Failed to fetch global shape part: $e")
+                                            null
+                                        }
+                                    }
+
+                                    val localPoly = highResDeferred.await()
+                                    val globalPoly = lowResDeferred.await()
+
+                                    if (localPoly != null && globalPoly != null) {
+                                        splicePolylines(globalPoly, localPoly)
+                                    } else {
+                                        globalPoly ?: localPoly
+                                    }
                                 }
-                            } else {
+                            } catch (e: Exception) {
+                                // println("Complex fetch failed, falling back to simple: $e")
                                 null
                             }
                         } else {
                             null
                         }
+                    } else {
+                        null
+                    }
 
                 val polylineToCheck =
-                        if (finalPolyline == null) {
-                            val url =
-                                    "https://birch.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline"
-                            val response = ktorClient.get(url).body<JsonObject>()
-                            (response["polyline"] as? JsonPrimitive)?.content
-                        } else {
-                            finalPolyline
-                        }
+                    if (finalPolyline == null) {
+                        val url =
+                            "https://birch.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline"
+                        val response = ktorClient.get(url).body<JsonObject>()
+                        (response["polyline"] as? JsonPrimitive)?.content
+                    } else {
+                        finalPolyline
+                    }
 
                 if (polylineToCheck != null) {
                     // Update dataMeta (Thread-safe via Snapshot system, but keep in mind we are on
@@ -559,7 +560,7 @@ fun StopScreen(
                         // don't overwrite blindly?
                         // Actually, map + overwrites.
                         val newShapesForChateau =
-                                currentShapesForChateau + (shapeId to polylineToCheck)
+                            currentShapesForChateau + (shapeId to polylineToCheck)
                         val newShapes = meta.shapes + (chateauId to newShapesForChateau)
                         dataMeta = meta.copy(shapes = newShapes)
                     }
@@ -655,10 +656,10 @@ fun StopScreen(
                 geoLock.deactivate()
 
                 camera.animateTo(
-                        camera.position.copy(
-                                target = Position(primary.stop_lon, primary.stop_lat),
-                                zoom = 14.0
-                        )
+                    camera.position.copy(
+                        target = Position(primary.stop_lon, primary.stop_lat),
+                        zoom = 14.0
+                    )
                 )
             }
             flyToAlready = true
@@ -666,25 +667,25 @@ fun StopScreen(
 
         // Set stop pin
         val stopFeature =
-                Feature(
-                        Point(Position(primary.stop_lon, primary.stop_lat)),
-                        properties =
-                                JsonObject(
-                                        mapOf(
-                                                "label" to JsonPrimitive(primary.stop_name),
-                                                "stop_route_type" to JsonPrimitive(0)
-                                        )
-                                ) // Use 0 for "other" style
-                )
+            Feature(
+                Point(Position(primary.stop_lon, primary.stop_lat)),
+                properties =
+                    JsonObject(
+                        mapOf(
+                            "label" to JsonPrimitive(primary.stop_name),
+                            "stop_route_type" to JsonPrimitive(0)
+                        )
+                    ) // Use 0 for "other" style
+            )
         stopsContextSource.value.setData(
-                GeoJsonData.Features(FeatureCollection(listOf(stopFeature)))
+            GeoJsonData.Features(FeatureCollection(listOf(stopFeature)))
         )
 
         // Clear other context lines
         transitShapeSource.value.setData(
-                GeoJsonData.Features(
-                        FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
-                )
+            GeoJsonData.Features(
+                FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
+            )
         )
         onSetStopsToHide(emptySet()) // Clear stop hiding
 
@@ -719,11 +720,11 @@ fun StopScreen(
                     val positions = latLngs.map { Position(it.longitude, it.latitude) }
                     val lineString = LineString(positions)
                     features.add(
-                            Feature(
-                                    lineString,
-                                    properties =
-                                            JsonObject(mapOf("color" to JsonPrimitive(route.color)))
-                            )
+                        Feature(
+                            lineString,
+                            properties =
+                                JsonObject(mapOf("color" to JsonPrimitive(route.color)))
+                        )
                     )
                     shapeCount++
                 } catch (e: Exception) {
@@ -738,14 +739,14 @@ fun StopScreen(
     DisposableEffect(Unit) {
         onDispose {
             transitShapeForStopSource.value.setData(
-                    GeoJsonData.Features(
-                            FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())
-                    )
+                GeoJsonData.Features(
+                    FeatureCollection(emptyList<Feature<LineString, Map<String, Any>>>())
+                )
             )
             stopsContextSource.value.setData(
-                    GeoJsonData.Features(
-                            FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
-                    )
+                GeoJsonData.Features(
+                    FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
+                )
             )
         }
     }
@@ -755,69 +756,73 @@ fun StopScreen(
     if (meta == null) {
         Column {
             Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 0.dp),
-                    horizontalArrangement = Arrangement.End
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 0.dp),
+                horizontalArrangement = Arrangement.End
             ) { NavigationControls(onBack = onBack, onHome = onHome) }
             Box(
-                    modifier = Modifier.fillMaxWidth().padding(32.dp),
-                    contentAlignment = Alignment.Center
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         }
     } else {
         val zoneId =
-                remember(meta.primary.timezone) {
-                    try {
-                        ZoneId.of(meta.primary.timezone)
-                    } catch (e: Exception) {
-                        ZoneId.systemDefault()
-                    }
+            remember(meta.primary.timezone) {
+                try {
+                    ZoneId.of(meta.primary.timezone)
+                } catch (e: Exception) {
+                    ZoneId.systemDefault()
                 }
+            }
         val locale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
         val dateHeaderFormatter =
-                remember(locale) {
-                    DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
-                            .withLocale(locale)
-                            .withZone(zoneId)
-                }
+            remember(locale) {
+                DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
+                    .withLocale(locale)
+                    .withZone(zoneId)
+            }
 
         LazyColumn(state = lazyListState, modifier = Modifier.fillMaxWidth()) {
             // Header
             item {
                 Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)) {
                     Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                                text = meta.primary.stop_name,
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier.weight(1f)
+                            text = meta.primary.stop_name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.weight(1f)
                         )
                         NavigationControls(onBack = onBack, onHome = onHome)
                     }
                     FormattedTimeText(
-                            timezone = zoneId.id,
-                            timeSeconds = currentTime,
-                            showSeconds = true,
-                            // The style from LiveClock is now applied here
-                            )
+                        timezone = zoneId.id,
+                        timeSeconds = currentTime,
+                        showSeconds = true,
+                        // The style from LiveClock is now applied here
+                    )
                     Text(
-                            text = meta.primary.timezone,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = meta.primary.timezone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     val alertsExpandedState = remember { mutableStateMapOf<String, Boolean>() }
                     meta.alerts?.forEach { (chateauId, alertsmap) ->
                         val expanded = alertsExpandedState.getOrPut(chateauId) { true }
                         AlertsBox(
-                                alerts = alertsmap,
-                                chateau = chateauId,
-                                default_tz = zoneId.id,
-                                isScrollable = false,
-                                expanded = expanded,
-                                onExpandedChange = { alertsExpandedState[chateauId] = !expanded }
+                            alerts = alertsmap,
+                            chateau = chateauId,
+                            default_tz = zoneId.id,
+                            isScrollable = false,
+                            expanded = expanded,
+                            onExpandedChange = { alertsExpandedState[chateauId] = !expanded }
                         )
                     }
                 }
@@ -827,50 +832,53 @@ fun StopScreen(
             if (availableModes.size > 1) {
                 item {
                     Row(
-                            modifier =
-                                    Modifier.fillMaxWidth()
-                                            .padding(start = 8.dp, bottom = 8.dp)
-                                            .background(MaterialTheme.colorScheme.background),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, bottom = 8.dp)
+                                .background(MaterialTheme.colorScheme.background),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         availableModes.forEach { mode ->
                             val isSelected = activeTab == mode
                             val label =
-                                    when (mode) {
-                                        "rail" -> stringResource(R.string.heading_intercity_rail)
-                                        "metro" -> stringResource(R.string.heading_local_rail)
-                                        "bus" -> stringResource(R.string.heading_bus)
-                                        else -> stringResource(R.string.heading_other)
-                                    }
+                                when (mode) {
+                                    "rail" -> stringResource(R.string.heading_intercity_rail)
+                                    "metro" -> stringResource(R.string.heading_local_rail)
+                                    "bus" -> stringResource(R.string.heading_bus)
+                                    else -> stringResource(R.string.heading_other)
+                                }
 
                             // Simple Tab Button
                             Column(
-                                    modifier =
-                                            Modifier.clickable { activeTab = mode }
-                                                    .padding(vertical = 8.dp, horizontal = 12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                modifier =
+                                    Modifier
+                                        .clickable { activeTab = mode }
+                                        .padding(vertical = 8.dp, horizontal = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                        text = label,
-                                        style =
-                                                MaterialTheme.typography.labelLarge.copy(
-                                                        fontWeight =
-                                                                if (isSelected) FontWeight.Bold
-                                                                else FontWeight.Normal,
-                                                        color =
-                                                                if (isSelected)
-                                                                        MaterialTheme.colorScheme
-                                                                                .primary
-                                                                else
-                                                                        MaterialTheme.colorScheme
-                                                                                .onSurfaceVariant
-                                                )
+                                    text = label,
+                                    style =
+                                        MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight =
+                                                if (isSelected) FontWeight.Bold
+                                                else FontWeight.Normal,
+                                            color =
+                                                if (isSelected)
+                                                    MaterialTheme.colorScheme
+                                                        .primary
+                                                else
+                                                    MaterialTheme.colorScheme
+                                                        .onSurfaceVariant
+                                        )
                                 )
                                 if (isSelected) {
                                     Box(
-                                            Modifier.height(2.dp)
-                                                    .width(20.dp)
-                                                    .background(MaterialTheme.colorScheme.primary)
+                                        Modifier
+                                            .height(2.dp)
+                                            .width(20.dp)
+                                            .background(MaterialTheme.colorScheme.primary)
                                     )
                                 }
                             }
@@ -883,23 +891,23 @@ fun StopScreen(
             if (previousCount > 0) {
                 item {
                     TextButton(
-                            onClick = { showPreviousDepartures = !showPreviousDepartures },
-                            modifier = Modifier.padding(horizontal = 2.dp)
+                        onClick = { showPreviousDepartures = !showPreviousDepartures },
+                        modifier = Modifier.padding(horizontal = 2.dp)
                     ) {
                         Icon(
-                                imageVector =
-                                        if (showPreviousDepartures) Icons.Filled.KeyboardArrowUp
-                                        else Icons.Filled.KeyboardArrowDown,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
+                            imageVector =
+                                if (showPreviousDepartures) Icons.Filled.KeyboardArrowUp
+                                else Icons.Filled.KeyboardArrowDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.size(0.dp))
                         Text(
-                                text = stringResource(id = R.string.previous_departures),
-                                style =
-                                        MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = FontWeight.Bold
-                                        )
+                            text = stringResource(id = R.string.previous_departures),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
                         )
                     }
                 }
@@ -909,10 +917,10 @@ fun StopScreen(
             if (datesToEventsFiltered.isEmpty() && pages.none { it.loading }) {
                 item {
                     Text(
-                            text = stringResource(id = R.string.no_departures_found),
-                            modifier = Modifier.padding(8.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = stringResource(id = R.string.no_departures_found),
+                        modifier = Modifier.padding(8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
@@ -920,15 +928,16 @@ fun StopScreen(
                     // Date Header
                     stickyHeader {
                         Row(
-                                modifier =
-                                        Modifier.fillMaxWidth()
-                                                .background(MaterialTheme.colorScheme.surface)
-                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                    text = dateHeaderFormatter.format(date),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                text = dateHeaderFormatter.format(date),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -939,67 +948,68 @@ fun StopScreen(
 
                         if (activeTab == "rail") {
                             StationScreenTrainRow(
-                                    event = event,
-                                    routeInfo = routeInfo,
-                                    agencies = meta.agencies?.get(event.chateau),
-                                    currentTime = currentTime,
-                                    zoneId = zoneId,
-                                    locale = locale,
-                                    showSeconds = false,
-                                    modifier =
-                                            Modifier.clickable {
-                                                onTripClick(
-                                                        CatenaryStackEnum.SingleTrip(
-                                                                chateau_id = event.chateau,
-                                                                trip_id = event.trip_id,
-                                                                route_id = event.route_id,
-                                                                start_time = null,
-                                                                start_date =
-                                                                        event.service_date?.replace(
-                                                                                "-",
-                                                                                ""
-                                                                        ),
-                                                                vehicle_id = null,
-                                                                route_type = null
-                                                        )
-                                                )
-                                            }
+                                event = event,
+                                routeInfo = routeInfo,
+                                agencies = meta.agencies?.get(event.chateau),
+                                currentTime = currentTime,
+                                zoneId = zoneId,
+                                locale = locale,
+                                showSeconds = false,
+                                modifier =
+                                    Modifier.clickable {
+                                        onTripClick(
+                                            CatenaryStackEnum.SingleTrip(
+                                                chateau_id = event.chateau,
+                                                trip_id = event.trip_id,
+                                                route_id = event.route_id,
+                                                start_time = null,
+                                                start_date =
+                                                    event.service_date?.replace(
+                                                        "-",
+                                                        ""
+                                                    ),
+                                                vehicle_id = null,
+                                                route_type = null
+                                            )
+                                        )
+                                    }
                             )
                         } else {
                             StopScreenRow(
-                                    event = event,
-                                    routeInfo = routeInfo,
-                                    currentTime = currentTime,
-                                    zoneId = zoneId,
-                                    locale = locale,
-                                    modifier =
-                                            Modifier.fillMaxWidth()
-                                                    .clickable {
-                                                        onTripClick(
-                                                                CatenaryStackEnum.SingleTrip(
-                                                                        chateau_id = event.chateau,
-                                                                        trip_id = event.trip_id,
-                                                                        route_id = event.route_id,
-                                                                        start_time = null,
-                                                                        start_date =
-                                                                                event.service_date
-                                                                                        ?.replace(
-                                                                                                "-",
-                                                                                                ""
-                                                                                        ),
-                                                                        vehicle_id = null,
-                                                                        route_type =
-                                                                                null // This will be
-                                                                        // fetched in
-                                                                        // SingleTrip
-                                                                        )
-                                                        )
-                                                    }
-                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                event = event,
+                                routeInfo = routeInfo,
+                                currentTime = currentTime,
+                                zoneId = zoneId,
+                                locale = locale,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onTripClick(
+                                                CatenaryStackEnum.SingleTrip(
+                                                    chateau_id = event.chateau,
+                                                    trip_id = event.trip_id,
+                                                    route_id = event.route_id,
+                                                    start_time = null,
+                                                    start_date =
+                                                        event.service_date
+                                                            ?.replace(
+                                                                "-",
+                                                                ""
+                                                            ),
+                                                    vehicle_id = null,
+                                                    route_type =
+                                                        null // This will be
+                                                    // fetched in
+                                                    // SingleTrip
+                                                )
+                                            )
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                         HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                         )
                     }
                 }
@@ -1008,8 +1018,10 @@ fun StopScreen(
             // Loading / Load More footer
             item {
                 Box(
-                        modifier = Modifier.fillMaxWidth().padding(32.dp),
-                        contentAlignment = Alignment.Center
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     if (pages.any { it.loading }) {
                         CircularProgressIndicator()
@@ -1061,8 +1073,8 @@ private fun splicePolylines(globalPoly: String, localPoly: String): String {
 
         // 1. Update best start candidate up to current index j
         val distToStart =
-                (p.latitude - startLocal.latitude).let { it * it } +
-                        (p.longitude - startLocal.longitude).let { it * it }
+            (p.latitude - startLocal.latitude).let { it * it } +
+                    (p.longitude - startLocal.longitude).let { it * it }
 
         if (distToStart < currentMinStartDist) {
             currentMinStartDist = distToStart
@@ -1071,8 +1083,8 @@ private fun splicePolylines(globalPoly: String, localPoly: String): String {
 
         // 2. Check if (currentBestStartIdx, j) is the global best pair
         val distToEnd =
-                (p.latitude - endLocal.latitude).let { it * it } +
-                        (p.longitude - endLocal.longitude).let { it * it }
+            (p.latitude - endLocal.latitude).let { it * it } +
+                    (p.longitude - endLocal.longitude).let { it * it }
 
         val totalDist = currentMinStartDist + distToEnd
 
