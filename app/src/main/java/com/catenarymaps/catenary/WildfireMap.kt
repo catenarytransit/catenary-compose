@@ -112,7 +112,7 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
     val fireNamesSource = remember {
         GeoJsonSource(
             id = "firenames",
-            data = GeoJsonData.Features(FeatureCollection(emptyList())),
+            data = GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, FireProperties>>())),
             options = GeoJsonOptions()
         )
     }
