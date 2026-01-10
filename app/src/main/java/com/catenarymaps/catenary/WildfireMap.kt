@@ -57,7 +57,16 @@ data class WatchdutyFireDetails(
     val manual_deactivation_started: Boolean? = null
 )
 
-fun createFirePointFeatures(fires: List<WatchdutyFireData>): FeatureCollection<Point, Map<String, Any>> {
+@Serializable
+data class FireProperties(
+    val name: String,
+    val acreage: String,
+    val ha: Double,
+    val ha_rounded: String,
+    val containment: String
+)
+
+fun createFirePointFeatures(fires: List<WatchdutyFireData>): FeatureCollection<Point, FireProperties> {
     val features = fires
         .filter { it.is_active == true }
         .filter { it.data?.manual_deactivation_started != true }
@@ -66,14 +75,14 @@ fun createFirePointFeatures(fires: List<WatchdutyFireData>): FeatureCollection<P
             val ha = (fire.data?.acreage ?: 0.0) * 0.4046
             Feature(
                 geometry = Point(Position(fire.lng!!, fire.lat!!)),
-                properties = mapOf(
-                    "name" to (fire.name ?: "Unknown Fire"),
-                    "acreage" to (fire.data?.acreage?.toString() ?: "0"),
-                    "ha" to ha, // Double
-                    "ha_rounded" to String.format("%.1f", ha),
-                    "containment" to (fire.data?.containment?.toString() ?: "0")
+                properties = FireProperties(
+                    name = (fire.name ?: "Unknown Fire"),
+                    acreage = (fire.data?.acreage?.toString() ?: "0"),
+                    ha = ha,
+                    ha_rounded = String.format("%.1f", ha),
+                    containment = (fire.data?.containment?.toString() ?: "0")
                 )
-            ) as Feature<Point, Map<String, Any>>
+            )
         }
     return FeatureCollection(features)
 }
@@ -100,7 +109,7 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         options = GeoJsonOptions()
     )
 
-    var fireNamesData by remember { mutableStateOf<FeatureCollection<Point, Map<String, Any>>>(FeatureCollection(emptyList())) }
+    var fireNamesData by remember { mutableStateOf<FeatureCollection<Point, FireProperties>>(FeatureCollection(emptyList())) }
     
     val fireNamesSource = remember(fireNamesData) {
         GeoJsonSource(
