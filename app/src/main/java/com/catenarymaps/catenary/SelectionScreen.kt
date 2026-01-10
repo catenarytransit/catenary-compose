@@ -1,30 +1,19 @@
 package com.catenarymaps.catenary
 
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
 import android.graphics.drawable.Icon
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -51,12 +40,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import io.ktor.client.call.body
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.utils.EmptyContent.contentType
@@ -64,20 +59,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.launch
 
-import androidx.compose.ui.platform.LocalContext
-import com.google.android.gms.analytics.GoogleAnalytics
-import com.google.android.gms.analytics.HitBuilders
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.logEvent
-import coil.compose.AsyncImage
-import coil.decode.SvgDecoder
-import coil.request.ImageRequest
-import coil.ImageLoader
-
 @Composable
 fun VehicleSelectionItem(
-    option: MapSelectionSelector.VehicleMapSelector,
-    onClick: (MapSelectionSelector.VehicleMapSelector) -> Unit
+        option: MapSelectionSelector.VehicleMapSelector,
+        onClick: (MapSelectionSelector.VehicleMapSelector) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
     val routeBaseColor = parseColor(option.colour, MaterialTheme.colorScheme.onSurface)
@@ -86,11 +71,13 @@ fun VehicleSelectionItem(
     // For simplicity, we'll just use the parsed colour, but you could add a similar helper.
 
     Card(
-        onClick = { onClick(option) },
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-        )
+            onClick = { onClick(option) },
+            modifier = Modifier.fillMaxWidth(),
+            colors =
+                    CardDefaults.cardColors(
+                            containerColor =
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                    )
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             // Route Name
@@ -100,23 +87,23 @@ fun VehicleSelectionItem(
                 Row {
                     if (short != null && long != null && !long.contains(short)) {
                         Text(
-                            text = short,
-                            fontWeight = FontWeight.Bold,
-                            color = routeColor,
-                            style = MaterialTheme.typography.bodyLarge
+                                text = short,
+                                fontWeight = FontWeight.Bold,
+                                color = routeColor,
+                                style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = long,
-                            color = routeColor,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 4.dp)
+                                text = long,
+                                color = routeColor,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 4.dp)
                         )
                     } else {
                         Text(
-                            text = long ?: short ?: "Unknown Route",
-                            fontWeight = FontWeight.Bold,
-                            color = routeColor,
-                            style = MaterialTheme.typography.bodyLarge
+                                text = long ?: short ?: "Unknown Route",
+                                fontWeight = FontWeight.Bold,
+                                color = routeColor,
+                                style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
@@ -124,36 +111,33 @@ fun VehicleSelectionItem(
 
             // Headsign and Vehicle ID
             FlowRow(
-                modifier = Modifier.padding(top = 2.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.padding(top = 2.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // Run Number (simplified from JS logic)
-                val runNumber = option.trip_short_name //?: option.vehicle_id
+                val runNumber = option.trip_short_name // ?: option.vehicle_id
                 if (runNumber != null) {
                     Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(routeBaseColor)
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                            modifier =
+                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                            .background(routeBaseColor)
+                                            .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
-                        Text(
-                            text = runNumber,
-                            color = parseColor(option.text_colour, Color.White)
-                        )
+                        Text(text = runNumber, color = parseColor(option.text_colour, Color.White))
                     }
                 }
 
                 // Headsign
                 if (option.headsign.isNotBlank()) {
                     Icon(
-                        Icons.Filled.ChevronRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                            Icons.Filled.ChevronRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = option.headsign,
-                        style = MaterialTheme.typography.bodyMedium,
+                            text = option.headsign,
+                            style = MaterialTheme.typography.bodyMedium,
                     )
                 }
 
@@ -162,26 +146,26 @@ fun VehicleSelectionItem(
                 // Vehicle ID
                 if (option.vehicle_id != null && option.vehicle_id != runNumber) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                                            .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Icon(
-                            when (option.route_type) {
-                                0 -> Icons.Filled.Tram
-                                1 -> Icons.Filled.Subway
-                                2 -> Icons.Filled.Train
-                                else -> Icons.Filled.DirectionsBus
-                            },
-                            contentDescription = "Vehicle",
-                            modifier = Modifier.size(12.dp)
+                                when (option.route_type) {
+                                    0 -> Icons.Filled.Tram
+                                    1 -> Icons.Filled.Subway
+                                    2 -> Icons.Filled.Train
+                                    else -> Icons.Filled.DirectionsBus
+                                },
+                                contentDescription = "Vehicle",
+                                modifier = Modifier.size(12.dp)
                         )
                         Text(
-                            text = option.vehicle_id,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(start = 2.dp)
+                                text = option.vehicle_id,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(start = 2.dp)
                         )
                     }
                 }
@@ -193,23 +177,25 @@ fun VehicleSelectionItem(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StopSelectionItem(
-    option: MapSelectionSelector.StopMapSelector,
-    previewData: StopPreviewDetail?,
-    routeData: Map<String, RoutePreviewDetail>?,
-    onClick: (MapSelectionSelector.StopMapSelector) -> Unit
+        option: MapSelectionSelector.StopMapSelector,
+        previewData: StopPreviewDetail?,
+        routeData: Map<String, RoutePreviewDetail>?,
+        onClick: (MapSelectionSelector.StopMapSelector) -> Unit
 ) {
     Card(
-        onClick = { onClick(option) },
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-        )
+            onClick = { onClick(option) },
+            modifier = Modifier.fillMaxWidth(),
+            colors =
+                    CardDefaults.cardColors(
+                            containerColor =
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                    )
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                text = option.stop_name,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+                    text = option.stop_name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
             )
 
             if (previewData != null) {
@@ -217,15 +203,15 @@ fun StopSelectionItem(
                 Row {
                     if (previewData.level_id != null) {
                         Text(
-                            text = "Level ${previewData.level_id}",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(end = 8.dp)
+                                text = "Level ${previewData.level_id}",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(end = 8.dp)
                         )
                     }
                     if (previewData.platform_code != null) {
                         Text(
-                            text = "Platform ${previewData.platform_code}",
-                            style = MaterialTheme.typography.bodySmall
+                                text = "Platform ${previewData.platform_code}",
+                                style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
@@ -237,74 +223,117 @@ fun StopSelectionItem(
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         if (isNationalRail) {
-                            val agencyGroups = mapOf(
-                                "GW" to Pair("Great Western Railway", "GreaterWesternRailway.svg"),
-                                "SW" to Pair("South Western Railway", "SouthWesternRailway.svg"),
-                                "SN" to Pair("Southern", "SouthernIcon.svg"),
-                                "CC" to Pair("c2c", "c2c_logo.svg"),
-                                "LE" to Pair("Greater Anglia", null)
-                            )
+                            val agencyGroups =
+                                    mapOf(
+                                            "GW" to
+                                                    Pair(
+                                                            "Great Western Railway",
+                                                            "GreaterWesternRailway.svg"
+                                                    ),
+                                            "SW" to
+                                                    Pair(
+                                                            "South Western Railway",
+                                                            "SouthWesternRailway.svg"
+                                                    ),
+                                            "SN" to Pair("Southern", "SouthernIcon.svg"),
+                                            "CC" to Pair("c2c", "c2c_logo.svg"),
+                                            "LE" to Pair("Greater Anglia", null)
+                                    )
 
                             agencyGroups.forEach { (agencyId, info) ->
                                 val name = info.first
                                 val icon = info.second
-                                val matchingRoutes = previewData.routes.filter { routeData[it]?.agency_id == agencyId }
+                                val matchingRoutes =
+                                        previewData.routes.filter {
+                                            routeData[it]?.agency_id == agencyId
+                                        }
 
                                 if (matchingRoutes.isNotEmpty()) {
                                     handledRoutes.addAll(matchingRoutes)
                                     Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant) // Matches bg-gray-200/800 roughly
-                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier =
+                                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                                            .background(
+                                                                    MaterialTheme.colorScheme
+                                                                            .surfaceVariant
+                                                            ) // Matches bg-gray-200/800 roughly
+                                                            .padding(
+                                                                    horizontal = 6.dp,
+                                                                    vertical = 2.dp
+                                                            )
                                     ) {
                                         if (icon != null) {
                                             val context = LocalContext.current
-                                            val imageLoader = remember(context) {
-                                                ImageLoader.Builder(context)
-                                                    .components { add(SvgDecoder.Factory()) }
-                                                    .build()
-                                            }
+                                            val imageLoader =
+                                                    remember(context) {
+                                                        ImageLoader.Builder(context)
+                                                                .components {
+                                                                    add(SvgDecoder.Factory())
+                                                                }
+                                                                .build()
+                                                    }
                                             AsyncImage(
-                                                model = ImageRequest.Builder(context)
-                                                    .data("https://maps.catenarymaps.org/agencyicons/$icon")
-                                                    .decoderFactory(SvgDecoder.Factory())
-                                                    .build(),
-                                                imageLoader = imageLoader,
-                                                contentDescription = name,
-                                                modifier = Modifier
-                                                    .size(12.dp)
-                                                    .padding(end = 4.dp)
+                                                    model =
+                                                            ImageRequest.Builder(context)
+                                                                    .data(
+                                                                            "https://maps.catenarymaps.org/agencyicons/$icon"
+                                                                    )
+                                                                    .decoderFactory(
+                                                                            SvgDecoder.Factory()
+                                                                    )
+                                                                    .build(),
+                                                    imageLoader = imageLoader,
+                                                    contentDescription = name,
+                                                    modifier =
+                                                            Modifier.size(12.dp).padding(end = 4.dp)
                                             )
                                         }
-                                        Text(text = name, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                                        Text(
+                                                text = name,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.SemiBold
+                                        )
                                     }
                                 }
                             }
                         }
 
-                        val remainingRoutes = previewData.routes.filter { !handledRoutes.contains(it) }
+                        val remainingRoutes =
+                                previewData.routes.filter { !handledRoutes.contains(it) }
 
                         if (remainingRoutes.isNotEmpty()) {
                             FlowRow(
-                                modifier = Modifier.padding(top = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 remainingRoutes.forEach { routeId ->
                                     routeData[routeId]?.let { route ->
                                         Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background(parseColor(route.color, Color.Black))
-                                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                                modifier =
+                                                        Modifier.clip(RoundedCornerShape(4.dp))
+                                                                .background(
+                                                                        parseColor(
+                                                                                route.color,
+                                                                                Color.Black
+                                                                        )
+                                                                )
+                                                                .padding(
+                                                                        horizontal = 4.dp,
+                                                                        vertical = 2.dp
+                                                                )
                                         ) {
                                             Text(
-                                                text = route.short_name ?: route.long_name ?: routeId,
-                                                color = parseColor(route.text_color, Color.White),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontSize = 10.sp,
+                                                    text = route.short_name
+                                                                    ?: route.long_name ?: routeId,
+                                                    color =
+                                                            parseColor(
+                                                                    route.text_color,
+                                                                    Color.White
+                                                            ),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontSize = 10.sp,
                                             )
                                         }
                                     }
@@ -320,40 +349,133 @@ fun StopSelectionItem(
 
 @Composable
 fun RouteSelectionItem(
-    option: MapSelectionSelector.RouteMapSelector,
-    onClick: (MapSelectionSelector.RouteMapSelector) -> Unit
+        option: MapSelectionSelector.RouteMapSelector,
+        onClick: (MapSelectionSelector.RouteMapSelector) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
     val routeBaseColor = parseColor(option.colour, MaterialTheme.colorScheme.onSurface)
 
-    val routeColor = if (isDark) lightenColour(routeBaseColor, minContrast = 8.0) else darkenColour(
-        routeBaseColor
-    )
+    val routeColor =
+            if (isDark) lightenColour(routeBaseColor, minContrast = 8.0)
+            else darkenColour(routeBaseColor)
 
     Card(
-        onClick = { onClick(option) },
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-        )
+            onClick = { onClick(option) },
+            modifier = Modifier.fillMaxWidth(),
+            colors =
+                    CardDefaults.cardColors(
+                            containerColor =
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                    )
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                text = option.name ?: "Unknown Route",
-                color = routeColor,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
+                    text = option.name ?: "Unknown Route",
+                    color = routeColor,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
             )
         }
     }
 }
 
 @Composable
+fun OsmStationSelectionItem(
+        option: MapSelectionSelector.OsmStationMapSelector,
+        previewData: OsmStationPreview?,
+        onClick: (MapSelectionSelector.OsmStationMapSelector) -> Unit
+) {
+    Card(
+            onClick = { onClick(option) },
+            modifier = Modifier.fillMaxWidth(),
+            colors =
+                    CardDefaults.cardColors(
+                            containerColor =
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                    )
+    ) {
+        Column(modifier = Modifier.padding(8.dp)) {
+            Text(
+                    text = option.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+            )
+            // Mode type label
+            Text(
+                    text =
+                            when (option.mode_type) {
+                                "subway" -> "Metro"
+                                "rail" -> "Rail"
+                                "tram", "light_rail" -> "Tram"
+                                else -> option.mode_type
+                            },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // Preview Data (Badges)
+            if (previewData != null && previewData.routes.isNotEmpty()) {
+                val uniqueRoutes =
+                        previewData
+                                .stops
+                                .values
+                                .flatMap { it.values }
+                                .flatMap { it.routes }
+                                .toSet()
+                                .sorted()
+
+                if (uniqueRoutes.isNotEmpty()) {
+                    FlowRow(
+                            modifier = Modifier.padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        uniqueRoutes.forEach { routeId ->
+                            // Find route info across all networks (simplified lookup)
+                            val routeInfo =
+                                    previewData.routes.values.flatMap { it.values }.find {
+                                        it.route_id == routeId
+                                    }
+
+                            if (routeInfo != null) {
+                                Box(
+                                        modifier =
+                                                Modifier.clip(RoundedCornerShape(4.dp))
+                                                        .background(
+                                                                parseColor(
+                                                                        routeInfo.color,
+                                                                        Color.Black
+                                                                )
+                                                        )
+                                                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                            text = routeInfo.short_name
+                                                            ?: routeInfo.long_name?.replace(
+                                                                    " Line",
+                                                                    ""
+                                                            )
+                                                                    ?: routeId,
+                                            color = parseColor(routeInfo.text_color, Color.White),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 10.sp,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun MapSelectionScreen(
-    screenData: CatenaryStackEnum.MapSelectionScreen,
-    onStackPush: (CatenaryStackEnum) -> Unit,
-    onBack: () -> Unit,
-    onHome: () -> Unit
+        screenData: CatenaryStackEnum.MapSelectionScreen,
+        onStackPush: (CatenaryStackEnum) -> Unit,
+        onBack: () -> Unit,
+        onHome: () -> Unit
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -361,7 +483,7 @@ fun MapSelectionScreen(
             val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, "MapSelectionScreen")
-                //param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
+                // param(FirebaseAnalytics.Param.SCREEN_CLASS, "HomeCompose")
             }
         } catch (e: Exception) {
             // Log the error or handle it gracefully
@@ -375,20 +497,24 @@ fun MapSelectionScreen(
 
     // Fetch stop preview data
     LaunchedEffect(screenData) {
-        val stopsToQuery = screenData.arrayofoptions
-            .mapNotNull { it.data as? MapSelectionSelector.StopMapSelector }
-            .groupBy { it.chateau_id }
-            .mapValues { entry -> entry.value.map { it.stop_id } }
+        val stopsToQuery =
+                screenData
+                        .arrayofoptions
+                        .mapNotNull { it.data as? MapSelectionSelector.StopMapSelector }
+                        .groupBy { it.chateau_id }
+                        .mapValues { entry -> entry.value.map { it.stop_id } }
 
         if (stopsToQuery.isNotEmpty()) {
             scope.launch {
                 try {
                     val requestBody = StopPreviewRequest(chateaus = stopsToQuery)
                     val response: StopPreviewResponse =
-                        ktorClient.post("https://birch.catenarymaps.org/stop_preview") {
-                            contentType(ContentType.Application.Json)
-                            setBody(requestBody)
-                        }.body()
+                            ktorClient
+                                    .post("https://birch.catenarymaps.org/stop_preview") {
+                                        contentType(ContentType.Application.Json)
+                                        setBody(requestBody)
+                                    }
+                                    .body()
                     stopPreviewData = response
                 } catch (e: Exception) {
                     Log.e("MapSelectionScreen", "Failed to fetch stop preview: ${e.message}")
@@ -400,51 +526,91 @@ fun MapSelectionScreen(
         }
     }
 
+    // OSM Station preview state
+    var osmStationPreviewData by remember {
+        mutableStateOf<Map<String, OsmStationPreview>>(emptyMap())
+    }
+
+    // Fetch OSM station preview data
+    LaunchedEffect(screenData) {
+        val osmStationsToQuery =
+                screenData
+                        .arrayofoptions
+                        .mapNotNull { it.data as? MapSelectionSelector.OsmStationMapSelector }
+                        .map { it.osm_id }
+                        .distinct()
+
+        osmStationsToQuery.forEach { osmId ->
+            if (!osmStationPreviewData.containsKey(osmId)) {
+                scope.launch {
+                    try {
+                        val response: OsmStationPreview =
+                                ktorClient
+                                        .get(
+                                                "https://birch.catenarymaps.org/osm_station_preview?osm_station_id=$osmId"
+                                        )
+                                        .body()
+                        osmStationPreviewData = osmStationPreviewData + (osmId to response)
+                    } catch (e: Exception) {
+                        Log.e(
+                                "MapSelectionScreen",
+                                "Failed to fetch osm station preview for $osmId: ${e.message}"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     // Separate lists with deduplication to prevent LazyColumn crashes
     // Uniqueness is enforced using the same logic as the LazyColumn keys
-    val vehicles = screenData.arrayofoptions
-        .mapNotNull { it.data as? MapSelectionSelector.VehicleMapSelector }
-        .distinctBy {
-            "${it.chateau_id}:${it.vehicle_id ?: it.trip_id ?: it.hashCode()}"
-        }
+    val vehicles =
+            screenData.arrayofoptions
+                    .mapNotNull { it.data as? MapSelectionSelector.VehicleMapSelector }
+                    .distinctBy {
+                        "${it.chateau_id}:${it.vehicle_id ?: it.trip_id ?: it.hashCode()}"
+                    }
 
-    val stops = screenData.arrayofoptions
-        .mapNotNull { it.data as? MapSelectionSelector.StopMapSelector }
-        .distinctBy {
-            "${it.chateau_id}:${it.stop_id}"
-        }
+    val stops =
+            screenData.arrayofoptions
+                    .mapNotNull { it.data as? MapSelectionSelector.StopMapSelector }
+                    .distinctBy { "${it.chateau_id}:${it.stop_id}" }
 
-    val routes = screenData.arrayofoptions
-        .mapNotNull { it.data as? MapSelectionSelector.RouteMapSelector }
-        .distinctBy {
-            "${it.chateau_id}:${it.route_id}"
-        }
+    val routes =
+            screenData.arrayofoptions
+                    .mapNotNull { it.data as? MapSelectionSelector.RouteMapSelector }
+                    .distinctBy { "${it.chateau_id}:${it.route_id}" }
+
+    val osmStations =
+            screenData.arrayofoptions
+                    .mapNotNull { it.data as? MapSelectionSelector.OsmStationMapSelector }
+                    .distinctBy { it.osm_id }
 
     // Keep this as-is or swap for rememberSaveable if you want to survive process death.
     val lazyListState = rememberLazyListState()
 
     LazyColumn(
-        state = lazyListState,
-        modifier = Modifier
-            .fillMaxWidth(),
-        // REMOVE the extra .scrollable(...) – LazyColumn already scrolls itself
-        // .scrollable(state = lazyListState, orientation = Orientation.Vertical)
-        contentPadding = PaddingValues(bottom = 64.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-        // Use safe drawing insets, but bottom-only to avoid top inset jank during flings
-//            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
-    ) {
+            state = lazyListState,
+            modifier = Modifier.fillMaxWidth(),
+            // REMOVE the extra .scrollable(...) – LazyColumn already scrolls itself
+            // .scrollable(state = lazyListState, orientation = Orientation.Vertical)
+            contentPadding = PaddingValues(bottom = 64.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+            // Use safe drawing insets, but bottom-only to avoid top inset jank during flings
+            //
+            // .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+            ) {
         // Give the summary row a stable key
         item(key = "summary") {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${screenData.arrayofoptions.size} items selected",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                        text = "${screenData.arrayofoptions.size} items selected",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(vertical = 8.dp)
                 )
                 NavigationControls(onBack = onBack, onHome = onHome)
             }
@@ -454,45 +620,44 @@ fun MapSelectionScreen(
             // Header has a key
             item(key = "header-vehicles") {
                 Text(
-                    "Vehicles",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 8.dp)
+                        "Vehicles",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 8.dp)
                 )
             }
             // Items have stable keys
             items(
-                items = vehicles,
-                key = { v ->
-                    // Ensure uniqueness even when trip_id is null
-                    "veh:${v.chateau_id}:${v.vehicle_id ?: v.trip_id ?: "${v.hashCode()}"}"
-                },
-                contentType = { "vehicle" }
+                    items = vehicles,
+                    key = { v ->
+                        // Ensure uniqueness even when trip_id is null
+                        "veh:${v.chateau_id}:${v.vehicle_id ?: v.trip_id ?: "${v.hashCode()}"}"
+                    },
+                    contentType = { "vehicle" }
             ) { vehicle ->
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     VehicleSelectionItem(
-                        option = vehicle,
-                        onClick = {
-                            val newStackItem = if (it.trip_id != null) {
-                                CatenaryStackEnum.SingleTrip(
-                                    chateau_id = it.chateau_id,
-                                    trip_id = it.trip_id,
-                                    route_id = it.route_id,
-                                    start_time = it.start_time,
-                                    start_date = it.start_date,
-                                    vehicle_id = it.vehicle_id,
-                                    route_type = it.route_type
-                                )
-                            } else {
-                                CatenaryStackEnum.VehicleSelectedStack(
-                                    chateau_id = it.chateau_id,
-                                    vehicle_id = it.vehicle_id,
-                                    gtfs_id = it.gtfs_id
-                                )
+                            option = vehicle,
+                            onClick = {
+                                val newStackItem =
+                                        if (it.trip_id != null) {
+                                            CatenaryStackEnum.SingleTrip(
+                                                    chateau_id = it.chateau_id,
+                                                    trip_id = it.trip_id,
+                                                    route_id = it.route_id,
+                                                    start_time = it.start_time,
+                                                    start_date = it.start_date,
+                                                    vehicle_id = it.vehicle_id,
+                                                    route_type = it.route_type
+                                            )
+                                        } else {
+                                            CatenaryStackEnum.VehicleSelectedStack(
+                                                    chateau_id = it.chateau_id,
+                                                    vehicle_id = it.vehicle_id,
+                                                    gtfs_id = it.gtfs_id
+                                            )
+                                        }
+                                onStackPush(newStackItem)
                             }
-                            onStackPush(newStackItem)
-                        }
                     )
                 }
             }
@@ -501,29 +666,59 @@ fun MapSelectionScreen(
         if (stops.isNotEmpty()) {
             item(key = "header-stops") {
                 Text(
-                    "Stops",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 8.dp)
+                        "Stops",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 8.dp)
                 )
             }
             items(
-                items = stops,
-                key = { s -> "stop:${s.chateau_id}:${s.stop_id}" },
-                contentType = { "stop" }
+                    items = stops,
+                    key = { s -> "stop:${s.chateau_id}:${s.stop_id}" },
+                    contentType = { "stop" }
             ) { stop ->
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     val preview = stopPreviewData?.stops?.get(stop.chateau_id)?.get(stop.stop_id)
                     val routeCache = stopPreviewData?.routes?.get(stop.chateau_id)
 
                     StopSelectionItem(
-                        option = stop,
-                        previewData = preview,
-                        routeData = routeCache,
-                        onClick = {
-                            onStackPush(CatenaryStackEnum.StopStack(it.chateau_id, it.stop_id))
-                        }
+                            option = stop,
+                            previewData = preview,
+                            routeData = routeCache,
+                            onClick = {
+                                onStackPush(CatenaryStackEnum.StopStack(it.chateau_id, it.stop_id))
+                            }
+                    )
+                }
+            }
+        }
+
+        if (osmStations.isNotEmpty()) {
+            item(key = "header-stations") {
+                Text(
+                        "Stations",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            items(
+                    items = osmStations,
+                    key = { s -> "osm:${s.osm_id}" },
+                    contentType = { "osm_station" }
+            ) { station ->
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    val preview = osmStationPreviewData[station.osm_id]
+                    OsmStationSelectionItem(
+                            option = station,
+                            previewData = preview,
+                            onClick = {
+                                onStackPush(
+                                        CatenaryStackEnum.OsmStationStack(
+                                                osm_station_id = it.osm_id,
+                                                station_name = it.name,
+                                                mode_type = it.mode_type
+                                        )
+                                )
+                            }
                     )
                 }
             }
@@ -532,25 +727,24 @@ fun MapSelectionScreen(
         if (routes.isNotEmpty()) {
             item(key = "header-routes") {
                 Text(
-                    "Routes",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 8.dp)
+                        "Routes",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 8.dp)
                 )
             }
             items(
-                items = routes,
-                key = { r -> "route:${r.chateau_id}:${r.route_id}" },
-                contentType = { "route" }
-
+                    items = routes,
+                    key = { r -> "route:${r.chateau_id}:${r.route_id}" },
+                    contentType = { "route" }
             ) { route ->
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
                     RouteSelectionItem(
-                        option = route,
-                        onClick = {
-                            onStackPush(CatenaryStackEnum.RouteStack(it.chateau_id, it.route_id))
-                        }
+                            option = route,
+                            onClick = {
+                                onStackPush(
+                                        CatenaryStackEnum.RouteStack(it.chateau_id, it.route_id)
+                                )
+                            }
                     )
                 }
             }
