@@ -78,25 +78,21 @@ fun createFirePointFeatures(fires: List<WatchdutyFireData>): FeatureCollection<P
 @Composable
 fun WildfireMapLayers(darkMode: Boolean = false) {
     val evacuationCaSource = rememberGeoJsonSource(
-        id = "evacuation_ca_fire",
         data = GeoJsonData.Uri(EVACUATION_CA_FIRE_URL),
         options = GeoJsonOptions()
     )
 
     val laEvacSource = rememberGeoJsonSource(
-        id = "los_angeles_city_fire_evac",
         data = GeoJsonData.Uri(LOS_ANGELES_EVAC_URL),
         options = GeoJsonOptions()
     )
 
     val modisSource = rememberGeoJsonSource(
-        id = "modis",
         data = GeoJsonData.Uri(MODIS_URL),
         options = GeoJsonOptions()
     )
 
     val viirsSource = rememberGeoJsonSource(
-        id = "viirs_nw",
         data = GeoJsonData.Uri(VIIRS_URL),
         options = GeoJsonOptions()
     )
@@ -105,9 +101,8 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
     
     val fireNamesSource = remember(fireNamesData) {
         GeoJsonSource(
-            "firenames_wd",
-            GeoJsonData.Features(fireNamesData),
-            GeoJsonOptions()
+            data = GeoJsonData.Features(fireNamesData),
+            options = GeoJsonOptions()
         )
     }
 
@@ -197,7 +192,7 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         iconImage = const("fireicon"), // Image must be registered or available in style
         iconSize = interpolate(
             linear(),
-            get("ha").cast<NumberValue<Double>>(),
+            get("ha").cast<NumberValue<Number>>(),
             0.0 to const(0.03f),
             100.0 to const(0.04f),
             1000.0 to const(0.05f),
@@ -225,13 +220,13 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         minZoom = 5f,
         color = interpolate(
             linear(),
-            get("BRIGHTNESS").cast<NumberValue<Double>>(),
+            get("BRIGHTNESS").cast<NumberValue<Number>>(),
             310.64 to const(Color(0xFFFF751F)),
             508.63 to const(Color(0xFFFF1A1A))
         ),
         opacity = interpolate(
             linear(),
-            get("BRIGHTNESS").cast<NumberValue<Double>>(),
+            get("BRIGHTNESS").cast<NumberValue<Number>>(),
             310.64 to const(0.3f),
             508.63 to const(0.5f)
         ),
@@ -253,13 +248,13 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         minZoom = 5f,
         color = interpolate(
             linear(),
-            get("frp").cast<NumberValue<Double>>(),
+            get("frp").cast<NumberValue<Number>>(),
             3.0 to const(Color(0xFFFF751F)),
             100.0 to const(Color(0xFFFF1A1A))
         ),
         opacity = interpolate(
             linear(),
-            get("frp").cast<NumberValue<Double>>(),
+            get("frp").cast<NumberValue<Number>>(),
             3.0 to const(0.1f),
             10.0 to const(0.3f),
             100.0 to const(0.4f)
