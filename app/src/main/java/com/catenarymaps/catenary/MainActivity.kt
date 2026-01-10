@@ -2135,6 +2135,9 @@ class MainActivity : ComponentActivity() {
 
                         AddStops(layerSettings = layerSettings.value)
 
+                        // Wildfire map overlay layers
+                        WildfireMapLayers(darkMode = isDark)
+
                         // --- Detour Line ---
                         LineLayer(
                                 id = "contextlinebackingdetour",
