@@ -109,14 +109,18 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         options = GeoJsonOptions()
     )
 
-    var fireNamesData by remember { mutableStateOf<FeatureCollection<Point, FireProperties>>(FeatureCollection(emptyList())) }
-    
-    val fireNamesSource = remember(fireNamesData) {
+    val fireNamesSource = remember {
         GeoJsonSource(
             id = "firenames",
-            data = GeoJsonData.Features(fireNamesData),
+            data = GeoJsonData.Features(FeatureCollection(emptyList())),
             options = GeoJsonOptions()
         )
+    }
+
+    var fireNamesData by remember { mutableStateOf<FeatureCollection<Point, FireProperties>>(FeatureCollection(emptyList())) }
+
+    LaunchedEffect(fireNamesData) {
+        fireNamesSource.setData(GeoJsonData.Features(fireNamesData))
     }
 
     LaunchedEffect(Unit) {
