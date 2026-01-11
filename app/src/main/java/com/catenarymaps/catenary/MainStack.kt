@@ -41,7 +41,9 @@ sealed interface CatenaryStackEnum {
     data class OsmStationStack(
         val osm_station_id: String,
         val station_name: String?,
-        val mode_type: String?
+        val mode_type: String?,
+        val lat: Double? = null,
+        val lon: Double? = null
     ) : CatenaryStackEnum
 }
 

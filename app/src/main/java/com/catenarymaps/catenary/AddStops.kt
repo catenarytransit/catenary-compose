@@ -719,6 +719,12 @@ fun AddStops(
                 source = osmStopsSource,
                 sourceLayer = "data",
                 textField = get("local_ref").cast(),
+                textFont = step(
+                        input = zoom(),
+                        barlowRegular,
+                        10 to barlowMedium,
+                        13 to barlowBold
+                ),
                 textSize =
                         interpolate(
                                 type = linear(),
@@ -733,7 +739,7 @@ fun AddStops(
                 textColor = const(Color(0xFFFFFFFF)),
                 textHaloColor = const(Color(0xFF2d327d)),
                 filter = all(get("station_type").cast<StringValue>().eq(const("stop_position"))),
-                minZoom = 14f,
+                minZoom = 12f,
         )
 
         // STATION FEATURES

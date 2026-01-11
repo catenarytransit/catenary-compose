@@ -118,6 +118,7 @@ data class StopEvent(
     val trip_cancelled: Boolean,
     val stop_cancelled: Boolean,
     val trip_deleted: Boolean,
+    val route_type: Int? = null
 )
 
 @Serializable
@@ -127,16 +128,18 @@ data class DeparturesAtStopResponse(
     val shapes: Map<String, Map<String, String>>? = null, // Chateau -> Shape ID -> Polyline
     val events: List<StopEvent>? = null,
     val alerts: Map<String, Map<String, Alert>> = emptyMap(),
-    val agencies: Map<String, Map<String, AgencyInfo>>? = null // Chateau -> Agency ID -> Info
+    val agencies: Map<String, Map<String, AgencyInfo>>? = null, // Chateau -> Agency ID -> Info
+    val stops: List<StopPrimary>? = null
 )
 
 // --- Internal State Data Classes ---
 private data class StopMeta(
-    val primary: StopPrimary,
+    val primary: StopPrimary?,
     val routes: Map<String, Map<String, StopRouteInfo>>,
     val shapes: Map<String, Map<String, String>>,
     val alerts: Map<String, Map<String, Alert>>,
-    val agencies: Map<String, Map<String, AgencyInfo>>
+    val agencies: Map<String, Map<String, AgencyInfo>>,
+    val stops: List<StopPrimary>?
 )
 
 private data class PageInfo(
@@ -319,10 +322,23 @@ fun StopScreen(
         }
     }
 
+    val displayTimezone by remember {
+        derivedStateOf {
+            dataMeta?.primary?.timezone
+                ?: dataMeta?.stops?.firstOrNull()?.timezone
+                ?: dataMeta?.agencies
+                    ?.values
+                    ?.firstOrNull()
+                    ?.values
+                    ?.firstOrNull()
+                    ?.agency_timezone
+        }
+    }
+
     val datesToEventsFiltered by remember {
         derivedStateOf {
             val tz =
-                dataMeta?.primary?.timezone?.let {
+                displayTimezone?.let {
                     try {
                         ZoneId.of(it)
                     } catch (e: Exception) {
@@ -380,49 +396,47 @@ fun StopScreen(
 
     fun mergePageEvents(pageId: String, data: DeparturesAtStopResponse, refreshedAt: Long) {
         // Merge meta
-        if (data.primary != null) {
-            // Deep merge Routes
-            val mergedRoutes = (dataMeta?.routes ?: emptyMap()).toMutableMap()
-            data.routes?.forEach { (chateau, newRoutes) ->
-                val existing = mergedRoutes[chateau] ?: emptyMap()
-                mergedRoutes[chateau] = existing + newRoutes
-            }
+        // Deep merge Routes
+        val mergedRoutes = (dataMeta?.routes ?: emptyMap()).toMutableMap()
+        data.routes?.forEach { (chateau, newRoutes) ->
+            val existing = mergedRoutes[chateau] ?: emptyMap()
+            mergedRoutes[chateau] = existing + newRoutes
+        }
 
-            // Deep merge Shapes
-            val mergedShapes = (dataMeta?.shapes ?: emptyMap()).toMutableMap()
-            data.shapes?.forEach { (chateau, newShapes) ->
-                val existing = mergedShapes[chateau] ?: emptyMap()
-                mergedShapes[chateau] = existing + newShapes
-            }
+        // Deep merge Shapes
+        val mergedShapes = (dataMeta?.shapes ?: emptyMap()).toMutableMap()
+        data.shapes?.forEach { (chateau, newShapes) ->
+            val existing = mergedShapes[chateau] ?: emptyMap()
+            mergedShapes[chateau] = existing + newShapes
+        }
 
-            // Deep merge Alerts
-            val mergedAlerts = (dataMeta?.alerts ?: emptyMap()).toMutableMap()
-            data.alerts.forEach { (chateau, newAlerts) ->
-                val existing = mergedAlerts[chateau] ?: emptyMap()
-                mergedAlerts[chateau] = existing + newAlerts
-            }
+        // Deep merge Alerts
+        val mergedAlerts = (dataMeta?.alerts ?: emptyMap()).toMutableMap()
+        data.alerts.forEach { (chateau, newAlerts) ->
+            val existing = mergedAlerts[chateau] ?: emptyMap()
+            mergedAlerts[chateau] = existing + newAlerts
+        }
 
-            // Deep merge Agencies
-            val mergedAgencies = (dataMeta?.agencies ?: emptyMap()).toMutableMap()
-            data.agencies?.forEach { (chateau, newAgencies) ->
-                val existing = mergedAgencies[chateau] ?: emptyMap()
-                mergedAgencies[chateau] = existing + newAgencies
-            }
+        // Deep merge Agencies
+        val mergedAgencies = (dataMeta?.agencies ?: emptyMap()).toMutableMap()
+        data.agencies?.forEach { (chateau, newAgencies) ->
+            val existing = mergedAgencies[chateau] ?: emptyMap()
+            mergedAgencies[chateau] = existing + newAgencies
+        }
 
-            // If we didn't have a primary before, use the new one.
-            // If we did, we probably want to keep the old one or update it.
-            // Usually primary shouldn't change much, so taking the new one is fine.
-            val currentPrimary = dataMeta?.primary ?: data.primary
+        // Handle primary: prioritize non-null
+        val currentPrimary = data.primary ?: dataMeta?.primary
+        val currentStops = data.stops ?: dataMeta?.stops
 
-            dataMeta =
+        dataMeta =
                 StopMeta(
                     currentPrimary,
                     mergedRoutes,
                     mergedShapes,
                     mergedAlerts,
-                    mergedAgencies
+                    mergedAgencies,
+                    currentStops
                 )
-        }
 
         // Merge events
         data.events?.forEach { ev ->
@@ -445,16 +459,17 @@ fun StopScreen(
 
         val useUrl =
             if (osmStackData != null) {
-                "https://birch.catenarymaps.org/departures_at_osm_station?station_id=${key}&start_time=${startSec}&end_time=${endSec}"
+                "https://birch.catenarymaps.org/departures_at_osm_station?osm_station_id=${key}&start_time=${startSec}&end_time=${endSec}"
             } else {
                 "https://birchdeparturesfromstop.catenarymaps.org/departures_at_stop?chateau_id=${chateauId}&stop_id=${key}&start_time=${startSec}&end_time=${endSec}&include_shapes=false"
             }
 
+        var responseString: String? = null
         try {
-            val responseString = ktorClient.get(useUrl).body<String>()
+            responseString = ktorClient.get(useUrl).body<String>()
             val data =
                 Json { ignoreUnknownKeys = true }
-                    .decodeFromString<DeparturesAtStopResponse>(responseString)
+                    .decodeFromString<DeparturesAtStopResponse>(responseString!!)
             val refreshedAt = Instant.now().epochSecond
             mergePageEvents(id, data, refreshedAt)
             currentPageHours = chooseNextPageHours(data.events?.size ?: 0)
@@ -462,6 +477,9 @@ fun StopScreen(
             page.error = e.message
 
             println("Error fetching page: $e")
+            if (responseString != null) {
+                println("Raw response body: $responseString")
+            }
 
             page.loading = false
         }
@@ -482,8 +500,8 @@ fun StopScreen(
             try {
                 val finalPolyline: String? =
                     if (isComplexRoute) {
-                        val lat = dataMeta?.primary?.stop_lat
-                        val lon = dataMeta?.primary?.stop_lon
+                        val lat = dataMeta?.primary?.stop_lat ?: osmStackData?.lat
+                        val lon = dataMeta?.primary?.stop_lon ?: osmStackData?.lon
 
                         if (lat != null && lon != null) {
                             // println("Fetching complex shape for train route...")
@@ -646,21 +664,22 @@ fun StopScreen(
     }
 
     // Map interaction
-    LaunchedEffect(dataMeta) {
-        val meta = dataMeta ?: return@LaunchedEffect
-        val primary = meta.primary
+    LaunchedEffect(dataMeta, osmStackData) {
+        val meta = dataMeta
+        // Fallback to OSM stack data if primary is not available
+        val lat = meta?.primary?.stop_lat ?: osmStackData?.lat
+        val lon = meta?.primary?.stop_lon ?: osmStackData?.lon
+        val name = meta?.primary?.stop_name ?: osmStackData?.station_name ?: "Station"
+
+        if (lat == null || lon == null) return@LaunchedEffect
+
         val map = camera
 
         if (!flyToAlready) {
             scope.launch {
                 geoLock.deactivate()
 
-                camera.animateTo(
-                    camera.position.copy(
-                        target = Position(primary.stop_lon, primary.stop_lat),
-                        zoom = 14.0
-                    )
-                )
+                camera.animateTo(camera.position.copy(target = Position(lon, lat), zoom = 14.0))
             }
             flyToAlready = true
         }
@@ -668,11 +687,11 @@ fun StopScreen(
         // Set stop pin
         val stopFeature =
             Feature(
-                Point(Position(primary.stop_lon, primary.stop_lat)),
+                Point(Position(lon, lat)),
                 properties =
                     JsonObject(
                         mapOf(
-                            "label" to JsonPrimitive(primary.stop_name),
+                            "label" to JsonPrimitive(name),
                             "stop_route_type" to JsonPrimitive(0)
                         )
                     ) // Use 0 for "other" style
@@ -698,7 +717,7 @@ fun StopScreen(
         val relevantRouteIds = mergedEvents.map { it.route_id }.toSet()
 
         var shapeCount = 0
-        outerLoop@ for ((chateauId, routes) in meta.routes) {
+        outerLoop@ for ((chateauId, routes) in (meta?.routes ?: emptyMap())) {
             for ((routeId, route) in routes) {
                 if (shapeCount >= MAX_SHAPES) break@outerLoop
 
@@ -707,7 +726,7 @@ fun StopScreen(
 
                 // Take only the first shape per route to reduce memory usage
                 val shapeId = route.shapes_list?.firstOrNull() ?: continue
-                val polyline = meta.shapes[chateauId]?.get(shapeId)
+                val polyline = meta?.shapes?.get(chateauId)?.get(shapeId)
 
                 if (polyline == null) {
                     // Lazy fetch
@@ -753,7 +772,11 @@ fun StopScreen(
 
     // --- UI ---
     val meta = dataMeta
-    if (meta == null) {
+    // If no meta AND no valid fallback name/location, show loading
+    // But if we have OSM stack data, we can at least show the header + loading
+    val hasFallback = osmStackData != null
+
+    if (meta == null && !hasFallback) {
         Column {
             Row(
                 modifier = Modifier
@@ -769,17 +792,18 @@ fun StopScreen(
             ) { CircularProgressIndicator() }
         }
     } else {
+        val timezone = displayTimezone
         val zoneId =
-            remember(meta.primary.timezone) {
+            remember(timezone) {
                 try {
-                    ZoneId.of(meta.primary.timezone)
+                    if (timezone != null) ZoneId.of(timezone) else ZoneId.systemDefault()
                 } catch (e: Exception) {
                     ZoneId.systemDefault()
                 }
             }
         val locale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
         val dateHeaderFormatter =
-            remember(locale) {
+            remember(locale, zoneId) {
                 DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
                     .withLocale(locale)
                     .withZone(zoneId)
@@ -795,26 +819,29 @@ fun StopScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = meta.primary.stop_name,
+                            text = meta?.primary?.stop_name
+                                ?: osmStackData?.station_name ?: "Station",
                             style = MaterialTheme.typography.headlineSmall,
                             modifier = Modifier.weight(1f)
                         )
                         NavigationControls(onBack = onBack, onHome = onHome)
                     }
-                    FormattedTimeText(
-                        timezone = zoneId.id,
-                        timeSeconds = currentTime,
-                        showSeconds = true,
-                        // The style from LiveClock is now applied here
-                    )
-                    Text(
-                        text = meta.primary.timezone,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (timezone != null) {
+                        FormattedTimeText(
+                            timezone = zoneId.id,
+                            timeSeconds = currentTime,
+                            showSeconds = true,
+                            // The style from LiveClock is now applied here
+                        )
+                        Text(
+                            text = timezone,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     val alertsExpandedState = remember { mutableStateMapOf<String, Boolean>() }
-                    meta.alerts?.forEach { (chateauId, alertsmap) ->
+                    meta?.alerts?.forEach { (chateauId, alertsmap) ->
                         val expanded = alertsExpandedState.getOrPut(chateauId) { true }
                         AlertsBox(
                             alerts = alertsmap,
@@ -944,17 +971,18 @@ fun StopScreen(
 
                     // Event Rows
                     items(events, key = { composeEventKey(it) }) { event ->
-                        val routeInfo = meta.routes[event.chateau]?.get(event.route_id)
+                        val routeInfo = meta?.routes?.get(event.chateau)?.get(event.route_id)
 
                         if (activeTab == "rail") {
                             StationScreenTrainRow(
                                 event = event,
                                 routeInfo = routeInfo,
-                                agencies = meta.agencies?.get(event.chateau),
+                                agencies = meta?.agencies?.get(event.chateau),
                                 currentTime = currentTime,
                                 zoneId = zoneId,
                                 locale = locale,
                                 showSeconds = false,
+                                useSymbolSign = true,
                                 modifier =
                                     Modifier.clickable {
                                         onTripClick(
@@ -981,6 +1009,9 @@ fun StopScreen(
                                 currentTime = currentTime,
                                 zoneId = zoneId,
                                 locale = locale,
+                                showArrivals = event.last_stop == true,
+                                useSymbolSign = false,
+                                vertical = false,
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
