@@ -738,8 +738,10 @@ fun AddStops(
                 textHaloWidth = const(10.dp),
                 textColor = const(Color(0xFFFFFFFF)),
                 textHaloColor = const(Color(0xFF2d327d)),
+                textAllowOverlap = const(true),
+                textIgnorePlacement = const(true),
                 filter = all(get("station_type").cast<StringValue>().eq(const("stop_position"))),
-                minZoom = 12f,
+                minZoom = 13.5f,
         )
 
         // STATION FEATURES
