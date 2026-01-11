@@ -12,9 +12,11 @@ import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.dsl.Feature.has
 import org.maplibre.compose.expressions.dsl.all
 import org.maplibre.compose.expressions.dsl.any
+import org.maplibre.compose.expressions.dsl.case
 import org.maplibre.compose.expressions.dsl.coalesce
 import org.maplibre.compose.expressions.dsl.condition
 import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.contains as dslcontains
 import org.maplibre.compose.expressions.dsl.contains
 import org.maplibre.compose.expressions.dsl.em
 import org.maplibre.compose.expressions.dsl.eq
@@ -29,7 +31,6 @@ import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.compose.expressions.dsl.zoom
 import org.maplibre.compose.expressions.value.ColorValue
 import org.maplibre.compose.expressions.value.EquatableValue
-import org.maplibre.compose.expressions.value.NumberValue
 import org.maplibre.compose.expressions.value.StringValue
 import org.maplibre.compose.expressions.value.SymbolAnchor
 import org.maplibre.compose.expressions.value.TextJustify
@@ -37,525 +38,759 @@ import org.maplibre.compose.expressions.value.VectorValue
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.sources.rememberVectorSource
-import org.maplibre.compose.expressions.dsl.contains as dslcontains
-
 
 @Composable
 fun AddStops(
-    layerSettings: AllLayerSettings,
+        layerSettings: AllLayerSettings,
 ) {
-    val isDark = isSystemInDarkTheme()
-    val cfg = LocalConfiguration.current
-    val isTablet = (cfg.screenWidthDp >= 768)
+        val isDark = isSystemInDarkTheme()
+        val cfg = LocalConfiguration.current
+        val isTablet = (cfg.screenWidthDp >= 768)
 
-    // Vector sources
-    val busStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("busstops"))
-    val railStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("railstops"))
-    val otherStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("otherstops"))
-    val stationFeaturesSource = rememberVectorSource(uri = STOP_SOURCES.getValue("stationfeatures"))
+        // Vector sources
+        val busStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("busstops"))
+        val railStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("railstops"))
+        val otherStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("otherstops"))
+        val osmStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("osmstations"))
+        val stationFeaturesSource =
+                rememberVectorSource(uri = STOP_SOURCES.getValue("stationfeatures"))
 
-    // Fonts
-    val barlowRegular = const(listOf("Barlow-Regular"))
-    val barlowMedium = const(listOf("Barlow-Medium"))
-    val barlowBold = const(listOf("Barlow-Bold"))
+        // Fonts
+        val barlowRegular = const(listOf("Barlow-Regular"))
+        val barlowMedium = const(listOf("Barlow-Medium"))
+        val barlowBold = const(listOf("Barlow-Bold"))
 
-    // Colors (inside/outside dot)
-    val circleInside = if (isDark) Color(0xFF1C2636) else Color(0xFFFFFFFF)
-    val circleOutside = if (isDark) Color(0xFFFFFFFF) else Color(0xFF1C2636)
+        // Colors (inside/outside dot)
+        val circleInside = if (isDark) Color(0xFF1C2636) else Color(0xFFFFFFFF)
+        val circleOutside = if (isDark) Color(0xFFFFFFFF) else Color(0xFF1C2636)
 
-    // JS: bus_stop_stop_color(darkMode) -> step(zoom, ...)
-    val busStrokeColorExpr: Expression<ColorValue> = if (isDark) {
-        step(
-            input = zoom(),
-            const(Color(0xFFE0E0E0)),
-            14.0 to const(Color(0xFFDDDDDD))
+        // JS: bus_stop_stop_color(darkMode) -> step(zoom, ...)
+        val busStrokeColorExpr: Expression<ColorValue> =
+                if (isDark) {
+                        step(
+                                input = zoom(),
+                                const(Color(0xFFE0E0E0)),
+                                14.0 to const(Color(0xFFDDDDDD))
+                        )
+                } else {
+                        const(Color(0xFF333333))
+                }
+
+        // route_type filters
+        val rtEq = { v: Int ->
+                (any(get("route_types").cast<VectorValue<EquatableValue>>().dslcontains(const(v))))
+        }
+
+        val childrenRtEq = { v: Int ->
+                (any(
+                        get("children_route_types")
+                                .cast<VectorValue<EquatableValue>>()
+                                .dslcontains(const(v))
+                ))
+        }
+
+        val isMetro =
+                any(
+                        any(
+                                (rtEq(1)),
+                                childrenRtEq(1),
+                        ),
+                        has("osm_station_id").not(),
+                        (rtEq(12))
+                )
+        val isTram = all(
+                any(any(rtEq(0), childrenRtEq(0)), rtEq(5)), isMetro().not(),
+                has("osm_station_id").not()
         )
-    } else {
-        const(Color(0xFF333333))
-    }
+        val isIntercity = rtEq(2)
 
-    // route_type filters
-    val rtEq = { v: Int ->
-        (any(
-            get("route_types").cast<VectorValue<EquatableValue>>().dslcontains(const(v))
-        ))
-    }
+        // String pieces for label fields
+        val semi = const("; ")
+        val empty = const("")
+        val level: Expression<StringValue> = coalesce(get("level_id").cast<StringValue>(), empty)
+        val platform: Expression<StringValue> =
+                coalesce(get("platform_code").cast<StringValue>(), empty)
 
-    val childrenRtEq = { v: Int ->
-        (any(
-            get("children_route_types").cast<VectorValue<EquatableValue>>().dslcontains(const(v))
-        ))
-    }
-
-    val isMetro = any(
-        any(
-            (rtEq(1)),
-            childrenRtEq(1),
-        ),
-        (rtEq(12))
-    )
-    val isTram = all(
-        any(any(rtEq(0), childrenRtEq(0)), rtEq(5)),
-        isMetro().not()
-    )
-    val isIntercity = rtEq(2)
-
-    // String pieces for label fields
-    val semi = const("; ")
-    val empty = const("")
-    val level: Expression<StringValue> =
-        coalesce(get("level_id").cast<StringValue>(), empty)
-    val platform: Expression<StringValue> =
-        coalesce(get("platform_code").cast<StringValue>(), empty)
-
-    /* ============================================================
-       BUS (busstops)
-       ============================================================ */
-    CircleLayer(
-        id = LayersPerCategory.Bus.Stops,
-        source = busStopsSource,
-        sourceLayer = "data",
-        color = const(Color(0xFF1C2636)),
-        radius = interpolate(
-            type = linear(),
-            input = zoom(),
-            11 to const(0.9.dp),
-            12 to const(1.2.dp),
-            13 to const(2.dp)
-        ),
-        strokeColor = busStrokeColorExpr,
-        strokeWidth = step(
-            input = zoom(),
-            const(0.8.dp),
-            12.0 to const(1.2.dp),
-            13.2 to const(1.5.dp)
-        ),
-        strokeOpacity = step(
-            input = zoom(),
-            const(0.5f),
-            15.0 to const(0.6f)
-        ),
-        opacity = const(0.1f),
-        minZoom = 13f,
-        visible = (layerSettings.bus as LayerCategorySettings).stops
-    )
-
-    SymbolLayer(
-        id = LayersPerCategory.Bus.LabelStops,
-        source = busStopsSource,
-        sourceLayer = "data",
-        textField = get("displayname").cast(),
-        textFont = barlowMedium,
-        textSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            13 to const(0.4375f).em, // 7px
-            15 to const(0.5f).em,    // 8px
-            16 to const(0.625f).em   // 10px
-        ),
-        // radial 0.5 => y offset +0.5em
-        textOffset = offset(0.em, 0.5.em),
-        textColor = if (isDark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
-        textHaloWidth = const(0.4.dp),
-        minZoom = 14.7f,
-
-        textJustify = const(TextJustify.Left),
-        textAnchor = const(SymbolAnchor.Left),
-        visible = (layerSettings.bus as LayerCategorySettings).labelstops
-    )
-
-    /* ============================================================
-       OTHER (otherstops)
-       ============================================================ */
-    CircleLayer(
-        id = LayersPerCategory.Other.Stops,
-        source = otherStopsSource,
-        sourceLayer = "data",
-        color = const(circleInside),
-        radius = interpolate(
-            type = linear(),
-            input = zoom(),
-            8 to const(1.dp),
-            12 to const(4.dp),
-            15 to const(5.dp)
-        ),
-        strokeColor = const(circleOutside),
-        strokeWidth = step(
-            input = zoom(),
-            const(1.2.dp),
-            13.2 to const(1.5.dp)
-        ),
-        strokeOpacity = step(
-            input = zoom(),
-            const(0.5f),
-            15.0 to const(0.6f)
-        ),
-        opacity = interpolate(
-            type = linear(),
-            input = zoom(),
-            10 to const(0.7f),
-            16 to const(0.8f)
-        ),
-        minZoom = 9f,
-        visible = (layerSettings.other as LayerCategorySettings).stops
-    )
-
-    SymbolLayer(
-        id = LayersPerCategory.Other.LabelStops,
-        source = otherStopsSource,
-        sourceLayer = "data",
-        textField = get("displayname").cast(),
-        textSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            9 to const(0.375f).em,  // 6px
-            15 to const(0.5625f).em, // 9px
-            17 to const(0.625f).em   // 10px
-        ),
-        // radial 1 => y offset +1em
-        textOffset = offset(0.em, 1.em),
-        textFont = barlowBold,
-        textColor = if (isDark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
-        textHaloWidth = const(1.dp),
-        minZoom = 9f,
-
-        textJustify = const(TextJustify.Left),
-        textAnchor = const(SymbolAnchor.Left),
-        visible = (layerSettings.other as LayerCategorySettings).labelstops
-    )
-
-    /* ============================================================
-       METRO (railstops, route_type 1/12)
-       ============================================================ */
-    CircleLayer(
-        id = LayersPerCategory.Metro.Stops,
-        source = railStopsSource,
-        sourceLayer = "data",
-        color = const(circleInside),
-        radius = interpolate(
-            type = linear(),
-            input = zoom(),
-            8 to const(0.8.dp),
-            12 to const(3.5.dp),
-            15 to const(5.dp)
-        ),
-        strokeColor = const(circleOutside),
-        strokeWidth = step(
-            input = zoom(),
-            const(0.4.dp),
-            10.5 to const(0.8.dp),
-            11.0 to const(1.2.dp),
-            13.2 to const(1.5.dp)
-        ),
-        strokeOpacity = step(
-            input = zoom(),
-            const(0.5f),
-            15.0 to const(0.6f)
-        ),
-        opacity = interpolate(
-            type = linear(),
-            input = zoom(),
-            10 to const(0.7f),
-            16 to const(0.8f)
-        ),
-        minZoom = 9f,
-        filter = isMetro,
-        visible = (layerSettings.localrail as LayerCategorySettings).stops
-    )
-
-    SymbolLayer(
-        id = LayersPerCategory.Metro.LabelStops,
-        source = railStopsSource,
-        sourceLayer = "data",
-        textField = step(
-            input = zoom(),
-            fallback = get("displayname").cast<StringValue>(),
-            8 to get("displayname").cast<StringValue>(),
-            13 to get("displayname").cast<StringValue>() +
-                    switch(
-                        conditions = arrayOf(
-                            condition(
-                                has("level_id"),
-                                semi + level
-                            )
+        /* ============================================================
+        BUS (busstops)
+        ============================================================ */
+        CircleLayer(
+                id = LayersPerCategory.Bus.Stops,
+                source = busStopsSource,
+                sourceLayer = "data",
+                color = const(Color(0xFF1C2636)),
+                radius =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                11 to const(0.9.dp),
+                                12 to const(1.2.dp),
+                                13 to const(2.dp)
                         ),
-                        fallback = const("")
-                    )
-                    +
-                    switch(
-                        conditions = arrayOf(
-                            condition(
-                                has("platform_code"),
-                                semi + platform
-                            )
+                strokeColor = busStrokeColorExpr,
+                strokeWidth =
+                        step(
+                                input = zoom(),
+                                const(0.8.dp),
+                                12.0 to const(1.2.dp),
+                                13.2 to const(1.5.dp)
                         ),
+                strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
+                opacity = const(0.1f),
+                minZoom = 13f,
+                visible = (layerSettings.bus as LayerCategorySettings).stops
+        )
 
-                        fallback = const("")
-                    )
-        ),
-        textSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            11 to const(0.5f).em,    // 8px
-            12 to const(0.625f).em,  // 10px
-            14 to const(0.75f).em,    // 12px
-            17 to const(0.875f).em    // 14px
-        ),
-        // radial: 7->0.1, 10->0.3, 12->0.6 (maplibre uses em); animate y offset
-        textOffset = interpolate(
-            type = linear(),
-            input = zoom(),
-            7 to offset(0.em, 0.10.em),
-            10 to offset(0.em, 0.30.em),
-            12 to offset(0.em, 0.60.em)
-        ),
-        textFont = step(
-            input = zoom(),
-            barlowRegular,
-            12.0 to barlowMedium
-        ),
-        textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
-        textHaloWidth = const(1.dp), // was 1.dp
-        minZoom = 11f,
-        filter = isMetro,
-        textJustify = const(TextJustify.Left),
-        textAnchor = const(SymbolAnchor.Left),
-        visible = (layerSettings.localrail as LayerCategorySettings).labelstops
-    )
-
-    /* ============================================================
-        TRAM (railstops, route_type 0/5)
-       ============================================================ */
-    CircleLayer(
-        id = LayersPerCategory.Tram.Stops,
-        source = railStopsSource,
-        sourceLayer = "data",
-        color = const(circleInside),
-        radius = interpolate(
-            type = linear(),
-            input = zoom(),
-            9 to const(0.9.dp),
-            10 to const(1.dp),
-            12 to const(3.dp),
-            15 to const(4.dp)
-        ),
-        strokeColor = const(circleOutside),
-        strokeWidth = step(
-            input = zoom(),
-            const(1.2.dp),
-            13.2 to const(1.5.dp)
-        ),
-        strokeOpacity = step(
-            input = zoom(),
-            const(0.4f),
-            11.0 to const(0.5f),
-            15.0 to const(0.6f)
-        ),
-        opacity = const(0.8f),
-        minZoom = 9f,
-        filter = isTram,
-        visible = (layerSettings.localrail as LayerCategorySettings).stops
-    )
-
-    SymbolLayer(
-        id = LayersPerCategory.Tram.LabelStops,
-        source = railStopsSource,
-        sourceLayer = "data",
-        textField = step(
-            input = zoom(),
-            fallback = get("displayname").cast<StringValue>(),
-            8 to get("displayname").cast<StringValue>(),
-            14 to get("displayname").cast<StringValue>() +
-                    switch(
-                        conditions = arrayOf(
-                            condition(
-                                has("level_id"),
-                                semi + level
-                            )
+        SymbolLayer(
+                id = LayersPerCategory.Bus.LabelStops,
+                source = busStopsSource,
+                sourceLayer = "data",
+                textField = get("displayname").cast(),
+                textFont = barlowMedium,
+                textSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                13 to const(0.4375f).em, // 7px
+                                15 to const(0.5f).em, // 8px
+                                16 to const(0.625f).em // 10px
                         ),
-                        fallback = const("")
-                    )
-                    +
-                    switch(
-                        conditions = arrayOf(
-                            condition(
-                                has("platform_code"),
-                                semi + platform
-                            )
+                // radial 0.5 => y offset +0.5em
+                textOffset = offset(0.em, 0.5.em),
+                textColor = if (isDark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+                textHaloWidth = const(0.4.dp),
+                minZoom = 14.7f,
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                visible = (layerSettings.bus as LayerCategorySettings).labelstops
+        )
+
+        /* ============================================================
+        OTHER (otherstops)
+        ============================================================ */
+        CircleLayer(
+                id = LayersPerCategory.Other.Stops,
+                source = otherStopsSource,
+                sourceLayer = "data",
+                color = const(circleInside),
+                radius =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                8 to const(1.dp),
+                                12 to const(4.dp),
+                                15 to const(5.dp)
                         ),
-
-                        fallback = const("")
-                    )
-        ),
-        textSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            9 to const(0.4375f).em, // 7px
-            11 to const(0.4375f).em, // 7px
-            12 to const(0.5625f).em, // 9px
-            14 to const(0.625f).em,   // 10px
-            17 to const(0.75f).em,
-        ),
-        // radial: 7->0.2, 10->0.3, 12->0.5
-        textOffset = interpolate(
-            type = linear(),
-            input = zoom(),
-            7 to offset(0.em, 0.2.em),
-            10 to offset(0.em, 0.3.em),
-            12 to offset(0.em, 0.5.em)
-        ),
-        textFont = step(
-            input = zoom(),
-            barlowRegular,
-            12.0 to barlowMedium
-        ),
-        textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
-        textHaloWidth = const(1.dp), // was 1.dp
-        minZoom = 12f,
-        filter = isTram,
-        textJustify = const(TextJustify.Left),
-        textAnchor = const(SymbolAnchor.Left),
-        visible = (layerSettings.localrail as LayerCategorySettings).labelstops
-    )
-
-    /* ============================================================
-       INTERCITY (railstops, route_type 2)
-       ============================================================ */
-    val intercityCircleRadius = interpolate(
-        type = linear(),
-        input = zoom(),
-        7 to const(1.dp),
-        8 to const(2.dp),
-        9 to const(3.dp),
-        12 to const(5.dp),
-        15 to const(8.dp)
-    )
-    val intercityLabelSize = interpolate(
-        type = linear(),
-        input = zoom(),
-        6 to const(0.375f).em, // 6px
-        13 to const(0.75f).em   // 12px
-    )
-
-    CircleLayer(
-        id = LayersPerCategory.IntercityRail.Stops,
-        source = railStopsSource,
-        sourceLayer = "data",
-        color = const(circleInside),
-        radius = intercityCircleRadius,
-        strokeColor = const(circleOutside),
-        strokeWidth = interpolate(
-            type = linear(),
-            input = zoom(),
-            9 to const(1.dp),
-            13.2 to const(1.5.dp)
-        ),
-        strokeOpacity = step(
-            input = zoom(),
-            const(0.5f),
-            15.0 to const(0.6f)
-        ),
-        opacity = step(
-            input = zoom(),
-            const(0.6f),
-            13.0 to const(0.8f)
-        ),
-        minZoom = 7.5f,
-        filter = isIntercity,
-        visible = layerSettings.intercityrail.stops
-    )
-
-    SymbolLayer(
-        id = LayersPerCategory.IntercityRail.LabelStops,
-        source = railStopsSource,
-        sourceLayer = "data",
-        textField = step(
-            input = zoom(),
-            fallback = get("displayname").cast<StringValue>(),
-            8 to get("displayname").cast<StringValue>(),
-            13 to get("displayname").cast<StringValue>() +
-                    switch(
-                        conditions = arrayOf(
-                            condition(
-                                has("level_id"),
-                                semi + level
-                            )
+                strokeColor = const(circleOutside),
+                strokeWidth = step(input = zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
+                opacity =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                10 to const(0.7f),
+                                16 to const(0.8f)
                         ),
-                        fallback = const("")
-                    )
-                    +
-                    switch(
-                        conditions = arrayOf(
-                            condition(
-                                has("platform_code"),
-                                semi + platform
-                            )
+                minZoom = 9f,
+                visible = (layerSettings.other as LayerCategorySettings).stops
+        )
+
+        SymbolLayer(
+                id = LayersPerCategory.Other.LabelStops,
+                source = otherStopsSource,
+                sourceLayer = "data",
+                textField = get("displayname").cast(),
+                textSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                9 to const(0.375f).em, // 6px
+                                15 to const(0.5625f).em, // 9px
+                                17 to const(0.625f).em // 10px
                         ),
+                // radial 1 => y offset +1em
+                textOffset = offset(0.em, 1.em),
+                textFont = barlowBold,
+                textColor = if (isDark) const(Color(0xFFEEE6FE)) else const(Color(0xFF2A2A2A)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+                textHaloWidth = const(1.dp),
+                minZoom = 9f,
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                visible = (layerSettings.other as LayerCategorySettings).labelstops
+        )
 
-                        fallback = const("")
-                    )
-        ),
-        textSize = intercityLabelSize,
-        // radial 0.2 => y offset +0.2em
-        textOffset = offset(0.em, 0.2.em),
-        textFont = step(
-            input = zoom(),
-            barlowRegular,
-            10 to barlowMedium
-        ),
-        textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
-        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
-        textHaloWidth = const(1.dp), // was 1.dp
-        minZoom = 8f,
-        textJustify = const(TextJustify.Left),
-        textAnchor = const(SymbolAnchor.Left),
-        filter = isIntercity,
-        visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
-    )
+        /* ============================================================
+        METRO (railstops, route_type 1/12)
+        ============================================================ */
+        CircleLayer(
+                id = LayersPerCategory.Metro.Stops,
+                source = railStopsSource,
+                sourceLayer = "data",
+                color = const(circleInside),
+                radius =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                8 to const(0.8.dp),
+                                12 to const(3.5.dp),
+                                15 to const(5.dp)
+                        ),
+                strokeColor = const(circleOutside),
+                strokeWidth =
+                        step(
+                                input = zoom(),
+                                const(0.4.dp),
+                                10.5 to const(0.8.dp),
+                                11.0 to const(1.2.dp),
+                                13.2 to const(1.5.dp)
+                        ),
+                strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
+                opacity =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                10 to const(0.7f),
+                                16 to const(0.8f)
+                        ),
+                minZoom = 9f,
+                filter = isMetro,
+                visible = (layerSettings.localrail as LayerCategorySettings).stops
+        )
 
+        SymbolLayer(
+                id = LayersPerCategory.Metro.LabelStops,
+                source = railStopsSource,
+                sourceLayer = "data",
+                textField =
+                        step(
+                                input = zoom(),
+                                fallback = get("displayname").cast<StringValue>(),
+                                8 to get("displayname").cast<StringValue>(),
+                                13 to
+                                        get("displayname").cast<StringValue>() +
+                                        switch(
+                                                conditions =
+                                                        arrayOf(
+                                                                condition(
+                                                                        has("level_id"),
+                                                                        semi + level
+                                                                )
+                                                        ),
+                                                fallback = const("")
+                                        ) +
+                                        switch(
+                                                conditions =
+                                                        arrayOf(
+                                                                condition(
+                                                                        has(
+                                                                                "platform_code"
+                                                                        ),
+                                                                        semi + platform
+                                                                )
+                                                        ),
+                                                fallback = const("")
+                                        )
+                        ),
+                textSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                11 to const(0.5f).em, // 8px
+                                12 to const(0.625f).em, // 10px
+                                14 to const(0.75f).em, // 12px
+                                17 to const(0.875f).em // 14px
+                        ),
+                // radial: 7->0.1, 10->0.3, 12->0.6 (maplibre uses em); animate y offset
+                textOffset =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                7 to offset(0.em, 0.10.em),
+                                10 to offset(0.em, 0.30.em),
+                                12 to offset(0.em, 0.60.em)
+                        ),
+                textFont = step(input = zoom(), barlowRegular, 12.0 to barlowMedium),
+                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+                textHaloWidth = const(1.dp), // was 1.dp
+                minZoom = 11f,
+                filter = isMetro,
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                visible = (layerSettings.localrail as LayerCategorySettings).labelstops
+        )
 
-    // STATION FEATURES
+        CircleLayer(
+                id = LayersPerCategory.Metro.Stops + "_osm",
+                source = osmStopsSource,
+                sourceLayer = "data",
+                color = const(circleInside),
+                radius =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                8 to const(0.8.dp),
+                                12 to const(3.5.dp),
+                                15 to const(5.dp)
+                        ),
+                strokeColor = const(circleOutside),
+                strokeWidth =
+                        step(
+                                input = zoom(),
+                                const(0.4.dp),
+                                10.5 to const(0.8.dp),
+                                11.0 to const(1.2.dp),
+                                13.2 to const(1.5.dp)
+                        ),
+                strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
+                opacity =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                10 to const(0.7f),
+                                16 to const(0.8f)
+                        ),
+                minZoom = 9f,
+                filter =
+                        all(
+                                has("local_ref").not(),
+                                get("station_type").cast<StringValue>().eq(const("station")),
+                                get("mode_type").cast<StringValue>().eq(const("subway"))
+                        ),
+                visible = (layerSettings.localrail as LayerCategorySettings).stops
+        )
 
-    SymbolLayer(
-        id = "stationenter",
-        source = stationFeaturesSource,
-        sourceLayer = "data",
-        iconImage = image(painterResource(R.drawable.station_enter)),
-        iconSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            15 to const(0.1f),
-            18 to const(0.2f)
-        ),
-        iconAllowOverlap = const(true),
-        iconIgnorePlacement = const(true),
-        minZoom = 15.0F
-    )
+        SymbolLayer(
+                id = LayersPerCategory.Metro.LabelStops + "_osm",
+                source = osmStopsSource,
+                sourceLayer = "data",
+                textField = get("name").cast(),
+                textSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                11 to const(0.5f).em, // 8px
+                                12 to const(0.625f).em, // 10px
+                                14 to const(0.75f).em, // 12px
+                                17 to const(0.875f).em // 14px
+                        ),
+                textOffset =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                7 to offset(0.em, 0.10.em),
+                                10 to offset(0.em, 0.30.em),
+                                12 to offset(0.em, 0.60.em)
+                        ),
+                textFont = step(input = zoom(), barlowRegular, 12.0 to barlowMedium),
+                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+                textHaloWidth = const(1.dp),
+                minZoom = 11f,
+                filter =
+                        all(
+                                has("local_ref").not(),
+                                get("station_type").cast<StringValue>().eq(const("station")),
+                                get("mode_type").cast<StringValue>().eq(const("subway"))
+                        ),
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                visible = (layerSettings.localrail as LayerCategorySettings).labelstops
+        )
 
-    SymbolLayer(
-        id = "stationentertxt",
-        source = stationFeaturesSource,
-        sourceLayer = "data",
-        textField = get("name").cast<StringValue>(),
-        textColor = if (isDark) const(Color(0xFFBAE6FD)) else const(Color(0xFF1D4ED8)),
-        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
-        textHaloWidth = if (isDark) const(0.4.dp) else const(0.2.dp),
-        textSize = interpolate(
-            type = linear(),
-            input = zoom(),
-            16 to const(0.4f).em,
-            18 to const(0.8f).em
-        ),
-        textOffset = offset(1.em, 0.em),
-        textJustify = const(TextJustify.Left),
-        textAnchor = const(SymbolAnchor.Left),
-        textFont = barlowBold,
-        minZoom = 17F,
-    )
+        /* ============================================================
+         TRAM (railstops, route_type 0/5)
+        ============================================================ */
+        CircleLayer(
+                id = LayersPerCategory.Tram.Stops,
+                source = railStopsSource,
+                sourceLayer = "data",
+                color = const(circleInside),
+                radius =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                9 to const(0.9.dp),
+                                10 to const(1.dp),
+                                12 to const(3.dp),
+                                15 to const(4.dp)
+                        ),
+                strokeColor = const(circleOutside),
+                strokeWidth = step(input = zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                strokeOpacity =
+                        step(input = zoom(), const(0.4f), 11.0 to const(0.5f), 15.0 to const(0.6f)),
+                opacity = const(0.8f),
+                minZoom = 9f,
+                filter = isTram,
+                visible = (layerSettings.localrail as LayerCategorySettings).stops
+        )
 
+        SymbolLayer(
+                id = LayersPerCategory.Tram.LabelStops,
+                source = railStopsSource,
+                sourceLayer = "data",
+                textField =
+                        step(
+                                input = zoom(),
+                                fallback = get("displayname").cast<StringValue>(),
+                                8 to get("displayname").cast<StringValue>(),
+                                14 to
+                                        get("displayname").cast<StringValue>() +
+                                        switch(
+                                                conditions =
+                                                        arrayOf(
+                                                                condition(
+                                                                        has("level_id"),
+                                                                        semi + level
+                                                                )
+                                                        ),
+                                                fallback = const("")
+                                        ) +
+                                        switch(
+                                                conditions =
+                                                        arrayOf(
+                                                                condition(
+                                                                        has(
+                                                                                "platform_code"
+                                                                        ),
+                                                                        semi + platform
+                                                                )
+                                                        ),
+                                                fallback = const("")
+                                        )
+                        ),
+                textSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                9 to const(0.4375f).em, // 7px
+                                11 to const(0.4375f).em, // 7px
+                                12 to const(0.5625f).em, // 9px
+                                14 to const(0.625f).em, // 10px
+                                17 to const(0.75f).em,
+                        ),
+                // radial: 7->0.2, 10->0.3, 12->0.5
+                textOffset =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                7 to offset(0.em, 0.2.em),
+                                10 to offset(0.em, 0.3.em),
+                                12 to offset(0.em, 0.5.em)
+                        ),
+                textFont = step(input = zoom(), barlowRegular, 12.0 to barlowMedium),
+                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
+                textHaloWidth = const(1.dp), // was 1.dp
+                minZoom = 12f,
+                filter = isTram,
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                visible = (layerSettings.localrail as LayerCategorySettings).labelstops
+        )
 
+        CircleLayer(
+                id = LayersPerCategory.Tram.Stops + "_osm",
+                source = osmStopsSource,
+                sourceLayer = "data",
+                color = const(circleInside),
+                radius =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                9 to const(0.9.dp),
+                                10 to const(1.dp),
+                                12 to const(3.dp),
+                                15 to const(4.dp)
+                        ),
+                strokeColor = const(circleOutside),
+                strokeWidth = step(input = zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
+                strokeOpacity =
+                        step(input = zoom(), const(0.4f), 11.0 to const(0.5f), 15.0 to const(0.6f)),
+                opacity = const(0.8f),
+                minZoom = 9f,
+                filter =
+                        all(
+                                has("local_ref").not(),
+                                get("station_type").cast<StringValue>().eq(const("station")),
+                                any(
+                                        get("mode_type").cast<StringValue>().eq(const("tram")),
+                                        get("mode_type").cast<StringValue>().eq(const("light_rail"))
+                                )
+                        ),
+                visible = (layerSettings.localrail as LayerCategorySettings).stops
+        )
+
+        SymbolLayer(
+                id = LayersPerCategory.Tram.LabelStops + "_osm",
+                source = osmStopsSource,
+                sourceLayer = "data",
+                textField = get("name").cast(),
+                textSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                9 to const(0.4375f).em, // 7px
+                                11 to const(0.4375f).em, // 7px
+                                12 to const(0.5625f).em, // 9px
+                                14 to const(0.625f).em, // 10px
+                                17 to const(0.75f).em,
+                        ),
+                textOffset =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                7 to offset(0.em, 0.2.em),
+                                10 to offset(0.em, 0.3.em),
+                                12 to offset(0.em, 0.5.em)
+                        ),
+                textFont = step(input = zoom(), barlowRegular, 12.0 to barlowMedium),
+                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
+                textHaloWidth = const(1.dp),
+                minZoom = 12f,
+                filter =
+                        all(
+                                has("local_ref").not(),
+                                get("station_type").cast<StringValue>().eq(const("station")),
+                                any(
+                                        get("mode_type").cast<StringValue>().eq(const("tram")),
+                                        get("mode_type").cast<StringValue>().eq(const("light_rail"))
+                                )
+                        ),
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                visible = (layerSettings.localrail as LayerCategorySettings).labelstops
+        )
+
+        /* ============================================================
+        INTERCITY (railstops, route_type 2)
+        ============================================================ */
+        val intercityCircleRadius =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        7 to const(1.dp),
+                        8 to const(2.dp),
+                        9 to const(3.dp),
+                        12 to const(5.dp),
+                        15 to const(8.dp)
+                )
+        val intercityLabelSize =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        6 to const(0.375f).em, // 6px
+                        13 to const(0.75f).em // 12px
+                )
+
+        CircleLayer(
+                id = LayersPerCategory.IntercityRail.Stops,
+                source = railStopsSource,
+                sourceLayer = "data",
+                color = const(circleInside),
+                radius = intercityCircleRadius,
+                strokeColor = const(circleOutside),
+                strokeWidth =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                9 to const(1.dp),
+                                13.2 to const(1.5.dp)
+                        ),
+                strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
+                opacity = step(input = zoom(), const(0.6f), 13.0 to const(0.8f)),
+                minZoom = 7.5f,
+                filter = all(
+                        isIntercity,
+                        has("osm_station_id").not()
+                ),
+                visible = layerSettings.intercityrail.stops
+        )
+
+        SymbolLayer(
+                id = LayersPerCategory.IntercityRail.LabelStops,
+                source = railStopsSource,
+                sourceLayer = "data",
+                textField =
+                        step(
+                                input = zoom(),
+                                fallback = get("displayname").cast<StringValue>(),
+                                8 to get("displayname").cast<StringValue>(),
+                                13 to
+                                        get("displayname").cast<StringValue>() +
+                                        switch(
+                                                conditions =
+                                                        arrayOf(
+                                                                condition(
+                                                                        has("level_id"),
+                                                                        semi + level
+                                                                )
+                                                        ),
+                                                fallback = const("")
+                                        ) +
+                                        switch(
+                                                conditions =
+                                                        arrayOf(
+                                                                condition(
+                                                                        has(
+                                                                                "platform_code"
+                                                                        ),
+                                                                        semi + platform
+                                                                )
+                                                        ),
+                                                fallback = const("")
+                                        )
+                        ),
+                textSize = intercityLabelSize,
+                // radial 0.2 => y offset +0.2em
+                textOffset = offset(0.em, 0.2.em),
+                textFont = step(input = zoom(), barlowRegular, 10 to barlowMedium),
+                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+                textHaloWidth = const(1.dp), // was 1.dp
+                minZoom = 8f,
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                filter = all(
+                        isIntercity,
+                        has("osm_station_id").not()
+                ),
+                visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
+        )
+
+        CircleLayer(
+                id = LayersPerCategory.IntercityRail.Stops + "_osm",
+                source = osmStopsSource,
+                sourceLayer = "data",
+                color = const(circleInside),
+                radius = intercityCircleRadius,
+                strokeColor = const(circleOutside),
+                strokeWidth =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                9 to const(1.dp),
+                                13.2 to const(1.5.dp)
+                        ),
+                strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
+                opacity = step(input = zoom(), const(0.6f), 13.0 to const(0.8f)),
+                filter =
+                        all(
+                                has("local_ref").not(),
+                                get("station_type").cast<StringValue>().eq(const("station")),
+                                get("mode_type").cast<StringValue>().eq(const("rail"))
+                        ),
+                minZoom = 7.5f,
+                visible = layerSettings.intercityrail.stops
+        )
+
+        SymbolLayer(
+                id = LayersPerCategory.IntercityRail.LabelStops + "_osm",
+                source = osmStopsSource,
+                sourceLayer = "data",
+                textField = get("name").cast(),
+                textSize = intercityLabelSize,
+                textOffset = offset(0.em, 0.2.em),
+                textFont = step(
+                        input = zoom(),
+                        barlowRegular,
+                        10 to barlowMedium,
+                        13 to barlowBold
+                ),
+                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+                textHaloWidth = const(1.dp),
+                minZoom = 8f,
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                filter =
+                        all(
+                                has("local_ref").not(),
+                                get("station_type").cast<StringValue>().eq(const("station")),
+                                get("mode_type").cast<StringValue>().eq(const("rail"))
+                        ),
+                visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
+        )
+
+        SymbolLayer(
+                id = "platformlabels_osm_intercity",
+                source = osmStopsSource,
+                sourceLayer = "data",
+                textField = switch(
+                        conditions = arrayOf(
+                                condition(
+                                        has("local_ref").cast(),
+                                        get("local_ref").cast()
+                                ),
+                        ),
+                        fallback = get("ref").cast<StringValue>()
+                ),
+                textFont = step(
+                        input = zoom(),
+                        barlowRegular,
+                        10 to barlowMedium,
+                        13 to barlowBold
+                ),
+                textSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                14 to const(0.25f).em, // 4px
+                                15 to const(0.375f).em, // 6px
+                                16 to const(0.6f).em,
+                                17 to const(0.8f).em,
+                                18 to const(1f).em
+                        ),
+                textHaloWidth = const(10.dp),
+                textColor = const(Color(0xFFFFFFFF)),
+                textHaloColor = const(Color(0xFF2d327d)),
+                textAllowOverlap = const(true),
+                textIgnorePlacement = const(true),
+                filter = all(get("station_type").cast<StringValue>().eq(const("stop_position"))),
+                minZoom = 14.2f,
+        )
+
+        // STATION FEATURES
+
+        SymbolLayer(
+                id = "stationenter",
+                source = stationFeaturesSource,
+                sourceLayer = "data",
+                iconImage = image(painterResource(R.drawable.station_enter)),
+                iconSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                15 to const(0.1f),
+                                18 to const(0.2f)
+                        ),
+                iconAllowOverlap = const(true),
+                iconIgnorePlacement = const(true),
+                minZoom = 15.0F
+        )
+
+        SymbolLayer(
+                id = "stationentertxt",
+                source = stationFeaturesSource,
+                sourceLayer = "data",
+                textField = get("name").cast<StringValue>(),
+                textColor = if (isDark) const(Color(0xFFBAE6FD)) else const(Color(0xFF1D4ED8)),
+                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
+                textHaloWidth = if (isDark) const(0.4.dp) else const(0.2.dp),
+                textSize =
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                16 to const(0.4f).em,
+                                18 to const(0.8f).em
+                        ),
+                textOffset = offset(1.em, 0.em),
+                textJustify = const(TextJustify.Left),
+                textAnchor = const(SymbolAnchor.Left),
+                textFont = barlowBold,
+                minZoom = 17F,
+        )
 }

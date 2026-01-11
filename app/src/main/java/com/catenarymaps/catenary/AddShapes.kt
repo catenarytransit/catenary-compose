@@ -301,7 +301,7 @@ fun AddShapes(
         placement = const(SymbolPlacement.Line),
         textField = get("route_label").cast<StringValue>(), // your JS toggles debug; you can replicate if needed
         textFont = step(
-            input = zoom(), const(listOf("Barlow-Semibold")), 7.0 to const(listOf("Barlow-Bold"))
+            input = zoom(), const(listOf("Barlow-SemiBold")), 8.0 to const(listOf("Barlow-Bold"))
         ),
         textSize = interpolate(
             type = linear(), input = zoom(), 3 to const(0.375f).em,  // 6px
