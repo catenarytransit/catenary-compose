@@ -12,6 +12,7 @@ import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.dsl.Feature.has
 import org.maplibre.compose.expressions.dsl.all
 import org.maplibre.compose.expressions.dsl.any
+import org.maplibre.compose.expressions.dsl.case
 import org.maplibre.compose.expressions.dsl.coalesce
 import org.maplibre.compose.expressions.dsl.condition
 import org.maplibre.compose.expressions.dsl.const
@@ -718,7 +719,15 @@ fun AddStops(
                 id = "platformlabels_osm_intercity",
                 source = osmStopsSource,
                 sourceLayer = "data",
-                textField = get("local_ref").cast(),
+                textField = switch(
+                        conditions = arrayOf(
+                                condition(
+                                        has("local_ref").cast(),
+                                        get("local_ref").cast()
+                                ),
+                        ),
+                        fallback = get("ref").cast<StringValue>()
+                ),
                 textFont = step(
                         input = zoom(),
                         barlowRegular,
@@ -731,9 +740,9 @@ fun AddStops(
                                 input = zoom(),
                                 14 to const(0.25f).em, // 4px
                                 15 to const(0.375f).em, // 6px
-                                16 to const(0.6875f).em, // 11px
-                                17 to const(0.875f).em, // 14px
-                                18 to const(1.125f).em // 18px
+                                16 to const(0.6f).em,
+                                17 to const(0.8f).em,
+                                18 to const(1f).em
                         ),
                 textHaloWidth = const(10.dp),
                 textColor = const(Color(0xFFFFFFFF)),
@@ -741,7 +750,7 @@ fun AddStops(
                 textAllowOverlap = const(true),
                 textIgnorePlacement = const(true),
                 filter = all(get("station_type").cast<StringValue>().eq(const("stop_position"))),
-                minZoom = 13.5f,
+                minZoom = 14.2f,
         )
 
         // STATION FEATURES
