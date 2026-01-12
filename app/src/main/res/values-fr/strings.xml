@@ -103,4 +103,11 @@
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
     <string name="occupancy_percentage">Pourcentage d\'occupation</string>
+
+    <string name="stations">Stations</string>
+    <string name="routes">Lignes</string>
+    <plurals name="items_selected">
+        <item quantity="one">%d élément sélectionné</item>
+        <item quantity="other">%d éléments sélectionnés</item>
+    </plurals>
 </resources>

@@ -24,7 +24,13 @@
     <string name="no_headsign">No headsign</string>
     <string name="directions">Directions</string>
     <string name="vehicles">Vehicles</string>
+    <string name="stations">Stations</string>
     <string name="stops">Stops</string>
+    <string name="routes">Routes</string>
+    <plurals name="items_selected">
+        <item quantity="one">%d item selected</item>
+        <item quantity="other">%d items selected</item>
+    </plurals>
     <string name="next_stop">Next stop</string>
     <string name="occupancy_status">Occupancy</string>
     <string name="occupancy_status_empty">Empty</string>
@@ -111,4 +117,10 @@
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
     <string name="occupancy_percentage">Occupancy percentage</string>
+
+    <string name="route_category_rail">Rail</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Tram</string>
+    <string name="route_category_bus">Bus</string>
+    <string name="route_category_other">Other</string>
 </resources>
