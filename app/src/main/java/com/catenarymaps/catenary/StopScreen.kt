@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -284,7 +285,7 @@ fun StopScreen(
 
     // Filters
     // Mode = 'rail' | 'metro' | 'bus' | 'other'
-    var activeTab by remember { mutableStateOf("bus") }
+    var activeTab by remember(key) { mutableStateOf("rail") }
     var availableModes by remember { mutableStateOf(listOf<String>()) }
 
     fun getModeForRouteType(routeType: Int): String {
@@ -358,12 +359,7 @@ fun StopScreen(
                     if ((relevantTime ?: 0) < (currentTime - cutoff)) return@filter false
 
                     if (event.last_stop == true) {
-                        // show_arrivals_only logic? Svelte: `if (event.last_stop &&
-                        // !show_arrivals_only) return false;`
-                        // We don't have `show_arrivals_only` state port yet?
-                        // Let's assume false for now or ignore?
-                        // Svelte: `export let show_arrival_only = false;` (implicit?)
-                        // I will skip this check for now as I don't see it passed in.
+                        return@filter false
                     }
 
                     // Filter by mode
@@ -467,9 +463,26 @@ fun StopScreen(
         var responseString: String? = null
         try {
             responseString = ktorClient.get(useUrl).body<String>()
-            val data =
+            val rawData =
                 Json { ignoreUnknownKeys = true }
                     .decodeFromString<DeparturesAtStopResponse>(responseString!!)
+
+            // Fix for OSM station data: sometimes it marks everything as last_stop
+            // If we have a departure time, it's definitely not a last stop for the purpose of this
+            // screen
+            val fixedEvents =
+                rawData.events?.map { ev ->
+                    if (ev.last_stop == true &&
+                        (ev.scheduled_departure != null ||
+                                ev.realtime_departure != null)
+                    ) {
+                        ev.copy(last_stop = false)
+                    } else {
+                        ev
+                    }
+                }
+            val data = rawData.copy(events = fixedEvents)
+
             val refreshedAt = Instant.now().epochSecond
             mergePageEvents(id, data, refreshedAt)
             currentPageHours = chooseNextPageHours(data.events?.size ?: 0)
@@ -809,213 +822,201 @@ fun StopScreen(
                     .withZone(zoneId)
             }
 
-        LazyColumn(state = lazyListState, modifier = Modifier.fillMaxWidth()) {
-            // Header
-            item {
-                Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)) {
-                    Row(
+        Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)) {
+                Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
+                ) {
+                    Text(
                             text = meta?.primary?.stop_name
                                 ?: osmStackData?.station_name ?: "Station",
                             style = MaterialTheme.typography.headlineSmall,
                             modifier = Modifier.weight(1f)
-                        )
-                        NavigationControls(onBack = onBack, onHome = onHome)
-                    }
-                    if (timezone != null) {
-                        FormattedTimeText(
+                    )
+                    NavigationControls(onBack = onBack, onHome = onHome)
+                }
+                if (timezone != null) {
+                    FormattedTimeText(
                             timezone = zoneId.id,
                             timeSeconds = currentTime,
                             showSeconds = true,
                             // The style from LiveClock is now applied here
-                        )
-                        Text(
+                    )
+                    Text(
                             text = timezone,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    val alertsExpandedState = remember { mutableStateMapOf<String, Boolean>() }
-                    meta?.alerts?.forEach { (chateauId, alertsmap) ->
-                        val expanded = alertsExpandedState.getOrPut(chateauId) { true }
-                        AlertsBox(
-                            alerts = alertsmap,
-                            chateau = chateauId,
-                            default_tz = zoneId.id,
-                            isScrollable = false,
-                            expanded = expanded,
-                            onExpandedChange = { alertsExpandedState[chateauId] = !expanded }
-                        )
-                    }
+                    )
                 }
             }
 
-            // Tabs for filtering
-            if (availableModes.size > 1) {
+            LazyColumn(state = lazyListState, modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)) {
+                // Header
                 item {
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp, bottom = 8.dp)
-                                .background(MaterialTheme.colorScheme.background),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        availableModes.forEach { mode ->
-                            val isSelected = activeTab == mode
-                            val label =
-                                when (mode) {
-                                    "rail" -> stringResource(R.string.heading_intercity_rail)
-                                    "metro" -> stringResource(R.string.heading_local_rail)
-                                    "bus" -> stringResource(R.string.heading_bus)
-                                    else -> stringResource(R.string.heading_other)
+                    Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)) {
+                        val alertsExpandedState = remember { mutableStateMapOf<String, Boolean>() }
+                        meta?.alerts?.forEach { (chateauId, alertsmap) ->
+                            val expanded = alertsExpandedState.getOrPut(chateauId) { true }
+                            AlertsBox(
+                                alerts = alertsmap,
+                                chateau = chateauId,
+                                default_tz = zoneId.id,
+                                isScrollable = false,
+                                expanded = expanded,
+                                onExpandedChange = {
+                                    alertsExpandedState[chateauId] = !expanded
                                 }
+                            )
+                        }
+                    }
+                }
 
-                            // Simple Tab Button
-                            Column(
-                                modifier =
-                                    Modifier
-                                        .clickable { activeTab = mode }
-                                        .padding(vertical = 8.dp, horizontal = 12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = label,
-                                    style =
-                                        MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight =
-                                                if (isSelected) FontWeight.Bold
-                                                else FontWeight.Normal,
-                                            color =
-                                                if (isSelected)
-                                                    MaterialTheme.colorScheme
-                                                        .primary
-                                                else
-                                                    MaterialTheme.colorScheme
-                                                        .onSurfaceVariant
-                                        )
-                                )
-                                if (isSelected) {
-                                    Box(
+                // Tabs for filtering
+                if (availableModes.size > 1) {
+                    item {
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, bottom = 8.dp)
+                                    .background(MaterialTheme.colorScheme.background),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            availableModes.forEach { mode ->
+                                val isSelected = activeTab == mode
+                                val label =
+                                    when (mode) {
+                                        "rail" ->
+                                            stringResource(R.string.heading_intercity_rail)
+
+                                        "metro" -> stringResource(R.string.heading_local_rail)
+                                        "bus" -> stringResource(R.string.heading_bus)
+                                        else -> stringResource(R.string.heading_other)
+                                    }
+
+                                // Simple Tab Button
+                                Column(
+                                    modifier =
                                         Modifier
-                                            .height(2.dp)
-                                            .width(20.dp)
-                                            .background(MaterialTheme.colorScheme.primary)
+                                            .clickable { activeTab = mode }
+                                            .padding(
+                                                vertical = 8.dp,
+                                                horizontal = 12.dp
+                                            ),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style =
+                                            MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight =
+                                                    if (isSelected) FontWeight.Bold
+                                                    else FontWeight.Normal,
+                                                color =
+                                                    if (isSelected)
+                                                        MaterialTheme
+                                                            .colorScheme
+                                                            .primary
+                                                    else
+                                                        MaterialTheme
+                                                            .colorScheme
+                                                            .onSurfaceVariant
+                                            )
                                     )
+                                    if (isSelected) {
+                                        Box(
+                                            Modifier
+                                                .height(2.dp)
+                                                .width(20.dp)
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary
+                                                )
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            // Previous Departures Toggle
-            if (previousCount > 0) {
-                item {
-                    TextButton(
-                        onClick = { showPreviousDepartures = !showPreviousDepartures },
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    ) {
-                        Icon(
-                            imageVector =
-                                if (showPreviousDepartures) Icons.Filled.KeyboardArrowUp
-                                else Icons.Filled.KeyboardArrowDown,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.size(0.dp))
-                        Text(
-                            text = stringResource(id = R.string.previous_departures),
-                            style =
-                                MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
-                        )
-                    }
-                }
-            }
-
-            // Departures List
-            if (datesToEventsFiltered.isEmpty() && pages.none { it.loading }) {
-                item {
-                    Text(
-                        text = stringResource(id = R.string.no_departures_found),
-                        modifier = Modifier.padding(8.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                datesToEventsFiltered.forEach { (date, events) ->
-                    // Date Header
-                    stickyHeader {
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                // Previous Departures Toggle
+                if (previousCount > 0) {
+                    item {
+                        TextButton(
+                            onClick = { showPreviousDepartures = !showPreviousDepartures },
+                            modifier = Modifier.padding(horizontal = 2.dp)
                         ) {
+                            Icon(
+                                imageVector =
+                                    if (showPreviousDepartures) Icons.Filled.KeyboardArrowUp
+                                    else Icons.Filled.KeyboardArrowDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.size(0.dp))
                             Text(
-                                text = dateHeaderFormatter.format(date),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                text = stringResource(id = R.string.previous_departures),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
                             )
                         }
                     }
+                }
 
-                    // Event Rows
-                    items(events, key = { composeEventKey(it) }) { event ->
-                        val routeInfo = meta?.routes?.get(event.chateau)?.get(event.route_id)
-
-                        if (activeTab == "rail") {
-                            StationScreenTrainRow(
-                                event = event,
-                                routeInfo = routeInfo,
-                                agencies = meta?.agencies?.get(event.chateau),
-                                currentTime = currentTime,
-                                zoneId = zoneId,
-                                locale = locale,
-                                showSeconds = false,
-                                useSymbolSign = true,
-                                modifier =
-                                    Modifier.clickable {
-                                        onTripClick(
-                                            CatenaryStackEnum.SingleTrip(
-                                                chateau_id = event.chateau,
-                                                trip_id = event.trip_id,
-                                                route_id = event.route_id,
-                                                start_time = null,
-                                                start_date =
-                                                    event.service_date?.replace(
-                                                        "-",
-                                                        ""
-                                                    ),
-                                                vehicle_id = null,
-                                                route_type = null
-                                            )
-                                        )
-                                    }
-                            )
-                        } else {
-                            StopScreenRow(
-                                event = event,
-                                routeInfo = routeInfo,
-                                currentTime = currentTime,
-                                zoneId = zoneId,
-                                locale = locale,
-                                showArrivals = event.last_stop == true,
-                                useSymbolSign = false,
-                                vertical = false,
+                // Departures List
+                if (datesToEventsFiltered.isEmpty() && pages.none { it.loading }) {
+                    item {
+                        Text(
+                            text = stringResource(id = R.string.no_departures_found),
+                            modifier = Modifier.padding(8.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    datesToEventsFiltered.forEach { (date, events) ->
+                        // Date Header
+                        stickyHeader {
+                            Row(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
-                                        .clickable {
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = dateHeaderFormatter.format(date),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        // Event Rows
+                        items(events, key = { composeEventKey(it) }) { event ->
+                            val routeInfo = meta?.routes?.get(event.chateau)?.get(event.route_id)
+
+                            val rType = routeInfo?.route_type ?: 3
+                            val mode = getModeForRouteType(rType)
+
+                            if (activeTab == "rail" && mode == "rail") {
+                                StationScreenTrainRow(
+                                    event = event,
+                                    routeInfo = routeInfo,
+                                    agencies = meta?.agencies?.get(event.chateau),
+                                    currentTime = currentTime,
+                                    zoneId = zoneId,
+                                    locale = locale,
+                                    showSeconds = false,
+                                    useSymbolSign = true,
+                                    modifier =
+                                        Modifier.clickable {
                                             onTripClick(
                                                 CatenaryStackEnum.SingleTrip(
                                                     chateau_id = event.chateau,
@@ -1029,36 +1030,75 @@ fun StopScreen(
                                                                 ""
                                                             ),
                                                     vehicle_id = null,
-                                                    route_type =
-                                                        null // This will be
-                                                    // fetched in
-                                                    // SingleTrip
+                                                    route_type = null
                                                 )
                                             )
                                         }
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            } else {
+                                StopScreenRow(
+                                    event = event,
+                                    routeInfo = routeInfo,
+                                    currentTime = currentTime,
+                                    zoneId = zoneId,
+                                    locale = locale,
+                                    showArrivals = event.last_stop == true,
+                                    useSymbolSign = false,
+                                    vertical = false,
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                onTripClick(
+                                                    CatenaryStackEnum.SingleTrip(
+                                                        chateau_id =
+                                                            event.chateau,
+                                                        trip_id = event.trip_id,
+                                                        route_id =
+                                                            event.route_id,
+                                                        start_time = null,
+                                                        start_date =
+                                                            event.service_date
+                                                                ?.replace(
+                                                                    "-",
+                                                                    ""
+                                                                ),
+                                                        vehicle_id = null,
+                                                        route_type =
+                                                            null // This
+                                                        // will be
+                                                        // fetched in
+                                                        // SingleTrip
+                                                    )
+                                                )
+                                            }
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                            HorizontalDivider(
+                                color =
+                                    MaterialTheme.colorScheme.outlineVariant.copy(
+                                        alpha = 0.3f
+                                    )
                             )
                         }
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                        )
                     }
                 }
-            }
 
-            // Loading / Load More footer
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (pages.any { it.loading }) {
-                        CircularProgressIndicator()
-                    } else {
-                        Button(onClick = { scope.launch { loadNextPage() } }) {
-                            Text(stringResource(id = R.string.load_more))
+                // Loading / Load More footer
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (pages.any { it.loading }) {
+                            CircularProgressIndicator()
+                        } else {
+                            Button(onClick = { scope.launch { loadNextPage() } }) {
+                                Text(stringResource(id = R.string.load_more))
+                            }
                         }
                     }
                 }

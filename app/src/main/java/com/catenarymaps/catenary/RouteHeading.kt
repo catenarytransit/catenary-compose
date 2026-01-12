@@ -94,25 +94,37 @@ fun RouteHeading(
             // Main text content; padded on the end so it "wraps around" controls
             Column(
                     modifier =
-                            Modifier.align(Alignment.TopStart)
-                                    .padding(
-                                            end = 48.dp
-                                    ) // adjust if your controls are wider/narrower
+                            Modifier
+                                .align(Alignment.TopStart)
+                                .padding(
+                                    end = 48.dp
+                                ) // adjust if your controls are wider/narrower
             ) {
                 // Route Name Header
                 Row(modifier = clickableModifier, verticalAlignment = Alignment.CenterVertically) {
                     if (isRatp) {
                         val iconUrl = RatpUtils.getRatpIconUrl(shortName)
                         if (iconUrl != null) {
+                            val context = LocalContext.current
+                            val imageLoader =
+                                androidx.compose.runtime.remember(context) {
+                                    coil.ImageLoader.Builder(context)
+                                        .components {
+                                            add(coil.decode.SvgDecoder.Factory())
+                                        }
+                                        .build()
+                                }
                             AsyncImage(
                                     model =
-                                            ImageRequest.Builder(LocalContext.current)
+                                        ImageRequest.Builder(context)
                                                     .data(iconUrl)
                                                     .crossfade(true)
                                                     .build(),
+                                imageLoader = imageLoader,
                                     contentDescription = shortName,
                                     modifier =
-                                            Modifier.height(32.dp) // Match roughly the text height
+                                            Modifier
+                                                .height(32.dp) // Match roughly the text height
                                                     .padding(end = 8.dp)
                             )
                         } else {
@@ -125,21 +137,49 @@ fun RouteHeading(
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                     } else if (isMta && shortName != null) {
-                        val mtaColor = MtaSubwayUtils.getMtaSubwayColor(shortName)
-                        val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(shortName)
-                        Box(
+                        val iconUrl = MtaSubwayUtils.getMtaIconUrl(shortName)
+                        if (iconUrl != null) {
+                            val context = LocalContext.current
+                            val imageLoader =
+                                androidx.compose.runtime.remember(context) {
+                                    coil.ImageLoader.Builder(context)
+                                        .components {
+                                            add(coil.decode.SvgDecoder.Factory())
+                                        }
+                                        .build()
+                                }
+                            AsyncImage(
+                                model =
+                                    ImageRequest.Builder(context)
+                                        .data(iconUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                imageLoader = imageLoader,
+                                contentDescription = shortName,
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .padding(end = 8.dp)
+                            )
+                        } else {
+                            val mtaColor = MtaSubwayUtils.getMtaSubwayColor(shortName)
+                            val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(shortName)
+                            Box(
                                 modifier =
-                                        Modifier.size(32.dp).clip(CircleShape).background(mtaColor),
+                                    Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(mtaColor),
                                 contentAlignment = Alignment.Center
-                        ) {
-                            Text(
+                            ) {
+                                Text(
                                     text = symbolShortName,
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
-                            )
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
                     } else {
                         // Default Text Rendering for Short Name
                         if (!shortName.isNullOrBlank()) {
@@ -152,7 +192,7 @@ fun RouteHeading(
                         }
                     }
 
-                    // Long Name
+                    // Long Namef
                     if (!longName.isNullOrBlank()) {
                         Text(text = longName, style = textStyle, color = displayColor)
                     }
@@ -163,9 +203,10 @@ fun RouteHeading(
                         if (tripShortName != null) {
                             Box(
                                     modifier =
-                                            Modifier.clip(RoundedCornerShape(4.dp))
-                                                    .background(routeColor)
-                                                    .padding(horizontal = 4.dp, vertical = 1.dp)
+                                            Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(routeColor)
+                                                .padding(horizontal = 4.dp, vertical = 1.dp)
                             ) { Text(text = tripShortName, color = routeTextColor) }
 
                             Spacer(Modifier.size(4.dp))

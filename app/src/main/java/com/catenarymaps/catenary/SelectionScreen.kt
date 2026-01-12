@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Subway
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.Tram
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -72,16 +70,13 @@ fun VehicleSelectionItem(
         // The Svelte code lightens the colour in dark mode.
         // For simplicity, we'll just use the parsed colour, but you could add a similar helper.
 
-        Card(
+        Surface(
                 onClick = { onClick(option) },
                 modifier = Modifier.fillMaxWidth(),
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-                        )
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
         ) {
-                Column(modifier = Modifier.padding(0.dp)) {
+                Column(modifier = Modifier.padding(2.dp)) {
                         // Route Name
                         if (option.route_long_name != null || option.route_short_name != null) {
                                 val short = option.route_short_name
@@ -123,7 +118,8 @@ fun VehicleSelectionItem(
                                                                 imageLoader = imageLoader,
                                                                 contentDescription = short,
                                                                 modifier =
-                                                                        Modifier.size(24.dp)
+                                                                        Modifier
+                                                                                .size(24.dp)
                                                                                 .padding(end = 0.dp)
                                                         )
                                                 }
@@ -153,7 +149,8 @@ fun VehicleSelectionItem(
                                                                 imageLoader = imageLoader,
                                                                 contentDescription = short,
                                                                 modifier =
-                                                                        Modifier.size(24.dp)
+                                                                        Modifier
+                                                                                .size(24.dp)
                                                                                 .padding(end = 0.dp)
                                                         )
                                                 }
@@ -195,7 +192,8 @@ fun VehicleSelectionItem(
                                 if (runNumber != null) {
                                         Box(
                                                 modifier =
-                                                        Modifier.clip(RoundedCornerShape(4.dp))
+                                                        Modifier
+                                                                .clip(RoundedCornerShape(4.dp))
                                                                 .background(routeBaseColor)
                                                                 .padding(
                                                                         horizontal = 4.dp,
@@ -204,6 +202,7 @@ fun VehicleSelectionItem(
                                         ) {
                                                 Text(
                                                         text = runNumber,
+                                                        style = MaterialTheme.typography.bodyMedium,
                                                         color =
                                                                 parseColor(
                                                                         option.text_colour,
@@ -233,7 +232,8 @@ fun VehicleSelectionItem(
                                         Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 modifier =
-                                                        Modifier.clip(RoundedCornerShape(4.dp))
+                                                        Modifier
+                                                                .clip(RoundedCornerShape(4.dp))
                                                                 .background(
                                                                         MaterialTheme.colorScheme
                                                                                 .surfaceVariant
@@ -273,14 +273,11 @@ fun StopSelectionItem(
         routeData: Map<String, RoutePreviewDetail>?,
         onClick: (MapSelectionSelector.StopMapSelector) -> Unit
 ) {
-        Card(
+        Surface(
                 onClick = { onClick(option) },
                 modifier = Modifier.fillMaxWidth(),
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-                        )
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
         ) {
                 Column(modifier = Modifier.padding(4.dp)) {
                         Text(
@@ -368,14 +365,11 @@ fun RouteSelectionItem(
                         option.name != null &&
                         MtaSubwayUtils.isSubwayRouteId(option.name)
 
-        Card(
+        Surface(
                 onClick = { onClick(option) },
                 modifier = Modifier.fillMaxWidth(),
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-                        )
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
         ) {
                 Row(
                         modifier = Modifier.padding(4.dp),
@@ -402,7 +396,9 @@ fun RouteSelectionItem(
                                                         .build(),
                                         imageLoader = imageLoader,
                                         contentDescription = option.name,
-                                        modifier = Modifier.size(24.dp).padding(end = 8.dp)
+                                        modifier = Modifier
+                                                .size(24.dp)
+                                                .padding(end = 8.dp)
                                 )
                         } else {
                                 Text(
@@ -467,7 +463,9 @@ fun CompactRouteSelectionItem(
                                                                 .build(),
                                                 imageLoader = imageLoader,
                                                 contentDescription = option.name,
-                                                modifier = Modifier.size(32.dp).padding(end = 4.dp)
+                                                modifier = Modifier
+                                                        .size(32.dp)
+                                                        .padding(end = 4.dp)
                                         )
                                 }
                         } else if (isMta) {
@@ -490,7 +488,9 @@ fun CompactRouteSelectionItem(
                                                                 .build(),
                                                 imageLoader = imageLoader,
                                                 contentDescription = option.name,
-                                                modifier = Modifier.size(32.dp).padding(end = 4.dp)
+                                                modifier = Modifier
+                                                        .size(32.dp)
+                                                        .padding(end = 4.dp)
                                         )
                                 }
                         }
@@ -513,14 +513,11 @@ fun OsmStationSelectionItem(
         previewData: OsmStationPreview?,
         onClick: (MapSelectionSelector.OsmStationMapSelector) -> Unit
 ) {
-        Card(
+        Surface(
                 onClick = { onClick(option) },
                 modifier = Modifier.fillMaxWidth(),
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-                        )
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
         ) {
                 Column(modifier = Modifier.padding(4.dp)) {
                         Text(
@@ -726,7 +723,7 @@ fun MapSelectionScreen(
                 // REMOVE the extra .scrollable(...) – LazyColumn already scrolls itself
                 // .scrollable(state = lazyListState, orientation = Orientation.Vertical)
                 contentPadding = PaddingValues(bottom = 64.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp)
                 // Use safe drawing insets, but bottom-only to avoid top inset jank during flings
                 //
                 // .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
@@ -824,7 +821,7 @@ fun MapSelectionScreen(
                                 key = { s -> "osm:${s.osm_id}" },
                                 contentType = { "osm_station" }
                         ) { station ->
-                                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         val preview = osmStationPreviewData[station.osm_id]
                                         OsmStationSelectionItem(
                                                 option = station,
@@ -856,7 +853,7 @@ fun MapSelectionScreen(
                                 key = { s -> "stop:${s.chateau_id}:${s.stop_id}" },
                                 contentType = { "stop" }
                         ) { stop ->
-                                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         val preview =
                                                 stopPreviewData
                                                         ?.stops
@@ -903,7 +900,7 @@ fun MapSelectionScreen(
                                 Text(
                                         stringResource(R.string.routes),
                                         style = MaterialTheme.typography.titleLarge,
-                                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                                        modifier = Modifier.padding(top = 4.dp, bottom = 0.dp)
                                 )
                         }
 
@@ -939,7 +936,8 @@ fun MapSelectionScreen(
                                                                 verticalArrangement =
                                                                         Arrangement.spacedBy(1.dp),
                                                                 modifier =
-                                                                        Modifier.fillMaxWidth()
+                                                                        Modifier
+                                                                                .fillMaxWidth()
                                                                                 .padding(
                                                                                         bottom =
                                                                                                 4.dp
@@ -963,29 +961,25 @@ fun MapSelectionScreen(
                                                 }
                                         } else {
                                                 // Rail(2), Bus(3), Other(-1): List Layout
-                                                items(
-                                                        items = bucket,
-                                                        key = { r ->
-                                                                "route:${r.chateau_id}:${r.route_id}"
-                                                        },
-                                                        contentType = { "route" }
-                                                ) { route ->
+                                                item(key = "routes-col-$catId") {
                                                         Column(
                                                                 verticalArrangement =
                                                                         Arrangement.spacedBy(0.dp)
                                                         ) {
-                                                                RouteSelectionItem(
-                                                                        option = route,
-                                                                        onClick = {
-                                                                                onStackPush(
-                                                                                        CatenaryStackEnum
-                                                                                                .RouteStack(
-                                                                                                        it.chateau_id,
-                                                                                                        it.route_id
-                                                                                                )
-                                                                                )
-                                                                        }
-                                                                )
+                                                                bucket.forEach { route ->
+                                                                        RouteSelectionItem(
+                                                                                option = route,
+                                                                                onClick = {
+                                                                                        onStackPush(
+                                                                                                CatenaryStackEnum
+                                                                                                        .RouteStack(
+                                                                                                                it.chateau_id,
+                                                                                                                it.route_id
+                                                                                                        )
+                                                                                        )
+                                                                                }
+                                                                        )
+                                                                }
                                                         }
                                                 }
                                         }
