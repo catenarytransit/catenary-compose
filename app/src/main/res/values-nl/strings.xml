@@ -113,4 +113,8 @@
         <item quantity="one">%d item selected</item>
         <item quantity="other">%d items selected</item>
     </plurals>
+    <string name="settings_preferences">Voorkeuren</string>
+    <string name="settings_show_seconds">Seconden tonen</string>
+    <string name="settings_show_seconds_description">Toon seconden in aankomst- en vertrektijden</string>
+    <string name="waiting_for_gps">Wachten op GPS…</string>
 </resources>

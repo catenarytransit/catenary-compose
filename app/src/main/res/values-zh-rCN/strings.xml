@@ -114,4 +114,8 @@
         <item quantity="one">%d item selected</item>
         <item quantity="other">%d items selected</item>
     </plurals>
+    <string name="settings_preferences">偏好设置</string>
+    <string name="settings_show_seconds">显示秒</string>
+    <string name="settings_show_seconds_description">在预达和出发时间中显示秒</string>
+    <string name="waiting_for_gps">等待 GPS…</string>
 </resources>

@@ -113,4 +113,8 @@
         <item quantity="one">%d item selected</item>
         <item quantity="other">%d items selected</item>
     </plurals>
+    <string name="settings_preferences">Beállítások</string>
+    <string name="settings_show_seconds">Másodpercek mutatása</string>
+    <string name="settings_show_seconds_description">Másodpercek megjelenítése az érkezési és indulási időkben</string>
+    <string name="waiting_for_gps">Várakozás GPS-re…</string>
 </resources>

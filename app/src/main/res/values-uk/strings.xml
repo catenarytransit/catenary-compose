@@ -115,4 +115,8 @@
         <item quantity="one">%d item selected</item>
         <item quantity="other">%d items selected</item>
     </plurals>
+    <string name="settings_preferences">Налаштування</string>
+    <string name="settings_show_seconds">Показати секунди</string>
+    <string name="settings_show_seconds_description">Відображати секунди в часі прибуття та відправлення</string>
+    <string name="waiting_for_gps">Очікування GPS…</string>
 </resources>

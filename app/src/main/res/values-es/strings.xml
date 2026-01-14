@@ -113,4 +113,8 @@
         <item quantity="one">%d elemento seleccionado</item>
         <item quantity="other">%d elementos seleccionados</item>
     </plurals>
+    <string name="settings_preferences">Preferencias</string>
+    <string name="settings_show_seconds">Mostrar segundos</string>
+    <string name="settings_show_seconds_description">Mostrar segundos en horas de llegada y salida</string>
+    <string name="waiting_for_gps">Esperando GPS…</string>
 </resources>

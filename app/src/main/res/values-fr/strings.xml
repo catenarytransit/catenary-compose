@@ -110,4 +110,8 @@
         <item quantity="one">%d élément sélectionné</item>
         <item quantity="other">%d éléments sélectionnés</item>
     </plurals>
+    <string name="settings_preferences">Préférences</string>
+    <string name="settings_show_seconds">Afficher les secondes</string>
+    <string name="settings_show_seconds_description">Afficher les secondes dans les heures d\'arrivée et de départ</string>
+    <string name="waiting_for_gps">En attente du GPS…</string>
 </resources>

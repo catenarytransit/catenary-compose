@@ -115,4 +115,8 @@
         <item quantity="one">%d item selected</item>
         <item quantity="other">%d items selected</item>
     </plurals>
+    <string name="settings_preferences">Predvoľby</string>
+    <string name="settings_show_seconds">Zobraziť sekundy</string>
+    <string name="settings_show_seconds_description">Zobrazovať sekundy v časoch príchodov a odchodov</string>
+    <string name="waiting_for_gps">Čakanie na GPS…</string>
 </resources>

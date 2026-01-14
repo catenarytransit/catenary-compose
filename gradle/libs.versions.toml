@@ -36,6 +36,7 @@ polyline = "0.2.0"
 units = "0.6.1"
 uiUnit = "1.10.0"
 playServicesAnalyticsImpl = "18.2.0"
+foundation = "1.10.0"
 
 [libraries]
 android-maps-utils = { module = "com.google.maps.android:android-maps-utils", version.ref = "androidMapsUtils" }
@@ -89,6 +90,7 @@ turf = { module = "org.maplibre.spatialk:turf", version.ref = "geojson" }
 units = { module = "org.maplibre.spatialk:units", version.ref = "units" }
 androidx-compose-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.ref = "uiUnit" }
 play-services-analytics-impl = { group = "com.google.android.gms", name = "play-services-analytics-impl", version.ref = "playServicesAnalyticsImpl" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

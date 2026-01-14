@@ -113,4 +113,8 @@
         <item quantity="one">%d Element ausgewählt</item>
         <item quantity="other">%d Elemente ausgewählt</item>
     </plurals>
+    <string name="settings_preferences">Einstellungen</string>
+    <string name="settings_show_seconds">Sekunden anzeigen</string>
+    <string name="settings_show_seconds_description">Sekunden in Ankunfts- und Abfahrtszeiten anzeigen</string>
+    <string name="waiting_for_gps">Warten auf GPS…</string>
 </resources>

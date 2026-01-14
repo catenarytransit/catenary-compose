@@ -1,6 +1,7 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,23 +17,33 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.google.maps.android.PolyUtil.encode
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -263,6 +274,9 @@ fun StopScreen(
     var currentPageHours by remember { mutableStateOf(1) }
     var flyToAlready by remember { mutableStateOf(false) }
     val requestedShapes = remember { mutableStateListOf<String>() }
+
+    // Alerts Sheet State
+    var showAlertsSheet by remember { mutableStateOf(false) }
 
     // --- Derived State ---
     val mergedEvents by remember {
@@ -855,22 +869,62 @@ fun StopScreen(
             LazyColumn(state = lazyListState, modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)) {
-                // Header
-                item {
-                    Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)) {
-                        val alertsExpandedState = remember { mutableStateMapOf<String, Boolean>() }
-                        meta?.alerts?.forEach { (chateauId, alertsmap) ->
-                            val expanded = alertsExpandedState.getOrPut(chateauId) { true }
-                            AlertsBox(
-                                alerts = alertsmap,
-                                chateau = chateauId,
-                                default_tz = zoneId.id,
-                                isScrollable = false,
-                                expanded = expanded,
-                                onExpandedChange = {
-                                    alertsExpandedState[chateauId] = !expanded
+
+                // Alerts Sticky Header
+                val totalAlerts = meta?.alerts?.values?.sumOf { it.size } ?: 0
+                if (totalAlerts > 0) {
+                    stickyHeader {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .clickable { showAlertsSheet = true }
+                                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .border(
+                                            1.dp,
+                                            MaterialTheme.colorScheme.error,
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(12.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector =
+                                            androidx.compose.material.icons.Icons.Filled
+                                                .Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text =
+                                            pluralStringResource(
+                                                id = R.plurals.service_alerts,
+                                                count = totalAlerts,
+                                                totalAlerts
+                                            ),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
-                            )
+                                Icon(
+                                    imageVector =
+                                        androidx.compose.material.icons.Icons.Filled
+                                            .KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
                 }
@@ -1103,11 +1157,64 @@ fun StopScreen(
                     }
                 }
             }
+
+            if (showAlertsSheet) {
+                Dialog(
+                    onDismissRequest = { showAlertsSheet = false },
+                    properties = DialogProperties(usePlatformDefaultWidth = false)
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.service_alerts_header),
+                                    style = MaterialTheme.typography.headlineSmall
+                                )
+                                IconButton(onClick = { showAlertsSheet = false }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = "Close"
+                                    )
+                                }
+                            }
+                            Column(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f)
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(horizontal = 16.dp)
+                            ) {
+                                meta?.alerts?.forEach { (chateauId, alertsmap) ->
+                                    AlertsBox(
+                                        alerts = alertsmap,
+                                        chateau = chateauId,
+                                        default_tz = zoneId.id,
+                                        isScrollable = false,
+                                        expanded = true,
+                                        onExpandedChange = {}
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(32.dp))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
-private fun splicePolylines(globalPoly: String, localPoly: String): String {
+fun splicePolylines(globalPoly: String, localPoly: String): String {
     val globalPoints = com.google.maps.android.PolyUtil.decode(globalPoly)
     val localPoints = com.google.maps.android.PolyUtil.decode(localPoly)
 

@@ -113,4 +113,8 @@
         <item quantity="one">%d item selected</item>
         <item quantity="other">%d items selected</item>
     </plurals>
+    <string name="settings_preferences">Asetukset</string>
+    <string name="settings_show_seconds">Näytä sekunnit</string>
+    <string name="settings_show_seconds_description">Näytä sekunnit tulo- ja lähtöajoissa</string>
+    <string name="waiting_for_gps">Odotetaan GPS:ää…</string>
 </resources>

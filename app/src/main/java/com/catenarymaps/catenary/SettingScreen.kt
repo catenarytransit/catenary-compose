@@ -1,6 +1,6 @@
 package com.catenarymaps.catenary
 
-import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,29 +26,34 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
-
 @Composable
 fun SettingsScreen(
     datadogConsent: Boolean,
     onDatadogConsentChanged: (Boolean) -> Unit,
     gaConsent: Boolean,
     onGaConsentChanged: (Boolean) -> Unit,
+    showSeconds: Boolean,
+    onShowSecondsChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onHome: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(vertical = 8.dp)
-            .windowInsetsPadding(
-                WindowInsets(
-                    bottom = WindowInsets.safeDrawing.getBottom(
-                        density = LocalDensity.current
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = 8.dp)
+                .windowInsetsPadding(
+                    WindowInsets(
+                        bottom =
+                            WindowInsets.safeDrawing.getBottom(
+                                density = LocalDensity.current
+                            )
                     )
                 )
-            )
+                .padding(horizontal = 16.dp)
     ) {
+        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -60,6 +66,39 @@ fun SettingsScreen(
             )
             NavigationControls(onBack = onBack, onHome = onHome)
         }
+
+        // --- Preferences Section ---
+        Text(
+            text = stringResource(id = R.string.settings_preferences),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Show Seconds
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onShowSecondsChange(!showSeconds) }
+                    .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(id = R.string.settings_show_seconds),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(id = R.string.settings_show_seconds_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(checked = showSeconds, onCheckedChange = onShowSecondsChange)
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
         // --- Datadog Section ---
         Text(
@@ -74,21 +113,15 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         if (datadogConsent) {
-            // Show Disable button if consent is GRANTED
             Button(
                 onClick = { onDatadogConsentChanged(false) },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(id = R.string.settings_disable_datadog_tracking))
-            }
+            ) { Text(stringResource(id = R.string.settings_disable_datadog_tracking)) }
         } else {
-            // Show Enable button if consent is NOT_GRANTED
             OutlinedButton(
                 onClick = { onDatadogConsentChanged(true) },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(id = R.string.settings_enable_datadog_tracking))
-            }
+            ) { Text(stringResource(id = R.string.settings_enable_datadog_tracking)) }
         }
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
@@ -106,21 +139,14 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         if (gaConsent) {
-            // Show Disable button if consent is GRANTED (default)
-            Button(
-                onClick = { onGaConsentChanged(false) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = { onGaConsentChanged(false) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(id = R.string.settings_disable_google_analytics))
             }
         } else {
-            // Show Enable button if consent is NOT_GRANTED
             OutlinedButton(
                 onClick = { onGaConsentChanged(true) },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(id = R.string.settings_enable_google_analytics))
-            }
+            ) { Text(stringResource(id = R.string.settings_enable_google_analytics)) }
         }
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
