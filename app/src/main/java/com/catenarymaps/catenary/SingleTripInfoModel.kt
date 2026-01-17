@@ -17,14 +17,14 @@ import kotlinx.serialization.json.Json
 
 // This class will be the "cleaned" version from your Svelte logic
 data class StopTimeCleaned(
-    val raw: TripStoptime,
-    var rtArrivalTime: Long? = raw.rt_arrival?.time,
-    var rtDepartureTime: Long? = raw.rt_departure?.time,
-    var strikeDeparture: Boolean = raw.rt_departure?.time != null,
-    var strikeArrival: Boolean = raw.rt_arrival?.time != null,
-    var rtArrivalDiff: Long? = null,
-    var rtDepartureDiff: Long? = null,
-    val showBoth: Boolean = false // Logic to calculate this
+        val raw: TripStoptime,
+        var rtArrivalTime: Long? = raw.rt_arrival?.time,
+        var rtDepartureTime: Long? = raw.rt_departure?.time,
+        var strikeDeparture: Boolean = raw.rt_departure?.time != null,
+        var strikeArrival: Boolean = raw.rt_arrival?.time != null,
+        var rtArrivalDiff: Long? = null,
+        var rtDepartureDiff: Long? = null,
+        val showBoth: Boolean = false // Logic to calculate this
 )
 
 class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip) : ViewModel() {
@@ -79,17 +79,17 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                 val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
 
                 val url =
-                    "https://birch.catenarymaps.org/get_trip_information/${encodedChateauId}/?" +
-                            if (tripSelected.trip_id != null) "trip_id=${encodedTripId}&"
-                            else
-                                "" +
-                                        if (tripSelected.start_date != null)
-                                            "start_date=${tripSelected.start_date}&"
-                                        else
-                                            "" +
-                                                    if (tripSelected.start_time != null)
-                                                        "start_time=${tripSelected.start_time}"
-                                                    else ""
+                        "https://birch.catenarymaps.org/get_trip_information/${encodedChateauId}/?" +
+                                if (tripSelected.trip_id != null) "trip_id=${encodedTripId}&"
+                                else
+                                        "" +
+                                                if (tripSelected.start_date != null)
+                                                        "start_date=${tripSelected.start_date}&"
+                                                else
+                                                        "" +
+                                                                if (tripSelected.start_time != null)
+                                                                        "start_time=${tripSelected.start_time}"
+                                                                else ""
 
                 println("fetching url ${url}")
 
@@ -127,25 +127,25 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                 val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
 
                 val url =
-                    "https://birch.catenarymaps.org/get_trip_information_rt_update/${encodedChateauId}/?" +
-                            "trip_id=${encodedTripId}&" +
-                            "start_date=${tripSelected.start_date ?: ""}&" +
-                            "start_time=${tripSelected.start_time ?: ""}"
+                        "https://birch.catenarymaps.org/get_trip_information_rt_update/${encodedChateauId}/?" +
+                                "trip_id=${encodedTripId}&" +
+                                "start_date=${tripSelected.start_date ?: ""}&" +
+                                "start_time=${tripSelected.start_time ?: ""}"
 
                 val rtUpdate = ktorClient.get(url).body<TripRtUpdateResponse>()
 
                 if (rtUpdate.found_data && rtUpdate.data != null) {
                     val newStopTimesMap =
-                        rtUpdate.data.stoptimes.associateBy {
-                            it.gtfs_stop_sequence ?: it.stop_id
-                        }
+                            rtUpdate.data.stoptimes.associateBy {
+                                it.gtfs_stop_sequence ?: it.stop_id
+                            }
 
                     // Merge RT data into existing list
                     _stopTimes.update { currentList ->
                         currentList.map { existingCleanedStop ->
                             val key =
-                                existingCleanedStop.raw.gtfs_stop_sequence
-                                    ?: existingCleanedStop.raw.stop_id
+                                    existingCleanedStop.raw.gtfs_stop_sequence
+                                            ?: existingCleanedStop.raw.stop_id
                             val newRtData = newStopTimesMap[key]
 
                             if (newRtData != null) {
@@ -166,15 +166,15 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
     private fun fetchVehicleInfo() {
         viewModelScope.launch {
             val vehicleId =
-                tripData.value?.vehicle?.label
-                    ?: tripData.value?.vehicle?.id ?: tripSelected.vehicle_id
+                    tripData.value?.vehicle?.label
+                            ?: tripData.value?.vehicle?.id ?: tripSelected.vehicle_id
 
             if (vehicleId.isNullOrBlank()) return@launch
 
             try {
                 val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
                 val url =
-                    "https://birch.catenarymaps.org/get_vehicle_information_from_label/${encodedChateauId}/$vehicleId"
+                        "https://birch.catenarymaps.org/get_vehicle_information_from_label/${encodedChateauId}/$vehicleId"
                 val response = ktorClient.get(url).body<VehicleRealtimeDataResponse>()
                 _vehicleData.value = response.data
             } catch (e: Exception) {
@@ -220,13 +220,13 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
         if (cleaned.rtArrivalTime != null && stoptime.scheduled_arrival_time_unix_seconds != null) {
             cleaned.rtArrivalDiff =
-                cleaned.rtArrivalTime!! - stoptime.scheduled_arrival_time_unix_seconds
+                    cleaned.rtArrivalTime!! - stoptime.scheduled_arrival_time_unix_seconds
         }
         if (cleaned.rtDepartureTime != null &&
-            stoptime.scheduled_departure_time_unix_seconds != null
+                        stoptime.scheduled_departure_time_unix_seconds != null
         ) {
             cleaned.rtDepartureDiff =
-                cleaned.rtDepartureTime!! - stoptime.scheduled_departure_time_unix_seconds
+                    cleaned.rtDepartureTime!! - stoptime.scheduled_departure_time_unix_seconds
         }
 
         // ... add more logic from your Svelte file (e.g., show_both_departure_and_arrival) ...
@@ -237,14 +237,14 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
     private fun mergeRtStopTime(existing: StopTimeCleaned, rt: StopTimeRefresh): StopTimeCleaned {
         // This function merges new RT data, like in your Svelte update_realtime_data
         val updated =
-            existing.copy(raw = existing.raw.copy(rt_platform_string = rt.rt_platform_string))
+                existing.copy(raw = existing.raw.copy(rt_platform_string = rt.rt_platform_string))
 
         if (rt.rt_arrival?.time != null) {
             updated.rtArrivalTime = rt.rt_arrival.time
             updated.strikeArrival = true
             if (updated.raw.scheduled_arrival_time_unix_seconds != null) {
                 updated.rtArrivalDiff =
-                    updated.rtArrivalTime!! - updated.raw.scheduled_arrival_time_unix_seconds
+                        updated.rtArrivalTime!! - updated.raw.scheduled_arrival_time_unix_seconds
             }
         }
 
@@ -253,8 +253,8 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
             updated.strikeDeparture = true
             if (updated.raw.scheduled_departure_time_unix_seconds != null) {
                 updated.rtDepartureDiff =
-                    updated.rtDepartureTime!! -
-                            updated.raw.scheduled_departure_time_unix_seconds
+                        updated.rtDepartureTime!! -
+                                updated.raw.scheduled_departure_time_unix_seconds
             }
         }
 
@@ -263,47 +263,92 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
         return updated
     }
 
+    // --- Moving Dot State (Exposed) ---
+    private val _movingDotSegmentIdx = MutableStateFlow(-1)
+    val movingDotSegmentIdx = _movingDotSegmentIdx.asStateFlow()
+
+    private val _movingDotProgress = MutableStateFlow(0f)
+    val movingDotProgress = _movingDotProgress.asStateFlow()
+
     private fun updateStopProgress() {
-        // This logic ports your 100ms timer
         val nowSec = _currentTime.value / 1000
         var lastDepartedIdx = -1
         var currentAtStopIdx = -1
 
-        _stopTimes.value.forEachIndexed { i, stoptime ->
-            // This logic is ported from the web frontend to ensure consistency
+        val stopList = _stopTimes.value
+
+        // Strict RT check: Do we have ANY realtime data?
+        val hasAnyRealtime = stopList.any { it.rtArrivalTime != null || it.rtDepartureTime != null }
+
+        stopList.forEachIndexed { i, stoptime ->
+            // Logic ported from web frontend + Strict RT Fix
             var arrivalTimeToUse = stoptime.rtArrivalTime
             var departureTimeToUse = stoptime.rtDepartureTime
 
-            // if a trip has a RT arrival time, but the scheduled departure time is before the RT
-            // arrival,
-            // then the departure time should be at least the arrival time.
-            if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
-                stoptime.rtArrivalTime != null
-            ) {
-                if (stoptime.raw.scheduled_departure_time_unix_seconds < stoptime.rtArrivalTime!!) {
-                    departureTimeToUse = stoptime.rtArrivalTime
-                }
-            }
+            // If we have ANY realtime data for the trip, we strictly ignore scheduled times
+            // for the purpose of determining active stop / passed stops.
+            // UNLESS the specific stop has no RT data, in which case it is implicitly
+            // "unknown/future"
+            // if we are strictly in RT mode (handled by null check below).
+            // Actually, if a stop has NO RT data but the trip HAS RT data,
+            // it usually means we haven't reached it yet or it's skipped?
+            // "Active stop needs to be based on the realtime data and NOT the schedule data IF
+            // there is realtime data."
 
-            // This handles an edge case where a train might be running express,
-            // and its realtime departure from a future stop is before its scheduled arrival at the
-            // current stop.
-            // In this case, we should consider the arrival to have happened no later than that
-            // departure.
-            if (stoptime.rtArrivalTime != null) {
-                if (stoptime.raw.scheduled_arrival_time_unix_seconds != null &&
-                    stoptime.rtDepartureTime != null
+            // However, we still need fallbacks for processing logic if we are NOT in strict RT
+            // mode.
+
+            if (hasAnyRealtime) {
+                // Do not fallback to schedule.
+                // arrivalTimeToUse and departureTimeToUse remain as is (possibly null).
+
+                // However, we still need to apply the logic for "departed before arrival" fixups
+                // just in case RT data is weird
+                if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
+                                arrivalTimeToUse != null
                 ) {
-                    if (stoptime.raw.scheduled_arrival_time_unix_seconds >
-                        stoptime.rtDepartureTime!!
-                    ) {
-                        arrivalTimeToUse = stoptime.rtDepartureTime
+                    if (stoptime.raw.scheduled_departure_time_unix_seconds < arrivalTimeToUse!!) {
+                        departureTimeToUse = arrivalTimeToUse
+                    }
+                }
+            } else {
+                // Fallback to schedule if no RT at all
+                // Same fixup logic
+                if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
+                                arrivalTimeToUse != null
+                ) {
+                    if (stoptime.raw.scheduled_departure_time_unix_seconds < arrivalTimeToUse!!) {
+                        departureTimeToUse = arrivalTimeToUse
                     }
                 }
             }
 
-            val dep = departureTimeToUse ?: stoptime.raw.scheduled_departure_time_unix_seconds
-            val arr = arrivalTimeToUse ?: stoptime.raw.scheduled_arrival_time_unix_seconds
+            // Express / Overtake edge case fixup
+            if (arrivalTimeToUse != null &&
+                            stoptime.raw.scheduled_arrival_time_unix_seconds != null &&
+                            stoptime.rtDepartureTime != null
+            ) {
+                if (stoptime.raw.scheduled_arrival_time_unix_seconds > stoptime.rtDepartureTime!!) {
+                    arrivalTimeToUse = stoptime.rtDepartureTime
+                }
+            }
+
+            // Fallback for missing departure lookup in strict RT mode
+            // If we have strict RT, and departure is null, but arrival is NOT null,
+            // we should assume departure = arrival (just departed).
+            if (hasAnyRealtime && departureTimeToUse == null && arrivalTimeToUse != null) {
+                departureTimeToUse = arrivalTimeToUse
+            }
+
+            val dep =
+                    if (hasAnyRealtime) departureTimeToUse
+                    else (departureTimeToUse ?: stoptime.raw.scheduled_departure_time_unix_seconds)
+            val arr =
+                    if (hasAnyRealtime) arrivalTimeToUse
+                    else (arrivalTimeToUse ?: stoptime.raw.scheduled_arrival_time_unix_seconds)
+
+            // If we are in strict RT mode and a stop has NO RT data, it effectively hasn't happened
+            // yet (is null).
 
             val hasDeparted = dep != null && dep <= nowSec
             val hasArrived = arr != null && arr <= nowSec
@@ -317,6 +362,53 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
         _lastInactiveStopIdx.value = lastDepartedIdx
         _currentAtStopIdx.value = currentAtStopIdx
+
+        // --- Moving Dot Calculation (Moved from Screen) ---
+        var newMovingDotSegmentIdx = -1
+        var newMovingDotProgress = 0f
+
+        val isAtStation = currentAtStopIdx != -1
+
+        if (!isAtStation && lastDepartedIdx != -1 && lastDepartedIdx < stopList.size - 1) {
+            val prevStop = stopList[lastDepartedIdx]
+            val nextStop = stopList[lastDepartedIdx + 1]
+
+            val hasAnyRealtime =
+                    stopList.any { it.rtArrivalTime != null || it.rtDepartureTime != null }
+
+            // Apply same strict RT rule for dot interpolation
+            val dep =
+                    if (hasAnyRealtime) {
+                        prevStop.rtDepartureTime?.toDouble() ?: prevStop.rtArrivalTime?.toDouble()
+                    } else {
+                        prevStop.rtDepartureTime?.toDouble()
+                                ?: prevStop.raw.scheduled_departure_time_unix_seconds?.toDouble()
+                                        ?: prevStop.raw.interpolated_stoptime_unix_seconds
+                                        ?.toDouble()
+                    }
+
+            val arr =
+                    if (hasAnyRealtime) {
+                        nextStop.rtArrivalTime?.toDouble()
+                    } else {
+                        nextStop.rtArrivalTime?.toDouble()
+                                ?: nextStop.raw.scheduled_arrival_time_unix_seconds?.toDouble()
+                                        ?: nextStop.raw.interpolated_stoptime_unix_seconds
+                                        ?.toDouble()
+                    }
+
+            val nowDouble = nowSec.toDouble()
+
+            if (dep != null && arr != null && arr > dep) {
+                newMovingDotSegmentIdx = lastDepartedIdx
+                val total = arr - dep
+                val elapsed = nowDouble - dep
+                newMovingDotProgress = (elapsed / total).coerceIn(0.0, 1.0).toFloat()
+            }
+        }
+
+        _movingDotSegmentIdx.value = newMovingDotSegmentIdx
+        _movingDotProgress.value = newMovingDotProgress
     }
 
     fun toggleShowPreviousStops() {
