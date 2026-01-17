@@ -118,4 +118,6 @@
     <string name="settings_show_seconds">顯示秒數</string>
     <string name="settings_show_seconds_description">在抵達和出發時間中顯示秒數</string>
     <string name="waiting_for_gps">等待 GPS…</string>
+    <string name="single_trip_info_screen_original">原始</string>
+    <string name="single_trip_info_screen_countdown">倒數</string>
 </resources>

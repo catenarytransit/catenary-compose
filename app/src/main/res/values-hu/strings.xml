@@ -117,4 +117,6 @@
     <string name="settings_show_seconds">Másodpercek mutatása</string>
     <string name="settings_show_seconds_description">Másodpercek megjelenítése az érkezési és indulási időkben</string>
     <string name="waiting_for_gps">Várakozás GPS-re…</string>
+    <string name="single_trip_info_screen_original">Eredeti</string>
+    <string name="single_trip_info_screen_countdown">Visszaszámlálás</string>
 </resources>

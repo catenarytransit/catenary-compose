@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
+    alias(libs.plugins.kotlin.serialization)
 
     id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.21.0" apply true
 
@@ -33,8 +33,8 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 197
-        versionName = "2.0.95"
+        versionCode = 198
+        versionName = "2.0.96"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.unit)
     implementation(libs.play.services.analytics.impl)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

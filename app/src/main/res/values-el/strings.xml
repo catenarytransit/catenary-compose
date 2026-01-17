@@ -117,4 +117,6 @@
     <string name="settings_show_seconds">Εμφάνιση δευτερολέπτων</string>
     <string name="settings_show_seconds_description">Εμφάνιση δευτερολέπτων στις ώρες άφιξης και αναχώρησης</string>
     <string name="waiting_for_gps">Αναμονή για GPS…</string>
+    <string name="single_trip_info_screen_original">Αρχικό</string>
+    <string name="single_trip_info_screen_countdown">Αντίστροφη μέτρηση</string>
 </resources>

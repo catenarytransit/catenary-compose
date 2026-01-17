@@ -119,4 +119,6 @@
     <string name="settings_show_seconds">Pokaż sekundy</string>
     <string name="settings_show_seconds_description">Wyświetlaj sekundy w czasach przyjazdu i odjazdu</string>
     <string name="waiting_for_gps">Oczekiwanie na GPS…</string>
+    <string name="single_trip_info_screen_original">Oryginał</string>
+    <string name="single_trip_info_screen_countdown">Odliczanie</string>
 </resources>

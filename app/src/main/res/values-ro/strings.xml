@@ -118,4 +118,6 @@
     <string name="settings_show_seconds">Afișează secundele</string>
     <string name="settings_show_seconds_description">Afișează secundele în orele de sosire și plecare</string>
     <string name="waiting_for_gps">Se așteaptă GPS…</string>
+    <string name="single_trip_info_screen_original">Original</string>
+    <string name="single_trip_info_screen_countdown">Numărătoare inversă</string>
 </resources>

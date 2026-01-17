@@ -11,7 +11,7 @@ ddSdkAndroidRum = "3.4.0"
 ddSdkAndroidRumVersion = "3.4.0"
 firebaseBom = "34.7.0"
 geojson = "0.6.1"
-kotlin = "2.3.0"
+kotlin = "2.1.0"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -37,6 +37,7 @@ units = "0.6.1"
 uiUnit = "1.10.0"
 playServicesAnalyticsImpl = "18.2.0"
 foundation = "1.10.0"
+ui = "1.10.1"
 
 [libraries]
 android-maps-utils = { module = "com.google.maps.android:android-maps-utils", version.ref = "androidMapsUtils" }
@@ -91,9 +92,11 @@ units = { module = "org.maplibre.spatialk:units", version.ref = "units" }
 androidx-compose-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.ref = "uiUnit" }
 play-services-analytics-impl = { group = "com.google.android.gms", name = "play-services-analytics-impl", version.ref = "playServicesAnalyticsImpl" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 

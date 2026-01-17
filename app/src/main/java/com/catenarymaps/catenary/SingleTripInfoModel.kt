@@ -1,13 +1,13 @@
 // In a new file, e.g., SingleTripViewModel.kt
 package com.catenarymaps.catenary
 
-import java.net.URLEncoder
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import java.net.URLEncoder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,9 +27,7 @@ data class StopTimeCleaned(
     val showBoth: Boolean = false // Logic to calculate this
 )
 
-class SingleTripViewModel(
-    private val tripSelected: CatenaryStackEnum.SingleTrip
-) : ViewModel() {
+class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
@@ -77,15 +75,21 @@ class SingleTripViewModel(
         viewModelScope.launch {
             try {
 
-
                 val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
                 val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
 
                 val url =
                     "https://birch.catenarymaps.org/get_trip_information/${encodedChateauId}/?" +
-                            if (tripSelected.trip_id != null) "trip_id=${encodedTripId}&" else "" +
-                                    if (tripSelected.start_date != null) "start_date=${tripSelected.start_date}&" else "" +
-                                            if (tripSelected.start_time != null) "start_time=${tripSelected.start_time}" else ""
+                            if (tripSelected.trip_id != null) "trip_id=${encodedTripId}&"
+                            else
+                                "" +
+                                        if (tripSelected.start_date != null)
+                                            "start_date=${tripSelected.start_date}&"
+                                        else
+                                            "" +
+                                                    if (tripSelected.start_time != null)
+                                                        "start_time=${tripSelected.start_time}"
+                                                    else ""
 
                 println("fetching url ${url}")
 
@@ -96,17 +100,17 @@ class SingleTripViewModel(
 
                 _tripData.value = data
                 _alerts.value = data.alert_id_to_alert
-                //processStopIdToAlertIds(data.alert_id_to_alert)
+                // processStopIdToAlertIds(data.alert_id_to_alert)
 
                 // Process stoptimes into the "cleaned" dataset
                 _stopTimes.value = data.stoptimes.map { processStopTime(it) }
+                updateStopProgress()
 
                 _isLoading.value = false
                 _error.value = null
 
                 // Fetch vehicle info once we have trip data
                 fetchVehicleInfo()
-
             } catch (e: Exception) {
                 Log.e("SingleTripViewModel", "Error fetching initial trip: ${e.message}")
                 _error.value = e.message
@@ -131,15 +135,17 @@ class SingleTripViewModel(
                 val rtUpdate = ktorClient.get(url).body<TripRtUpdateResponse>()
 
                 if (rtUpdate.found_data && rtUpdate.data != null) {
-                    val newStopTimesMap = rtUpdate.data.stoptimes.associateBy {
-                        it.gtfs_stop_sequence ?: it.stop_id
-                    }
+                    val newStopTimesMap =
+                        rtUpdate.data.stoptimes.associateBy {
+                            it.gtfs_stop_sequence ?: it.stop_id
+                        }
 
                     // Merge RT data into existing list
                     _stopTimes.update { currentList ->
                         currentList.map { existingCleanedStop ->
-                            val key = existingCleanedStop.raw.gtfs_stop_sequence
-                                ?: existingCleanedStop.raw.stop_id
+                            val key =
+                                existingCleanedStop.raw.gtfs_stop_sequence
+                                    ?: existingCleanedStop.raw.stop_id
                             val newRtData = newStopTimesMap[key]
 
                             if (newRtData != null) {
@@ -159,9 +165,9 @@ class SingleTripViewModel(
 
     private fun fetchVehicleInfo() {
         viewModelScope.launch {
-            val vehicleId = tripData.value?.vehicle?.label
-                ?: tripData.value?.vehicle?.id
-                ?: tripSelected.vehicle_id
+            val vehicleId =
+                tripData.value?.vehicle?.label
+                    ?: tripData.value?.vehicle?.id ?: tripSelected.vehicle_id
 
             if (vehicleId.isNullOrBlank()) return@launch
 
@@ -216,7 +222,9 @@ class SingleTripViewModel(
             cleaned.rtArrivalDiff =
                 cleaned.rtArrivalTime!! - stoptime.scheduled_arrival_time_unix_seconds
         }
-        if (cleaned.rtDepartureTime != null && stoptime.scheduled_departure_time_unix_seconds != null) {
+        if (cleaned.rtDepartureTime != null &&
+            stoptime.scheduled_departure_time_unix_seconds != null
+        ) {
             cleaned.rtDepartureDiff =
                 cleaned.rtDepartureTime!! - stoptime.scheduled_departure_time_unix_seconds
         }
@@ -245,7 +253,8 @@ class SingleTripViewModel(
             updated.strikeDeparture = true
             if (updated.raw.scheduled_departure_time_unix_seconds != null) {
                 updated.rtDepartureDiff =
-                    updated.rtDepartureTime!! - updated.raw.scheduled_departure_time_unix_seconds
+                    updated.rtDepartureTime!! -
+                            updated.raw.scheduled_departure_time_unix_seconds
             }
         }
 
@@ -265,20 +274,29 @@ class SingleTripViewModel(
             var arrivalTimeToUse = stoptime.rtArrivalTime
             var departureTimeToUse = stoptime.rtDepartureTime
 
-            // if a trip has a RT arrival time, but the scheduled departure time is before the RT arrival,
+            // if a trip has a RT arrival time, but the scheduled departure time is before the RT
+            // arrival,
             // then the departure time should be at least the arrival time.
-            if (stoptime.raw.scheduled_departure_time_unix_seconds != null && stoptime.rtArrivalTime != null) {
+            if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
+                stoptime.rtArrivalTime != null
+            ) {
                 if (stoptime.raw.scheduled_departure_time_unix_seconds < stoptime.rtArrivalTime!!) {
                     departureTimeToUse = stoptime.rtArrivalTime
                 }
             }
 
             // This handles an edge case where a train might be running express,
-            // and its realtime departure from a future stop is before its scheduled arrival at the current stop.
-            // In this case, we should consider the arrival to have happened no later than that departure.
+            // and its realtime departure from a future stop is before its scheduled arrival at the
+            // current stop.
+            // In this case, we should consider the arrival to have happened no later than that
+            // departure.
             if (stoptime.rtArrivalTime != null) {
-                if (stoptime.raw.scheduled_arrival_time_unix_seconds != null && stoptime.rtDepartureTime != null) {
-                    if (stoptime.raw.scheduled_arrival_time_unix_seconds > stoptime.rtDepartureTime!!) {
+                if (stoptime.raw.scheduled_arrival_time_unix_seconds != null &&
+                    stoptime.rtDepartureTime != null
+                ) {
+                    if (stoptime.raw.scheduled_arrival_time_unix_seconds >
+                        stoptime.rtDepartureTime!!
+                    ) {
                         arrivalTimeToUse = stoptime.rtDepartureTime
                     }
                 }
@@ -289,8 +307,6 @@ class SingleTripViewModel(
 
             val hasDeparted = dep != null && dep <= nowSec
             val hasArrived = arr != null && arr <= nowSec
-
-
 
             if (hasDeparted) {
                 lastDepartedIdx = i

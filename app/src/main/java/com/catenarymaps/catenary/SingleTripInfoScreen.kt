@@ -1,9 +1,14 @@
-// In a new file, e.g., SingleTripInfoScreen.kt
 package com.catenarymaps.catenary
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,16 +26,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,8 +52,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -51,13 +64,18 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.google.maps.android.PolyUtil.decode as decodePolyutil
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.maplibre.compose.expressions.ast.Expression
@@ -92,6 +110,8 @@ fun SingleTripInfoScreen(
         onHome: () -> Unit
 ) {
     val context = LocalContext.current
+    val prefs = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+
     LaunchedEffect(Unit) {
         try {
             val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
@@ -118,9 +138,160 @@ fun SingleTripInfoScreen(
     val error by viewModel.error.collectAsState()
     val tripData by viewModel.tripData.collectAsState()
     val stopTimes by viewModel.stopTimes.collectAsState()
-    val showPreviousStops by viewModel.showPreviousStops.collectAsState()
+    // val showPreviousStops by viewModel.showPreviousStops.collectAsState() // Removed
     val lastInactiveStopIdx by viewModel.lastInactiveStopIdx.collectAsState()
+
     val vehicleData by viewModel.vehicleData.collectAsState()
+
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Detect if current stop is below visible area
+    val showScrollToCurrentButton by remember {
+        derivedStateOf {
+            val lastVisibleItem = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()
+            val targetIndex = (lastInactiveStopIdx + 1).coerceAtLeast(0)
+            // If valid target and it's greater than the last visible item index
+            // (plus some buffer or check if significantly below?)
+            // "Below the screen" means index > last visible index.
+            if (lastVisibleItem != null && targetIndex > lastVisibleItem.index) {
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    // --- Moving Dot State ---
+    var currentTimeSeconds by remember { mutableLongStateOf(System.currentTimeMillis() / 1000) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(100)
+            currentTimeSeconds = System.currentTimeMillis() / 1000
+        }
+    }
+
+    val movingDotInfo by
+    remember(stopTimes) {
+        derivedStateOf {
+            val nowSec = currentTimeSeconds.toDouble() // Use derived state dependency
+            var lastDepartedIdx = -1
+            var currentAtStopIdx = -1
+
+            stopTimes.forEachIndexed { i, stopTime ->
+                val dep =
+                    stopTime.rtDepartureTime?.toDouble()
+                        ?: stopTime.raw.scheduled_departure_time_unix_seconds
+                            ?.toDouble()
+                        ?: stopTime.raw.interpolated_stoptime_unix_seconds
+                            ?.toDouble()
+
+                val arr =
+                    stopTime.rtArrivalTime?.toDouble()
+                        ?: stopTime.raw.scheduled_arrival_time_unix_seconds
+                            ?.toDouble()
+                        ?: stopTime.raw.interpolated_stoptime_unix_seconds
+                            ?.toDouble()
+
+                val hasDeparted = dep != null && dep <= nowSec
+                // A stop is "arrived" if we passed arrival time.
+                // If we also passed departure time, we are gone.
+                // If we passed arrival but NOT departure, we are "at stop".
+                val hasArrived = arr != null && arr <= nowSec
+
+                if (hasDeparted) {
+                    lastDepartedIdx = i
+                } else if (hasArrived && !hasDeparted && currentAtStopIdx == -1) {
+                    currentAtStopIdx = i
+                }
+            }
+
+            var movingDotSegmentIdx = -1
+            var movingDotProgress = 0f
+
+            val isAtStation = currentAtStopIdx != -1
+
+            if (!isAtStation &&
+                lastDepartedIdx != -1 &&
+                lastDepartedIdx < stopTimes.size - 1
+            ) {
+                val prevStop = stopTimes[lastDepartedIdx]
+                val nextStop = stopTimes[lastDepartedIdx + 1]
+
+                val dep =
+                    prevStop.rtDepartureTime?.toDouble()
+                        ?: prevStop.raw.scheduled_departure_time_unix_seconds
+                            ?.toDouble()
+                        ?: prevStop.raw.interpolated_stoptime_unix_seconds
+                            ?.toDouble()
+
+                val arr =
+                    nextStop.rtArrivalTime?.toDouble()
+                        ?: nextStop.raw.scheduled_arrival_time_unix_seconds
+                            ?.toDouble()
+                        ?: nextStop.raw.interpolated_stoptime_unix_seconds
+                            ?.toDouble()
+
+                if (dep != null && arr != null && arr > dep) {
+                    movingDotSegmentIdx = lastDepartedIdx
+                    val total = arr - dep
+                    val elapsed = nowSec - dep
+                    movingDotProgress = (elapsed / total).coerceIn(0.0, 1.0).toFloat()
+                }
+            }
+
+            Triple(currentAtStopIdx, movingDotSegmentIdx, movingDotProgress)
+        }
+    }
+
+    val currentAtStopIdx = movingDotInfo.first
+    val movingDotSegmentIdx = movingDotInfo.second
+    val movingDotProgress = movingDotInfo.third
+
+    var showFloatingControls by remember {
+        mutableStateOf(prefs.getBoolean(K_SHOW_FLOATING_CONTROLS, true))
+    }
+
+    LaunchedEffect(showFloatingControls) {
+        prefs.edit().putBoolean(K_SHOW_FLOATING_CONTROLS, showFloatingControls).apply()
+    }
+    val pulseIcon = remember { mutableStateOf(false) }
+    var alertsExpanded by remember { mutableStateOf(false) }
+
+    // Pulse Logic
+    LaunchedEffect(showFloatingControls) {
+        if (!showFloatingControls) {
+            pulseIcon.value = true
+            delay(500)
+            pulseIcon.value = false
+        }
+    }
+
+    // Scroll State
+    var hasInitialScrolled by remember { mutableStateOf(false) }
+
+    // Toggles
+    var showOriginalTimetable by remember {
+        mutableStateOf(prefs.getBoolean(K_SHOW_ORIGINAL_TIMETABLE, false))
+    }
+    var showCountdown by remember { mutableStateOf(prefs.getBoolean(K_SHOW_COUNTDOWN, true)) }
+
+    LaunchedEffect(showOriginalTimetable) {
+        prefs.edit().putBoolean(K_SHOW_ORIGINAL_TIMETABLE, showOriginalTimetable).apply()
+    }
+
+    LaunchedEffect(showCountdown) {
+        prefs.edit().putBoolean(K_SHOW_COUNTDOWN, showCountdown).apply()
+    }
+
+    val timeColumnWidth by
+    androidx.compose.animation.core.animateDpAsState(
+        targetValue =
+            (if (showSeconds) 80.dp else 66.dp) +
+                    (if (showOriginalTimetable) 55.dp else 0.dp),
+        label = "timeColumnWidth"
+    )
 
     // NEW: build stop -> connection chips map
     val stopConnections =
@@ -154,7 +325,7 @@ fun SingleTripInfoScreen(
                                 compareBy<Pair<ConnectingRoute, String>> {
                                     typeOrder[it.first.routeType] ?: 5
                                 }
-                                        .thenComparator { a, b ->
+                                    .thenComparing { a, b ->
                                             val aName = a.first.shortName ?: a.first.longName ?: ""
                                             val bName = b.first.shortName ?: b.first.longName ?: ""
 
@@ -218,7 +389,9 @@ fun SingleTripInfoScreen(
                 }
                 val feature = Feature(geometry = LineString(coordinates), properties = properties)
                 transitShapeSource.value.setData(
-                        GeoJsonData.Features(FeatureCollection(listOf(feature)))
+                    GeoJsonData.Features(
+                        FeatureCollection(listOf<Feature<LineString, JsonObject>>(feature))
+                    )
                 )
             } else {
                 transitShapeSource.value.setData(
@@ -239,7 +412,9 @@ fun SingleTripInfoScreen(
                 }
                 val feature = Feature(geometry = LineString(coordinates), properties = properties)
                 transitShapeDetourSource.value.setData(
-                        GeoJsonData.Features(FeatureCollection(listOf(feature)))
+                    GeoJsonData.Features(
+                        FeatureCollection(listOf<Feature<LineString, JsonObject>>(feature))
+                    )
                 )
             } else {
                 transitShapeDetourSource.value.setData(
@@ -314,23 +489,20 @@ fun SingleTripInfoScreen(
     }
 
     // --- UI Rendering ---
-    Column(
-        modifier = Modifier
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 8.dp)
-    ) {
-        if (isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier
+            .padding(horizontal = 8.dp)) {
+            if (isLoading) {
+                LinearProgressIndicator(modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp)
-            )
-        } else if (error != null) {
-            Text(text = error!!, color = MaterialTheme.colorScheme.error)
-        } else if (tripData != null) {
-            val data = tripData!!
+                    .padding(top = 8.dp))
+            } else if (error != null) {
+                Text(text = error!!, color = MaterialTheme.colorScheme.error)
+            } else if (tripData != null) {
+                val data = tripData!!
 
-            RouteHeading(
+                RouteHeading(
                     color = data.color ?: "#808080",
                     textColor = data.text_color ?: "#000000",
                     routeType = data.route_type,
@@ -344,215 +516,245 @@ fun SingleTripInfoScreen(
                     onRouteClick = {
                         if (data.route_id != null) {
                             onRouteClick(
-                                    CatenaryStackEnum.RouteStack(
-                                            chateau_id = tripSelected.chateau_id,
-                                            route_id = data.route_id
-                                    )
+                                CatenaryStackEnum.RouteStack(
+                                    chateau_id = tripSelected.chateau_id,
+                                    route_id = data.route_id
+                                )
                             )
                         }
                     },
-                    controls = { NavigationControls(onBack = onBack, onHome = onHome) },
+                    controls = {
+                        NavigationControls(
+                            onBack = onBack,
+                            onHome = onHome,
+                            onPageInfo = { showFloatingControls = !showFloatingControls },
+                            isPageInfoPulse = pulseIcon.value
+                        )
+                    },
                     headsign = data.trip_headsign
-            )
+                )
 
-            if (data.is_cancelled == true) {
-                Text(
+                // Toggles Row Removed - moved to floating controls
+
+                if (data.is_cancelled == true) {
+                    Text(
                         text = "${stringResource(id = R.string.cancelled)}",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.error
-                )
-            }
+                    )
+                }
 
-            if (data.deleted == true) {
-                Text(
+                if (data.deleted == true) {
+                    Text(
                         text = "${stringResource(id = R.string.deleted)}",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.error
-                )
-            }
+                    )
+                }
 
-            Row(
+                // Vehicle + Block + Alerts Pill Row
+                Row(
                     modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                     // horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                if (data.vehicle?.label != null || data.vehicle?.id != null) {
-                    Text(
+                ) {
+                    if (data.vehicle?.label != null || data.vehicle?.id != null) {
+                        Text(
                             text =
-                                    "${stringResource(id = R.string.vehicle)}: ${data.vehicle.label ?: data.vehicle.id}",
+                                "${stringResource(id = R.string.vehicle)}: ${data.vehicle.label ?: data.vehicle.id}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.width(4.dp))
-                } else {
-                    // Spacer(modifier = Modifier.weight(1f)) // push block id to the right
-                }
-
-                // Clickable Block ID
-                if (data.block_id != null && data.service_date != null) {
-                    Text(
-                            text = "${stringResource(id = R.string.block)}: ${data.block_id}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            textDecoration = TextDecoration.Underline,
-                            modifier =
-                                    Modifier.clickable {
-                                        onBlockClick(
-                                                CatenaryStackEnum.BlockStack(
-                                                        chateau_id = tripSelected.chateau_id,
-                                                        block_id = data.block_id,
-                                                        service_date = data.service_date
-                                                )
-                                        )
-                                    }
-                    )
-                }
-            }
-
-            Column() { // Clickable Vehicle Label
-                if (data.vehicle?.label != null || data.vehicle?.id != null) {
-                    VehicleInfo(
-                            label = data.vehicle.label ?: data.vehicle.id ?: "",
-                            chateau = tripSelected.chateau_id,
-                            routeId = data.route_id
-                    )
-                }
-
-                if (vehicleData != null) {
-                    VehicleInfoDetails(vehicleData = vehicleData!!, usUnits = usUnits)
-                }
-            }
-
-            //                    // Show/Hide Previous Stops Button
-            //                    if (showPreviousStops) {
-            //                        if (lastInactiveStopIdx > -1) {
-            //                            Button(onClick = { viewModel.toggleShowPreviousStops() })
-            // {
-            //                                Text(
-            //                                    if (showPreviousStops) stringResource(id =
-            // R.string.single_trip_info_screen_hide_previous_stops)
-            //                                    else stringResource(
-            //                                        id =
-            // R.string.single_trip_info_screen_show_previous_stops,
-            //                                        lastInactiveStopIdx + 1
-            //                                    )
-            //                                )
-            //                            }
-            //                        }
-            //                    }
-
-            var alertsExpanded by remember { mutableStateOf(false) }
-
-            // Stop List
-            val lazyListState = rememberLazyListState()
-            LazyColumn(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            // .windowInsetsBottomHeight(WindowInsets(bottom =
-                                    // WindowInsets.safeDrawing.getBottom(density =
-                                    // LocalDensity.current)))
-                                    .windowInsetsPadding(
-                                        WindowInsets(
-                                            bottom =
-                                                WindowInsets.safeDrawing.getBottom(
-                                                    density = LocalDensity.current
-                                                )
-                                        )
-                                    ),
-                    state = lazyListState
-            ) {
-                if (data.alert_id_to_alert.isNotEmpty()) {
-                    item(key = "alerts-box") {
-                        AlertsBox(
-                                alerts = data.alert_id_to_alert,
-                                default_tz = data.tz,
-                                chateau = tripSelected.chateau_id,
-                                isScrollable = false,
-                                expanded = alertsExpanded,
-                                onExpandedChange = { alertsExpanded = !alertsExpanded }
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
-                }
 
-                item(key = "show-previous-stops") {
-                    if (lastInactiveStopIdx > -1) {
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(IntrinsicSize.Min),
-                            verticalAlignment = Alignment.CenterVertically
+                    // Clickable Block ID (Button Style)
+                    if (data.block_id != null && data.service_date != null) {
+                        androidx.compose.material3.Surface(
+                            onClick = {
+                                onBlockClick(
+                                    CatenaryStackEnum.BlockStack(
+                                        chateau_id = tripSelected.chateau_id,
+                                        block_id = data.block_id,
+                                        service_date = data.service_date
+                                    )
+                                )
+                            },
+                            shape = RoundedCornerShape(percent = 50),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.padding(vertical = 2.dp)
                         ) {
-                            Box(Modifier.width(52.dp))
-                            Box(
-                                Modifier
-                                    .width(16.dp)
-                                    .fillMaxHeight()
+                            Text(
+                                text =
+                                    "${stringResource(id = R.string.block)} ${data.block_id}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    // Alerts Pill
+                    if (data.alert_id_to_alert.isNotEmpty()) {
+                        androidx.compose.material3.Surface(
+                            onClick = { alertsExpanded = !alertsExpanded },
+                            shape = RoundedCornerShape(percent = 50),
+                            color = Color(0xFFF99C24),
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                val tripColor =
-                                    remember(data.color) {
-                                        try {
-                                            Color(
-                                                android.graphics.Color.parseColor(
-                                                    data.color ?: "#808080"
-                                                )
-                                            )
-                                        } catch (e: Exception) {
-                                            Color.Gray
-                                        }
-                                    }
-
-                            }
-                            Button(
-                                onClick = { viewModel.toggleShowPreviousStops() },
-                                colors =
-                                    ButtonDefaults.buttonColors(
-                                        containerColor = Color.Transparent,
-                                        contentColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                modifier =
-                                    Modifier
-                                        .defaultMinSize(
-                                            minHeight = 1.dp,
-                                            minWidth = 1.dp
-                                        )
-                                        .padding(
-                                            start = 8.dp
-                                        ) // remove default button padding
-                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = "Alerts",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text =
-                                        if (showPreviousStops)
-                                            "↑ " +
-                                                    stringResource(
-                                                        id =
-                                                            R.string
-                                                                .single_trip_info_screen_hide_previous_stops
-                                                    )
-                                        else
-                                            "↓ " +
-                                                    stringResource(
-                                                        id =
-                                                            R.string
-                                                                .single_trip_info_screen_show_previous_stops,
-                                                        lastInactiveStopIdx + 1
-                                                    )
+                                    text = "${data.alert_id_to_alert.size}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
                     }
                 }
+            }
 
-                itemsIndexed(stopTimes) { i, stopTime ->
-                    if (showPreviousStops ||
-                                    i > lastInactiveStopIdx ||
-                                    (i == stopTimes.lastIndex && stopTimes.isNotEmpty())
+            if (tripData != null) {
+                val data = tripData!!
+                if (alertsExpanded) {
+                    Dialog(
+                        onDismissRequest = { alertsExpanded = false },
+                        properties = DialogProperties(usePlatformDefaultWidth = false)
                     ) {
+                        androidx.compose.material3.Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MaterialTheme.colorScheme.background
+                        ) {
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.service_alerts_header),
+                                        style = MaterialTheme.typography.headlineSmall
+                                    )
+                                    IconButton(onClick = { alertsExpanded = false }) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Close,
+                                            contentDescription = "Close"
+                                        )
+                                    }
+                                }
+                                Column(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .weight(1f)
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(horizontal = 16.dp)
+                                ) {
+                                    AlertsBox(
+                                        alerts = data.alert_id_to_alert,
+                                        default_tz = data.tz,
+                                        chateau = tripSelected.chateau_id,
+                                        isScrollable = false,
+                                        expanded = true,
+                                        onExpandedChange = {}
+                                    )
+                                    Spacer(modifier = Modifier.height(32.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Column() { // Clickable Vehicle Label
+                    if (data.vehicle?.label != null || data.vehicle?.id != null) {
+                        VehicleInfo(
+                            label = data.vehicle.label ?: data.vehicle.id ?: "",
+                            chateau = tripSelected.chateau_id,
+                            routeId = data.route_id
+                        )
+                    }
+
+                    if (vehicleData != null) {
+                        VehicleInfoDetails(vehicleData = vehicleData!!, usUnits = usUnits)
+                    }
+                }
+
+                //                    // Show/Hide Previous Stops Button
+                //                    if (showPreviousStops) {
+                //                        if (lastInactiveStopIdx > -1) {
+                //                            Button(onClick = {
+                // viewModel.toggleShowPreviousStops()
+                // })
+                // {
+                //                                Text(
+                //                                    if (showPreviousStops)
+                // stringResource(id =
+                // R.string.single_trip_info_screen_hide_previous_stops)
+                //                                    else stringResource(
+                //                                        id =
+                // R.string.single_trip_info_screen_show_previous_stops,
+                //                                        lastInactiveStopIdx + 1
+                //                                    )
+                //                                )
+                //                            }
+                //                        }
+                //                    }
+
+                // Stop List
+                // Stop List
+
+                // Auto-scroll logic
+                LaunchedEffect(stopTimes, lastInactiveStopIdx, tripData, isLoading) {
+                    if (!isLoading && !hasInitialScrolled && stopTimes.isNotEmpty()) {
+                        delay(100)
+                        val targetStopIndex =
+                            (lastInactiveStopIdx + 1).coerceIn(0, stopTimes.indices.last)
+                        lazyListState.scrollToItem(index = targetStopIndex)
+                        hasInitialScrolled = true
+                    }
+                }
+
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            // .windowInsetsBottomHeight(WindowInsets(bottom =
+                            // WindowInsets.safeDrawing.getBottom(density =
+                            // LocalDensity.current)))
+                            .windowInsetsPadding(
+                                WindowInsets(
+                                    bottom =
+                                        WindowInsets.safeDrawing.getBottom(
+                                            density =
+                                                LocalDensity.current
+                                        )
+                                )
+                            ),
+                    state = lazyListState
+                ) {
+
+                    // item(key = "show-previous-stops") removed
+
+                    itemsIndexed(stopTimes) { i, stopTime ->
+                        // Always show all stops
                         // Calculate new state variables
                         val isInactive = i <= lastInactiveStopIdx
-                        val isPreviousInactive = i - 1 == lastInactiveStopIdx
+                        val isBottomSegmentPast = i < lastInactiveStopIdx
                         val connections = stopConnections[stopTime.raw.stop_id]
 
                         StopListItem(
@@ -561,9 +763,11 @@ fun SingleTripInfoScreen(
                                 isFirst = i == 0,
                                 isLast = i == stopTimes.lastIndex,
                                 isInactive = isInactive,
-                                isPreviousInactive = isPreviousInactive,
-                                showPreviousStops = showPreviousStops,
+                            isBottomSegmentPast = isBottomSegmentPast,
                                 connections = connections,
+                            isAtStop = (i == currentAtStopIdx),
+                            movingDotProgress =
+                                if (i == movingDotSegmentIdx) movingDotProgress else null,
                                 onStopClick = {
                                     onStopClick(
                                             CatenaryStackEnum.StopStack(
@@ -572,14 +776,112 @@ fun SingleTripInfoScreen(
                                             )
                                     )
                                 },
-                            showSeconds = showSeconds
+                            showSeconds = showSeconds,
+                            showOriginalTimetable = showOriginalTimetable,
+                            showCountdown = showCountdown,
+                            timeColumnWidth = timeColumnWidth
+                        )
+                    }
+                }
+            } // End tripData != null block
+        } // End Column
+
+        // Floating Controls - Scroll To Current
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showScrollToCurrentButton,
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        bottom = 80.dp,
+                        end = 16.dp
+                    ), // Check padding vs other controls
+            enter = fadeIn() + slideInVertically { it / 2 },
+            exit = fadeOut() + slideOutVertically { it / 2 }
+        ) {
+            FloatingActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        val targetIndex =
+                            (lastInactiveStopIdx + 1).coerceIn(0, stopTimes.indices.last)
+                        lazyListState.animateScrollToItem(targetIndex)
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Scroll to current stop"
+                )
+            }
+        }
+
+        // Floating Controls - Toggles
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showFloatingControls,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp),
+            enter =
+                androidx.compose.animation.fadeIn() +
+                        androidx.compose.animation.slideInVertically { it },
+            exit =
+                androidx.compose.animation.fadeOut() +
+                        androidx.compose.animation.slideOutVertically { it }
+        ) {
+            androidx.compose.material3.Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
+                shadowElevation = 4.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.Switch(
+                            checked = showOriginalTimetable,
+                            onCheckedChange = { showOriginalTimetable = it },
+                            modifier = Modifier
+                                .scale(0.8f)
+                                .padding(end = 4.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.single_trip_info_screen_original),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.Switch(
+                            checked = showCountdown,
+                            onCheckedChange = { showCountdown = it },
+                            modifier = Modifier
+                                .scale(0.8f)
+                                .padding(end = 4.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.single_trip_info_screen_countdown),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                    IconButton(
+                        onClick = { showFloatingControls = false },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close Controls",
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
             }
         }
-    }
-}
+    } // End Box
+} // End SingleTripInfoScreen
 
 @Composable
 fun VehicleInfoDetails(vehicleData: VehicleRealtimeData, usUnits: Boolean) {
@@ -595,10 +897,8 @@ fun VehicleInfoDetails(vehicleData: VehicleRealtimeData, usUnits: Boolean) {
             )
             var currentTime by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
             LaunchedEffect(Unit) {
-                while (true) {
-                    delay(1000)
-                    currentTime = System.currentTimeMillis() / 1000
-                }
+                delay(1000)
+                currentTime = System.currentTimeMillis() / 1000
             }
             vehicleData.timestamp?.let {
                 val diff = (it - currentTime).toDouble()
@@ -694,12 +994,18 @@ fun StopListItem(
         isFirst: Boolean,
         isLast: Boolean,
         isInactive: Boolean,
-        isPreviousInactive: Boolean,
-        showPreviousStops: Boolean,
+        isBottomSegmentPast: Boolean,
         onStopClick: () -> Unit,
         showSeconds: Boolean,
+        showOriginalTimetable: Boolean,
+        showCountdown: Boolean,
+        timeColumnWidth: androidx.compose.ui.unit.Dp,
         connections: List<StopConnectionChip>? = null,
+        isAtStop: Boolean = false,
+        movingDotProgress: Float? = null,
 ) {
+    val isDark = isSystemInDarkTheme()
+    val neutralColor = if (isDark) Color(0xFFDDDDDD) else Color(0xFF333333)
     val tripColor =
             try {
                 Color(android.graphics.Color.parseColor(tripColorStr))
@@ -724,7 +1030,7 @@ fun StopListItem(
                 (rtDeparture != null && rtArrival != null && rtDeparture != rtArrival)
 
     val aboveContent: List<@Composable () -> Unit> =
-        remember(stopTime, isDoubleTime, showSeconds) {
+        remember(stopTime, isDoubleTime, showSeconds, showOriginalTimetable, showCountdown) {
             val list = mutableListOf<@Composable () -> Unit>()
 
             if (isDoubleTime) {
@@ -735,27 +1041,65 @@ fun StopListItem(
                 val arrHasDelay = arrDelay != 0L
 
                 list.add {
-                    Column(horizontalAlignment = Alignment.End) {
-                        FormattedTimeText(
-                            timezone = tz,
-                            timeSeconds = arrTime,
-                            showSeconds = showSeconds,
-                            color =
-                                if (isInactive) Color.Gray
-                                else MaterialTheme.colorScheme.onSurface,
-                            style =
-                                MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Normal
-                                ) // Non-bold for arrival, same size as dep
-                        )
-                        if (arrHasDelay) {
-                            DelayDiff(
-                                diff = arrDelay,
-                                show_seconds = showSeconds,
-                                fontSizeOfPolarity = 10.sp,
-                                use_symbol_sign = true,
-                                modifier = Modifier.offset(y = (-4).dp)
-                            )
+                    Row(verticalAlignment = Alignment.Top) {
+                        if (showOriginalTimetable && schedArr != null) {
+                            Box(
+                                modifier = Modifier.height(32.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                FormattedTimeText(
+                                    timezone = tz,
+                                    timeSeconds = schedArr,
+                                    showSeconds = false,
+                                    color = Color.Gray,
+                                    style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Normal
+                                        ),
+                                    textDecoration = TextDecoration.LineThrough,
+                                    modifier = Modifier.padding(end = 4.dp)
+                                )
+                            }
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Box(
+                                modifier = Modifier.height(32.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                FormattedTimeText(
+                                    timezone = tz,
+                                    timeSeconds = arrTime,
+                                    showSeconds = showSeconds,
+                                    color =
+                                        if (isInactive) Color.Gray
+                                        else MaterialTheme.colorScheme.onSurface,
+                                    style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                )
+                            }
+                            if (arrHasDelay) {
+                                DelayDiff(
+                                    diff = arrDelay,
+                                    show_seconds = showSeconds,
+                                    fontSizeOfPolarity = 10.sp,
+                                    use_symbol_sign = true,
+                                    modifier = Modifier.offset(y = (-4).dp)
+                                )
+                            }
+                            if (showCountdown) {
+                                Box(modifier = Modifier.offset(y = (-8).dp)) {
+                                    SelfUpdatingDiffTimer(
+                                        targetTimeSeconds = arrTime,
+                                        showBrackets = false,
+                                        showSeconds = showSeconds,
+                                        numSize = 12.sp,
+                                        unitSize = 10.sp,
+                                        bracketSize = 12.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -764,8 +1108,8 @@ fun StopListItem(
         }
 
     val mainContent: (@Composable () -> Unit)? =
-        remember(stopTime, isDoubleTime, showSeconds) {
-            val headerHeightLocal = 32.dp
+        remember(stopTime, isDoubleTime, showSeconds, showOriginalTimetable, showCountdown) {
+            val headerHeightLocal = 24.dp
             if (isDoubleTime) {
                 // DEPARTURE
                 val depTime = rtDeparture ?: schedDep ?: 0L
@@ -774,36 +1118,79 @@ fun StopListItem(
                     else 0L
                 val depHasDelay = depDelay != 0L
 
-                {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Box(
-                            modifier = Modifier.height(headerHeightLocal),
-                            contentAlignment = Alignment.CenterEnd
-                        ) {
-                            FormattedTimeText(
-                                timezone = tz,
-                                timeSeconds = depTime,
-                                showSeconds = showSeconds,
-                                color =
-                                    if (isInactive) Color.Gray
-                                    else MaterialTheme.colorScheme.onSurface,
-                                style =
-                                    MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold
-                                    )
-                            )
+                val content: @Composable () -> Unit = {
+                    Row(verticalAlignment = Alignment.Top) {
+                        if (showOriginalTimetable && schedDep != null) {
+                            Box(
+                                modifier = Modifier.height(headerHeightLocal),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                FormattedTimeText(
+                                    timezone = tz,
+                                    timeSeconds = schedDep,
+                                    showSeconds = false,
+                                    color = Color.Gray,
+                                    style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Normal
+                                        ),
+                                    textDecoration = TextDecoration.LineThrough,
+                                    modifier = Modifier.padding(end = 4.dp)
+                                )
+                            }
                         }
-                        if (depHasDelay) {
-                            DelayDiff(
-                                diff = depDelay,
-                                show_seconds = showSeconds,
-                                fontSizeOfPolarity = 10.sp,
-                                use_symbol_sign = true,
-                                modifier = Modifier.offset(y = (-4).dp)
-                            )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Box(
+                                modifier = Modifier.height(headerHeightLocal),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                FormattedTimeText(
+                                    timezone = tz,
+                                    timeSeconds = depTime,
+                                    showSeconds = showSeconds,
+                                    color =
+                                        if (isInactive) Color.Gray
+                                        else MaterialTheme.colorScheme.onSurface,
+                                    style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                    secondsStyle =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                )
+                            }
+                            if (depHasDelay) {
+                                DelayDiff(
+                                    diff = depDelay,
+                                    show_seconds = showSeconds,
+                                    fontSizeOfPolarity = 10.sp,
+                                    use_symbol_sign = true,
+                                    modifier = Modifier.offset(y = (-4).dp)
+                                )
+                            }
+                            if (showCountdown) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .padding(start = 4.dp)
+                                            .offset(y = (-8).dp)
+                                ) {
+                                    SelfUpdatingDiffTimer(
+                                        targetTimeSeconds = depTime,
+                                        showBrackets = false,
+                                        showSeconds = showSeconds,
+                                        numSize = 12.sp,
+                                        unitSize = 10.sp,
+                                        bracketSize = 12.sp,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
+                content
             } else {
                 // UNIFIED
                 val unifiedRt = rtDeparture ?: rtArrival
@@ -816,36 +1203,79 @@ fun StopListItem(
                 val hasDelay = delay != 0L
 
                 if (timeToShow != null) {
-                    {
-                        Column(horizontalAlignment = Alignment.End) {
-                            Box(
-                                modifier = Modifier.height(headerHeightLocal),
-                                contentAlignment = Alignment.CenterEnd
-                            ) {
-                                FormattedTimeText(
-                                    timezone = tz,
-                                    timeSeconds = timeToShow,
-                                    showSeconds = showSeconds,
-                                    color =
-                                        if (isInactive) Color.Gray
-                                        else MaterialTheme.colorScheme.onSurface,
-                                    style =
-                                        MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                )
+                    val content: @Composable () -> Unit = {
+                        Row(verticalAlignment = Alignment.Top) {
+                            if (showOriginalTimetable && unifiedSched != null) {
+                                Box(
+                                    modifier = Modifier.height(headerHeightLocal),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    FormattedTimeText(
+                                        timezone = tz,
+                                        timeSeconds = unifiedSched,
+                                        showSeconds = false,
+                                        color = Color.Gray,
+                                        style =
+                                            MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Normal
+                                            ),
+                                        textDecoration = TextDecoration.LineThrough,
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
+                                }
                             }
-                            if (hasDelay) {
-                                DelayDiff(
-                                    diff = delay,
-                                    show_seconds = showSeconds,
-                                    fontSizeOfPolarity = 10.sp,
-                                    use_symbol_sign = true,
-                                    modifier = Modifier.offset(y = (-4).dp)
-                                )
+                            Column(horizontalAlignment = Alignment.End) {
+                                Box(
+                                    modifier = Modifier.height(headerHeightLocal),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    FormattedTimeText(
+                                        timezone = tz,
+                                        timeSeconds = timeToShow,
+                                        showSeconds = showSeconds,
+                                        color =
+                                            if (isInactive) Color.Gray
+                                            else MaterialTheme.colorScheme.onSurface,
+                                        style =
+                                            MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                        secondsStyle =
+                                            MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Normal
+                                            )
+                                    )
+                                }
+                                if (hasDelay) {
+                                    DelayDiff(
+                                        diff = delay,
+                                        show_seconds = showSeconds,
+                                        fontSizeOfPolarity = 10.sp,
+                                        use_symbol_sign = true,
+                                        modifier = Modifier.offset(y = (-4).dp)
+                                    )
+                                }
+                                if (showCountdown) {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .padding(start = 4.dp)
+                                                .offset(y = (-8).dp)
+                                    ) {
+                                        SelfUpdatingDiffTimer(
+                                            targetTimeSeconds = timeToShow,
+                                            showBrackets = false,
+                                            showSeconds = showSeconds,
+                                            numSize = 12.sp,
+                                            unitSize = 10.sp,
+                                            bracketSize = 12.sp
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
+                    content
                 } else {
                     null
                 }
@@ -853,7 +1283,7 @@ fun StopListItem(
         }
 
     // Define a consistent header height for the "Station Name" row
-    val headerHeight = 32.dp
+    val headerHeight = 24.dp
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // 1. Render Above Rows
@@ -867,33 +1297,28 @@ fun StopListItem(
                 // Time
                 Box(
                     modifier = Modifier
-                        .width(52.dp)
+                        .width(timeColumnWidth)
                         .padding(end = 4.dp),
                     contentAlignment = Alignment.CenterEnd
                 ) { content() }
 
                 // Timeline (Line Only)
-                Box(
-                    modifier = Modifier
-                        .width(16.dp)
-                        .fillMaxHeight()
-                ) {
+                Box(modifier = Modifier
+                    .width(16.dp)
+                    .fillMaxHeight()) {
                     if (!isFirst) {
                         TimelineLine(
-                            color = tripColor,
-                            isPreviousInactive = isPreviousInactive,
-                            showPreviousStops = showPreviousStops,
+                            color = neutralColor,
+                            isPast = isInactive,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
                 }
 
                 // Content Spacer
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp)
-                ) {
+                Box(modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)) {
                     // Empty
                 }
             }
@@ -911,28 +1336,29 @@ fun StopListItem(
             Box(
                 modifier =
                     Modifier
-                        .width(52.dp)
-                        // .height(headerHeight) // Removed to allow delay expansion
+                        .width(timeColumnWidth)
+                        // .height(headerHeight) // Removed to allow delay
+                        // expansion
                         .padding(end = 4.dp),
                 contentAlignment = Alignment.TopEnd // Align content to top (time inside)
             ) { mainContent?.invoke() }
 
             // Timeline (Dot + Lines)
-            Box(
-                modifier = Modifier
-                    .width(16.dp)
-                    .fillMaxHeight()
-            ) {
+            Box(modifier = Modifier
+                .width(16.dp)
+                .fillMaxHeight()) {
                 TripProgressIndicator(
                     color = tripColor,
+                    neutralColor = neutralColor,
                     isFirst = isFirst, // Standard Dot Logic
                     isLast = isLast,
-                    isInactive = isInactive,
-                    isPreviousInactive = isPreviousInactive,
-                    showPreviousStops = showPreviousStops,
+                    isTopPast = isInactive,
+                    isBottomPast = isBottomSegmentPast,
                     modifier = Modifier.fillMaxSize(),
                     // Center dot in the headerHeight
-                    dotOffset = headerHeight / 2
+                    dotOffset = headerHeight / 2,
+                    isAtStop = isAtStop,
+                    movingDotProgress = movingDotProgress
                 )
             }
 
@@ -962,10 +1388,8 @@ fun StopListItem(
                             modifier =
                                 Modifier
                                     .clickable(onClick = onStopClick)
-                                    .weight(
-                                        1f,
-                                        fill = false
-                                    ), // Don't push platform off if name is short
+                                    .weight(1f, fill = false), // Don't push platform
+                            // off if name is short
                             textDecoration =
                                 if (isInactive) TextDecoration.None
                                 else TextDecoration.Underline,
@@ -1006,70 +1430,55 @@ fun StopListItem(
 
         // Continuous line/spacer
         if (!isLast) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(12.dp)
-            ) {
-                Box(Modifier.width(52.dp))
-                Box(
-                    Modifier
-                        .width(16.dp)
-                        .fillMaxHeight()
-                ) {
+            Row(Modifier
+                .fillMaxWidth()
+                .height(4.dp)) {
+                Box(Modifier.width(timeColumnWidth))
+                Box(Modifier
+                    .width(16.dp)
+                    .fillMaxHeight()) {
                     TimelineLine(
-                        color = tripColor,
-                        isPreviousInactive = false,
-                        showPreviousStops = showPreviousStops,
+                        color = neutralColor,
+                        isPast = isBottomSegmentPast,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
             }
         } else {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }
 
 @Composable
-fun TimelineLine(
-    color: Color,
-    isPreviousInactive: Boolean,
-    showPreviousStops: Boolean,
-    modifier: Modifier = Modifier
-) {
+fun TimelineLine(color: Color, isPast: Boolean, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val wCenter = size.width / 2
-        val lineWidth = 4.dp.toPx()
-        val fadedColor = if (showPreviousStops) color.copy(alpha = 0.4f) else Color.Transparent
+        val lineWidth = if (isPast) 1.dp.toPx() else 2.dp.toPx()
+        val useColor = if (isPast) color.copy(alpha = 0.5f) else color
 
-        if (isPreviousInactive) {
-            drawRect(
-                brush = Brush.verticalGradient(colors = listOf(fadedColor, color)),
+        drawRect(
+            color = useColor,
                 topLeft = Offset(wCenter - lineWidth / 2, 0f),
                 size = androidx.compose.ui.geometry.Size(lineWidth, size.height)
-            )
-        } else {
-            drawRect(
-                color = color,
-                topLeft = Offset(wCenter - lineWidth / 2, 0f),
-                size = androidx.compose.ui.geometry.Size(lineWidth, size.height)
-            )
-        }
+        )
     }
 }
 
 @Composable
 fun TripProgressIndicator(
         color: Color,
+        neutralColor: Color,
         isFirst: Boolean,
         isLast: Boolean,
-        isInactive: Boolean,
-        isPreviousInactive: Boolean,
-        showPreviousStops: Boolean,
+        isTopPast: Boolean,
+        isBottomPast: Boolean,
         modifier: Modifier = Modifier,
-        dotOffset: androidx.compose.ui.unit.Dp? = null
+        dotOffset: androidx.compose.ui.unit.Dp? = null,
+        isAtStop: Boolean = false,
+        movingDotProgress: Float? = null
 ) {
+    val isDark = isSystemInDarkTheme()
     Canvas(modifier = modifier) {
         val canvasWidth = size.width
         val canvasHeight = size.height
@@ -1078,40 +1487,28 @@ fun TripProgressIndicator(
         // Determine Vertical Center for Dot and Split Point
         val hCenter = if (dotOffset != null) dotOffset.toPx() else canvasHeight / 2
 
-        val lineWidth = 4.dp.toPx()
-
-        val circleColor = if (isInactive) Color.Gray else Color.White
-        val strokeColor = if (isInactive) Color.DarkGray else color
-
-        // This is the logic from the JS app. It's the color used for the line segment
-        // *above* an inactive stop when previous stops are shown.
-        // Faded if showing previous stops, transparent if not
-        val fadedColor = if (showPreviousStops) color.copy(alpha = 0.4f) else Color.Transparent
+        val activeLineWidth = 2.dp.toPx()
+        val pastLineWidth = 1.dp.toPx()
 
         // Top line
         if (!isFirst) {
-            val topColor = color // Always colored strip
+            val topColor = if (isTopPast) neutralColor.copy(alpha = 0.5f) else neutralColor
+            val lineWidth = if (isTopPast) pastLineWidth else activeLineWidth
 
-            // If we want gradient for isPreviousInactive, we need Brush.verticalGradient
-            if (isPreviousInactive) {
-                drawRect(
-                        brush = Brush.verticalGradient(colors = listOf(fadedColor, color)),
-                    topLeft = Offset(wCenter - lineWidth / 2, 0f),
-                    size = androidx.compose.ui.geometry.Size(lineWidth, hCenter)
-                )
-            } else {
-                drawRect(
+            drawRect(
                     color = topColor,
                     topLeft = Offset(wCenter - lineWidth / 2, 0f),
                     size = androidx.compose.ui.geometry.Size(lineWidth, hCenter)
-                )
-            }
+            )
         }
 
         // Bottom line
         if (!isLast) {
+            val bottomColor = if (isBottomPast) neutralColor.copy(alpha = 0.5f) else neutralColor
+            val lineWidth = if (isBottomPast) pastLineWidth else activeLineWidth
+
             drawRect(
-                color = color, // Always colored strip
+                color = bottomColor,
                 topLeft = Offset(wCenter - lineWidth / 2, hCenter),
                 size = androidx.compose.ui.geometry.Size(lineWidth, canvasHeight - hCenter)
             )
@@ -1120,16 +1517,181 @@ fun TripProgressIndicator(
         // Center circle (Dot)
         val dotRadius = 4.dp.toPx()
         val center = Offset(wCenter, hCenter)
+        val dotNeutralColor = if (isTopPast) neutralColor.copy(alpha = 0.5f) else neutralColor
 
-        if (isInactive) {
-            drawCircle(color = Color.Gray, radius = dotRadius, center = center)
+        // Always Neutral Circle
+        if (isDark) {
+            // Dark mode: Black fill, neutral ring, black border around it
+            val borderStroke = 1.dp.toPx()
+            val ringStroke = 2.dp.toPx()
+
+            // Draw outer black border
+            drawCircle(
+                color = Color.Black,
+                radius = dotRadius + (borderStroke / 2) + (ringStroke / 2),
+                center = center,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = borderStroke)
+            )
+
+            // Fill black (to cover the line passing through)
+            drawCircle(color = Color.Black, radius = dotRadius, center = center)
+
+            // Draw neutral ring
+            drawCircle(
+                color = dotNeutralColor,
+                radius = dotRadius,
+                center = center,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = ringStroke)
+            )
         } else {
-            // Active dot (White with colored stroke?)
+            // Light mode: White dot, neutral stroke
             drawCircle(color = Color.White, radius = dotRadius, center = center)
+            drawCircle(
+                color = dotNeutralColor,
+                radius = dotRadius,
+                center = center,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+            )
+        }
+
+        // Pulsing logic for "At Stop"
+        if (isAtStop) {
+            drawCircle(color = color, radius = dotRadius * 0.8f, center = center)
+        }
+
+        // Moving Dot Interpolation
+        if (movingDotProgress != null) {
+            // progress is 0.0 to 1.0 representing travel from THIS stop to NEXT stop.
+            // In the UI, the line goes from `hCenter` (this dot) to `size.height +
+            // nextDotOffset?`
+            // But we only render within this item's box.
+            // The line segment for "next" stop starts at hCenter and goes down to
+            // size.height.
+            // Actually, the "Pearl Chain" column in `StopListItem` is
+            // `fillMaxHeight()`.
+            // The next stop's dot is in the NEXT item.
+            // So we need to compute where the dot is relative to THIS item's height.
+
+            // Svelte logic: top: calc(${movingDotProgress * 100}% + 0.25rem);
+            // This suggests it moves relative to the segment height.
+            // In Compose, `TripProgressIndicator` is inside a Box of height
+            // `IntrinsicSize.Min`
+            // (the row height).
+            // But wait, the row height is just the stop info. The "line" connects
+            // stops.
+            // The `TripProgressIndicator` draws the line from top to bottom of THIS
+            // row.
+            // If the vehicle is between this stop and the next, it should appear on the
+            // bottom half
+            // of the line?
+            // No, strictly speaking:
+            // Stop N (Line spans from Top to Bottom of Stop N row).
+            // Stop N+1 (Line spans from Top to Bottom of Stop N+1 row).
+            // The visual gap between stops is represented by the height of the rows +
+            // any spacers.
+            // Our logic `movingDotSegmentIdx = i` means vehicle is between Stop i and
+            // Stop i+1.
+            // Visually, it should slide from Stop i's dot down to Stop i+1's dot.
+            // BUT `TripProgressIndicator` only knows about its own bounds.
+            // If the row for Stop i is 100px tall, and Stop i+1 is 100px tall.
+            // And Spacer is 0.
+            // Current `TripProgressIndicator` draws:
+            // Top Line: Top to hCenter (Dot)
+            // Bottom Line: hCenter to Bottom.
+
+            // So if progress = 0 (Departing Stop i), dot is at hCenter.
+            // If progress = 1 (Arriving Stop i+1), dot should be at Stop i+1's hCenter.
+            // Since we clip to `TripProgressIndicator` bounds, we can only draw until
+            // `size.height`.
+            // We can't draw into the next item's canvas easily.
+
+            // HOWEVER, we are inside a `LazyColumn`.
+            // Svelte implementation uses `absolute` positioning on the " Pearl Chain
+            // Column" which
+            // might span?
+            // checking Svelte again...
+            // It puts the dot in the `td` for the segment.
+            // `style={background-color: ...; top: calc(${moving_dot_progress * 100}% +
+            // 0.25rem);
+            // ...}`
+            // It seems it thinks the segment is just that `td`.
+            // If the `td` height covers the whole gap, then yes.
+
+            // In Compose:
+            // `TripProgressIndicator` fills the `Timeline (Dot + Lines)` Box which is
+            // `fillMaxHeight()` of the Row.
+            // The Row contains the Stop info.
+            // So the height of `TripProgressIndicator` is roughly the height of the
+            // StopItem.
+            // The distance from Stop i to Stop i+1 is effectively the height of Stop i
+            // (center to
+            // bottom) + height of Stop i+1 (top to center)?
+            // Actually, `StopListItem` is the whole row.
+            // So `TripProgressIndicator` covers the whole row.
+            // Dot is at `dotOffset` (16.dp = 32.dp/2).
+            // `hCenter` is `dotOffset`.
+            // Bottom of this canvas is `size.height`.
+            // The next dot is at `nextItem.hCenter` (which is relative to next item).
+            // So the distance is `(size.height - hCenter) + (nextItem.hCenter)`.
+            // Roughly `size.height`. (Assuming uniform height and centering).
+
+            // Let's approximate:
+            // We draw the dot at `hCenter + progress * (size.height)`.
+            // This will look like it moves from the stop dot down to the bottom of the
+            // row.
+            // Once it passes the bottom, it's "in" the next row (conceptually).
+            // But simpler: Svelte uses `top: progress * 100%`.
+            // If we assume the visual segment is just this row's representation...
+            // Let's try drawing at `hCenter + movingDotProgress * (size.height -
+            // hCenter +
+            // something?)`
+            // Or just `hCenter + movingDotProgress * (someDist)`.
+            // If we draw strictly within bounds, the dot disappears when it hits
+            // bottom.
+            // But the next one takes over? No, `movingDotSegmentIdx` is only `i`.
+            // So when `i` becomes `i+1`, progress resets to 0 (Departing i+1).
+            // Wait, `lastDepartedIdx` is `i`.
+            // So `progress` 0 -> 1 is explicitly travel from `i` to `i+1`.
+            // If we only draw in `i`, we need to cover the full visual distance to
+            // `i+1`.
+            // Since `LazyColumn` clips items? Actually `Canvas` clips by default? No,
+            // `drawRect`
+            // doesn't clip unless `clipToBounds` modifier is used.
+            // `TripProgressIndicator` logic:
+            // `drawCircle` at `Offset(wCenter, hCenter + movingDotProgress *
+            // (totalDistanceToNextDot))`
+            // `totalDistanceToNextDot` is roughly `size.height` (if rows are equal and
+            // dot is
+            // centered or fixed from top).
+            // Since dot is fixed offset from top (`dotOffset`=16dp), and item height is
+            // variable...
+            // distance = (size.height - dotOffset) + (nextDotOffset).
+            // nextDotOffset is also 16dp.
+            // So distance = size.height.
+            // So `y = hCenter + movingDotProgress * size.height`?
+            // if progress=0, y = hCenter. Correct.
+            // if progress=1, y = hCenter + size.height = 16dp + height.
+            // The next dot is at 16dp from NEXT top.
+            // Start of next top is `size.height` of this one.
+            // So 16dp into next one is `size.height + 16dp`.
+            // So target Y is `size.height + 16dp`.
+            // Current Y is `16dp`.
+            // Delta is `size.height`.
+            // So yes, `y = hCenter + movingDotProgress * size.height`.
+
+            val targetY = hCenter + movingDotProgress * size.height
+            drawCircle(
+                color = color,
+                radius = dotRadius * 1.0f, // Make "moving" dot slightly distinctive?
+                // Svelte uses
+                // size similar to normal dot?
+                center = Offset(wCenter, targetY)
+            )
+            // Pulse ring
             drawCircle(
                 color = color,
                 radius = dotRadius,
-                center = center,
+                center = Offset(wCenter, targetY),
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
             )
         }
@@ -1190,7 +1752,11 @@ fun SbbTimeBlock(
                 timeSeconds = timeToShow,
                 showSeconds = showSeconds, // User setting applied here
                 color = color,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                secondsStyle =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Normal
+                    )
             )
 
             if (hasDelay) {
@@ -1213,7 +1779,8 @@ fun CompactTransferRouteChip(conn: StopConnectionChip) {
     // Assuming TransferRouteChip in RouteScreen.kt uses Utils we can access.
     // Wait, TransferRouteChip was NOT private in RouteScreen.kt but we want a compact version.
 
-    // Note: If TransferRouteChip is public in RouteScreen.kt, we can't easily modify its internals
+    // Note: If TransferRouteChip is public in RouteScreen.kt, we can't easily modify its
+    // internals
     // without changing that file.
     // We will reimplement a compact version here.
 

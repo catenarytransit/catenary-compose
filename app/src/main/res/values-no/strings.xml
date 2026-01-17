@@ -117,4 +117,6 @@
     <string name="settings_show_seconds">Vis sekunder</string>
     <string name="settings_show_seconds_description">Vis sekunder i ankomst- og avgangstider</string>
     <string name="waiting_for_gps">Venter på GPS…</string>
+    <string name="single_trip_info_screen_original">Original</string>
+    <string name="single_trip_info_screen_countdown">Nedtelling</string>
 </resources>

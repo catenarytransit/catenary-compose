@@ -119,4 +119,6 @@
     <string name="settings_show_seconds">Показати секунди</string>
     <string name="settings_show_seconds_description">Відображати секунди в часі прибуття та відправлення</string>
     <string name="waiting_for_gps">Очікування GPS…</string>
+    <string name="single_trip_info_screen_original">Оригінал</string>
+    <string name="single_trip_info_screen_countdown">Зворотний відлік</string>
 </resources>

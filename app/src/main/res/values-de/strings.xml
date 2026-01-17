@@ -117,4 +117,6 @@
     <string name="settings_show_seconds">Sekunden anzeigen</string>
     <string name="settings_show_seconds_description">Sekunden in Ankunfts- und Abfahrtszeiten anzeigen</string>
     <string name="waiting_for_gps">Warten auf GPS…</string>
+    <string name="single_trip_info_screen_original">Original</string>
+    <string name="single_trip_info_screen_countdown">Countdown</string>
 </resources>

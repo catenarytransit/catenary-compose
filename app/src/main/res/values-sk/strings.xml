@@ -119,4 +119,6 @@
     <string name="settings_show_seconds">Zobraziť sekundy</string>
     <string name="settings_show_seconds_description">Zobrazovať sekundy v časoch príchodov a odchodov</string>
     <string name="waiting_for_gps">Čakanie na GPS…</string>
+    <string name="single_trip_info_screen_original">Pôvodné</string>
+    <string name="single_trip_info_screen_countdown">Odpočítavanie</string>
 </resources>

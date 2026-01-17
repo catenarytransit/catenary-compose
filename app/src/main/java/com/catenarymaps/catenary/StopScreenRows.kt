@@ -78,12 +78,16 @@ fun StationScreenTrainRow(
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
 
         Row(
-                modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+                modifier = modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // Left: Time (Vertical Stack)
                 Column(
-                        modifier = Modifier.width(80.dp).padding(end = 8.dp),
+                        modifier = Modifier
+                                .width(80.dp)
+                                .padding(end = 8.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -212,7 +216,11 @@ fun StationScreenTrainRow(
                 }
 
                 // Middle: Info
-                Column(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
+                Column(
+                        modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 4.dp)
+                ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                         text = event.headsign ?: "",
@@ -247,7 +255,8 @@ fun StationScreenTrainRow(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
                                                 modifier =
-                                                        Modifier.clip(RoundedCornerShape(2.dp))
+                                                        Modifier
+                                                                .clip(RoundedCornerShape(2.dp))
                                                                 .background(
                                                                         parseColor(
                                                                                 routeInfo.color,
@@ -320,7 +329,8 @@ fun StationScreenTrainRow(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
                                                 modifier =
-                                                        Modifier.clip(RoundedCornerShape(2.dp))
+                                                        Modifier
+                                                                .clip(RoundedCornerShape(2.dp))
                                                                 .background(
                                                                         parseColor(
                                                                                 routeInfo.color,
@@ -351,7 +361,8 @@ fun StationScreenTrainRow(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier.background(
+                                                Modifier
+                                                        .background(
                                                                 MaterialTheme.colorScheme
                                                                         .surfaceVariant,
                                                                 RoundedCornerShape(4.dp)
@@ -511,7 +522,8 @@ fun StopScreenRow(
                                                                                 routeInfo
                                                                                         ?.short_name,
                                                                         modifier =
-                                                                                Modifier.height(
+                                                                                Modifier
+                                                                                        .height(
                                                                                                 20.dp
                                                                                         )
                                                                                         .padding(
@@ -532,7 +544,8 @@ fun StopScreenRow(
                                                                         )
                                                         androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier.size(20.dp)
+                                                                        Modifier
+                                                                                .size(20.dp)
                                                                                 .clip(CircleShape)
                                                                                 .background(
                                                                                         mtaColor
@@ -576,7 +589,8 @@ fun StopScreenRow(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier.clip(
+                                                                        Modifier
+                                                                                .clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -613,7 +627,8 @@ fun StopScreenRow(
                                                                                                 .SemiBold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier.clip(
+                                                                        Modifier
+                                                                                .clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -693,21 +708,7 @@ fun StopScreenRow(
                                                         Spacer(Modifier.width(4.dp))
 
                                                         // Strikethrough
-                                                        FormattedTimeText(
-                                                                timezone = zoneId.id,
-                                                                timeSeconds = schedTime,
-                                                                showSeconds = showSeconds,
-                                                                textDecoration =
-                                                                        TextDecoration.LineThrough,
-                                                                style =
-                                                                        MaterialTheme.typography
-                                                                                .bodyMedium,
-                                                                color =
-                                                                        MaterialTheme.colorScheme
-                                                                                .onSurfaceVariant
-                                                                                .copy(alpha = 0.7f)
-                                                        )
-                                                        Spacer(Modifier.width(4.dp))
+
                                                 }
 
                                                 // Real time / Scheduled

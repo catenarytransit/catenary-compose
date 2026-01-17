@@ -100,10 +100,14 @@ fun DelayDiff(
                     color = textColor,
                     modifier = Modifier.alignByBaseline()
                 )
+            } else if (diff.toInt() == 0) {
+                Text(
+                    "+",
+                    fontSize = fontSizeOfPolarity,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
             }
-            // For 0/OnTime in symbol mode, maybe show nothing or check user req in previous
-            // conversation?
-            // User conv said: "+, -, and nothing for on-time."
         }
 
         if (diff != 0L) {
@@ -150,6 +154,13 @@ fun DelayDiff(
                     modifier = Modifier.alignByBaseline()
                 )
             }
+        } else {
+            Text(
+                text = "0",
+                fontSize = 14.sp,
+                color = textColor,
+                modifier = Modifier.alignByBaseline()
+            )
         }
     }
 }

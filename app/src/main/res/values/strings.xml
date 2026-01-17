@@ -129,4 +129,6 @@
     <string name="route_category_tram">Tram</string>
     <string name="route_category_bus">Bus</string>
     <string name="route_category_other">Other</string>
+    <string name="single_trip_info_screen_original">Original</string>
+    <string name="single_trip_info_screen_countdown">Countdown</string>
 </resources>

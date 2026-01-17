@@ -198,7 +198,7 @@ fun parseColor(colorString: String?, default: Color = Color.Black): Color {
         }
 }
 
-private const val PREFS_NAME = "catenary_prefs"
+const val PREFS_NAME = "catenary_prefs"
 private const val K_LAT = "camera_lat"
 private const val K_LON = "camera_lon"
 private const val K_ZOOM = "camera_zoom"
@@ -215,6 +215,10 @@ private const val K_GA_CONSENT = "ga_consent"
 private const val K_SHOW_ZOMBIE_BUSES = "show_zombie_buses"
 private const val K_SHOW_SECONDS = "show_seconds"
 private const val K_USE_US_UNITS = "use_us_units"
+
+const val K_SHOW_ORIGINAL_TIMETABLE = "show_original_timetable"
+const val K_SHOW_COUNTDOWN = "show_countdown"
+const val K_SHOW_FLOATING_CONTROLS = "show_floating_controls"
 
 private fun SharedPreferences.putDouble(key: String, value: Double) =
         edit().putLong(key, java.lang.Double.doubleToRawLongBits(value)).apply()

@@ -118,4 +118,6 @@
     <string name="settings_show_seconds">秒を表示</string>
     <string name="settings_show_seconds_description">到着・出発時刻に秒を表示する</string>
     <string name="waiting_for_gps">GPSを待機中…</string>
+    <string name="single_trip_info_screen_original">オリジナル</string>
+    <string name="single_trip_info_screen_countdown">カウントダウン</string>
 </resources>

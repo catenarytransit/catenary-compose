@@ -2,19 +2,16 @@ package com.catenarymaps.catenary
 
 import android.content.Context
 import android.os.Build
-import androidx.compose.runtime.*
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
@@ -22,8 +19,7 @@ import kotlin.math.floor
 // ---------- Locale helpers ----------
 fun currentLocale(context: Context): Locale {
     val cfg = context.resources.configuration
-    return if (Build.VERSION.SDK_INT >= 24) cfg.locales[0]
-    else @Suppress("DEPRECATION") cfg.locale
+    return if (Build.VERSION.SDK_INT >= 24) cfg.locales[0] else @Suppress("DEPRECATION") cfg.locale
 }
 
 private fun hourMarking(locale: Locale): String {
@@ -72,10 +68,11 @@ private fun secMarking(locale: Locale): String {
 
 // ---------- Self-Updating Timer Component ----------
 /**
- * A self-updating countdown timer that automatically refreshes every second.
- * Use this for countdown displays that need to update in real-time.
+ * A self-updating countdown timer that automatically refreshes every second. Use this for countdown
+ * displays that need to update in real-time.
  *
- * @param targetTimeSeconds The target Unix timestamp in seconds to count down to (or from if in the past)
+ * @param targetTimeSeconds The target Unix timestamp in seconds to count down to (or from if in the
+ * past)
  */
 @Composable
 fun SelfUpdatingDiffTimer(
@@ -92,16 +89,16 @@ fun SelfUpdatingDiffTimer(
     color: Color = Color.Unspecified
 ) {
     var currentTimeSeconds by remember { mutableStateOf(java.time.Instant.now().epochSecond) }
-    
+
     LaunchedEffect(Unit) {
         while (true) {
             currentTimeSeconds = java.time.Instant.now().epochSecond
             kotlinx.coroutines.delay(1000L)
         }
     }
-    
+
     val diff = (targetTimeSeconds - currentTimeSeconds).toDouble()
-    
+
     DiffTimer(
         diff = diff,
         showBrackets = showBrackets,
@@ -120,7 +117,7 @@ fun SelfUpdatingDiffTimer(
 // ---------- Compose Timer Component ----------
 @Composable
 fun DiffTimer(
-    diff: Double,                 // seconds (can be negative)
+    diff: Double, // seconds (can be negative)
     showBrackets: Boolean = true,
     showSeconds: Boolean = false,
     showDays: Boolean = false,
@@ -136,28 +133,30 @@ fun DiffTimer(
     val locale = remember { currentLocale(context) }
 
     // Fix: Unified types to Int to avoid "intersection of Number & Comparable" warning
-    val (d, h, m, s) = remember(diff, showDays) {
-        var remainder = floor(abs(diff))
-        var days = 0
-        if (showDays) {
-            days = floor(remainder / 86400).toInt()
-            remainder -= days * 86400
+    val (d, h, m, s) =
+        remember(diff, showDays) {
+            var remainder = floor(abs(diff))
+            var days = 0
+            if (showDays) {
+                days = floor(remainder / 86400).toInt()
+                remainder -= days * 86400
+            }
+            val hours = floor(remainder / 3600).toInt()
+            remainder -= hours * 3600
+            val mins = floor(remainder / 60).toInt()
+            remainder -= mins * 60
+
+            // Explicitly convert to Int here so the array is Array<Int>
+            val secs = remainder.toInt()
+            arrayOf(days, hours, mins, secs)
         }
-        val hours = floor(remainder / 3600).toInt()
-        remainder -= hours * 3600
-        val mins = floor(remainder / 60).toInt()
-        remainder -= mins * 60
 
-        // Explicitly convert to Int here so the array is Array<Int>
-        val secs = remainder.toInt()
-        arrayOf(days, hours, mins, secs)
-    }
-
-    val signText = when {
-        diff < 0 -> "-"
-        diff > 0 && showPlus -> "+"
-        else -> ""
-    }
+    val signText =
+        when {
+            diff < 0 -> "-"
+            diff > 0 && showPlus -> "+"
+            else -> ""
+        }
 
     Row(modifier = Modifier, verticalAlignment = Alignment.Bottom) {
         if (showBrackets) {
@@ -166,16 +165,22 @@ fun DiffTimer(
 
         if (signText.isNotEmpty()) {
             Text(
-                signText, fontSize = numSize, fontWeight = FontWeight.Bold,
-                modifier = Modifier.alignByBaseline(), color = color
+                signText,
+                fontSize = numSize,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.alignByBaseline(),
+                color = color
             )
         }
 
         // Note: usage of 'as Int' is no longer required as d, h, m, s are inferred as Int
         if (d > 0) {
             Text(
-                "$d", fontSize = numSize, fontWeight = numberFontWeight,
-                modifier = Modifier.alignByBaseline(), color = color
+                "$d",
+                fontSize = numSize,
+                fontWeight = numberFontWeight,
+                modifier = Modifier.alignByBaseline(),
+                color = color
             )
             Text(
                 dayMarking(locale),
@@ -188,8 +193,11 @@ fun DiffTimer(
 
         if (h > 0) {
             Text(
-                "$h", modifier = Modifier.alignByBaseline(),
-                fontSize = numSize, fontWeight = numberFontWeight, color = color
+                "$h",
+                modifier = Modifier.alignByBaseline(),
+                fontSize = numSize,
+                fontWeight = numberFontWeight,
+                color = color
             )
             Text(
                 hourMarking(locale),
@@ -200,8 +208,7 @@ fun DiffTimer(
             )
         }
 
-        val showM =
-            h > 0 || (m > 0 || (!showSeconds && m >= 0 && diff != 0.0))
+        val showM = h > 0 || (m > 0 || (!showSeconds && m >= 0 && diff != 0.0))
         if (showM) {
             Text(
                 "$m",

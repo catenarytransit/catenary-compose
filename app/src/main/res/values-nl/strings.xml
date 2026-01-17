@@ -117,4 +117,6 @@
     <string name="settings_show_seconds">Seconden tonen</string>
     <string name="settings_show_seconds_description">Toon seconden in aankomst- en vertrektijden</string>
     <string name="waiting_for_gps">Wachten op GPS…</string>
+    <string name="single_trip_info_screen_original">Origineel</string>
+    <string name="single_trip_info_screen_countdown">Aftellen</string>
 </resources>

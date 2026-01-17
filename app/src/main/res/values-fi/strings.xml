@@ -117,4 +117,6 @@
     <string name="settings_show_seconds">Näytä sekunnit</string>
     <string name="settings_show_seconds_description">Näytä sekunnit tulo- ja lähtöajoissa</string>
     <string name="waiting_for_gps">Odotetaan GPS:ää…</string>
+    <string name="single_trip_info_screen_original">Alkuperäinen</string>
+    <string name="single_trip_info_screen_countdown">Lähtölaskenta</string>
 </resources>

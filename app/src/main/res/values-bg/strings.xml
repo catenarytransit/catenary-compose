@@ -117,4 +117,6 @@
     <string name="settings_show_seconds">Покажи секундите</string>
     <string name="settings_show_seconds_description">Показване на секунди в часовете на пристигане и заминаване</string>
     <string name="waiting_for_gps">Изчакване на GPS…</string>
+    <string name="single_trip_info_screen_original">Оригинал</string>
+    <string name="single_trip_info_screen_countdown">Обратно броене</string>
 </resources>
