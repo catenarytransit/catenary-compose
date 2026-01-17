@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -820,9 +821,18 @@ fun SingleTripInfoScreen(
         // Floating Controls - Toggles
         androidx.compose.animation.AnimatedVisibility(
             visible = showFloatingControls,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp)
+                    .windowInsetsPadding(
+                        WindowInsets(
+                            bottom =
+                                WindowInsets.safeDrawing.getBottom(
+                                    density = LocalDensity.current
+                                )
+                        )
+                    ),
             enter =
                 androidx.compose.animation.fadeIn() +
                         androidx.compose.animation.slideInVertically { it },
@@ -897,8 +907,10 @@ fun VehicleInfoDetails(vehicleData: VehicleRealtimeData, usUnits: Boolean) {
             )
             var currentTime by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
             LaunchedEffect(Unit) {
-                delay(1000)
-                currentTime = System.currentTimeMillis() / 1000
+                while (true) {
+                    delay(1000)
+                    currentTime = System.currentTimeMillis() / 1000
+                }
             }
             vehicleData.timestamp?.let {
                 val diff = (it - currentTime).toDouble()
@@ -1285,7 +1297,9 @@ fun StopListItem(
     // Define a consistent header height for the "Station Name" row
     val headerHeight = 24.dp
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .zIndex(if (movingDotProgress != null) 1f else 0f)) {
         // 1. Render Above Rows
         aboveContent.forEach { content ->
             Row(
