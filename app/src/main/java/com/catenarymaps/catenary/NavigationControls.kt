@@ -64,7 +64,7 @@ fun NavigationControls(
 
                         IconButton(onClick = onHome, modifier = Modifier.size(32.dp)) {
                                 Icon(
-                                        Icons.Filled.MoreVert,
+                                        Icons.Filled.Home,
                                         contentDescription = "Home screen",
                                         modifier =
                                                 Modifier
@@ -112,9 +112,7 @@ fun NavigationControls(
                                 ) {
                                         Icon(
                                                 Icons.Filled
-                                                        .MoreTime, // Using Info as PageInfo replacement
-                                                // if not found,
-                                                // usually PageInfo is not standard.
+                                                        .MoreTime,
                                                 contentDescription = "Page Info",
                                                 modifier =
                                                         Modifier
