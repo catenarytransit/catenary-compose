@@ -44,7 +44,15 @@ fun SelectionRouteBadges(
         resolveRouteInfo: (String) -> ResolvedRouteBadgeInfo?,
         modifier: Modifier = Modifier
 ) {
-        val routeInfos = remember(routeIds) { routeIds.mapNotNull { resolveRouteInfo(it) } }
+    val routeInfos =
+        remember(routeIds) {
+            routeIds.mapNotNull { resolveRouteInfo(it) }.distinctBy {
+                val name =
+                    it.shortName
+                        ?: it.longName?.replace(" Line", "") ?: it.routeId
+                it.color to name
+            }
+        }
 
         if (routeInfos.isEmpty()) return
 
@@ -54,56 +62,42 @@ fun SelectionRouteBadges(
                 // --- National Rail Logic ---
                 val nrRoutes = routeInfos.filter { it.chateauId == "nationalrailuk" }
                 if (nrRoutes.isNotEmpty()) {
-                        val agencyGroups =
-                                mapOf(
-                                        "GW" to
-                                                Pair(
-                                                        "Great Western Railway",
-                                                        "GreaterWesternRailway.svg"
-                                                ),
-                                        "SW" to
-                                                Pair(
-                                                        "South Western Railway",
-                                                        "SouthWesternRailway.svg"
-                                                ),
-                                        "SN" to Pair("Southern", "SouthernIcon.svg"),
-                                        "CC" to Pair("c2c", "c2c_logo.svg"),
-                                        "LE" to Pair("Greater Anglia", null)
+                    val groupedRoutes =
+                        nrRoutes
+                            .mapNotNull { route ->
+                                NationalRailUtils.getAgencyInfo(
+                                    route.agencyId,
+                                    null
                                 )
+                                    ?.let { it to route }
+                            }
+                            .groupBy({ it.first }, { it.second })
 
-                        agencyGroups.forEach { (agencyId, info) ->
-                                val name = info.first
-                                val icon = info.second
-                                val matchingRoutes = nrRoutes.filter { it.agencyId == agencyId }
+                    groupedRoutes.forEach { (info, routes) ->
+                        routes.forEach { handledRoutes.add(it.routeId) }
 
-                                if (matchingRoutes.isNotEmpty()) {
-                                        matchingRoutes.forEach { handledRoutes.add(it.routeId) }
-
-                                        Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                modifier =
-                                                        Modifier.clip(RoundedCornerShape(4.dp))
-                                                                .background(
-                                                                        MaterialTheme.colorScheme
-                                                                                .surfaceVariant
-                                                                )
-                                                                .padding(
-                                                                        horizontal = 6.dp,
-                                                                        vertical = 2.dp
-                                                                )
-                                        ) {
-                                                if (icon != null) {
-                                                        AgencyIcon(
-                                                                iconName = icon,
-                                                                contentDescription = name
-                                                        )
-                                                }
-                                                Text(
-                                                        text = name,
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        fontWeight = FontWeight.SemiBold
-                                                )
-                                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(
+                                        MaterialTheme.colorScheme
+                                            .surfaceVariant
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            if (info.icon != null) {
+                                AgencyIcon(
+                                    iconName = info.icon,
+                                    contentDescription = info.name
+                                )
+                            }
+                            Text(
+                                text = info.name,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
                                 }
                         }
                 }
@@ -213,9 +207,10 @@ fun SelectionRouteBadges(
 fun StandardRouteBadge(route: ResolvedRouteBadgeInfo) {
         Box(
                 modifier =
-                        Modifier.clip(RoundedCornerShape(4.dp))
-                                .background(parseColor(route.color, Color.Black))
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(parseColor(route.color, Color.Black))
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
         ) {
                 Text(
                         text = route.shortName
@@ -244,6 +239,8 @@ fun AgencyIcon(iconName: String, contentDescription: String?) {
                                 .build(),
                 imageLoader = imageLoader,
                 contentDescription = contentDescription,
-                modifier = Modifier.size(12.dp).padding(end = 4.dp)
+                modifier = Modifier
+                    .size(12.dp)
+                    .padding(end = 4.dp)
         )
 }

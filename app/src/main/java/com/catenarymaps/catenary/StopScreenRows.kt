@@ -32,23 +32,6 @@ import coil.request.ImageRequest
 import java.time.ZoneId
 import java.util.Locale
 
-private fun getAgencyIconUrl(agencyId: String?, agencyName: String?): String? {
-        val base = "https://maps.catenarymaps.org/agencyicons"
-        return when {
-                agencyId == "GWR" || agencyName?.trim()?.lowercase() == "gwr" ->
-                        "$base/GreaterWesternRailway.svg" // Note: Svelte had Brighter variant for
-                // dark
-                // mode, ignoring for now or could handle with
-                // isSystemInDarkTheme()
-                agencyName?.trim()?.lowercase() == "london overground" ->
-                        "$base/uk-london-overground.svg"
-                agencyId == "CC" || agencyName?.trim()?.lowercase() == "c2c" -> "$base/c2c_logo.svg"
-                agencyName?.trim()?.lowercase() == "elizabeth line" ->
-                        "$base/Elizabeth_line_roundel.svg" // User said all SVG
-                else -> null
-        }
-}
-
 @Composable
 fun StationScreenTrainRow(
         event: StopEvent,
@@ -216,11 +199,9 @@ fun StationScreenTrainRow(
                 }
 
                 // Middle: Info
-                Column(
-                        modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 4.dp)
-                ) {
+                Column(modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                         text = event.headsign ?: "",
@@ -270,8 +251,16 @@ fun StationScreenTrainRow(
                                         )
                                 }
 
-                                if (agencyName != null) {
-                                        val iconUrl = getAgencyIconUrl(agencyId, agencyName)
+                                val agencyInfo =
+                                        NationalRailUtils.getAgencyInfo(agencyId, agencyName)
+                                val resolvedAgencyName = agencyInfo?.name ?: agencyName
+
+                                if (resolvedAgencyName != null) {
+                                        val iconUrl =
+                                                NationalRailUtils.getAgencyIconUrl(
+                                                        agencyId,
+                                                        agencyName
+                                                )
                                         if (iconUrl != null) {
                                                 val context = LocalContext.current
                                                 val imageLoader =
@@ -302,7 +291,7 @@ fun StationScreenTrainRow(
                                         }
 
                                         Text(
-                                                text = agencyName,
+                                                text = resolvedAgencyName,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )

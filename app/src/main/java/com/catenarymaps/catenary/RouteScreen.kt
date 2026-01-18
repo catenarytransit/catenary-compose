@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -50,8 +49,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import io.ktor.client.call.body
@@ -92,6 +89,7 @@ data class ConnectingRoute(
         @SerialName("color") val color: String? = null,
         @SerialName("text_color") val textColor: String? = null,
         @SerialName("route_type") val routeType: Int = 3,
+        @SerialName("agency_id") val agencyId: String? = null,
 )
 
 @Serializable
@@ -108,11 +106,13 @@ data class RouteInfoDirectionPattern(
 )
 
 data class StopConnectionChip(
+    val routeId: String,
         val shortName: String?,
         val longName: String?,
         val color: String?,
         val textColor: String?,
-        val chateauId: String? = null
+    val chateauId: String? = null,
+    val agencyId: String? = null
 )
 
 @Serializable
@@ -313,15 +313,15 @@ fun RouteScreen(
     if (routeInfo == null) {
         Column {
             Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.End
             ) { NavigationControls(onBack = onBack, onHome = onHome) }
             Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                     contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         }
@@ -337,12 +337,13 @@ fun RouteScreen(
                 val connectingRoutes = info.connectingRoutes ?: emptyMap()
 
                 for ((stopId, perChateau) in connectionsPerStop) {
-                    val connectingRoutesList = mutableListOf<Pair<ConnectingRoute, String>>()
+                    val connectingRoutesList =
+                        mutableListOf<Triple<ConnectingRoute, String, String>>()
                     for ((chateauId, routeIds) in perChateau) {
                         val routesForChateau = connectingRoutes[chateauId] ?: continue
                         for (routeId in routeIds) {
                             routesForChateau[routeId]?.let {
-                                connectingRoutesList.add(it to chateauId)
+                                connectingRoutesList.add(Triple(it, chateauId, routeId))
                             }
                         }
                     }
@@ -358,7 +359,7 @@ fun RouteScreen(
                                         4 to 4 // Ferry
                                 )
                         connectingRoutesList.sortWith(
-                                compareBy<Pair<ConnectingRoute, String>> {
+                            compareBy<Triple<ConnectingRoute, String, String>> {
                                     typeOrder[it.first.routeType] ?: 5
                                 }
                                         .thenComparator { a, b ->
@@ -377,13 +378,15 @@ fun RouteScreen(
                         )
 
                         result[stopId] =
-                                connectingRoutesList.map { (route, chateauId) ->
+                            connectingRoutesList.map { (route, chateauId, routeId) ->
                                     StopConnectionChip(
+                                        routeId = routeId,
                                             shortName = route.shortName,
                                             longName = route.longName,
                                             color = route.color,
                                             textColor = route.textColor,
-                                            chateauId = chateauId
+                                        chateauId = chateauId,
+                                        agencyId = route.agencyId
                                     )
                                 }
                     }
@@ -520,16 +523,16 @@ fun RouteScreen(
 
     LazyColumn(
             modifier =
-                    Modifier
-                        .padding(horizontal = 8.dp)
-                        .windowInsetsPadding(
-                            WindowInsets(
-                                bottom =
-                                    WindowInsets.safeDrawing.getBottom(
-                                        density = LocalDensity.current
-                                    )
-                            )
+                Modifier
+                    .padding(horizontal = 8.dp)
+                    .windowInsetsPadding(
+                        WindowInsets(
+                            bottom =
+                                WindowInsets.safeDrawing.getBottom(
+                                    density = LocalDensity.current
+                                )
                         )
+                    )
     ) {
         // Header
         item {
@@ -586,9 +589,9 @@ fun RouteScreen(
 
                     Card(
                             modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .clickable { activeParentId = parentId },
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { activeParentId = parentId },
                             shape = RoundedCornerShape(8.dp),
                             colors =
                                     CardDefaults.cardColors(
@@ -621,12 +624,12 @@ fun RouteScreen(
                                 Spacer(Modifier.width(8.dp))
                                 Box(
                                         modifier =
-                                                Modifier
-                                                    .size(24.dp)
-                                                    .clip(CircleShape)
-                                                    .background(
-                                                        MaterialTheme.colorScheme.primary
-                                                    ),
+                                            Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary
+                                                ),
                                         contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -662,22 +665,22 @@ fun RouteScreen(
             items(activeVehicles) { vehicle ->
                 Card(
                         modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp)
-                                    .clickable {
-                                        onTripClick(
-                                            CatenaryStackEnum.SingleTrip(
-                                                chateau_id = screenData.chateau_id,
-                                                trip_id = vehicle.trip?.trip_id ?: "",
-                                                route_id = vehicle.trip?.route_id,
-                                                start_date = vehicle.trip?.start_date,
-                                                start_time = vehicle.trip?.start_time,
-                                                vehicle_id = vehicle.vehicle?.id,
-                                                route_type = vehicle.route_type
-                                            )
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                                .clickable {
+                                    onTripClick(
+                                        CatenaryStackEnum.SingleTrip(
+                                            chateau_id = screenData.chateau_id,
+                                            trip_id = vehicle.trip?.trip_id ?: "",
+                                            route_id = vehicle.trip?.route_id,
+                                            start_date = vehicle.trip?.start_date,
+                                            start_time = vehicle.trip?.start_time,
+                                            vehicle_id = vehicle.vehicle?.id,
+                                            route_type = vehicle.route_type
                                         )
-                                    },
+                                    )
+                                },
                         colors =
                                 CardDefaults.cardColors(
                                         containerColor =
@@ -728,26 +731,26 @@ fun RouteScreen(
                 if (stopDetails != null) {
                     Row(
                             modifier =
-                                    Modifier
-                                        .height(IntrinsicSize.Min)
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            onStopClick(
-                                                CatenaryStackEnum.StopStack(
-                                                    chateau_id = screenData.chateau_id,
-                                                    stop_id = stopTime.stopId
-                                                )
+                                Modifier
+                                    .height(IntrinsicSize.Min)
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onStopClick(
+                                            CatenaryStackEnum.StopStack(
+                                                chateau_id = screenData.chateau_id,
+                                                stop_id = stopTime.stopId
                                             )
-                                        },
+                                        )
+                                    },
                             verticalAlignment = Alignment.Top
                     ) {
                         RouteStopProgressIndicator(
                                 color = parseColor(info.color),
                                 isFirst = index == 0,
                                 isLast = index == activeStops.lastIndex,
-                                modifier = Modifier
-                                    .width(12.dp)
-                                    .fillMaxHeight()
+                            modifier = Modifier
+                                .width(12.dp)
+                                .fillMaxHeight()
                         )
                         Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.padding(vertical = 4.dp)) {
@@ -778,11 +781,24 @@ fun RouteScreen(
 
                             if (connectionKey != null) {
                                 val connections = stopConnections[connectionKey].orEmpty()
-                                FlowRow(
-                                        modifier = Modifier.padding(top = 0.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(1.dp),
-                                        verticalArrangement = Arrangement.spacedBy(1.dp)
-                                ) { connections.forEach { conn -> TransferRouteChip(conn) } }
+                                SelectionRouteBadges(
+                                    routeIds = connections.map { it.routeId },
+                                    resolveRouteInfo = { routeId ->
+                                        connections.find { it.routeId == routeId }?.let { chip
+                                            ->
+                                            ResolvedRouteBadgeInfo(
+                                                routeId = chip.routeId,
+                                                shortName = chip.shortName,
+                                                longName = chip.longName,
+                                                color = chip.color ?: "000000",
+                                                textColor = chip.textColor ?: "FFFFFF",
+                                                agencyId = chip.agencyId,
+                                                chateauId = chip.chateauId
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier.padding(top = 0.dp)
+                                )
                             }
 
                             Spacer(modifier = Modifier
@@ -839,100 +855,6 @@ fun RouteStopProgressIndicator(
                 radius = canvasWidth / 2,
                 center = center,
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = canvasWidth / 4)
-        )
-    }
-}
-
-@Composable
-fun TransferRouteChip(conn: StopConnectionChip, modifier: Modifier = Modifier) {
-    val isRatp = RatpUtils.isIdfmChateau(conn.chateauId) && RatpUtils.isRatpRoute(conn.shortName)
-    val isMta =
-            MtaSubwayUtils.MTA_CHATEAU_ID == conn.chateauId &&
-                    !conn.shortName.isNullOrEmpty() &&
-                    MtaSubwayUtils.isSubwayRouteId(conn.shortName!!)
-
-    if (isRatp) {
-        val iconUrl = RatpUtils.getRatpIconUrl(conn.shortName)
-        if (iconUrl != null) {
-            val context = LocalContext.current
-            val imageLoader =
-                    androidx.compose.runtime.remember(context) {
-                        coil.ImageLoader.Builder(context)
-                                .components { add(coil.decode.SvgDecoder.Factory()) }
-                                .build()
-                    }
-            AsyncImage(
-                    model = ImageRequest.Builder(context).data(iconUrl).crossfade(true).build(),
-                    imageLoader = imageLoader,
-                    contentDescription = conn.shortName,
-                    modifier = modifier
-                        .height(20.dp)
-                        .padding(horizontal = 2.dp)
-            )
-            return
-        }
-    } else if (isMta) {
-        val iconUrl = MtaSubwayUtils.getMtaIconUrl(conn.shortName!!)
-        if (iconUrl != null) {
-            val context = LocalContext.current
-            val imageLoader =
-                androidx.compose.runtime.remember(context) {
-                    coil.ImageLoader.Builder(context)
-                        .components { add(coil.decode.SvgDecoder.Factory()) }
-                        .build()
-                }
-            AsyncImage(
-                model = ImageRequest.Builder(context).data(iconUrl).crossfade(true).build(),
-                imageLoader = imageLoader,
-                contentDescription = conn.shortName,
-                modifier = modifier
-                    .height(20.dp)
-                    .padding(horizontal = 2.dp)
-            )
-            return
-        } else {
-            val mtaColor = MtaSubwayUtils.getMtaSubwayColor(conn.shortName!!)
-            val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(conn.shortName)
-            Box(
-                modifier =
-                    modifier
-                        .size(20.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(mtaColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = symbolShortName,
-                    color = Color.White,
-                    style =
-                        MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-            }
-            return
-        }
-    }
-
-    val bgColor = remember(conn.color) { parseColor(conn.color ?: "#cccccc") }
-    val fgColor = remember(conn.textColor) { parseColor(conn.textColor ?: "#000000") }
-
-    Box(
-            modifier =
-                    modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(bgColor)
-                        .padding(horizontal = 3.dp, vertical = 1.dp)
-    ) {
-        Text(
-                text = conn.shortName
-                                ?: conn.longName?.replace(" Line", "") // same trick as JS
-                                 ?: "",
-                color = fgColor,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
         )
     }
 }

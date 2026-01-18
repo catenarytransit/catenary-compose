@@ -94,11 +94,11 @@ fun RouteHeading(
             // Main text content; padded on the end so it "wraps around" controls
             Column(
                     modifier =
-                            Modifier
-                                .align(Alignment.TopStart)
-                                .padding(
-                                    end = 48.dp
-                                ) // adjust if your controls are wider/narrower
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(
+                                end = 48.dp
+                            ) // adjust if your controls are wider/narrower
             ) {
                 // Route Name Header
                 Row(modifier = clickableModifier, verticalAlignment = Alignment.CenterVertically) {
@@ -123,8 +123,8 @@ fun RouteHeading(
                                 imageLoader = imageLoader,
                                     contentDescription = shortName,
                                     modifier =
-                                            Modifier
-                                                .height(32.dp) // Match roughly the text height
+                                        Modifier
+                                            .height(32.dp) // Match roughly the text height
                                                     .padding(end = 8.dp)
                             )
                         } else {
@@ -194,7 +194,11 @@ fun RouteHeading(
 
                     // Long Namef
                     if (!longName.isNullOrBlank()) {
-                        Text(text = longName, style = textStyle, color = displayColor)
+                        val isNationalRail = chateauId == "nationalrailuk"
+                        val hasTo = longName.contains(" to ", ignoreCase = true)
+                        if (!isNationalRail || !hasTo) {
+                            Text(text = longName, style = textStyle, color = displayColor)
+                        }
                     }
                 }
 
@@ -203,10 +207,10 @@ fun RouteHeading(
                         if (tripShortName != null) {
                             Box(
                                     modifier =
-                                            Modifier
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background(routeColor)
-                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                        Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(routeColor)
+                                            .padding(horizontal = 4.dp, vertical = 1.dp)
                             ) { Text(text = tripShortName, color = routeTextColor) }
 
                             Spacer(Modifier.size(4.dp))

@@ -267,6 +267,7 @@ data class OsmStationRouteInfo(
         val text_color: String,
         val short_name: String? = null,
         val long_name: String? = null,
+        val agency_id: String? = null,
 )
 
 private data class SavedCamera(

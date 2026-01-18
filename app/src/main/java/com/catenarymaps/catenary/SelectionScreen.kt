@@ -571,7 +571,7 @@ fun OsmStationSelectionItem(
                                                                                         textColor =
                                                                                                 info.text_color,
                                                                                         agencyId =
-                                                                                                null,
+                                                                                                info.agency_id,
                                                                                         chateauId =
                                                                                                 chateauId
                                                                                 )
