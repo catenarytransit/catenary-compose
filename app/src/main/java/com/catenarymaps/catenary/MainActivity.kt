@@ -198,7 +198,7 @@ fun parseColor(colorString: String?, default: Color = Color.Black): Color {
         }
 }
 
-private const val PREFS_NAME = "catenary_prefs"
+const val PREFS_NAME = "catenary_prefs"
 private const val K_LAT = "camera_lat"
 private const val K_LON = "camera_lon"
 private const val K_ZOOM = "camera_zoom"
@@ -213,7 +213,12 @@ private const val K_DATADOG_CONSENT = "datadog_consent"
 private const val K_GA_CONSENT = "ga_consent"
 
 private const val K_SHOW_ZOMBIE_BUSES = "show_zombie_buses"
+private const val K_SHOW_SECONDS = "show_seconds"
 private const val K_USE_US_UNITS = "use_us_units"
+
+const val K_SHOW_ORIGINAL_TIMETABLE = "show_original_timetable"
+const val K_SHOW_COUNTDOWN = "show_countdown"
+const val K_SHOW_FLOATING_CONTROLS = "show_floating_controls"
 
 private fun SharedPreferences.putDouble(key: String, value: Double) =
         edit().putLong(key, java.lang.Double.doubleToRawLongBits(value)).apply()
@@ -253,8 +258,7 @@ data class OsmStationPreview(
         @EncodeDefault val routes: Map<String, Map<String, OsmStationRouteInfo>> = emptyMap()
 )
 
-@Serializable
-data class OsmStationStopInfo(@EncodeDefault val routes: List<String> = emptyList())
+@Serializable data class OsmStationStopInfo(@EncodeDefault val routes: List<String> = emptyList())
 
 @Serializable
 data class OsmStationRouteInfo(
@@ -263,6 +267,7 @@ data class OsmStationRouteInfo(
         val text_color: String,
         val short_name: String? = null,
         val long_name: String? = null,
+        val agency_id: String? = null,
 )
 
 private data class SavedCamera(
@@ -500,7 +505,7 @@ val STOP_SOURCES =
         mapOf(
                 "busstops" to "https://birch6.catenarymaps.org/busstops",
                 "stationfeatures" to "https://birch7.catenarymaps.org/station_features",
-                "railstops" to "https://birch5.catenarymaps.org/railstops",
+                "railstops" to "https://birch5.catenarymaps.org/unmatched_railstops",
                 "otherstops" to "https://birch8.catenarymaps.org/otherstops",
                 "osmstations" to "https://birch.catenarymaps.org/osm_stations"
         )
@@ -739,11 +744,11 @@ class MainActivity : ComponentActivity() {
                                                                         top = 0.dp,
                                                                         right =
                                                                                 (mapSize.width /
-                                                                                        density)
+                                                                                                density)
                                                                                         .dp,
                                                                         bottom =
                                                                                 (mapSize.height /
-                                                                                        density)
+                                                                                                density)
                                                                                         .dp
                                                                 )
 
@@ -752,9 +757,9 @@ class MainActivity : ComponentActivity() {
                                                                 if (layerSettingsValue
                                                                                 .intercityrail
                                                                                 .shapes ||
-                                                                        layerSettingsValue
-                                                                                .intercityrail
-                                                                                .labelshapes
+                                                                                layerSettingsValue
+                                                                                        .intercityrail
+                                                                                        .labelshapes
                                                                 )
                                                                         (responseFromRailCounting
                                                                                 ?.intercityRailShapes
@@ -764,9 +769,9 @@ class MainActivity : ComponentActivity() {
                                                                 if (layerSettingsValue
                                                                                 .localrail
                                                                                 .shapes ||
-                                                                        layerSettingsValue
-                                                                                .localrail
-                                                                                .labelshapes
+                                                                                layerSettingsValue
+                                                                                        .localrail
+                                                                                        .labelshapes
                                                                 ) {
                                                                         (responseFromRailCounting
                                                                                 ?.metroShapes
@@ -782,9 +787,9 @@ class MainActivity : ComponentActivity() {
                                                                 if (layerSettingsValue
                                                                                 .localrail
                                                                                 .shapes ||
-                                                                        layerSettingsValue
-                                                                                .localrail
-                                                                                .labelshapes
+                                                                                layerSettingsValue
+                                                                                        .localrail
+                                                                                        .labelshapes
                                                                 ) {
                                                                         (responseFromRailCounting
                                                                                 ?.metroShapes
@@ -801,27 +806,27 @@ class MainActivity : ComponentActivity() {
 
                                                         val featuresDotsCount =
                                                                 projection.queryRenderedFeatures(
-                                                                        rect = rect,
-                                                                        layerIds =
-                                                                                setOf(
-                                                                                        //
-                                                                                        // LayersPerCategory.Tram.Stops,
-                                                                                        //
-                                                                                        // LayersPerCategory.Tram.Livedots,
-                                                                                        LayersPerCategory
-                                                                                                .Metro
-                                                                                                .Stops,
-                                                                                        LayersPerCategory
-                                                                                                .Metro
-                                                                                                .Livedots,
-                                                                                        LayersPerCategory
-                                                                                                .IntercityRail
-                                                                                                .Stops,
-                                                                                        LayersPerCategory
-                                                                                                .IntercityRail
-                                                                                                .Livedots,
-                                                                                )
-                                                                )
+                                                                                rect = rect,
+                                                                                layerIds =
+                                                                                        setOf(
+                                                                                                //
+                                                                                                // LayersPerCategory.Tram.Stops,
+                                                                                                //
+                                                                                                // LayersPerCategory.Tram.Livedots,
+                                                                                                LayersPerCategory
+                                                                                                        .Metro
+                                                                                                        .Stops,
+                                                                                                LayersPerCategory
+                                                                                                        .Metro
+                                                                                                        .Livedots,
+                                                                                                LayersPerCategory
+                                                                                                        .IntercityRail
+                                                                                                        .Stops,
+                                                                                                LayersPerCategory
+                                                                                                        .IntercityRail
+                                                                                                        .Livedots,
+                                                                                        )
+                                                                        )
                                                                         .size
 
                                                         val queryFeatureDotDuration =
@@ -857,8 +862,8 @@ class MainActivity : ComponentActivity() {
                                                                                         .uptimeMillis()
 
                                                                         android.os.Handler(
-                                                                                Looper.getMainLooper()
-                                                                        )
+                                                                                        Looper.getMainLooper()
+                                                                                )
                                                                                 .post {
                                                                                         val handlerWaitTime2 =
                                                                                                 SystemClock
@@ -887,8 +892,8 @@ class MainActivity : ComponentActivity() {
                                                                                                 featuresDotsCount >=
                                                                                                         100 ||
                                                                                                         intercityRailShapesCount +
-                                                                                                        metroRailShapesCount >=
-                                                                                                        20
+                                                                                                                metroRailShapesCount >=
+                                                                                                                20
                                                                                         railinframe =
                                                                                                 manyVisible
                                                                                 }
@@ -1045,10 +1050,10 @@ class MainActivity : ComponentActivity() {
 
                 val configuration =
                         com.datadog.android.core.configuration.Configuration.Builder(
-                                clientToken = clientToken,
-                                env = environmentName,
-                                variant = appVariantName
-                        )
+                                        clientToken = clientToken,
+                                        env = environmentName,
+                                        variant = appVariantName
+                                )
                                 .useSite(DatadogSite.EU1)
                                 .build()
                 // Initialize with the saved consent state
@@ -1089,8 +1094,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
                         if (requestCode == 1001 &&
-                                grantResults.isNotEmpty() &&
-                                grantResults[0] == PackageManager.PERMISSION_GRANTED
+                                        grantResults.isNotEmpty() &&
+                                        grantResults[0] == PackageManager.PERMISSION_GRANTED
                         ) {
                                 fetchLocation { lat, lon ->
                                         // You could trigger a recomposition by setting state again
@@ -1108,7 +1113,7 @@ class MainActivity : ComponentActivity() {
                         val currentCache = realtimeVehicleRouteCache.value
                         val currentCacheKeys = currentCache.keys
                         if (currentCacheKeys.size != visibleSet.size ||
-                                !currentCacheKeys.containsAll(visibleSet)
+                                        !currentCacheKeys.containsAll(visibleSet)
                         ) {
                                 realtimeVehicleRouteCache.value =
                                         currentCache.filterKeys { it in visibleSet }
@@ -1117,7 +1122,7 @@ class MainActivity : ComponentActivity() {
                         val currentLastUpdated = realtimeVehicleLocationsLastUpdated.value
                         val currentLastUpdatedKeys = currentLastUpdated.keys
                         if (currentLastUpdatedKeys.size != visibleSet.size ||
-                                !currentLastUpdatedKeys.containsAll(visibleSet)
+                                        !currentLastUpdatedKeys.containsAll(visibleSet)
                         ) {
                                 realtimeVehicleLocationsLastUpdated.value =
                                         currentLastUpdated.filterKeys { it in visibleSet }
@@ -1126,7 +1131,7 @@ class MainActivity : ComponentActivity() {
                         val currentAgenciesKnown = routeCacheAgenciesKnown.value
                         val currentAgenciesKnownKeys = currentAgenciesKnown.keys
                         if (currentAgenciesKnownKeys.size != visibleSet.size ||
-                                !currentAgenciesKnownKeys.containsAll(visibleSet)
+                                        !currentAgenciesKnownKeys.containsAll(visibleSet)
                         ) {
                                 routeCacheAgenciesKnown.value =
                                         currentAgenciesKnown.filterKeys { it in visibleSet }
@@ -1164,7 +1169,7 @@ class MainActivity : ComponentActivity() {
                         val currentTileBoundaries = previousTileBoundariesStore.value
                         val currentTileBoundariesKeys = currentTileBoundaries.keys
                         if (currentTileBoundariesKeys.size != visibleSet.size ||
-                                !currentTileBoundariesKeys.containsAll(visibleSet)
+                                        !currentTileBoundariesKeys.containsAll(visibleSet)
                         ) {
                                 previousTileBoundariesStore.value =
                                         currentTileBoundaries.filterKeys { it in visibleSet }
@@ -1386,6 +1391,9 @@ class MainActivity : ComponentActivity() {
                         // State for settings from JS
                         var showZombieBuses by remember { mutableStateOf(initialShowZombieBuses) }
                         var usUnits by remember { mutableStateOf(initialUsUnits) }
+                        var showSeconds by remember {
+                                mutableStateOf(prefs.getBoolean(K_SHOW_SECONDS, false))
+                        }
 
                         LaunchedEffect(showZombieBuses) {
                                 prefs.edit()
@@ -1395,6 +1403,10 @@ class MainActivity : ComponentActivity() {
 
                         LaunchedEffect(usUnits) {
                                 prefs.edit().putBoolean(K_USE_US_UNITS, usUnits).apply()
+                        }
+
+                        LaunchedEffect(showSeconds) {
+                                prefs.edit().putBoolean(K_SHOW_SECONDS, showSeconds).apply()
                         }
                         val isDark = isSystemInDarkTheme()
 
@@ -1466,9 +1478,9 @@ class MainActivity : ComponentActivity() {
                                         // distance
                                         val request =
                                                 LocationRequest.Builder(
-                                                        Priority.PRIORITY_HIGH_ACCURACY,
-                                                        /* intervalMillis = */ 5_000L
-                                                )
+                                                                Priority.PRIORITY_HIGH_ACCURACY,
+                                                                /* intervalMillis = */ 5_000L
+                                                        )
                                                         .setMinUpdateIntervalMillis(2_000L)
                                                         .setMinUpdateDistanceMeters(5f)
                                                         .build()
@@ -1626,8 +1638,8 @@ class MainActivity : ComponentActivity() {
                                                                                                 .Indefinite
                                                                         )
                                                                 if (result ==
-                                                                        SnackbarResult
-                                                                                .ActionPerformed
+                                                                                SnackbarResult
+                                                                                        .ActionPerformed
                                                                 ) {
                                                                         // User clicked "RESTART",
                                                                         // complete the update
@@ -1715,7 +1727,7 @@ class MainActivity : ComponentActivity() {
                                                         draggableState.currentValue ==
                                                                 SheetSnapPoint.PartiallyExpanded ||
                                                                 draggableState.currentValue ==
-                                                                SheetSnapPoint.Expanded
+                                                                        SheetSnapPoint.Expanded
                                                 }
                                         }
 
@@ -1746,7 +1758,6 @@ class MainActivity : ComponentActivity() {
                                                                 (isSearchFocused ||
                                                                         sheetHalfOrMore) ->
                                                                 PaddingValues(start = halfWidthDp)
-
                                                         else -> PaddingValues(0.dp)
                                                 }
                                         }
@@ -1902,6 +1913,9 @@ class MainActivity : ComponentActivity() {
                                                         // --- Query each layer group separately ---
                                                         // The returned 'Feature' is
                                                         // spatialk.geojson.Feature
+
+                                                        // Removed unused vehicleLabelType logic
+                                                        // that caused compilation errors
                                                         val vehicleFeatures =
                                                                 projection.queryRenderedFeatures(
                                                                         clickRect,
@@ -1924,9 +1938,9 @@ class MainActivity : ComponentActivity() {
                                                                 )
 
                                                         if (vehicleFeatures.isEmpty() &&
-                                                                routeFeatures.isEmpty() &&
-                                                                stopFeatures.isEmpty() &&
-                                                                osmStationFeatures.isEmpty()
+                                                                        routeFeatures.isEmpty() &&
+                                                                        stopFeatures.isEmpty() &&
+                                                                        osmStationFeatures.isEmpty()
                                                         ) {
                                                                 Log.d(
                                                                         TAG,
@@ -2064,11 +2078,10 @@ class MainActivity : ComponentActivity() {
                                                         val now = SystemClock.uptimeMillis()
                                                         val pos = camera.position
 
-                                                        if (lastCameraPos == null) {
-                                                        }
+                                                        if (lastCameraPos == null) {}
 
                                                         if (lastCameraPos == null ||
-                                                                lastCameraPos != pos
+                                                                        lastCameraPos != pos
                                                         ) {
                                                                 lastCameraPos = pos
                                                                 lastMoveAt = now
@@ -2077,7 +2090,7 @@ class MainActivity : ComponentActivity() {
                                                                 // an internal move we
                                                                 // initiated.
                                                                 if (!geoLock.isInternalMove() &&
-                                                                        geoLock.isActive()
+                                                                                geoLock.isActive()
                                                                 ) {
                                                                         // println("deactivate
                                                                         // camera
@@ -2103,41 +2116,41 @@ class MainActivity : ComponentActivity() {
                                                                         val currentLoc =
                                                                                 currentLocation
                                                                         if (internalPos == null ||
-                                                                                kotlin.math
-                                                                                        .abs(
-                                                                                                pos.target
-                                                                                                        .latitude -
-                                                                                                        internalPos
-                                                                                                                .latitude
-                                                                                        ) >
-                                                                                epsilon ||
-                                                                                kotlin.math
-                                                                                        .abs(
-                                                                                                pos.target
-                                                                                                        .longitude -
-                                                                                                        internalPos
-                                                                                                                .longitude
-                                                                                        ) >
-                                                                                epsilon
-                                                                        ) {
-                                                                                if (currentLoc ==
-                                                                                        null ||
                                                                                         kotlin.math
                                                                                                 .abs(
                                                                                                         pos.target
                                                                                                                 .latitude -
-                                                                                                                currentLoc
-                                                                                                                        .first
+                                                                                                                internalPos
+                                                                                                                        .latitude
                                                                                                 ) >
-                                                                                        epsilon ||
+                                                                                                epsilon ||
                                                                                         kotlin.math
                                                                                                 .abs(
                                                                                                         pos.target
                                                                                                                 .longitude -
-                                                                                                                currentLoc
-                                                                                                                        .second
+                                                                                                                internalPos
+                                                                                                                        .longitude
                                                                                                 ) >
-                                                                                        epsilon
+                                                                                                epsilon
+                                                                        ) {
+                                                                                if (currentLoc ==
+                                                                                                null ||
+                                                                                                kotlin.math
+                                                                                                        .abs(
+                                                                                                                pos.target
+                                                                                                                        .latitude -
+                                                                                                                        currentLoc
+                                                                                                                                .first
+                                                                                                        ) >
+                                                                                                        epsilon ||
+                                                                                                kotlin.math
+                                                                                                        .abs(
+                                                                                                                pos.target
+                                                                                                                        .longitude -
+                                                                                                                        currentLoc
+                                                                                                                                .second
+                                                                                                        ) >
+                                                                                                        epsilon
                                                                                 ) {
                                                                                         geoLock.deactivate()
                                                                                 }
@@ -2199,9 +2212,9 @@ class MainActivity : ComponentActivity() {
                                                                         )
 
                                                                         if (camera.projection !=
-                                                                                null &&
-                                                                                mapSize !=
-                                                                                IntSize.Zero
+                                                                                        null &&
+                                                                                        mapSize !=
+                                                                                                IntSize.Zero
                                                                         ) {
                                                                                 queryVisibleChateaus(
                                                                                         scope,
@@ -2213,12 +2226,12 @@ class MainActivity : ComponentActivity() {
 
                                                                                 if (railinframe) {
                                                                                         if (distanceMovedOfRailChecker >
-                                                                                                20000 ||
-                                                                                                zoomMovedOfRailChecker >
-                                                                                                3
+                                                                                                        20000 ||
+                                                                                                        zoomMovedOfRailChecker >
+                                                                                                                3
                                                                                         ) {
                                                                                                 if (pos.zoom >
-                                                                                                        6
+                                                                                                                6
                                                                                                 ) {
                                                                                                         queryAreAnyRailFeaturesVisible(
                                                                                                                 camera,
@@ -2232,9 +2245,9 @@ class MainActivity : ComponentActivity() {
                                                                                         }
                                                                                 } else {
                                                                                         if (distanceMovedOfRailChecker >
-                                                                                                500 ||
-                                                                                                zoomMovedOfRailChecker >
-                                                                                                1
+                                                                                                        500 ||
+                                                                                                        zoomMovedOfRailChecker >
+                                                                                                                1
                                                                                         ) {
                                                                                                 queryAreAnyRailFeaturesVisible(
                                                                                                         camera,
@@ -2250,8 +2263,8 @@ class MainActivity : ComponentActivity() {
                                                                                 lastQueriedPos = pos
 
                                                                                 if (now -
-                                                                                        lastFetchedAt >=
-                                                                                        fetchDebounceMs
+                                                                                                lastFetchedAt >=
+                                                                                                fetchDebounceMs
                                                                                 ) {
                                                                                         fetchRealtimeData(
                                                                                                 scope =
@@ -2289,11 +2302,11 @@ class MainActivity : ComponentActivity() {
                                                                 // 👇 Persist the camera view while
                                                                 // idle (throttled)
                                                                 if ((now - lastSavedAt) >=
-                                                                        saveThrottleMs &&
-                                                                        (lastSavedPos ==
-                                                                                null ||
-                                                                                lastSavedPos !=
-                                                                                pos)
+                                                                                saveThrottleMs &&
+                                                                                (lastSavedPos ==
+                                                                                        null ||
+                                                                                        lastSavedPos !=
+                                                                                                pos)
                                                                 ) {
                                                                         prefsMemo.writeCamera(pos)
                                                                         lastSavedPos = pos
@@ -2508,7 +2521,7 @@ class MainActivity : ComponentActivity() {
                                                                 stopsContextSource
                                                         onDispose {
                                                                 if (stopsContextSourceRef.value ===
-                                                                        stopsContextSource
+                                                                                stopsContextSource
                                                                 ) {
                                                                         stopsContextSourceRef
                                                                                 .value = null
@@ -2520,7 +2533,7 @@ class MainActivity : ComponentActivity() {
                                                         majorDotsSourceRef.value = majorDotsSource
                                                         onDispose {
                                                                 if (majorDotsSourceRef.value ===
-                                                                        majorDotsSource
+                                                                                majorDotsSource
                                                                 ) {
                                                                         majorDotsSourceRef.value =
                                                                                 null
@@ -2533,7 +2546,7 @@ class MainActivity : ComponentActivity() {
                                                                 transitShapeSource
                                                         onDispose {
                                                                 if (transitShapeSourceRef.value ===
-                                                                        transitShapeSource
+                                                                                transitShapeSource
                                                                 ) {
                                                                         transitShapeSourceRef
                                                                                 .value = null
@@ -2547,7 +2560,7 @@ class MainActivity : ComponentActivity() {
                                                         onDispose {
                                                                 if (transitShapeDetourSourceRef
                                                                                 .value ===
-                                                                        transitShapeDetourSource
+                                                                                transitShapeDetourSource
                                                                 ) {
                                                                         transitShapeDetourSourceRef
                                                                                 .value = null
@@ -2561,7 +2574,7 @@ class MainActivity : ComponentActivity() {
                                                         onDispose {
                                                                 if (transitShapeForStopSourceRef
                                                                                 .value ===
-                                                                        transitShapeForStopSource
+                                                                                transitShapeForStopSource
                                                                 ) {
                                                                         transitShapeForStopSourceRef
                                                                                 .value = null
@@ -2994,8 +3007,8 @@ class MainActivity : ComponentActivity() {
                                                                                                 "trip_id"
                                                                                         ),
                                                                                         get(
-                                                                                                "trip_id"
-                                                                                        )
+                                                                                                        "trip_id"
+                                                                                                )
                                                                                                 .cast<
                                                                                                         StringValue>()
                                                                                                 .neq(
@@ -3037,8 +3050,8 @@ class MainActivity : ComponentActivity() {
                                                                                                 "trip_id"
                                                                                         ),
                                                                                         get(
-                                                                                                "trip_id"
-                                                                                        )
+                                                                                                        "trip_id"
+                                                                                                )
                                                                                                 .cast<
                                                                                                         StringValue>()
                                                                                                 .neq(
@@ -3091,8 +3104,8 @@ class MainActivity : ComponentActivity() {
                                                                                                 "trip_id"
                                                                                         ),
                                                                                         get(
-                                                                                                "trip_id"
-                                                                                        )
+                                                                                                        "trip_id"
+                                                                                                )
                                                                                                 .cast<
                                                                                                         StringValue>()
                                                                                                 .neq(
@@ -3123,13 +3136,13 @@ class MainActivity : ComponentActivity() {
                                                         source = railDotsSrc.value,
                                                         settings =
                                                                 (layerSettings.value[
-                                                                        "intercityrail"] as
-                                                                        LayerCategorySettings)
+                                                                                "intercityrail"] as
+                                                                                LayerCategorySettings)
                                                                         .labelrealtimedots,
                                                         isVisible =
                                                                 (layerSettings.value[
-                                                                        "intercityrail"] as
-                                                                        LayerCategorySettings)
+                                                                                "intercityrail"] as
+                                                                                LayerCategorySettings)
                                                                         .visiblerealtimedots,
                                                         baseFilter =
                                                                 all(
@@ -3142,8 +3155,8 @@ class MainActivity : ComponentActivity() {
                                                                                                 "trip_id"
                                                                                         ),
                                                                                         get(
-                                                                                                "trip_id"
-                                                                                        )
+                                                                                                        "trip_id"
+                                                                                                )
                                                                                                 .cast<
                                                                                                         StringValue>()
                                                                                                 .neq(
@@ -3175,11 +3188,11 @@ class MainActivity : ComponentActivity() {
                                                         source = otherDotsSrc.value,
                                                         settings =
                                                                 (layerSettings.value["other"] as
-                                                                        LayerCategorySettings)
+                                                                                LayerCategorySettings)
                                                                         .labelrealtimedots,
                                                         isVisible =
                                                                 (layerSettings.value["other"] as
-                                                                        LayerCategorySettings)
+                                                                                LayerCategorySettings)
                                                                         .visiblerealtimedots,
                                                         baseFilter =
                                                                 if (showZombieBuses)
@@ -3217,8 +3230,8 @@ class MainActivity : ComponentActivity() {
                                                                                                 "trip_id"
                                                                                         ),
                                                                                         get(
-                                                                                                "trip_id"
-                                                                                        )
+                                                                                                        "trip_id"
+                                                                                                )
                                                                                                 .cast<
                                                                                                         StringValue>()
                                                                                                 .neq(
@@ -3432,8 +3445,9 @@ class MainActivity : ComponentActivity() {
                                                                                 catenaryStack =
                                                                                         newStack
                                                                         },
-                                                                        onRouteClick = { chateauId,
-                                                                                         routeId ->
+                                                                        onRouteClick = {
+                                                                                chateauId,
+                                                                                routeId ->
                                                                                 val newStack =
                                                                                         ArrayDeque(
                                                                                                 catenaryStack
@@ -3450,8 +3464,9 @@ class MainActivity : ComponentActivity() {
                                                                                 catenaryStack =
                                                                                         newStack
                                                                         },
-                                                                        onStopClick = { chateauId,
-                                                                                        stopId ->
+                                                                        onStopClick = {
+                                                                                chateauId,
+                                                                                stopId ->
                                                                                 val newStack =
                                                                                         ArrayDeque(
                                                                                                 catenaryStack
@@ -3504,19 +3519,20 @@ class MainActivity : ComponentActivity() {
                                                                                 is CatenaryStackEnum.SingleTrip -> {
                                                                                         if (transitShapeSourceRef
                                                                                                         .value !=
-                                                                                                null &&
-                                                                                                transitShapeDetourSourceRef
-                                                                                                        .value !=
-                                                                                                null &&
-                                                                                                stopsContextSourceRef
-                                                                                                        .value !=
-                                                                                                null
+                                                                                                        null &&
+                                                                                                        transitShapeDetourSourceRef
+                                                                                                                .value !=
+                                                                                                                null &&
+                                                                                                        stopsContextSourceRef
+                                                                                                                .value !=
+                                                                                                                null
                                                                                         ) {
 
                                                                                                 SingleTripInfoScreen(
                                                                                                         tripSelected =
                                                                                                                 currentScreen,
-                                                                                                        onStopClick = { stopStack
+                                                                                                        onStopClick = {
+                                                                                                                stopStack
                                                                                                                 ->
                                                                                                                 val newStack =
                                                                                                                         ArrayDeque(
@@ -3528,7 +3544,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                 catenaryStack =
                                                                                                                         newStack
                                                                                                         },
-                                                                                                        onBlockClick = { blockStack
+                                                                                                        onBlockClick = {
+                                                                                                                blockStack
                                                                                                                 ->
                                                                                                                 val newStack =
                                                                                                                         ArrayDeque(
@@ -3540,7 +3557,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                 catenaryStack =
                                                                                                                         newStack
                                                                                                         },
-                                                                                                        onRouteClick = { routeStack
+                                                                                                        onRouteClick = {
+                                                                                                                routeStack
                                                                                                                 ->
                                                                                                                 val newStack =
                                                                                                                         ArrayDeque(
@@ -3554,6 +3572,8 @@ class MainActivity : ComponentActivity() {
                                                                                                         },
                                                                                                         usUnits =
                                                                                                                 usUnits,
+                                                                                                        showSeconds =
+                                                                                                                showSeconds,
                                                                                                         // --- Pass the .value of the sources ---
                                                                                                         transitShapeSource =
                                                                                                                 transitShapeSourceRef
@@ -3568,7 +3588,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                 majorDotsSourceRef
                                                                                                                         .value!!,
                                                                                                         // Pass the state setter
-                                                                                                        onSetStopsToHide = { newSet
+                                                                                                        onSetStopsToHide = {
+                                                                                                                newSet
                                                                                                                 ->
                                                                                                                 stopsToHide =
                                                                                                                         newSet
@@ -3582,12 +3603,12 @@ class MainActivity : ComponentActivity() {
                                                                                                 )
                                                                                         }
                                                                                 }
-
                                                                                 is CatenaryStackEnum.MapSelectionScreen -> {
                                                                                         MapSelectionScreen(
                                                                                                 screenData =
                                                                                                         currentScreen,
-                                                                                                onStackPush = { newScreenData
+                                                                                                onStackPush = {
+                                                                                                        newScreenData
                                                                                                         ->
                                                                                                         val newStack =
                                                                                                                 ArrayDeque(
@@ -3605,7 +3626,6 @@ class MainActivity : ComponentActivity() {
                                                                                                         onHome
                                                                                         )
                                                                                 }
-
                                                                                 is CatenaryStackEnum.SettingsStack -> {
                                                                                         SettingsScreen(
                                                                                                 datadogConsent =
@@ -3616,20 +3636,25 @@ class MainActivity : ComponentActivity() {
                                                                                                         gaConsent,
                                                                                                 onGaConsentChanged =
                                                                                                         onGaConsentChanged,
+                                                                                                showSeconds =
+                                                                                                        showSeconds,
+                                                                                                onShowSecondsChange = {
+                                                                                                        showSeconds =
+                                                                                                                it
+                                                                                                },
                                                                                                 onBack =
                                                                                                         onBack,
                                                                                                 onHome =
                                                                                                         onHome
                                                                                         )
                                                                                 }
-
                                                                                 is CatenaryStackEnum.RouteStack -> {
                                                                                         if (transitShapeSourceRef
                                                                                                         .value !=
-                                                                                                null &&
-                                                                                                stopsContextSourceRef
-                                                                                                        .value !=
-                                                                                                null
+                                                                                                        null &&
+                                                                                                        stopsContextSourceRef
+                                                                                                                .value !=
+                                                                                                                null
                                                                                         ) {
                                                                                                 RouteScreen(
                                                                                                         screenData =
@@ -3640,7 +3665,8 @@ class MainActivity : ComponentActivity() {
                                                                                                         stopsContextSource =
                                                                                                                 stopsContextSourceRef
                                                                                                                         .value!!,
-                                                                                                        onStopClick = { stopStack
+                                                                                                        onStopClick = {
+                                                                                                                stopStack
                                                                                                                 ->
                                                                                                                 val newStack =
                                                                                                                         ArrayDeque(
@@ -3652,7 +3678,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                 catenaryStack =
                                                                                                                         newStack
                                                                                                         },
-                                                                                                        onTripClick = { tripStack
+                                                                                                        onTripClick = {
+                                                                                                                tripStack
                                                                                                                 ->
                                                                                                                 val newStack =
                                                                                                                         ArrayDeque(
@@ -3664,7 +3691,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                 catenaryStack =
                                                                                                                         newStack
                                                                                                         },
-                                                                                                        onSetStopsToHide = { newSet
+                                                                                                        onSetStopsToHide = {
+                                                                                                                newSet
                                                                                                                 ->
                                                                                                                 stopsToHide =
                                                                                                                         newSet
@@ -3680,23 +3708,22 @@ class MainActivity : ComponentActivity() {
                                                                                                 )
                                                                                         }
                                                                                 }
-
                                                                                 is CatenaryStackEnum.StopStack -> {
                                                                                         // Check all
                                                                                         // 4 refs
                                                                                         // now
                                                                                         if (transitShapeSourceRef
                                                                                                         .value !=
-                                                                                                null &&
-                                                                                                transitShapeDetourSourceRef
-                                                                                                        .value !=
-                                                                                                null &&
-                                                                                                stopsContextSourceRef
-                                                                                                        .value !=
-                                                                                                null &&
-                                                                                                transitShapeForStopSourceRef
-                                                                                                        .value !=
-                                                                                                null // <-- Added this check
+                                                                                                        null &&
+                                                                                                        transitShapeDetourSourceRef
+                                                                                                                .value !=
+                                                                                                                null &&
+                                                                                                        stopsContextSourceRef
+                                                                                                                .value !=
+                                                                                                                null &&
+                                                                                                        transitShapeForStopSourceRef
+                                                                                                                .value !=
+                                                                                                                null // <-- Added this check
                                                                                         ) {
                                                                                                 StopScreen(
                                                                                                         screenData =
@@ -3709,7 +3736,8 @@ class MainActivity : ComponentActivity() {
                                                                                                         },
                                                                                                         ktorClient =
                                                                                                                 ktorHttpClient,
-                                                                                                        onTripClick = { tripStack
+                                                                                                        onTripClick = {
+                                                                                                                tripStack
                                                                                                                 ->
                                                                                                                 val newStack =
                                                                                                                         ArrayDeque(
@@ -3733,7 +3761,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value!!,
                                                                                                         camera =
                                                                                                                 camera,
-                                                                                                        onSetStopsToHide = { newSet
+                                                                                                        onSetStopsToHide = {
+                                                                                                                newSet
                                                                                                                 ->
                                                                                                                 stopsToHide =
                                                                                                                         newSet
@@ -3747,20 +3776,19 @@ class MainActivity : ComponentActivity() {
                                                                                                 )
                                                                                         }
                                                                                 }
-
                                                                                 is CatenaryStackEnum.OsmStationStack -> {
                                                                                         if (transitShapeSourceRef
                                                                                                         .value !=
-                                                                                                null &&
-                                                                                                transitShapeDetourSourceRef
-                                                                                                        .value !=
-                                                                                                null &&
-                                                                                                stopsContextSourceRef
-                                                                                                        .value !=
-                                                                                                null &&
-                                                                                                transitShapeForStopSourceRef
-                                                                                                        .value !=
-                                                                                                null
+                                                                                                        null &&
+                                                                                                        transitShapeDetourSourceRef
+                                                                                                                .value !=
+                                                                                                                null &&
+                                                                                                        stopsContextSourceRef
+                                                                                                                .value !=
+                                                                                                                null &&
+                                                                                                        transitShapeForStopSourceRef
+                                                                                                                .value !=
+                                                                                                                null
                                                                                         ) {
                                                                                                 StopScreen(
                                                                                                         screenData =
@@ -3773,7 +3801,8 @@ class MainActivity : ComponentActivity() {
                                                                                                         },
                                                                                                         ktorClient =
                                                                                                                 ktorHttpClient,
-                                                                                                        onTripClick = { tripStack
+                                                                                                        onTripClick = {
+                                                                                                                tripStack
                                                                                                                 ->
                                                                                                                 val newStack =
                                                                                                                         ArrayDeque(
@@ -3796,7 +3825,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value!!,
                                                                                                         camera =
                                                                                                                 camera,
-                                                                                                        onSetStopsToHide = { newSet
+                                                                                                        onSetStopsToHide = {
+                                                                                                                newSet
                                                                                                                 ->
                                                                                                                 stopsToHide =
                                                                                                                         newSet
@@ -3810,7 +3840,6 @@ class MainActivity : ComponentActivity() {
                                                                                                 )
                                                                                         }
                                                                                 }
-
                                                                                 is CatenaryStackEnum.BlockStack -> {
                                                                                         BlockScreen(
                                                                                                 chateau =
@@ -3891,7 +3920,8 @@ class MainActivity : ComponentActivity() {
                                                         Box(
                                                                 modifier =
                                                                         Modifier
-                                                                                .onGloballyPositioned { coords ->
+                                                                                .onGloballyPositioned {
+                                                                                        coords ->
                                                                                         val bottom =
                                                                                                 coords.positionInRoot()
                                                                                                         .y +
@@ -4085,14 +4115,14 @@ class MainActivity : ComponentActivity() {
                                         val fabYAboveSheet =
                                                 with(density) {
                                                         (sheetOffsetPx -
-                                                                fabSize.toPx() -
-                                                                fabMargin.toPx())
+                                                                        fabSize.toPx() -
+                                                                        fabMargin.toPx())
                                                                 .roundToInt()
                                                 }
                                         val fabBottomMarginWhenFull =
                                                 with(density) {
                                                         (maxHeight.toPx() - sheetOffsetPx +
-                                                                fabMargin.toPx())
+                                                                        fabMargin.toPx())
                                                                 .roundToInt()
                                                 }
 
@@ -4169,7 +4199,7 @@ class MainActivity : ComponentActivity() {
                                                                                 zoom = 16.0 // pick
                                                                                 // your
                                                                                 // desired snap zoom
-                                                                        )
+                                                                                )
                                                                 }
                                                                 println(
                                                                         "Geolock state ${geoLock.isActive()}"
@@ -4291,10 +4321,11 @@ class MainActivity : ComponentActivity() {
                                                                 }
                                                                 focusManager.clearFocus()
                                                         },
-                                                        onStopClick = { chateau,
-                                                                        gtfsId,
-                                                                        ranking,
-                                                                        stopInfo ->
+                                                        onStopClick = {
+                                                                chateau,
+                                                                gtfsId,
+                                                                ranking,
+                                                                stopInfo ->
                                                                 geoLock.deactivate()
 
                                                                 val pos =
@@ -4425,37 +4456,33 @@ class MainActivity : ComponentActivity() {
                                                                                         selectedTab
                                                                                 )
                                                                 ) {
-                                                                        tabs.forEachIndexed { index,
-                                                                                              title ->
+                                                                        tabs.forEachIndexed {
+                                                                                index,
+                                                                                title ->
                                                                                 val textResId =
                                                                                         when (title
                                                                                         ) {
                                                                                                 "intercityrail" ->
                                                                                                         R.string
                                                                                                                 .heading_intercity_rail
-
                                                                                                 "localrail" ->
                                                                                                         R.string
                                                                                                                 .heading_local_rail
-
                                                                                                 "bus" ->
                                                                                                         R.string
                                                                                                                 .heading_bus
-
                                                                                                 "other" ->
                                                                                                         R.string
                                                                                                                 .heading_other
-
                                                                                                 "more" ->
                                                                                                         R.string
                                                                                                                 .heading_more
-
                                                                                                 else ->
                                                                                                         R.string
                                                                                                                 .app_name // Fallback, though
-                                                                                                // should
-                                                                                                // not
-                                                                                                // happen
+                                                                                        // should
+                                                                                        // not
+                                                                                        // happen
                                                                                         }
                                                                                 Tab(
                                                                                         selected =
@@ -4495,19 +4522,20 @@ class MainActivity : ComponentActivity() {
 
                                                                 // Content for Vehicle Tabs
                                                                 if (selectedTab in
-                                                                        listOf(
-                                                                                "intercityrail",
-                                                                                "localrail",
-                                                                                "bus",
-                                                                                "other"
-                                                                        )
+                                                                                listOf(
+                                                                                        "intercityrail",
+                                                                                        "localrail",
+                                                                                        "bus",
+                                                                                        "other"
+                                                                                )
                                                                 ) {
                                                                         val currentSettings =
                                                                                 layerSettings.value
                                                                                         .category(
                                                                                                 selectedTab
                                                                                         )
-                                                                        currentSettings?.let { settings ->
+                                                                        currentSettings?.let {
+                                                                                settings ->
 
                                                                                 // Row 1: Shapes,
                                                                                 // Labels, Stops,
@@ -4552,7 +4580,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         shapes =
@@ -4601,7 +4630,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelshapes =
@@ -4650,7 +4680,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         stops =
@@ -4702,7 +4733,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelstops =
@@ -4750,7 +4782,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         visiblerealtimedots =
@@ -4822,7 +4855,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelrealtimedots =
@@ -4857,7 +4891,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelrealtimedots =
@@ -4892,7 +4927,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelrealtimedots =
@@ -4928,7 +4964,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelrealtimedots =
@@ -4963,7 +5000,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelrealtimedots =
@@ -4998,7 +5036,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelrealtimedots =
@@ -5033,7 +5072,8 @@ class MainActivity : ComponentActivity() {
                                                                                                                         .value
                                                                                                                         .updateCategory(
                                                                                                                                 selectedTab
-                                                                                                                        ) { cat
+                                                                                                                        ) {
+                                                                                                                                cat
                                                                                                                                 ->
                                                                                                                                 cat.copy(
                                                                                                                                         labelrealtimedots =
@@ -5275,12 +5315,12 @@ class MainActivity : ComponentActivity() {
                                                 route_short_name = f.getString("route_short_name"),
                                                 route_long_name = f.getString("route_long_name"),
                                                 route_type = f.getString("routeType")?.toIntOrNull()
-                                                        ?: 3,
+                                                                ?: 3,
                                                 trip_short_name = f.getString("trip_short_name"),
                                                 text_colour = f.getString("text_color")
-                                                        ?: "#000000",
+                                                                ?: "#000000",
                                                 gtfs_id = f.getString("rt_id")
-                                                        ?: "", // JS maps rt_id to gtfs_id
+                                                                ?: "", // JS maps rt_id to gtfs_id
                                                 trip_id = f.getString("trip_id"),
                                                 start_time = f.getString("start_time"),
                                                 start_date = f.getString("start_date")
@@ -5323,7 +5363,13 @@ class MainActivity : ComponentActivity() {
                                                                 .first()
                                                                 .removeSurrounding("\""),
                                                 colour = "#${f.getString("color") ?: "FFFFFF"}",
-                                                name = f.getString("route_label")
+                                                name = f.getString("route_label"),
+                                                route_type =
+                                                        f.properties
+                                                                ?.get("route_type")
+                                                                ?.jsonPrimitive
+                                                                ?.content
+                                                                ?.toIntOrNull()
                                         )
                                 )
                         } catch (e: Exception) {
@@ -5353,9 +5399,9 @@ class MainActivity : ComponentActivity() {
                                         MapSelectionSelector.StopMapSelector(
                                                 chateau_id = f.getString("chateau") ?: "",
                                                 stop_id = f.getString("gtfs_id")
-                                                        ?: "", // JS maps gtfs_id to stop_id
+                                                                ?: "", // JS maps gtfs_id to stop_id
                                                 stop_name = f.getString("displayname")
-                                                        ?: "Unknown Stop"
+                                                                ?: "Unknown Stop"
                                         )
                                 )
                         } catch (e: Exception) {
@@ -5393,8 +5439,8 @@ class MainActivity : ComponentActivity() {
                                         MapSelectionSelector.OsmStationMapSelector(
                                                 osm_id = osmId,
                                                 name = f.getString("name")
-                                                        ?: f.getString("name_en")
-                                                        ?: "Unknown Station",
+                                                                ?: f.getString("name_en")
+                                                                        ?: "Unknown Station",
                                                 mode_type = f.getString("mode_type") ?: "unknown",
                                                 lat = lat,
                                                 lon = lon

@@ -12,7 +12,6 @@ import org.maplibre.compose.expressions.dsl.Feature.get
 import org.maplibre.compose.expressions.dsl.Feature.has
 import org.maplibre.compose.expressions.dsl.all
 import org.maplibre.compose.expressions.dsl.any
-import org.maplibre.compose.expressions.dsl.case
 import org.maplibre.compose.expressions.dsl.coalesce
 import org.maplibre.compose.expressions.dsl.condition
 import org.maplibre.compose.expressions.dsl.const
@@ -98,10 +97,12 @@ fun AddStops(
                         has("osm_station_id").not(),
                         (rtEq(12))
                 )
-        val isTram = all(
-                any(any(rtEq(0), childrenRtEq(0)), rtEq(5)), isMetro().not(),
-                has("osm_station_id").not()
-        )
+        val isTram =
+                all(
+                        any(any(rtEq(0), childrenRtEq(0)), rtEq(5)),
+                        isMetro().not(),
+                        has("osm_station_id").not()
+                )
         val isIntercity = rtEq(2)
 
         // String pieces for label fields
@@ -270,28 +271,28 @@ fun AddStops(
                                 8 to get("displayname").cast<StringValue>(),
                                 13 to
                                         get("displayname").cast<StringValue>() +
-                                        switch(
-                                                conditions =
-                                                        arrayOf(
-                                                                condition(
-                                                                        has("level_id"),
-                                                                        semi + level
-                                                                )
-                                                        ),
-                                                fallback = const("")
-                                        ) +
-                                        switch(
-                                                conditions =
-                                                        arrayOf(
-                                                                condition(
-                                                                        has(
-                                                                                "platform_code"
-                                                                        ),
-                                                                        semi + platform
-                                                                )
-                                                        ),
-                                                fallback = const("")
-                                        )
+                                                switch(
+                                                        conditions =
+                                                                arrayOf(
+                                                                        condition(
+                                                                                has("level_id"),
+                                                                                semi + level
+                                                                        )
+                                                                ),
+                                                        fallback = const("")
+                                                ) +
+                                                switch(
+                                                        conditions =
+                                                                arrayOf(
+                                                                        condition(
+                                                                                has(
+                                                                                        "platform_code"
+                                                                                ),
+                                                                                semi + platform
+                                                                        )
+                                                                ),
+                                                        fallback = const("")
+                                                )
                         ),
                 textSize =
                         interpolate(
@@ -438,28 +439,28 @@ fun AddStops(
                                 8 to get("displayname").cast<StringValue>(),
                                 14 to
                                         get("displayname").cast<StringValue>() +
-                                        switch(
-                                                conditions =
-                                                        arrayOf(
-                                                                condition(
-                                                                        has("level_id"),
-                                                                        semi + level
-                                                                )
-                                                        ),
-                                                fallback = const("")
-                                        ) +
-                                        switch(
-                                                conditions =
-                                                        arrayOf(
-                                                                condition(
-                                                                        has(
-                                                                                "platform_code"
-                                                                        ),
-                                                                        semi + platform
-                                                                )
-                                                        ),
-                                                fallback = const("")
-                                        )
+                                                switch(
+                                                        conditions =
+                                                                arrayOf(
+                                                                        condition(
+                                                                                has("level_id"),
+                                                                                semi + level
+                                                                        )
+                                                                ),
+                                                        fallback = const("")
+                                                ) +
+                                                switch(
+                                                        conditions =
+                                                                arrayOf(
+                                                                        condition(
+                                                                                has(
+                                                                                        "platform_code"
+                                                                                ),
+                                                                                semi + platform
+                                                                        )
+                                                                ),
+                                                        fallback = const("")
+                                                )
                         ),
                 textSize =
                         interpolate(
@@ -603,10 +604,7 @@ fun AddStops(
                 strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
                 opacity = step(input = zoom(), const(0.6f), 13.0 to const(0.8f)),
                 minZoom = 7.5f,
-                filter = all(
-                        isIntercity,
-                        has("osm_station_id").not()
-                ),
+                filter = all(isIntercity, has("osm_station_id").not()),
                 visible = layerSettings.intercityrail.stops
         )
 
@@ -621,28 +619,28 @@ fun AddStops(
                                 8 to get("displayname").cast<StringValue>(),
                                 13 to
                                         get("displayname").cast<StringValue>() +
-                                        switch(
-                                                conditions =
-                                                        arrayOf(
-                                                                condition(
-                                                                        has("level_id"),
-                                                                        semi + level
-                                                                )
-                                                        ),
-                                                fallback = const("")
-                                        ) +
-                                        switch(
-                                                conditions =
-                                                        arrayOf(
-                                                                condition(
-                                                                        has(
-                                                                                "platform_code"
-                                                                        ),
-                                                                        semi + platform
-                                                                )
-                                                        ),
-                                                fallback = const("")
-                                        )
+                                                switch(
+                                                        conditions =
+                                                                arrayOf(
+                                                                        condition(
+                                                                                has("level_id"),
+                                                                                semi + level
+                                                                        )
+                                                                ),
+                                                        fallback = const("")
+                                                ) +
+                                                switch(
+                                                        conditions =
+                                                                arrayOf(
+                                                                        condition(
+                                                                                has(
+                                                                                        "platform_code"
+                                                                                ),
+                                                                                semi + platform
+                                                                        )
+                                                                ),
+                                                        fallback = const("")
+                                                )
                         ),
                 textSize = intercityLabelSize,
                 // radial 0.2 => y offset +0.2em
@@ -654,10 +652,7 @@ fun AddStops(
                 minZoom = 8f,
                 textJustify = const(TextJustify.Left),
                 textAnchor = const(SymbolAnchor.Left),
-                filter = all(
-                        isIntercity,
-                        has("osm_station_id").not()
-                ),
+                filter = all(isIntercity, has("osm_station_id").not()),
                 visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
         )
 
@@ -694,12 +689,8 @@ fun AddStops(
                 textField = get("name").cast(),
                 textSize = intercityLabelSize,
                 textOffset = offset(0.em, 0.2.em),
-                textFont = step(
-                        input = zoom(),
-                        barlowRegular,
-                        10 to barlowMedium,
-                        13 to barlowBold
-                ),
+                textFont =
+                        step(input = zoom(), barlowRegular, 10 to barlowMedium, 13 to barlowBold),
                 textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
                 textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
                 textHaloWidth = const(1.dp),
@@ -719,21 +710,19 @@ fun AddStops(
                 id = "platformlabels_osm_intercity",
                 source = osmStopsSource,
                 sourceLayer = "data",
-                textField = switch(
-                        conditions = arrayOf(
-                                condition(
-                                        has("local_ref").cast(),
-                                        get("local_ref").cast()
-                                ),
+                textField =
+                        switch(
+                                conditions =
+                                        arrayOf(
+                                                condition(
+                                                        has("local_ref").cast(),
+                                                        get("local_ref").cast()
+                                                ),
+                                        ),
+                                fallback = get("ref").cast<StringValue>()
                         ),
-                        fallback = get("ref").cast<StringValue>()
-                ),
-                textFont = step(
-                        input = zoom(),
-                        barlowRegular,
-                        10 to barlowMedium,
-                        13 to barlowBold
-                ),
+                textFont =
+                        step(input = zoom(), barlowRegular, 10 to barlowMedium, 13 to barlowBold),
                 textSize =
                         interpolate(
                                 type = linear(),

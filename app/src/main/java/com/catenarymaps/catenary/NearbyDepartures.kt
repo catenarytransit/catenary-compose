@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import java.lang.Integer.min
@@ -63,9 +65,9 @@ import okhttp3.ResponseBody
 /* -------------------------------------------------------------------------- */
 @Serializable
 private data class NearbyResponse(
-    val stop: Map<String, Map<String, StopEntry>>,
-    val departures: List<RouteGroup>,
-    val debug: DebugInfo? = null
+        val stop: Map<String, Map<String, StopEntry>>,
+        val departures: List<RouteGroup>,
+        val debug: DebugInfo? = null
 )
 
 @Serializable
@@ -73,56 +75,56 @@ private data class DebugInfo(@SerialName("total_time_ms") val totalTimeMs: Long?
 
 @Serializable
 private data class StopEntry(
-    val name: String? = null,
-    val lat: Double? = null,
-    @SerialName("latitude") val latitude: Double? = null,
-    val lon: Double? = null,
-    @SerialName("longitude") val longitude: Double? = null,
-    val timezone: String? = null
+        val name: String? = null,
+        val lat: Double? = null,
+        @SerialName("latitude") val latitude: Double? = null,
+        val lon: Double? = null,
+        @SerialName("longitude") val longitude: Double? = null,
+        val timezone: String? = null
 )
 
 @Serializable
 private data class RouteGroup(
-    @SerialName("chateau_id") val chateauId: String,
-    @SerialName("route_id") val routeId: String,
-    @SerialName("route_type") val routeType: Int,
-    @SerialName("short_name") val shortName: String? = null,
-    @SerialName("long_name") val longName: String? = null,
-    val color: String? = null,
-    @SerialName("text_color") val textColor: String? = null,
-    // directions is a map keyed by headsign after consolidation server-side; we normalize on
-    // load
-    val directions: Map<String, Map<String, DirectionGroup>>
+        @SerialName("chateau_id") val chateauId: String,
+        @SerialName("route_id") val routeId: String,
+        @SerialName("route_type") val routeType: Int,
+        @SerialName("short_name") val shortName: String? = null,
+        @SerialName("long_name") val longName: String? = null,
+        val color: String? = null,
+        @SerialName("text_color") val textColor: String? = null,
+        // directions is a map keyed by headsign after consolidation server-side; we normalize on
+        // load
+        val directions: Map<String, Map<String, DirectionGroup>>
 )
 
 @Serializable
 private data class DirectionGroup(
-    val headsign: String,
-    val trips: List<TripEntry>,
+        val headsign: String,
+        val trips: List<TripEntry>,
 )
 
 @Serializable
 data class TripEntry(
-    @SerialName("stop_id") val stopId: String,
-    @SerialName("trip_id") val tripId: String,
-    val tz: String? = null,
-    val platform: String? = null,
-    val cancelled: Boolean? = null,
-    val deleted: Boolean? = null,
-    @SerialName("trip_short_name") val tripShortName: String? = null,
-    @SerialName("departure_realtime") val departureRealtime: Long? = null,
-    @SerialName("departure_schedule") val departureSchedule: Long? = null,
-    @SerialName("gtfs_schedule_start_day") val startDay: String? = null,
-    @SerialName("gtfs_frequency_start_time") val startTime: String? = null
+        @SerialName("stop_id") val stopId: String,
+        @SerialName("trip_id") val tripId: String,
+        val tz: String? = null,
+        val platform: String? = null,
+        val cancelled: Boolean? = null,
+        val deleted: Boolean? = null,
+        @SerialName("trip_short_name") val tripShortName: String? = null,
+        @SerialName("departure_realtime") val departureRealtime: Long? = null,
+        @SerialName("departure_schedule") val departureSchedule: Long? = null,
+        @SerialName("gtfs_schedule_start_day") val startDay: String? = null,
+        @SerialName("gtfs_frequency_start_time") val startTime: String? = null
 )
 
 data class TripClickResponse(
-    val tripId: String? = null,
-    val stopId: String? = null,
-    val chateauId: String? = null,
-    val routeId: String? = null,
-    val routeType: Int? = null,
-    val startDay: String? = null
+        val tripId: String? = null,
+        val stopId: String? = null,
+        val chateauId: String? = null,
+        val routeId: String? = null,
+        val routeType: Int? = null,
+        val startDay: String? = null
 )
 
 /* -------------------------------- Utilities ------------------------------- */
@@ -133,10 +135,10 @@ private enum class SortMode {
 }
 
 private data class Filters(
-    val rail: Boolean = true,
-    val metro: Boolean = true,
-    val bus: Boolean = true,
-    val other: Boolean = true
+        val rail: Boolean = true,
+        val metro: Boolean = true,
+        val bus: Boolean = true,
+        val other: Boolean = true
 )
 
 private object FilterPreferences {
@@ -160,16 +162,16 @@ private object FilterPreferences {
     fun loadFilters(context: Context): Filters {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return Filters(
-            rail = prefs.getBoolean(KEY_RAIL, true),
-            metro = prefs.getBoolean(KEY_METRO, true),
-            bus = prefs.getBoolean(KEY_BUS, true),
-            other = prefs.getBoolean(KEY_OTHER, true)
+                rail = prefs.getBoolean(KEY_RAIL, true),
+                metro = prefs.getBoolean(KEY_METRO, true),
+                bus = prefs.getBoolean(KEY_BUS, true),
+                other = prefs.getBoolean(KEY_OTHER, true)
         )
     }
 }
 
 private fun flattenDirections(
-    nested: Map<String, Map<String, DirectionGroup>>
+        nested: Map<String, Map<String, DirectionGroup>>
 ): Map<String, DirectionGroup> {
     // Merge all sub-direction maps into a single map keyed by headsign,
     // concatenating trips, then sort trips by (realtime || schedule).
@@ -186,9 +188,9 @@ private fun flattenDirections(
     // Build final map with trips sorted ascending by departure
     return merged.mapValues { (headsign, trips) ->
         val sortedTrips =
-            trips.distinctBy { it.tripId + it.startDay + it.startTime }.sortedBy { t ->
-                t.departureRealtime ?: t.departureSchedule ?: Long.MAX_VALUE
-            }
+                trips.distinctBy { it.tripId + it.startDay + it.startTime }.sortedBy { t ->
+                    t.departureRealtime ?: t.departureSchedule ?: Long.MAX_VALUE
+                }
         DirectionGroup(headsign = headsign, trips = sortedTrips)
     }
 }
@@ -204,25 +206,25 @@ private fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Doub
 
 // Rough mapping mirroring the JS filter buckets
 private fun isAllowedByFilter(routeType: Int, f: Filters): Boolean =
-    when (routeType) {
-        3, 11, 700 -> f.bus
-        0, 1, 5, 7, 12, 900 -> f.metro
-        2, 106, 107, 101, 100, 102, 103 -> f.rail
-        4 -> f.other // ferries
-        else -> true
-    }
+        when (routeType) {
+            3, 11, 700 -> f.bus
+            0, 1, 5, 7, 12, 900 -> f.metro
+            2, 106, 107, 101, 100, 102, 103 -> f.rail
+            4 -> f.other // ferries
+            else -> true
+        }
 
 private fun normalizeHex(c: String?): Color? {
     if (c.isNullOrBlank()) return null
     val s = if (c.startsWith("#")) c.drop(1) else c
     return runCatching {
-        val v = s.toLong(16).toInt()
-        val r = (v shr 16) and 0xFF
-        val g = (v shr 8) and 0xFF
-        val b = v and 0xFF
-        Color(r, g, b)
-    }
-        .getOrNull()
+                val v = s.toLong(16).toInt()
+                val r = (v shr 16) and 0xFF
+                val g = (v shr 8) and 0xFF
+                val b = v and 0xFF
+                Color(r, g, b)
+            }
+            .getOrNull()
 }
 
 /* ------------------------------ Networking -------------------------------- */
@@ -237,12 +239,12 @@ private val httpClient by lazy { OkHttpClient() }
 
 private val nearbyClient: OkHttpClient by lazy {
     httpClient
-        .newBuilder()
-        .callTimeout(45, TimeUnit.SECONDS)
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(45, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
+            .newBuilder()
+            .callTimeout(45, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(45, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
 }
 
 private const val NEARBY_TAG = "NearbyDebug"
@@ -251,11 +253,11 @@ private fun peekString(body: ResponseBody?, limit: Long = 200_000): String {
     if (body == null) return "<null body>"
     return try {
         val peeked =
-            body.source()
-                .peek()
-                .readByteArray(
-                    minOf(body.contentLength().takeIf { it >= 0 } ?: limit, limit)
-                )
+                body.source()
+                        .peek()
+                        .readByteArray(
+                                minOf(body.contentLength().takeIf { it >= 0 } ?: limit, limit)
+                        )
         String(peeked)
     } catch (e: Throwable) {
         "<failed to peek: ${e.message}>"
@@ -271,65 +273,65 @@ private fun logSerializationError(e: SerializationException, raw: String) {
 }
 
 private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
-    withContext(Dispatchers.IO) {
-        Log.d(
-            NEARBY_TAG,
-            "Fetch nearby departures lat=$lat lon=$lon (thread=${Thread.currentThread().name})"
-        )
+        withContext(Dispatchers.IO) {
+            Log.d(
+                    NEARBY_TAG,
+                    "Fetch nearby departures lat=$lat lon=$lon (thread=${Thread.currentThread().name})"
+            )
 
-        val url =
-            "https://birch.catenarymaps.org/nearbydeparturesfromcoordsv2?lat=$lat&lon=$lon&limit_n_events_after_departure_time=32"
-        val req = Request.Builder().url(url).get().build()
+            val url =
+                    "https://birch.catenarymaps.org/nearbydeparturesfromcoordsv2?lat=$lat&lon=$lon&limit_n_events_after_departure_time=32"
+            val req = Request.Builder().url(url).get().build()
 
-        try {
-            nearbyClient.newCall(req).execute().use { resp ->
-                Log.d(NEARBY_TAG, "HTTP ${resp.code} ${resp.message}")
+            try {
+                nearbyClient.newCall(req).execute().use { resp ->
+                    Log.d(NEARBY_TAG, "HTTP ${resp.code} ${resp.message}")
 
-                if (!resp.isSuccessful) {
-                    val preview = peekString(resp.body, limit = 4000)
-                    Log.e(NEARBY_TAG, "Unsuccessful (${resp.code}). Body preview:\n$preview")
-                    return@withContext null
-                }
+                    if (!resp.isSuccessful) {
+                        val preview = peekString(resp.body, limit = 4000)
+                        Log.e(NEARBY_TAG, "Unsuccessful (${resp.code}). Body preview:\n$preview")
+                        return@withContext null
+                    }
 
-                val rawBody = resp.body?.string()
-                if (rawBody.isNullOrEmpty()) {
-                    Log.e(NEARBY_TAG, "Empty body")
-                    return@withContext null
-                }
+                    val rawBody = resp.body?.string()
+                    if (rawBody.isNullOrEmpty()) {
+                        Log.e(NEARBY_TAG, "Empty body")
+                        return@withContext null
+                    }
 
-                if (rawBody.trimStart().startsWith("<")) {
-                    Log.e(
-                        NEARBY_TAG,
-                        "Body looks like HTML (unexpected):\n${rawBody.take(1000)}"
-                    )
-                    return@withContext null
-                }
-
-                Log.d(NEARBY_TAG, "Body length: ${rawBody.length} chars")
-
-                withContext(Dispatchers.Default) {
-                    try {
-                        val parsed = json.decodeFromString(NearbyResponse.serializer(), rawBody)
-                        Log.d(
-                            NEARBY_TAG,
-                            "Decoded OK: departures=${parsed.departures.size}, stops chateaus=${parsed.stop.keys.size}, serverMs=${parsed.debug?.totalTimeMs}"
+                    if (rawBody.trimStart().startsWith("<")) {
+                        Log.e(
+                                NEARBY_TAG,
+                                "Body looks like HTML (unexpected):\n${rawBody.take(1000)}"
                         )
-                        parsed
-                    } catch (se: SerializationException) {
-                        logSerializationError(se, rawBody)
-                        null
+                        return@withContext null
+                    }
+
+                    Log.d(NEARBY_TAG, "Body length: ${rawBody.length} chars")
+
+                    withContext(Dispatchers.Default) {
+                        try {
+                            val parsed = json.decodeFromString(NearbyResponse.serializer(), rawBody)
+                            Log.d(
+                                    NEARBY_TAG,
+                                    "Decoded OK: departures=${parsed.departures.size}, stops chateaus=${parsed.stop.keys.size}, serverMs=${parsed.debug?.totalTimeMs}"
+                            )
+                            parsed
+                        } catch (se: SerializationException) {
+                            logSerializationError(se, rawBody)
+                            null
+                        }
                     }
                 }
+            } catch (t: Throwable) {
+                Log.e(
+                        NEARBY_TAG,
+                        "Network error on ${Thread.currentThread().name}: ${t.message}",
+                        t
+                )
+                null
             }
-        } catch (t: Throwable) {
-            Log.e(
-                NEARBY_TAG,
-                "Network error on ${Thread.currentThread().name}: ${t.message}",
-                t
-            )
-            null
         }
-    }
 
 /* ----------------------------- Public UI API ------------------------------ */
 /**
@@ -341,17 +343,17 @@ private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponse? =
  */
 @Composable
 fun NearbyDepartures(
-    userLocation: Pair<Double, Double>? = null,
-    pickedLocation: Pair<Double, Double>? = null,
-    usePickedLocation: Boolean = false,
-    pin: PinState? = null,
-    darkMode: Boolean = false,
-    onMyLocation: () -> Unit = {},
-    onPinDrop: () -> Unit = {},
-    onCenterPin: () -> Unit = {},
-    onTripClick: (TripClickResponse) -> Unit = {},
-    onRouteClick: (chateauId: String, routeId: String) -> Unit = { _, _ -> },
-    onStopClick: (chateauId: String, stopId: String) -> Unit = { _, _ -> }
+        userLocation: Pair<Double, Double>? = null,
+        pickedLocation: Pair<Double, Double>? = null,
+        usePickedLocation: Boolean = false,
+        pin: PinState? = null,
+        darkMode: Boolean = false,
+        onMyLocation: () -> Unit = {},
+        onPinDrop: () -> Unit = {},
+        onCenterPin: () -> Unit = {},
+        onTripClick: (TripClickResponse) -> Unit = {},
+        onRouteClick: (chateauId: String, routeId: String) -> Unit = { _, _ -> },
+        onStopClick: (chateauId: String, stopId: String) -> Unit = { _, _ -> }
 ) {
     val applicationContext = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
@@ -479,46 +481,45 @@ fun NearbyDepartures(
 
     // derived + sorting
     val filtered =
-        remember(departureList, filters) {
-            departureList.filter { rg ->
-                rg.directions.isNotEmpty() && isAllowedByFilter(rg.routeType, filters)
+            remember(departureList, filters) {
+                departureList.filter { rg ->
+                    rg.directions.isNotEmpty() && isAllowedByFilter(rg.routeType, filters)
+                }
             }
-        }
 
     var sorted by remember { mutableStateOf<List<RouteGroup>>(emptyList()) }
 
     LaunchedEffect(filtered, sortMode, lockedOrigin, stopsTable) {
         withContext(Dispatchers.Default) {
             val result =
-                when (sortMode) {
-                    SortMode.ALPHA ->
-                        filtered.sortedWith(
-                            compareBy(
-                                {
-                                    (it.shortName ?: it.longName ?: "").lowercase(
-                                        Locale.UK
-                                    )
-                                },
-                                { it.routeId }
-                            )
-                        )
-
-                    SortMode.DISTANCE ->
-                        filtered.sortedWith(
-                            compareBy(
-                                {
-                                    val o = lockedOrigin
-                                    if (o == null) Double.POSITIVE_INFINITY
-                                    else tryDistanceForRouteGroup(it, o, stopsTable)
-                                },
-                                {
-                                    (it.shortName ?: it.longName ?: "").lowercase(
-                                        Locale.UK
-                                    )
-                                }
-                            )
-                        )
-                }
+                    when (sortMode) {
+                        SortMode.ALPHA ->
+                                filtered.sortedWith(
+                                        compareBy(
+                                                {
+                                                    (it.shortName ?: it.longName ?: "").lowercase(
+                                                            Locale.UK
+                                                    )
+                                                },
+                                                { it.routeId }
+                                        )
+                                )
+                        SortMode.DISTANCE ->
+                                filtered.sortedWith(
+                                        compareBy(
+                                                {
+                                                    val o = lockedOrigin
+                                                    if (o == null) Double.POSITIVE_INFINITY
+                                                    else tryDistanceForRouteGroup(it, o, stopsTable)
+                                                },
+                                                {
+                                                    (it.shortName ?: it.longName ?: "").lowercase(
+                                                            Locale.UK
+                                                    )
+                                                }
+                                        )
+                                )
+                    }
             sorted = result.distinctBy { it.chateauId + it.routeId }
         }
     }
@@ -527,36 +528,36 @@ fun NearbyDepartures(
         .padding(horizontal = 12.dp)
         .padding(bottom = 12.dp)) {
         TopRow(
-            currentPickModeIsPin = usePickedLocation,
-            onMyLocation = {
-                // User explicitly requested GPS recenter:
-                onMyLocation()
-                // If we have a current GPS fix, take it and restart polling.
-                userLocation?.let {
-                    lockedOrigin = it
-                    restartPolling()
-                }
-            },
-            onPinDrop = {
-                onPinDrop()
-                // Parent will update pickedLocation; our LaunchedEffect(pickedLocation) will
-                // handle restart.
-            },
-            onCenterPin = {
-                onCenterPin()
-                // No-op here; movement will be observed by pickedLocation change if it happens.
-            },
-            serverMs = serverMs,
-            sortMode = sortMode,
-            onSortChange = { sortMode = it },
-            darkMode = darkMode
+                currentPickModeIsPin = usePickedLocation,
+                onMyLocation = {
+                    // User explicitly requested GPS recenter:
+                    onMyLocation()
+                    // If we have a current GPS fix, take it and restart polling.
+                    userLocation?.let {
+                        lockedOrigin = it
+                        restartPolling()
+                    }
+                },
+                onPinDrop = {
+                    onPinDrop()
+                    // Parent will update pickedLocation; our LaunchedEffect(pickedLocation) will
+                    // handle restart.
+                },
+                onCenterPin = {
+                    onCenterPin()
+                    // No-op here; movement will be observed by pickedLocation change if it happens.
+                },
+                serverMs = serverMs,
+                sortMode = sortMode,
+                onSortChange = { sortMode = it },
+                darkMode = darkMode
         )
 
         if (!firstAttemptSent && !usePickedLocation) {
             Text(
-                text = "Waiting for GPS…",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                text = stringResource(id = R.string.waiting_for_gps),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
             )
         }
 
@@ -572,36 +573,36 @@ fun NearbyDepartures(
 
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(
-                            WindowInsets(
-                                bottom =
-                                    WindowInsets.safeDrawing.getBottom(
-                                        density = LocalDensity.current
+                    modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .windowInsetsPadding(
+                                    WindowInsets(
+                                        bottom =
+                                            WindowInsets.safeDrawing.getBottom(
+                                                density = LocalDensity.current
+                                            )
                                     )
-                            )
-                        ),
+                                ),
             ) {
                 if (sorted.isEmpty() && firstLoadComplete && !loading) {
                     item {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            stringResource(id = R.string.nearby_departures_no_departures),
-                            style = MaterialTheme.typography.bodyMedium
+                                stringResource(id = R.string.nearby_departures_no_departures),
+                                style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
                 items(sorted, key = { it.chateauId + it.routeId }) { route ->
                     RouteGroupCard(
-                        route,
-                        stopsTable,
-                        darkMode,
-                        onTripClick,
-                        onRouteClick,
-                        onStopClick,
-                        nowSec = nowSec
+                            route,
+                            stopsTable,
+                            darkMode,
+                            onTripClick,
+                            onRouteClick,
+                            onStopClick,
+                            nowSec = nowSec
                     )
                 }
             }
@@ -613,89 +614,89 @@ fun NearbyDepartures(
 
 @Composable
 private fun TopRow(
-    currentPickModeIsPin: Boolean,
-    onMyLocation: () -> Unit,
-    onPinDrop: () -> Unit,
-    onCenterPin: () -> Unit,
-    serverMs: Long?,
-    sortMode: SortMode,
-    onSortChange: (SortMode) -> Unit,
-    darkMode: Boolean
+        currentPickModeIsPin: Boolean,
+        onMyLocation: () -> Unit,
+        onPinDrop: () -> Unit,
+        onCenterPin: () -> Unit,
+        serverMs: Long?,
+        sortMode: SortMode,
+        onSortChange: (SortMode) -> Unit,
+        darkMode: Boolean
 ) {
     val primaryButtonColor =
-        if (darkMode) Color(0xFF00532F)
-        else Color(0xFF48DC90) // Dark green for dark mode, light green for light mode
+            if (darkMode) Color(0xFF00532F)
+            else Color(0xFF48DC90) // Dark green for dark mode, light green for light mode
     Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(top = 0.dp),
-        verticalAlignment = Alignment.CenterVertically
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 0.dp),
+            verticalAlignment = Alignment.CenterVertically
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconButton(
-                onClick = onMyLocation,
-                modifier =
-                    Modifier
-                        .size(36.dp)
-                        .border(
-                            2.dp,
-                            Color(0xFF008744), // oklch(72.3% 0.219 149.579)
-                            RoundedCornerShape(8.dp)
-                        )
-                        .background(
-                            if (!currentPickModeIsPin)
-                                primaryButtonColor.copy(0.25f)
-                            else Color.Transparent,
-                            RoundedCornerShape(8.dp)
-                        )
+                    onClick = onMyLocation,
+                    modifier =
+                            Modifier
+                                .size(36.dp)
+                                .border(
+                                    2.dp,
+                                    Color(0xFF008744), // oklch(72.3% 0.219 149.579)
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .background(
+                                    if (!currentPickModeIsPin)
+                                        primaryButtonColor.copy(0.25f)
+                                    else Color.Transparent,
+                                    RoundedCornerShape(8.dp)
+                                )
             ) { Icon(Icons.Default.NearMe, contentDescription = "My location") }
 
             Row(
-                modifier =
-                    Modifier
-                        .border(
-                            2.dp,
-                            Color(0xFFC9A2C8),
-                            RoundedCornerShape(8.dp)
-                        ) // purple
-                        .clip(RoundedCornerShape(8.dp))
-                        .height(36.dp)
+                    modifier =
+                            Modifier
+                                .border(
+                                    2.dp,
+                                    Color(0xFFC9A2C8),
+                                    RoundedCornerShape(8.dp)
+                                ) // purple
+                                    .clip(RoundedCornerShape(8.dp))
+                                .height(36.dp)
             ) {
                 TextButton(
-                    modifier = Modifier.height(36.dp),
-                    onClick = onPinDrop,
-                    shape = RoundedCornerShape(0.dp),
-                    colors =
-                        ButtonDefaults.textButtonColors(
-                            containerColor =
-                                if (currentPickModeIsPin)
-                                    Color(0xFFC9A2C8).copy(0.25f)
-                                else Color.Transparent
-                        ),
-                    contentPadding = PaddingValues(horizontal = 8.dp),
+                        modifier = Modifier.height(36.dp),
+                        onClick = onPinDrop,
+                        shape = RoundedCornerShape(0.dp),
+                        colors =
+                                ButtonDefaults.textButtonColors(
+                                        containerColor =
+                                                if (currentPickModeIsPin)
+                                                        Color(0xFFC9A2C8).copy(0.25f)
+                                                else Color.Transparent
+                                ),
+                        contentPadding = PaddingValues(horizontal = 8.dp),
                 ) {
                     Icon(
-                        Icons.Default.PinDrop,
-                        contentDescription = "Pin",
-                        tint = if (darkMode) Color.White else Color.Black
+                            Icons.Default.PinDrop,
+                            contentDescription = "Pin",
+                            tint = if (darkMode) Color.White else Color.Black
                     )
                 }
                 Divider(
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(1.dp)
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(1.dp)
                 )
                 TextButton(
-                    onClick = onCenterPin,
-                    modifier = Modifier.height(36.dp),
-                    shape = RoundedCornerShape(0.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
+                        onClick = onCenterPin,
+                        modifier = Modifier.height(36.dp),
+                        shape = RoundedCornerShape(0.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
                     Icon(
-                        Icons.Default.CenterFocusStrong,
-                        contentDescription = "Center",
-                        tint = if (darkMode) Color.White else Color.Black
+                            Icons.Default.CenterFocusStrong,
+                            contentDescription = "Center",
+                            tint = if (darkMode) Color.White else Color.Black
                     )
                 }
             }
@@ -703,9 +704,9 @@ private fun TopRow(
 
         if (serverMs != null) {
             Text(
-                text = "${serverMs} ms",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 8.dp)
+                    text = "${serverMs} ms",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 8.dp)
             )
         }
 
@@ -713,57 +714,57 @@ private fun TopRow(
 
         // Sort toggle (A–Z | Distance)
         Row(
-            modifier =
-                Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .height(42.dp)
-                    .border(
-                        2.dp,
-                        MaterialTheme.colorScheme.outlineVariant,
-                        RoundedCornerShape(999.dp)
-                    )
+                modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .height(42.dp)
+                            .border(
+                                2.dp,
+                                MaterialTheme.colorScheme.outlineVariant,
+                                RoundedCornerShape(999.dp)
+                            )
         ) {
             TextButton(
-                onClick = { onSortChange(SortMode.ALPHA) },
-                colors =
-                    ButtonDefaults.textButtonColors(
-                        containerColor =
-                            if (sortMode == SortMode.ALPHA)
-                                MaterialTheme.colorScheme.primary.copy(0.3f)
-                            else Color.Transparent
-                    ),
-                modifier =
-                    Modifier
-                        .border(width = 0.dp, color = Color.Transparent)
-                        .fillMaxHeight(),
-                contentPadding = PaddingValues(horizontal = 6.dp)
+                    onClick = { onSortChange(SortMode.ALPHA) },
+                    colors =
+                            ButtonDefaults.textButtonColors(
+                                    containerColor =
+                                            if (sortMode == SortMode.ALPHA)
+                                                    MaterialTheme.colorScheme.primary.copy(0.3f)
+                                            else Color.Transparent
+                            ),
+                    modifier =
+                            Modifier
+                                .border(width = 0.dp, color = Color.Transparent)
+                                .fillMaxHeight(),
+                    contentPadding = PaddingValues(horizontal = 6.dp)
             ) {
                 Icon(
-                    Icons.Default.SortByAlpha,
-                    contentDescription = "Sort by Alpha",
-                    Modifier.size(20.dp)
+                        Icons.Default.SortByAlpha,
+                        contentDescription = "Sort by Alpha",
+                        Modifier.size(20.dp)
                 )
             }
 
             TextButton(
-                onClick = { onSortChange(SortMode.DISTANCE) },
-                colors =
-                    ButtonDefaults.textButtonColors(
-                        containerColor =
-                            if (sortMode == SortMode.DISTANCE)
-                                MaterialTheme.colorScheme.primary.copy(0.3f)
-                            else Color.Transparent
-                    ),
-                modifier =
-                    Modifier
-                        .border(width = 0.dp, color = Color.Transparent)
-                        .fillMaxHeight(),
-                contentPadding = PaddingValues(horizontal = 6.dp)
+                    onClick = { onSortChange(SortMode.DISTANCE) },
+                    colors =
+                            ButtonDefaults.textButtonColors(
+                                    containerColor =
+                                            if (sortMode == SortMode.DISTANCE)
+                                                    MaterialTheme.colorScheme.primary.copy(0.3f)
+                                            else Color.Transparent
+                            ),
+                    modifier =
+                            Modifier
+                                .border(width = 0.dp, color = Color.Transparent)
+                                .fillMaxHeight(),
+                    contentPadding = PaddingValues(horizontal = 6.dp)
             ) {
                 Icon(
-                    Icons.Default.Straighten,
-                    contentDescription = "Sort by Distance",
-                    Modifier.size(20.dp)
+                        Icons.Default.Straighten,
+                        contentDescription = "Sort by Distance",
+                        Modifier.size(20.dp)
                 )
             }
         }
@@ -793,72 +794,133 @@ private fun FilterRow(filters: Filters, onChange: (Filters) -> Unit) {
 @Composable
 private fun FilterChip(label: String, on: Boolean, onClick: () -> Unit) {
     Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(999.dp),
-        tonalElevation = if (on) 4.dp else 16.dp,
-        border = if (on) ButtonDefaults.outlinedButtonBorder else null,
-        color =
-            if (on) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
-            else MaterialTheme.colorScheme.surfaceVariant
+            onClick = onClick,
+            shape = RoundedCornerShape(999.dp),
+            tonalElevation = if (on) 4.dp else 16.dp,
+            border = if (on) ButtonDefaults.outlinedButtonBorder else null,
+            color =
+                    if (on) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
+                    else MaterialTheme.colorScheme.surfaceVariant
     ) {
         Text(
-            label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.bodySmall
+                label,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.bodySmall
         )
     }
 }
 
 @Composable
 private fun RouteGroupCard(
-    route: RouteGroup,
-    stopsTable: Map<String, Map<String, StopEntry>>,
-    darkMode: Boolean,
-    onTripClick: (TripClickResponse) -> Unit,
-    onRouteClick: (chateauId: String, routeId: String) -> Unit,
-    onStopClick: (chateauId: String, stopId: String) -> Unit,
-    nowSec: Long
+        route: RouteGroup,
+        stopsTable: Map<String, Map<String, StopEntry>>,
+        darkMode: Boolean,
+        onTripClick: (TripClickResponse) -> Unit,
+        onRouteClick: (chateauId: String, routeId: String) -> Unit,
+        onStopClick: (chateauId: String, stopId: String) -> Unit,
+        nowSec: Long
 ) {
     val bg = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (darkMode) 0.5f else 1f)
     val textCol = normalizeHex(route.textColor) ?: MaterialTheme.colorScheme.onSurface
     val lineCol = normalizeHex(route.color) ?: MaterialTheme.colorScheme.primary
 
     Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(bg)
-                .padding(8.dp)
+            modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(bg)
+                        .padding(8.dp)
     ) {
         Row(
-            modifier = Modifier.clickable { onRouteClick(route.chateauId, route.routeId) },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp) // space between texts
+                modifier = Modifier.clickable { onRouteClick(route.chateauId, route.routeId) },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp) // space between texts
         ) {
-            Text(
-                text = route.shortName?.trim().orEmpty(),
-                color =
-                    if (darkMode)
-                        lightenColour(
-                            lineCol,
-                            minContrast = 6.0,
-                        )
-                    else darkenColour(lineCol, minContrast = 2.0),
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleMedium,
-                textDecoration = TextDecoration.Underline
-            )
+            val isRatp =
+                    RatpUtils.isIdfmChateau(route.chateauId) &&
+                            RatpUtils.isRatpRoute(route.shortName)
+            val isMta =
+                    MtaSubwayUtils.MTA_CHATEAU_ID == route.chateauId &&
+                            !route.shortName.isNullOrEmpty() &&
+                            MtaSubwayUtils.isSubwayRouteId(route.shortName!!)
+
+            if (isRatp) {
+                val iconUrl = RatpUtils.getRatpIconUrl(route.shortName)
+                if (iconUrl != null) {
+                    AsyncImage(
+                            model =
+                                    ImageRequest.Builder(LocalContext.current)
+                                            .data(iconUrl)
+                                            .crossfade(true)
+                                            .build(),
+                            contentDescription = route.shortName,
+                            modifier = Modifier
+                                .height(24.dp)
+                                .padding(end = 4.dp)
+                    )
+                } else {
+                    Text(
+                            text = route.shortName?.trim().orEmpty(),
+                            color =
+                                    if (darkMode)
+                                            lightenColour(
+                                                    lineCol,
+                                                    minContrast = 6.0,
+                                            )
+                                    else darkenColour(lineCol, minContrast = 2.0),
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleMedium,
+                            textDecoration = TextDecoration.Underline
+                    )
+                }
+            } else if (isMta) {
+                val mtaColor = MtaSubwayUtils.getMtaSubwayColor(route.shortName!!)
+                val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(route.shortName)
+                androidx.compose.foundation.layout.Box(
+                        modifier =
+                                Modifier
+                                    .size(24.dp)
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(mtaColor),
+                        contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                            text = symbolShortName,
+                            color = Color.White,
+                            style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold
+                                    ),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+                Spacer(Modifier.width(4.dp))
+            } else {
+                Text(
+                        text = route.shortName?.trim().orEmpty(),
+                        color =
+                                if (darkMode)
+                                        lightenColour(
+                                                lineCol,
+                                                minContrast = 6.0,
+                                        )
+                                else darkenColour(lineCol, minContrast = 2.0),
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleMedium,
+                        textDecoration = TextDecoration.Underline
+                )
+            }
 
             Text(
-                text = route.longName?.trim().orEmpty(),
-                color =
-                    if (darkMode) lightenColour(lineCol, minContrast = 4.5)
-                    else darkenColour(lineCol, minContrast = 2.0),
-                fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.titleMedium,
-                textDecoration = TextDecoration.Underline
+                    text = route.longName?.trim().orEmpty(),
+                    color =
+                            if (darkMode) lightenColour(lineCol, minContrast = 4.5)
+                            else darkenColour(lineCol, minContrast = 2.0),
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleMedium,
+                    textDecoration = TextDecoration.Underline
             )
         }
 
@@ -867,34 +929,34 @@ private fun RouteGroupCard(
 
         flatDirections.entries.sortedBy { it.value.headsign }.forEach { (_, dir) ->
             val visibleTrips =
-                dir.trips.filter { t ->
-                    val dep = t.departureRealtime ?: t.departureSchedule ?: 0L
-                    val now = System.currentTimeMillis() / 1000
-                    dep in (now - 600)..(now + 64800)
-                }
+                    dir.trips.filter { t ->
+                        val dep = t.departureRealtime ?: t.departureSchedule ?: 0L
+                        val now = System.currentTimeMillis() / 1000
+                        dep in (now - 600)..(now + 64800)
+                    }
 
             // println("How many trips are visible ${dir.trips.count()} -> ${visibleTrips.count()}")
 
             if (visibleTrips.isEmpty()) return@forEach
 
             Row(
-                modifier =
-                    Modifier
-                        .padding(start = 2.dp, bottom = 1.dp)
-                        .horizontalScroll(rememberScrollState()),
-                verticalAlignment = Alignment.CenterVertically
+                    modifier =
+                            Modifier
+                                .padding(start = 2.dp, bottom = 1.dp)
+                                .horizontalScroll(rememberScrollState()),
+                    verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    Icons.Filled.ChevronRight,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .offset(y = 0.dp)
+                        Icons.Filled.ChevronRight,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .offset(y = 0.dp)
                 )
                 Text(
-                    dir.headsign.replace("Underground Station", "").replace(" Station", ""),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                        dir.headsign.replace("Underground Station", "").replace(" Station", ""),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
                 )
 
                 val firstTrip = dir.trips.firstOrNull()
@@ -903,29 +965,29 @@ private fun RouteGroupCard(
                     if (stopName != null) {
                         Spacer(Modifier.width(4.dp))
                         Surface(
-                            shape = RoundedCornerShape(2.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            modifier =
-                                Modifier
-                                    .offset(y = (-1).dp)
-                                    .clickable {
-                                        onStopClick(route.chateauId, firstTrip.stopId)
-                                    }
+                                shape = RoundedCornerShape(2.dp),
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                modifier =
+                                        Modifier
+                                            .offset(y = (-1).dp)
+                                            .clickable {
+                                                onStopClick(route.chateauId, firstTrip.stopId)
+                                            }
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    Icons.Default.PinDrop,
-                                    contentDescription = "Station",
-                                    modifier = Modifier.size(12.dp),
-                                    tint = MaterialTheme.colorScheme.onSurface
+                                        Icons.Default.PinDrop,
+                                        contentDescription = "Station",
+                                        modifier = Modifier.size(12.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    stopName.replace(" Station", ""),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(start = 2.dp)
+                                        stopName.replace(" Station", ""),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.padding(start = 2.dp)
                                 )
                             }
                         }
@@ -934,7 +996,7 @@ private fun RouteGroupCard(
             }
 
             LazyRow(
-                modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 items(
@@ -960,14 +1022,14 @@ private fun RouteGroupCard(
 
 @Composable
 private fun TripPill(
-    trip: TripEntry,
-    chateauId: String,
-    routeId: String,
-    stopsTable: Map<String, Map<String, StopEntry>>,
-    lineCol: Color,
-    textCol: Color,
-    onTripClick: (TripClickResponse) -> Unit,
-    nowSec: Long
+        trip: TripEntry,
+        chateauId: String,
+        routeId: String,
+        stopsTable: Map<String, Map<String, StopEntry>>,
+        lineCol: Color,
+        textCol: Color,
+        onTripClick: (TripClickResponse) -> Unit,
+        nowSec: Long
 ) {
     val dep = trip.departureRealtime ?: trip.departureSchedule ?: 0L
     val secondsLeft = dep - nowSec
@@ -977,9 +1039,9 @@ private fun TripPill(
     val isPast = secondsLeft < 0
 
     val contentAlpha =
-        if (isPast) {
-            0.7f
-        } else 1.0f
+            if (isPast) {
+                0.7f
+            } else 1.0f
 
     val hasRealtime = trip.departureRealtime != null
     val baseColor = if (hasRealtime) Color(0x00AB9B) else LocalContentColor.current
@@ -987,42 +1049,42 @@ private fun TripPill(
     val contentColor = baseColor.copy(alpha = contentAlpha)
 
     Surface(
-        onClick = {
-            onTripClick(
-                TripClickResponse(
-                    tripId = trip.tripId,
-                    stopId = trip.stopId,
-                    chateauId = chateauId,
-                    routeId = routeId,
-                    startDay =
-                        if (trip.startDay != null) trip.startDay.replace("-", "")
-                        else null
+            onClick = {
+                onTripClick(
+                        TripClickResponse(
+                                tripId = trip.tripId,
+                                stopId = trip.stopId,
+                                chateauId = chateauId,
+                                routeId = routeId,
+                                startDay =
+                                        if (trip.startDay != null) trip.startDay.replace("-", "")
+                                        else null
+                        )
                 )
-            )
-        },
-        shape = RoundedCornerShape(6.dp),
-        tonalElevation = 0.dp,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+            shape = RoundedCornerShape(6.dp),
+            tonalElevation = 0.dp,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Column(
-            modifier =
-                Modifier
-                    .widthIn(min = 76.dp)
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy((-4).dp)
+                modifier =
+                        Modifier
+                            .widthIn(min = 76.dp)
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy((-4).dp)
         ) {
             if (trip.tripShortName != null && trip.tripShortName.isNotBlank()) {
                 Text(
-                    trip.tripShortName,
-                    modifier =
-                        Modifier
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(lineCol)
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                    color = textCol,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1
+                        trip.tripShortName,
+                        modifier =
+                                Modifier
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(lineCol)
+                                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                        color = textCol,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1
                 )
             }
 
@@ -1030,24 +1092,24 @@ private fun TripPill(
             CompositionLocalProvider(LocalContentColor provides contentColor) {
                 Row() {
                     DiffTimer(
-                        diff = secondsLeft.toDouble(),
-                        showBrackets = false,
-                        showSeconds = false,
-                        showDays = false,
-                        showPlus = false,
-                        numSize = 16.sp,
-                        unitSize = 14.sp,
-                        numberFontWeight = FontWeight.Medium,
-                        unitFontWeight = FontWeight.Medium,
-                        color = contentColor.copy(alpha = contentColor.alpha)
+                            diff = secondsLeft.toDouble(),
+                            showBrackets = false,
+                            showSeconds = false,
+                            showDays = false,
+                            showPlus = false,
+                            numSize = 16.sp,
+                            unitSize = 14.sp,
+                            numberFontWeight = FontWeight.Medium,
+                            unitFontWeight = FontWeight.Medium,
+                            color = contentColor.copy(alpha = contentColor.alpha)
                     )
 
                     if (hasRealtime) {
                         Icon(
-                            Icons.Default.RssFeed,
-                            modifier = Modifier.size(10.dp),
-                            contentDescription = "Realtime",
-                            tint = contentColor.copy(alpha = contentColor.alpha)
+                                Icons.Default.RssFeed,
+                                modifier = Modifier.size(10.dp),
+                                contentDescription = "Realtime",
+                                tint = contentColor.copy(alpha = contentColor.alpha)
                         )
                     }
                 }
@@ -1056,23 +1118,23 @@ private fun TripPill(
             // Wall-clock time
             if (tz != null) {
                 FormattedTimeText(
-                    timezone = tz,
-                    timeSeconds = dep,
-                    showSeconds = false,
+                        timezone = tz,
+                        timeSeconds = dep,
+                        showSeconds = false,
                 )
             }
 
             if (trip.cancelled == true) {
                 Text(
-                    stringResource(R.string.cancelled),
-                    color = Color.Red,
-                    style = MaterialTheme.typography.labelSmall
+                        stringResource(R.string.cancelled),
+                        color = Color.Red,
+                        style = MaterialTheme.typography.labelSmall
                 )
             } else if (trip.deleted == true) {
                 Text(
-                    stringResource(R.string.deleted),
-                    color = Color.Red,
-                    style = MaterialTheme.typography.labelSmall
+                        stringResource(R.string.deleted),
+                        color = Color.Red,
+                        style = MaterialTheme.typography.labelSmall
                 )
             }
 
@@ -1089,10 +1151,10 @@ private fun TripPill(
             // Platform/Track
             trip.platform?.let {
                 Text(
-                    "${stringResource(R.string.platform)} ${
+                        "${stringResource(R.string.platform)} ${
                         it.replace("Track", "").trim()
                     }",
-                    style = MaterialTheme.typography.labelSmall
+                        style = MaterialTheme.typography.labelSmall
                 )
             }
         }
@@ -1102,9 +1164,9 @@ private fun TripPill(
 /* ---------------------------- Distance helper ----------------------------- */
 
 private fun tryDistanceForRouteGroup(
-    rg: RouteGroup,
-    origin: Pair<Double, Double>,
-    stopsTable: Map<String, Map<String, StopEntry>>
+        rg: RouteGroup,
+        origin: Pair<Double, Double>,
+        stopsTable: Map<String, Map<String, StopEntry>>
 ): Double {
     val (olat, olon) = origin
     var best = Double.POSITIVE_INFINITY

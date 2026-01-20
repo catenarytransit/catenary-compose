@@ -24,7 +24,13 @@
     <string name="no_headsign">No headsign</string>
     <string name="directions">Directions</string>
     <string name="vehicles">Vehicles</string>
+    <string name="stations">Stations</string>
     <string name="stops">Stops</string>
+    <string name="routes">Routes</string>
+    <plurals name="items_selected">
+        <item quantity="one">%d item selected</item>
+        <item quantity="other">%d items selected</item>
+    </plurals>
     <string name="next_stop">Next stop</string>
     <string name="occupancy_status">Occupancy</string>
     <string name="occupancy_status_empty">Empty</string>
@@ -64,6 +70,7 @@
         <item quantity="one">%d service alert</item>
         <item quantity="other">%d service alerts</item>
     </plurals>
+    <string name="service_alerts_header">Service Alerts</string>
     <string name="heading_intercity_rail">Rail</string>
     <string name="heading_local_rail">Metro/Tram</string>
     <string name="heading_bus">Bus</string>
@@ -88,6 +95,10 @@
     <string name="settings_disable_google_analytics">Disable Google Analytics</string>
     <string name="settings_enable_google_analytics">Enable Google Analytics</string>
     <string name="settings_test_crash">Test crash</string>
+    <string name="settings_preferences">Preferences</string>
+    <string name="settings_show_seconds">Show seconds</string>
+    <string name="settings_show_seconds_description">Display seconds in arrival and departure times</string>
+    <string name="waiting_for_gps">Waiting for GPS…</string>
 
     <string name="block_screen_block_id">Block: %1$s</string>
     <string name="block_screen_duration">Duration: </string>
@@ -103,6 +114,7 @@
     <string name="single_trip_info_screen_hide_previous_stops">Hide previous stops</string>
     <string name="single_trip_info_screen_show_previous_stops">Show %1$d previous stops</string>
     <string name="single_trip_info_screen_current_location_emoji" translatable="false">🎯</string>
+    <string name="platform_abbrev">Pl.</string>
 
     <string name="stop_screen_label">%1$s: </string>
 
@@ -111,4 +123,12 @@
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
     <string name="occupancy_percentage">Occupancy percentage</string>
+
+    <string name="route_category_rail">Rail</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Tram</string>
+    <string name="route_category_bus">Bus</string>
+    <string name="route_category_other">Other</string>
+    <string name="single_trip_info_screen_original">Original</string>
+    <string name="single_trip_info_screen_countdown">Countdown</string>
 </resources>

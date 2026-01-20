@@ -106,4 +106,17 @@
     <string name="vehicle_info_model"> %1$s</string>
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
+
+    <string name="stations">Estaciones</string>
+    <string name="routes">Rutas</string>
+    <plurals name="items_selected">
+        <item quantity="one">%d elemento seleccionado</item>
+        <item quantity="other">%d elementos seleccionados</item>
+    </plurals>
+    <string name="settings_preferences">Preferencias</string>
+    <string name="settings_show_seconds">Mostrar segundos</string>
+    <string name="settings_show_seconds_description">Mostrar segundos en horas de llegada y salida</string>
+    <string name="waiting_for_gps">Esperando GPS…</string>
+    <string name="single_trip_info_screen_original">Original</string>
+    <string name="single_trip_info_screen_countdown">Cuenta atrás</string>
 </resources>

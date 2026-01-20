@@ -107,4 +107,17 @@
     <string name="vehicle_info_model"> %1$s</string>
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
+
+    <string name="stations">Stations</string>
+    <string name="routes">Routes</string>
+    <plurals name="items_selected">
+        <item quantity="one">%d item selected</item>
+        <item quantity="other">%d items selected</item>
+    </plurals>
+    <string name="settings_preferences">偏好设置</string>
+    <string name="settings_show_seconds">显示秒</string>
+    <string name="settings_show_seconds_description">在预达和出发时间中显示秒</string>
+    <string name="waiting_for_gps">等待 GPS…</string>
+    <string name="single_trip_info_screen_original">原始</string>
+    <string name="single_trip_info_screen_countdown">倒计时</string>
 </resources>

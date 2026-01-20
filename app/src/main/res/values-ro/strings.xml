@@ -107,4 +107,17 @@
     <string name="vehicle_info_model"> %1$s</string>
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
+
+    <string name="stations">Stations</string>
+    <string name="routes">Routes</string>
+    <plurals name="items_selected">
+        <item quantity="one">%d item selected</item>
+        <item quantity="other">%d items selected</item>
+    </plurals>
+    <string name="settings_preferences">Preferințe</string>
+    <string name="settings_show_seconds">Afișează secundele</string>
+    <string name="settings_show_seconds_description">Afișează secundele în orele de sosire și plecare</string>
+    <string name="waiting_for_gps">Se așteaptă GPS…</string>
+    <string name="single_trip_info_screen_original">Original</string>
+    <string name="single_trip_info_screen_countdown">Numărătoare inversă</string>
 </resources>

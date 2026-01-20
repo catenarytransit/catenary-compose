@@ -108,4 +108,17 @@
     <string name="vehicle_info_model"> %1$s</string>
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
+
+    <string name="stations">Stations</string>
+    <string name="routes">Routes</string>
+    <plurals name="items_selected">
+        <item quantity="one">%d item selected</item>
+        <item quantity="other">%d items selected</item>
+    </plurals>
+    <string name="settings_preferences">Předvolby</string>
+    <string name="settings_show_seconds">Zobrazit sekundy</string>
+    <string name="settings_show_seconds_description">Zobrazovat sekundy v časech příjezdů a odjezdů</string>
+    <string name="waiting_for_gps">Čekání na GPS…</string>
+    <string name="single_trip_info_screen_original">Původní</string>
+    <string name="single_trip_info_screen_countdown">Odpočet</string>
 </resources>

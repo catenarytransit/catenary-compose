@@ -106,4 +106,17 @@
     <string name="vehicle_info_model"> %1$s</string>
     <string name="vehicle_info_years"> %1$s</string>
     <string name="vehicle_info_engine"> %1$s</string>
+
+    <string name="stations">Stations</string>
+    <string name="routes">Routes</string>
+    <plurals name="items_selected">
+        <item quantity="one">%d item selected</item>
+        <item quantity="other">%d items selected</item>
+    </plurals>
+    <string name="settings_preferences">Предпочитания</string>
+    <string name="settings_show_seconds">Покажи секундите</string>
+    <string name="settings_show_seconds_description">Показване на секунди в часовете на пристигане и заминаване</string>
+    <string name="waiting_for_gps">Изчакване на GPS…</string>
+    <string name="single_trip_info_screen_original">Оригинал</string>
+    <string name="single_trip_info_screen_countdown">Обратно броене</string>
 </resources>

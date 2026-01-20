@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,24 +31,6 @@ import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import java.time.ZoneId
 import java.util.Locale
-
-private fun getAgencyIconUrl(agencyId: String?, agencyName: String?): String? {
-        val base = "https://maps.catenarymaps.org/agencyicons"
-        return when {
-                agencyId == "GWR" || agencyName?.trim()?.lowercase() == "gwr" ->
-                        "$base/GreaterWesternRailway.svg" // Note: Svelte had Brighter variant for
-                // dark
-                // mode, ignoring for now or could handle with
-                // isSystemInDarkTheme()
-                agencyName?.trim()?.lowercase() == "london overground" ->
-                        "$base/uk-london-overground.svg"
-
-                agencyId == "CC" || agencyName?.trim()?.lowercase() == "c2c" -> "$base/c2c_logo.svg"
-                agencyName?.trim()?.lowercase() == "elizabeth line" ->
-                        "$base/Elizabeth_line_roundel.svg" // User said all SVG
-                else -> null
-        }
-}
 
 @Composable
 fun StationScreenTrainRow(
@@ -155,8 +139,8 @@ fun StationScreenTrainRow(
                                                                 if (isPast)
                                                                         MaterialTheme.colorScheme
                                                                                 .primary.copy(
-                                                                                        alpha = 0.7f
-                                                                                )
+                                                                                alpha = 0.7f
+                                                                        )
                                                                 else
                                                                         MaterialTheme.colorScheme
                                                                                 .primary
@@ -178,8 +162,8 @@ fun StationScreenTrainRow(
                                                                 if (isPast)
                                                                         MaterialTheme.colorScheme
                                                                                 .primary.copy(
-                                                                                        alpha = 0.7f
-                                                                                )
+                                                                                alpha = 0.7f
+                                                                        )
                                                                 else
                                                                         MaterialTheme.colorScheme
                                                                                 .primary
@@ -267,8 +251,16 @@ fun StationScreenTrainRow(
                                         )
                                 }
 
-                                if (agencyName != null) {
-                                        val iconUrl = getAgencyIconUrl(agencyId, agencyName)
+                                val agencyInfo =
+                                        NationalRailUtils.getAgencyInfo(agencyId, agencyName)
+                                val resolvedAgencyName = agencyInfo?.name ?: agencyName
+
+                                if (resolvedAgencyName != null) {
+                                        val iconUrl =
+                                                NationalRailUtils.getAgencyIconUrl(
+                                                        agencyId,
+                                                        agencyName
+                                                )
                                         if (iconUrl != null) {
                                                 val context = LocalContext.current
                                                 val imageLoader =
@@ -295,11 +287,11 @@ fun StationScreenTrainRow(
                                                         colorFilter =
                                                                 null // SVGs might have their own
                                                         // colors
-                                                )
+                                                        )
                                         }
 
                                         Text(
-                                                text = agencyName,
+                                                text = resolvedAgencyName,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -311,8 +303,8 @@ fun StationScreenTrainRow(
                                 }
 
                                 if (showRouteName &&
-                                        routeInfo?.short_name == null &&
-                                        routeInfo?.long_name != null
+                                                routeInfo?.short_name == null &&
+                                                routeInfo?.long_name != null
                                 ) {
                                         Text(
                                                 text = routeInfo.long_name,
@@ -464,7 +456,112 @@ fun StopScreenRow(
                                 // Info
                                 Column(Modifier.weight(1f)) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                                if (routeInfo?.short_name != null) {
+                                                val isRatp =
+                                                        RatpUtils.isIdfmChateau(event.chateau) &&
+                                                                RatpUtils.isRatpRoute(
+                                                                        routeInfo?.short_name
+                                                                )
+                                                val isMta =
+                                                        MtaSubwayUtils.MTA_CHATEAU_ID ==
+                                                                event.chateau &&
+                                                                !routeInfo?.short_name
+                                                                        .isNullOrEmpty() &&
+                                                                MtaSubwayUtils.isSubwayRouteId(
+                                                                        routeInfo?.short_name!!
+                                                                )
+
+                                                if (isRatp) {
+                                                        val iconUrl =
+                                                                RatpUtils.getRatpIconUrl(
+                                                                        routeInfo?.short_name
+                                                                )
+                                                        if (iconUrl != null) {
+                                                                val context = LocalContext.current
+                                                                val imageLoader =
+                                                                        androidx.compose.runtime
+                                                                                .remember(context) {
+                                                                                        coil.ImageLoader
+                                                                                                .Builder(
+                                                                                                        context
+                                                                                                )
+                                                                                                .components {
+                                                                                                        add(
+                                                                                                                coil.decode
+                                                                                                                        .SvgDecoder
+                                                                                                                        .Factory()
+                                                                                                        )
+                                                                                                }
+                                                                                                .build()
+                                                                                }
+                                                                AsyncImage(
+                                                                        model =
+                                                                                ImageRequest
+                                                                                        .Builder(
+                                                                                                context
+                                                                                        )
+                                                                                        .data(
+                                                                                                iconUrl
+                                                                                        )
+                                                                                        .crossfade(
+                                                                                                true
+                                                                                        )
+                                                                                        .build(),
+                                                                        imageLoader = imageLoader,
+                                                                        contentDescription =
+                                                                                routeInfo
+                                                                                        ?.short_name,
+                                                                        modifier =
+                                                                                Modifier
+                                                                                        .height(
+                                                                                                20.dp
+                                                                                        )
+                                                                                        .padding(
+                                                                                                end =
+                                                                                                        4.dp
+                                                                                        )
+                                                                )
+                                                        }
+                                                } else if (isMta) {
+                                                        val mtaColor =
+                                                                MtaSubwayUtils.getMtaSubwayColor(
+                                                                        routeInfo?.short_name!!
+                                                                )
+                                                        val symbolShortName =
+                                                                MtaSubwayUtils
+                                                                        .getMtaSymbolShortName(
+                                                                                routeInfo.short_name
+                                                                        )
+                                                        androidx.compose.foundation.layout.Box(
+                                                                modifier =
+                                                                        Modifier
+                                                                                .size(20.dp)
+                                                                                .clip(CircleShape)
+                                                                                .background(
+                                                                                        mtaColor
+                                                                                ),
+                                                                contentAlignment = Alignment.Center
+                                                        ) {
+                                                                Text(
+                                                                        text = symbolShortName,
+                                                                        color = Color.White,
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .labelSmall
+                                                                                        .copy(
+                                                                                                fontWeight =
+                                                                                                        FontWeight
+                                                                                                                .Bold
+                                                                                        ),
+                                                                        textAlign =
+                                                                                androidx.compose.ui
+                                                                                        .text.style
+                                                                                        .TextAlign
+                                                                                        .Center
+                                                                )
+                                                        }
+                                                        Spacer(Modifier.width(4.dp))
+                                                } else if (routeInfo?.short_name != null) {
                                                         Text(
                                                                 text = routeInfo.short_name,
                                                                 color =
@@ -476,10 +573,10 @@ fun StopScreenRow(
                                                                 style =
                                                                         MaterialTheme.typography
                                                                                 .labelSmall.copy(
-                                                                                        fontWeight =
-                                                                                                FontWeight
-                                                                                                        .Bold
-                                                                                ),
+                                                                                fontWeight =
+                                                                                        FontWeight
+                                                                                                .Bold
+                                                                        ),
                                                                 modifier =
                                                                         Modifier
                                                                                 .clip(
@@ -514,10 +611,10 @@ fun StopScreenRow(
                                                                 style =
                                                                         MaterialTheme.typography
                                                                                 .labelSmall.copy(
-                                                                                        fontWeight =
-                                                                                                FontWeight
-                                                                                                        .SemiBold
-                                                                                ),
+                                                                                fontWeight =
+                                                                                        FontWeight
+                                                                                                .SemiBold
+                                                                        ),
                                                                 modifier =
                                                                         Modifier
                                                                                 .clip(
@@ -577,7 +674,7 @@ fun StopScreenRow(
                                         if ((rtTime ?: schedTime) != null) {
                                                 SelfUpdatingDiffTimer(
                                                         targetTimeSeconds = rtTime
-                                                                ?: schedTime ?: 0,
+                                                                        ?: schedTime ?: 0,
                                                         showBrackets = false,
                                                         showSeconds = showSeconds,
                                                         showDays = false,
@@ -588,8 +685,8 @@ fun StopScreenRow(
 
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                                 if (rtTime != null &&
-                                                        schedTime != null &&
-                                                        rtTime != schedTime
+                                                                schedTime != null &&
+                                                                rtTime != schedTime
                                                 ) {
                                                         // Delay
                                                         DelayDiff(
@@ -600,21 +697,7 @@ fun StopScreenRow(
                                                         Spacer(Modifier.width(4.dp))
 
                                                         // Strikethrough
-                                                        FormattedTimeText(
-                                                                timezone = zoneId.id,
-                                                                timeSeconds = schedTime,
-                                                                showSeconds = showSeconds,
-                                                                textDecoration =
-                                                                        TextDecoration.LineThrough,
-                                                                style =
-                                                                        MaterialTheme.typography
-                                                                                .bodyMedium,
-                                                                color =
-                                                                        MaterialTheme.colorScheme
-                                                                                .onSurfaceVariant
-                                                                                .copy(alpha = 0.7f)
-                                                        )
-                                                        Spacer(Modifier.width(4.dp))
+
                                                 }
 
                                                 // Real time / Scheduled
@@ -626,10 +709,10 @@ fun StopScreenRow(
                                                                 style =
                                                                         MaterialTheme.typography
                                                                                 .bodyMedium.copy(
-                                                                                        fontWeight =
-                                                                                                FontWeight
-                                                                                                        .Medium
-                                                                                ),
+                                                                                fontWeight =
+                                                                                        FontWeight
+                                                                                                .Medium
+                                                                        ),
                                                                 color =
                                                                         if (isPast)
                                                                                 MaterialTheme
