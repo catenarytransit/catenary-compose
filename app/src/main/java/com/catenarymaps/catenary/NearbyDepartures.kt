@@ -601,7 +601,6 @@ fun NearbyDepartures(
                                                                                                 ?: item.group
                                                                                                         .longName
                                                                                                 ?: "")
-
                                                                                 is NearbyItem.StationGroupItem ->
                                                                                         item.group
                                                                                                 .stationName
@@ -609,7 +608,6 @@ fun NearbyDepartures(
                                                                 name.lowercase(Locale.UK)
                                                         }
                                                 )
-
                                         SortMode.DISTANCE -> mixedItems.sortedBy { it.sortDistance }
                                 }
 
@@ -620,7 +618,6 @@ fun NearbyDepartures(
                                         when (it) {
                                                 is NearbyItem.RouteGroupItem ->
                                                         "R:${it.group.chateauId}:${it.group.routeId}"
-
                                                 is NearbyItem.StationGroupItem ->
                                                         "S:${it.group.stationName}:${it.group.distanceM}" // Unique
                                                 // enough for
@@ -722,7 +719,6 @@ fun NearbyDepartures(
                                                 when (it) {
                                                         is NearbyItem.RouteGroupItem ->
                                                                 "R:${it.group.chateauId}:${it.group.routeId}"
-
                                                         is NearbyItem.StationGroupItem ->
                                                                 "S:${it.group.stationName}:${it.group.lat}"
                                                 }
@@ -740,7 +736,6 @@ fun NearbyDepartures(
                                                                 nowSec = nowSec
                                                         )
                                                 }
-
                                                 is NearbyItem.StationGroupItem -> {
                                                         StationGroupCard(
                                                                 group = item.group,
@@ -772,16 +767,12 @@ private fun StationGroupCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                 colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        if (darkMode) Color(0xFF1F2937)
-                                        else Color(0xFFF3F4F6) // gray-800 / gray-100
-                        ),
+                        CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border =
                         androidx.compose.foundation.BorderStroke(
                                 1.dp,
-                                if (darkMode) Color(0xFF374151) else Color(0xFFD1D5DB)
-                        ), // gray-700 / gray-300
+                                MaterialTheme.colorScheme.outlineVariant
+                        ),
                 shape = RoundedCornerShape(8.dp)
         ) {
                 Column(Modifier.padding(8.dp)) {
@@ -791,12 +782,7 @@ private fun StationGroupCard(
                                         Modifier
                                                 .fillMaxWidth()
                                                 .padding(bottom = 8.dp)
-                                                .border(
-                                                        width = 0.dp,
-                                                        color = Color.Transparent,
-                                                        shape = RoundedCornerShape(0.dp)
-                                                )
-                                                .padding(bottom = 4.dp), // simulating border-b
+                                                .padding(bottom = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -807,30 +793,23 @@ private fun StationGroupCard(
                                                         MaterialTheme.typography.titleMedium.copy(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
-                                                color =
-                                                        if (darkMode) Color(0xFFF3F4F6)
-                                                        else Color(0xFF111827)
+                                                color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
                                                 text = "${group.distanceM.toInt()}m",
                                                 style = MaterialTheme.typography.labelSmall,
-                                                color =
-                                                        if (darkMode) Color(0xFF9CA3AF)
-                                                        else Color(0xFF6B7280)
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                 }
                         }
-                        Divider(
-                                color = if (darkMode) Color(0xFF374151) else Color(0xFFD1D5DB),
-                                thickness = 1.dp
-                        )
+                        Divider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
 
                         // Departures
                         // Filter out Last Stop and limit to 10
                         val departures = group.departures.filter { !it.lastStop }.take(10)
 
                         Column {
-                                departures.forEach { dep ->
+                                departures.forEachIndexed { index, dep ->
                                         val routeInfo = routesMap[dep.chateauId]?.get(dep.routeId)
                                         // Construct StopEvent
                                         // Logic mirroring Svelte
@@ -947,6 +926,15 @@ private fun StationGroupCard(
                                                         )
                                                 }
                                         )
+
+                                        if (index < departures.lastIndex) {
+                                                Divider(
+                                                        color =
+                                                                MaterialTheme.colorScheme
+                                                                        .outlineVariant,
+                                                        thickness = 0.5.dp
+                                                )
+                                        }
                                 }
                         }
 
@@ -968,12 +956,7 @@ private fun StationGroupCard(
                                                         stringResource(
                                                                 id = R.string.more_departures
                                                         ),
-                                                color =
-                                                        if (darkMode) Color(0xFF60A5FA)
-                                                        else
-                                                                Color(
-                                                                        0xFF2563EB
-                                                                ) // blue-400 / blue-600
+                                                color = MaterialTheme.colorScheme.primary
                                         )
                                 }
                         }
