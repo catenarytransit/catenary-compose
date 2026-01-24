@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import java.net.URLEncoder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,47 +75,55 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     private fun fetchInitialTripData() {
         viewModelScope.launch {
+            var url = ""
             try {
 
                 val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
                 val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
 
-                val url =
+                val params = mutableListOf<String>()
+                if (tripSelected.trip_id != null) params.add("trip_id=${encodedTripId}")
+                if (tripSelected.start_date != null)
+                        params.add("start_date=${tripSelected.start_date}")
+                if (tripSelected.start_time != null)
+                        params.add("start_time=${tripSelected.start_time}")
+
+                url =
                         "https://birch.catenarymaps.org/get_trip_information/${encodedChateauId}/?" +
-                                if (tripSelected.trip_id != null) "trip_id=${encodedTripId}&"
-                                else
-                                        "" +
-                                                if (tripSelected.start_date != null)
-                                                        "start_date=${tripSelected.start_date}&"
-                                                else
-                                                        "" +
-                                                                if (tripSelected.start_time != null)
-                                                                        "start_time=${tripSelected.start_time}"
-                                                                else ""
+                                params.joinToString("&")
 
                 println("fetching url ${url}")
 
-                val response = ktorClient.get(url).body<String>()
+                // Use HttpResponse to get raw text safely
+                val response: HttpResponse = ktorClient.get(url)
+                val responseBody = response.bodyAsText()
 
                 // Handle errors
-                val data = json.decodeFromString<TripDataResponse>(response)
+                try {
+                    val data = json.decodeFromString<TripDataResponse>(responseBody)
 
-                _tripData.value = data
-                _alerts.value = data.alert_id_to_alert
-                // processStopIdToAlertIds(data.alert_id_to_alert)
+                    _tripData.value = data
+                    _alerts.value = data.alert_id_to_alert
+                    // processStopIdToAlertIds(data.alert_id_to_alert)
 
-                // Process stoptimes into the "cleaned" dataset
-                _stopTimes.value = data.stoptimes.map { processStopTime(it) }
-                updateStopProgress()
+                    // Process stoptimes into the "cleaned" dataset
+                    _stopTimes.value = data.stoptimes.map { processStopTime(it) }
+                    updateStopProgress()
 
-                _isLoading.value = false
-                _error.value = null
+                    _isLoading.value = false
+                    _error.value = null
 
-                // Fetch vehicle info once we have trip data
-                fetchVehicleInfo()
+                    // Fetch vehicle info once we have trip data
+                    fetchVehicleInfo()
+                } catch (e: Exception) {
+                    Log.e("SingleTripViewModel", "Error parsing trip data: ${e.message}", e)
+                    _error.value =
+                            "URL: $url\n\nError parsing data: ${e.message}\n\nRaw Response:\n$responseBody"
+                    _isLoading.value = false
+                }
             } catch (e: Exception) {
-                Log.e("SingleTripViewModel", "Error fetching initial trip: ${e.message}")
-                _error.value = e.message
+                Log.e("SingleTripViewModel", "Error fetching initial trip: ${e.message}", e)
+                _error.value = "URL: $url\n\nError fetching data: ${e.message}"
                 _isLoading.value = false
             }
         }

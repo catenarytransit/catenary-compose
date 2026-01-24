@@ -198,12 +198,12 @@ fun SingleTripInfoScreen(
         }
 
         val timeColumnWidth by
-        androidx.compose.animation.core.animateDpAsState(
-                targetValue =
-                        (if (showSeconds) 80.dp else 66.dp) +
-                                (if (showOriginalTimetable) 55.dp else 0.dp),
-                label = "timeColumnWidth"
-        )
+                androidx.compose.animation.core.animateDpAsState(
+                        targetValue =
+                                (if (showSeconds) 80.dp else 66.dp) +
+                                        (if (showOriginalTimetable) 55.dp else 0.dp),
+                        label = "timeColumnWidth"
+                )
 
         // NEW: build stop -> connection chips map
         val stopConnections =
@@ -245,17 +245,17 @@ fun SingleTripInfoScreen(
                                                                 val aName =
                                                                         a.first.shortName
                                                                                 ?: a.first.longName
-                                                                                ?: ""
+                                                                                        ?: ""
                                                                 val bName =
                                                                         b.first.shortName
                                                                                 ?: b.first.longName
-                                                                                ?: ""
+                                                                                        ?: ""
 
                                                                 val aNameAsInt = aName.toIntOrNull()
                                                                 val bNameAsInt = bName.toIntOrNull()
 
                                                                 if (aNameAsInt != null &&
-                                                                        bNameAsInt != null
+                                                                                bNameAsInt != null
                                                                 ) {
                                                                         aNameAsInt.compareTo(
                                                                                 bNameAsInt
@@ -267,7 +267,8 @@ fun SingleTripInfoScreen(
                                         )
 
                                         result[stopId] =
-                                                connectingRoutesList.map { (route, chateauId, routeId) ->
+                                                connectingRoutesList.map {
+                                                        (route, chateauId, routeId) ->
                                                         StopConnectionChip(
                                                                 routeId = routeId,
                                                                 shortName = route.shortName,
@@ -472,17 +473,73 @@ fun SingleTripInfoScreen(
 
         // --- UI Rendering ---
         Box(modifier = Modifier.fillMaxSize()) {
-                Column(modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 8.dp)) {
+                Column(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
                         if (isLoading) {
                                 LinearProgressIndicator(
-                                        modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(top = 8.dp)
+                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                                 )
                         } else if (error != null) {
-                                Text(text = error!!, color = MaterialTheme.colorScheme.error)
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                        // Header with Navigation Controls
+                                        Row(
+                                                modifier =
+                                                        Modifier.fillMaxWidth()
+                                                                .padding(bottom = 16.dp),
+                                                horizontalArrangement = Arrangement.Start,
+                                                verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                                NavigationControls(
+                                                        onBack = onBack,
+                                                        onHome = onHome,
+                                                        onPageInfo = {
+                                                                showFloatingControls =
+                                                                        !showFloatingControls
+                                                        },
+                                                        isPageInfoPulse = false
+                                                )
+                                        }
+
+                                        // Scrollable Error Details
+                                        androidx.compose.foundation.text.selection
+                                                .SelectionContainer {
+                                                        Column(
+                                                                modifier =
+                                                                        Modifier.weight(1f)
+                                                                                .verticalScroll(
+                                                                                        rememberScrollState()
+                                                                                )
+                                                        ) {
+                                                                Text(
+                                                                        text = "Error",
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .headlineSmall,
+                                                                        color =
+                                                                                MaterialTheme
+                                                                                        .colorScheme
+                                                                                        .error,
+                                                                        modifier =
+                                                                                Modifier.padding(
+                                                                                        bottom =
+                                                                                                8.dp
+                                                                                )
+                                                                )
+                                                                Text(
+                                                                        text = error!!,
+                                                                        color =
+                                                                                MaterialTheme
+                                                                                        .colorScheme
+                                                                                        .error,
+                                                                        fontFamily =
+                                                                                androidx.compose.ui
+                                                                                        .text.font
+                                                                                        .FontFamily
+                                                                                        .Monospace
+                                                                )
+                                                        }
+                                                }
+                                }
                         } else if (tripData != null) {
                                 val data = tripData!!
 
@@ -549,9 +606,9 @@ fun SingleTripInfoScreen(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 verticalAlignment = Alignment.CenterVertically
                                                 // horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
+                                                ) {
                                                 if (data.vehicle?.label != null ||
-                                                        data.vehicle?.id != null
+                                                                data.vehicle?.id != null
                                                 ) {
                                                         Text(
                                                                 text =
@@ -569,7 +626,7 @@ fun SingleTripInfoScreen(
 
                                                 // Clickable Block ID (Button Style)
                                                 if (data.block_id != null &&
-                                                        data.service_date != null
+                                                                data.service_date != null
                                                 ) {
                                                         androidx.compose.material3.Surface(
                                                                 onClick = {
@@ -696,8 +753,7 @@ fun SingleTripInfoScreen(
                                                         Column(modifier = Modifier.fillMaxSize()) {
                                                                 Row(
                                                                         modifier =
-                                                                                Modifier
-                                                                                        .fillMaxWidth()
+                                                                                Modifier.fillMaxWidth()
                                                                                         .padding(
                                                                                                 16.dp
                                                                                         ),
@@ -736,8 +792,7 @@ fun SingleTripInfoScreen(
                                                                 }
                                                                 Column(
                                                                         modifier =
-                                                                                Modifier
-                                                                                        .fillMaxWidth()
+                                                                                Modifier.fillMaxWidth()
                                                                                         .weight(1f)
                                                                                         .verticalScroll(
                                                                                                 rememberScrollState()
@@ -778,7 +833,7 @@ fun SingleTripInfoScreen(
                                         ) {
                                                 VehicleInfo(
                                                         label = data.vehicle.label
-                                                                ?: data.vehicle.id ?: "",
+                                                                        ?: data.vehicle.id ?: "",
                                                         chateau = tripSelected.chateau_id,
                                                         routeId = data.route_id
                                                 )
@@ -802,8 +857,8 @@ fun SingleTripInfoScreen(
                                         isLoading
                                 ) {
                                         if (!isLoading &&
-                                                !hasInitialScrolled &&
-                                                stopTimes.isNotEmpty()
+                                                        !hasInitialScrolled &&
+                                                        stopTimes.isNotEmpty()
                                         ) {
                                                 delay(100)
                                                 val targetStopIndex =
@@ -818,8 +873,7 @@ fun SingleTripInfoScreen(
 
                                 LazyColumn(
                                         modifier =
-                                                Modifier
-                                                        .fillMaxWidth()
+                                                Modifier.fillMaxWidth()
                                                         // .windowInsetsBottomHeight(WindowInsets(bottom =
                                                         // WindowInsets.safeDrawing.getBottom(density =
                                                         // LocalDensity.current)))
@@ -888,8 +942,7 @@ fun SingleTripInfoScreen(
                 androidx.compose.animation.AnimatedVisibility(
                         visible = showScrollToCurrentButton,
                         modifier =
-                                Modifier
-                                        .align(Alignment.BottomEnd)
+                                Modifier.align(Alignment.BottomEnd)
                                         .padding(
                                                 bottom = 80.dp,
                                                 end = 16.dp
@@ -922,8 +975,7 @@ fun SingleTripInfoScreen(
                 androidx.compose.animation.AnimatedVisibility(
                         visible = showFloatingControls,
                         modifier =
-                                Modifier
-                                        .align(Alignment.BottomCenter)
+                                Modifier.align(Alignment.BottomCenter)
                                         .padding(bottom = 16.dp)
                                         .windowInsetsPadding(
                                                 WindowInsets(
@@ -963,8 +1015,7 @@ fun SingleTripInfoScreen(
                                                                 showOriginalTimetable = it
                                                         },
                                                         modifier =
-                                                                Modifier
-                                                                        .scale(0.8f)
+                                                                Modifier.scale(0.8f)
                                                                         .padding(end = 4.dp)
                                                 )
                                                 Text(
@@ -981,8 +1032,7 @@ fun SingleTripInfoScreen(
                                                         checked = showCountdown,
                                                         onCheckedChange = { showCountdown = it },
                                                         modifier =
-                                                                Modifier
-                                                                        .scale(0.8f)
+                                                                Modifier.scale(0.8f)
                                                                         .padding(end = 4.dp)
                                                 )
                                                 Text(
@@ -1392,8 +1442,7 @@ fun StopListItem(
                                                         if (showCountdown) {
                                                                 Box(
                                                                         modifier =
-                                                                                Modifier
-                                                                                        .padding(
+                                                                                Modifier.padding(
                                                                                                 start =
                                                                                                         4.dp
                                                                                         )
@@ -1435,7 +1484,7 @@ fun StopListItem(
                                         val content: @Composable () -> Unit = {
                                                 Row(verticalAlignment = Alignment.Top) {
                                                         if (showOriginalTimetable &&
-                                                                unifiedSched != null
+                                                                        unifiedSched != null
                                                         ) {
                                                                 Box(
                                                                         modifier =
@@ -1535,8 +1584,7 @@ fun StopListItem(
                                                                 if (showCountdown) {
                                                                         Box(
                                                                                 modifier =
-                                                                                        Modifier
-                                                                                                .padding(
+                                                                                        Modifier.padding(
                                                                                                         start =
                                                                                                                 4.dp
                                                                                                 )
@@ -1575,31 +1623,23 @@ fun StopListItem(
         val headerHeight = 24.dp
 
         Column(
-                modifier = Modifier
-                        .fillMaxWidth()
-                        .zIndex(if (movingDotProgress != null) 1f else 0f)
+                modifier = Modifier.fillMaxWidth().zIndex(if (movingDotProgress != null) 1f else 0f)
         ) {
                 // 1. Render Above Rows
                 aboveContent.forEach { content ->
                         Row(
-                                modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(IntrinsicSize.Min),
+                                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                                 verticalAlignment = Alignment.Bottom
                         ) {
                                 // Time
                                 Box(
                                         modifier =
-                                                Modifier
-                                                        .width(timeColumnWidth)
-                                                        .padding(end = 4.dp),
+                                                Modifier.width(timeColumnWidth).padding(end = 4.dp),
                                         contentAlignment = Alignment.CenterEnd
                                 ) { content() }
 
                                 // Timeline (Line Only)
-                                Box(modifier = Modifier
-                                        .width(16.dp)
-                                        .fillMaxHeight()) {
+                                Box(modifier = Modifier.width(16.dp).fillMaxHeight()) {
                                         if (!isFirst) {
                                                 TimelineLine(
                                                         color = neutralColor,
@@ -1610,9 +1650,7 @@ fun StopListItem(
                                 }
 
                                 // Content Spacer
-                                Box(modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 8.dp)) {
+                                Box(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                                         // Empty
                                 }
                         }
@@ -1620,17 +1658,14 @@ fun StopListItem(
 
                 // 2. Render Main Row
                 Row(
-                        modifier = Modifier
-                                .fillMaxWidth()
-                                .height(IntrinsicSize.Min),
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                         verticalAlignment = Alignment.Top
                 ) {
                         // Time
                         // We constrain the time to the header height to align with the dot and name
                         Box(
                                 modifier =
-                                        Modifier
-                                                .width(timeColumnWidth)
+                                        Modifier.width(timeColumnWidth)
                                                 // .height(headerHeight) // Removed to allow delay
                                                 // expansion
                                                 .padding(end = 4.dp),
@@ -1639,9 +1674,7 @@ fun StopListItem(
                         ) { mainContent?.invoke() }
 
                         // Timeline (Dot + Lines)
-                        Box(modifier = Modifier
-                                .width(16.dp)
-                                .fillMaxHeight()) {
+                        Box(modifier = Modifier.width(16.dp).fillMaxHeight()) {
                                 TripProgressIndicator(
                                         color = tripColor,
                                         neutralColor = neutralColor,
@@ -1659,15 +1692,12 @@ fun StopListItem(
 
                         // Content (Station Name + Platform)
                         Column(
-                                modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 8.dp),
+                                modifier = Modifier.weight(1f).padding(start = 8.dp),
                                 verticalArrangement = Arrangement.Top
                         ) {
                                 Row(
                                         modifier =
-                                                Modifier
-                                                        .fillMaxWidth()
+                                                Modifier.fillMaxWidth()
                                                         .defaultMinSize(minHeight = headerHeight),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
@@ -1684,8 +1714,7 @@ fun StopListItem(
                                                                                 .onSurface,
                                                         fontWeight = FontWeight.Normal,
                                                         modifier =
-                                                                Modifier
-                                                                        .clickable(
+                                                                Modifier.clickable(
                                                                                 onClick =
                                                                                         onStopClick
                                                                         )
@@ -1749,7 +1778,7 @@ fun StopListItem(
                                                                                 longName =
                                                                                         chip.longName,
                                                                                 color = chip.color
-                                                                                        ?: "000000",
+                                                                                                ?: "000000",
                                                                                 textColor =
                                                                                         chip.textColor
                                                                                                 ?: "FFFFFF",
@@ -1768,13 +1797,9 @@ fun StopListItem(
 
                 // Continuous line/spacer
                 if (!isLast) {
-                        Row(Modifier
-                                .fillMaxWidth()
-                                .height(4.dp)) {
+                        Row(Modifier.fillMaxWidth().height(4.dp)) {
                                 Box(Modifier.width(timeColumnWidth))
-                                Box(Modifier
-                                        .width(16.dp)
-                                        .fillMaxHeight()) {
+                                Box(Modifier.width(16.dp).fillMaxHeight()) {
                                         TimelineLine(
                                                 color = neutralColor,
                                                 isPast = isBottomSegmentPast,
