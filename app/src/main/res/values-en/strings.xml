@@ -110,4 +110,5 @@
     </plurals>
     <string name="single_trip_info_screen_original">Original</string>
     <string name="single_trip_info_screen_countdown">Countdown</string>
+    <string name="more_departures">More departures</string>
 </resources>

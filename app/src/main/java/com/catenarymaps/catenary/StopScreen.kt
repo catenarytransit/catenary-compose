@@ -130,7 +130,9 @@ data class StopEvent(
     val trip_cancelled: Boolean,
     val stop_cancelled: Boolean,
     val trip_deleted: Boolean,
-    val route_type: Int? = null
+    val route_type: Int? = null,
+    val timezone: String? = null,
+    val distance_m: Double? = null
 )
 
 @Serializable

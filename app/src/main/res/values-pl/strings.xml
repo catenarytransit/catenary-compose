@@ -121,4 +121,5 @@
     <string name="waiting_for_gps">Oczekiwanie na GPS…</string>
     <string name="single_trip_info_screen_original">Oryginał</string>
     <string name="single_trip_info_screen_countdown">Odliczanie</string>
+    <string name="more_departures">Więcej odjazdów</string>
 </resources>

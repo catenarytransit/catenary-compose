@@ -121,4 +121,5 @@
     <string name="waiting_for_gps">Čekání na GPS…</string>
     <string name="single_trip_info_screen_original">Původní</string>
     <string name="single_trip_info_screen_countdown">Odpočet</string>
+    <string name="more_departures">Více odjezdů</string>
 </resources>

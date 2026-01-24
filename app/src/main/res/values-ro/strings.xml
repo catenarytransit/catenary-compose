@@ -120,4 +120,5 @@
     <string name="waiting_for_gps">Se așteaptă GPS…</string>
     <string name="single_trip_info_screen_original">Original</string>
     <string name="single_trip_info_screen_countdown">Numărătoare inversă</string>
+    <string name="more_departures">Mai multe plecări</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -61,16 +62,16 @@ fun StationScreenTrainRow(
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
 
         Row(
-                modifier = modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // Left: Time (Vertical Stack)
                 Column(
-                        modifier = Modifier
-                                .width(80.dp)
-                                .padding(end = 8.dp),
+                    modifier = Modifier
+                        .width(80.dp)
+                        .padding(end = 8.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -199,9 +200,9 @@ fun StationScreenTrainRow(
                 }
 
                 // Middle: Info
-                Column(modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp)) {
+            Column(modifier = Modifier
+                .weight(1f)
+                .padding(end = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                         text = event.headsign ?: "",
@@ -236,18 +237,18 @@ fun StationScreenTrainRow(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
                                                 modifier =
-                                                        Modifier
-                                                                .clip(RoundedCornerShape(2.dp))
-                                                                .background(
-                                                                        parseColor(
-                                                                                routeInfo.color,
-                                                                                Color.Gray
-                                                                        )
-                                                                )
-                                                                .padding(
-                                                                        horizontal = 4.dp,
-                                                                        vertical = 1.dp
-                                                                )
+                                                    Modifier
+                                                        .clip(RoundedCornerShape(2.dp))
+                                                        .background(
+                                                            parseColor(
+                                                                routeInfo.color,
+                                                                Color.Gray
+                                                            )
+                                                        )
+                                                        .padding(
+                                                            horizontal = 4.dp,
+                                                            vertical = 1.dp
+                                                        )
                                         )
                                 }
 
@@ -318,18 +319,18 @@ fun StationScreenTrainRow(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
                                                 modifier =
-                                                        Modifier
-                                                                .clip(RoundedCornerShape(2.dp))
-                                                                .background(
-                                                                        parseColor(
-                                                                                routeInfo.color,
-                                                                                Color.Gray
-                                                                        )
-                                                                )
-                                                                .padding(
-                                                                        horizontal = 4.dp,
-                                                                        vertical = 1.dp
-                                                                )
+                                                    Modifier
+                                                        .clip(RoundedCornerShape(2.dp))
+                                                        .background(
+                                                            parseColor(
+                                                                routeInfo.color,
+                                                                Color.Gray
+                                                            )
+                                                        )
+                                                        .padding(
+                                                            horizontal = 4.dp,
+                                                            vertical = 1.dp
+                                                        )
                                         )
                                 }
                         }
@@ -350,13 +351,13 @@ fun StationScreenTrainRow(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier
-                                                        .background(
-                                                                MaterialTheme.colorScheme
-                                                                        .surfaceVariant,
-                                                                RoundedCornerShape(4.dp)
-                                                        )
-                                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            Modifier
+                                                .background(
+                                                    MaterialTheme.colorScheme
+                                                        .surfaceVariant,
+                                                    RoundedCornerShape(4.dp)
+                                                )
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                         }
                 }
@@ -511,14 +512,14 @@ fun StopScreenRow(
                                                                                 routeInfo
                                                                                         ?.short_name,
                                                                         modifier =
-                                                                                Modifier
-                                                                                        .height(
-                                                                                                20.dp
-                                                                                        )
-                                                                                        .padding(
-                                                                                                end =
-                                                                                                        4.dp
-                                                                                        )
+                                                                            Modifier
+                                                                                .height(
+                                                                                    20.dp
+                                                                                )
+                                                                                .padding(
+                                                                                    end =
+                                                                                        4.dp
+                                                                                )
                                                                 )
                                                         }
                                                 } else if (isMta) {
@@ -533,12 +534,12 @@ fun StopScreenRow(
                                                                         )
                                                         androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier
-                                                                                .size(20.dp)
-                                                                                .clip(CircleShape)
-                                                                                .background(
-                                                                                        mtaColor
-                                                                                ),
+                                                                    Modifier
+                                                                        .size(20.dp)
+                                                                        .clip(CircleShape)
+                                                                        .background(
+                                                                            mtaColor
+                                                                        ),
                                                                 contentAlignment = Alignment.Center
                                                         ) {
                                                                 Text(
@@ -578,25 +579,25 @@ fun StopScreenRow(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier
-                                                                                .clip(
-                                                                                        RoundedCornerShape(
-                                                                                                2.dp
-                                                                                        )
-                                                                                )
-                                                                                .background(
-                                                                                        parseColor(
-                                                                                                routeInfo
-                                                                                                        .color,
-                                                                                                Color.Gray
-                                                                                        )
-                                                                                )
-                                                                                .padding(
-                                                                                        horizontal =
-                                                                                                4.dp,
-                                                                                        vertical =
-                                                                                                1.dp
-                                                                                )
+                                                                    Modifier
+                                                                        .clip(
+                                                                            RoundedCornerShape(
+                                                                                2.dp
+                                                                            )
+                                                                        )
+                                                                        .background(
+                                                                            parseColor(
+                                                                                routeInfo
+                                                                                    .color,
+                                                                                Color.Gray
+                                                                            )
+                                                                        )
+                                                                        .padding(
+                                                                            horizontal =
+                                                                                4.dp,
+                                                                            vertical =
+                                                                                1.dp
+                                                                        )
                                                         )
                                                         Spacer(Modifier.width(4.dp))
                                                 } else if (routeInfo?.long_name != null) {
@@ -616,8 +617,7 @@ fun StopScreenRow(
                                                                                                 .SemiBold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier
-                                                                                .clip(
+                                                                    Modifier.clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -772,4 +772,365 @@ fun StopScreenRow(
                         }
                 }
         }
+}
+
+@Composable
+fun StationScreenTrainRowCompact(
+    event: StopEvent,
+    routeInfo: StopRouteInfo?,
+    agencies: Map<String, AgencyInfo>?,
+    currentTime: Long,
+    zoneId: ZoneId,
+    locale: Locale,
+    showSeconds: Boolean = true,
+    useSymbolSign: Boolean = false,
+    showAgencyName: Boolean = true,
+    showTimeDiff: Boolean = true,
+    modifier: Modifier = Modifier,
+    onTripClick: (StopEvent) -> Unit = {}
+) {
+    val rtTime =
+        if (event.last_stop == true) event.realtime_arrival else event.realtime_departure
+    val schedTime =
+        if (event.last_stop == true) event.scheduled_arrival else event.scheduled_departure
+
+    val effectiveShowSeconds = showSeconds && (schedTime?.rem(60) != 0L)
+    val agencyId = routeInfo?.agency_id
+    val agencyName = if (agencyId != null) agencies?.get(agencyId)?.agency_name else null
+    val showRouteName =
+        event.chateau != "nationalrailuk" ||
+                listOf("TW", "ME", "LO", "XR", "HX").contains(agencyId)
+    val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
+
+    Row(
+        modifier =
+            modifier.fillMaxWidth()
+                .clickable { onTripClick(event) }
+                .padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 1. Route Name Bubble (Leftmost)
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.width(40.dp).padding(horizontal = 2.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (showRouteName && routeInfo?.short_name != null) {
+                Text(
+                    text = routeInfo.short_name.replace(" Line", ""),
+                    color = parseColor(routeInfo.text_color, Color.White),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                    modifier =
+                        Modifier.clip(RoundedCornerShape(2.dp))
+                            .background(
+                                parseColor(
+                                    routeInfo.color,
+                                    Color.Gray
+                                )
+                            )
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                )
+            }
+        }
+
+        // 2. Time (Vertical Stack)
+        Column(
+            modifier = Modifier.width(70.dp).padding(horizontal = 2.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            if (event.trip_cancelled == true) {
+                Text(
+                    text = stringResource(R.string.cancelled),
+                    color = MaterialTheme.colorScheme.error,
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                )
+                if (schedTime != null) {
+                    FormattedTimeText(
+                        timezone = zoneId.id,
+                        timeSeconds = schedTime,
+                        showSeconds = effectiveShowSeconds,
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 10.sp
+                            ),
+                        textDecoration = TextDecoration.LineThrough,
+                        color =
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                                .copy(alpha = 0.7f)
+                    )
+                }
+            } else if (event.trip_deleted == true) {
+                Text(
+                    text = stringResource(R.string.deleted),
+                    color = MaterialTheme.colorScheme.error,
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp
+                        )
+                )
+            } else if (event.stop_cancelled == true) {
+                Text(
+                    text = stringResource(R.string.stop_cancelled),
+                    color = MaterialTheme.colorScheme.error,
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp
+                        )
+                )
+            } else {
+                if (rtTime != null && schedTime != null && rtTime != schedTime) {
+                    // Sched (crossed)
+                    FormattedTimeText(
+                        timezone = zoneId.id,
+                        timeSeconds = schedTime,
+                        showSeconds = effectiveShowSeconds,
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 10.sp
+                            ),
+                        textDecoration = TextDecoration.LineThrough,
+                        color =
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                                .copy(alpha = 0.7f)
+                    )
+                    // Delay
+                    DelayDiff(
+                        diff = rtTime - schedTime,
+                        show_seconds = effectiveShowSeconds,
+                        use_symbol_sign = useSymbolSign
+                    )
+                    // Realtime
+                    FormattedTimeText(
+                        timezone = zoneId.id,
+                        timeSeconds = rtTime,
+                        showSeconds = effectiveShowSeconds,
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                        color =
+                            if (isPast)
+                                MaterialTheme.colorScheme.primary
+                                    .copy(alpha = 0.7f)
+                            else MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    // On Time OR No Realtime Data
+                    if (rtTime != null) {
+                        // Realtime (On Time)
+                        FormattedTimeText(
+                            timezone = zoneId.id,
+                            timeSeconds = rtTime,
+                            showSeconds = effectiveShowSeconds,
+                            style =
+                                MaterialTheme.typography.labelSmall
+                                    .copy(
+                                        fontSize = 11.sp,
+                                        fontWeight =
+                                            FontWeight
+                                                .Medium
+                                    ),
+                            color =
+                                if (isPast)
+                                    MaterialTheme.colorScheme
+                                        .primary.copy(
+                                            alpha = 0.7f
+                                        )
+                                else
+                                    MaterialTheme.colorScheme
+                                        .primary
+                        )
+                    } else if (schedTime != null) {
+                        // Scheduled Only
+                        FormattedTimeText(
+                            timezone = zoneId.id,
+                            timeSeconds = schedTime,
+                            showSeconds = effectiveShowSeconds,
+                            style =
+                                MaterialTheme.typography.labelSmall
+                                    .copy(
+                                        fontSize = 11.sp,
+                                        fontWeight =
+                                            FontWeight
+                                                .Medium
+                                    ),
+                            color =
+                                if (isPast)
+                                    MaterialTheme.colorScheme
+                                        .onSurface.copy(
+                                            alpha = 0.7f
+                                        )
+                                else
+                                    MaterialTheme.colorScheme
+                                        .onSurface
+                        )
+                    }
+                }
+            }
+            // TimeDiff (Countdown)
+            val diff = (rtTime ?: schedTime ?: 0) - currentTime
+            if (showTimeDiff && diff < 3600 && (rtTime ?: schedTime) != null) {
+                SelfUpdatingDiffTimer(
+                    targetTimeSeconds = rtTime ?: schedTime ?: 0,
+                    showBrackets = false,
+                    showSeconds = effectiveShowSeconds && diff < 3600,
+                    showDays = false,
+                    numSize = 10.sp,
+                    showPlus = false
+                )
+            }
+        }
+
+        // 3. Info (Middle)
+        Column(
+            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = event.headsign ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1
+                )
+                if (!event.trip_short_name.isNullOrBlank()) {
+                    Text(
+                        text = " ${event.trip_short_name}",
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                        modifier = Modifier.padding(start = 2.dp)
+                    )
+                }
+            }
+            // Agency Name / Long Name
+            Row(
+                modifier = Modifier.padding(top = 0.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val agencyInfo =
+                    NationalRailUtils.getAgencyInfo(agencyId, agencyName)
+                val resolvedAgencyName = agencyInfo?.name ?: agencyName
+                if (showAgencyName && resolvedAgencyName != null) {
+                    val iconUrl =
+                        NationalRailUtils.getAgencyIconUrl(
+                            agencyId,
+                            agencyName
+                        )
+                    if (iconUrl != null) {
+                        val context = LocalContext.current
+                        val imageLoader =
+                            androidx.compose.runtime.remember(context) {
+                                ImageLoader.Builder(context)
+                                    .components {
+                                        add(
+                                            SvgDecoder
+                                                .Factory()
+                                        )
+                                    }
+                                    .build()
+                            }
+
+                        AsyncImage(
+                            model =
+                                ImageRequest.Builder(context)
+                                    .data(iconUrl)
+                                    .crossfade(true)
+                                    .build(),
+                            imageLoader = imageLoader,
+                            contentDescription = agencyName,
+                            modifier =
+                                Modifier.size(12.dp)
+                                    .padding(end = 2.dp),
+                            colorFilter = null
+                        )
+                    }
+                    Text(
+                        text = resolvedAgencyName,
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 10.sp
+                            ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                if (showRouteName &&
+                    routeInfo?.short_name == null &&
+                    routeInfo?.long_name != null
+                ) {
+                    if (showAgencyName && resolvedAgencyName != null) {
+                        Text(
+                            text = " • ",
+                            style =
+                                MaterialTheme.typography.labelSmall
+                                    .copy(fontSize = 10.sp),
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = routeInfo.long_name,
+                        color =
+                            parseColor(
+                                routeInfo.text_color,
+                                Color.White
+                            ),
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(2.dp))
+                                .background(
+                                    parseColor(
+                                        routeInfo.color,
+                                        Color.Gray
+                                    )
+                                )
+                                .padding(
+                                    horizontal = 4.dp,
+                                    vertical = 0.5.dp
+                                )
+                    )
+                }
+            }
+        }
+
+        // 4. Platform (Right)
+        Column(modifier = Modifier.width(80.dp), horizontalAlignment = Alignment.End) {
+            if (!event.platform_string_realtime.isNullOrBlank()) {
+                Text(
+                    text =
+                        event.platform_string_realtime
+                            .replace("Track", "")
+                            .replace("platform", "", ignoreCase = true)
+                            .replace("Platform", "")
+                            .trim(),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp
+                        ),
+                    modifier =
+                        Modifier.background(
+                            MaterialTheme.colorScheme
+                                .surfaceVariant,
+                            RoundedCornerShape(4.dp)
+                        )
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                )
+            }
+        }
+    }
 }

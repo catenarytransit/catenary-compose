@@ -196,7 +196,7 @@ fun RouteHeading(
                     if (!longName.isNullOrBlank()) {
                         val isNationalRail = chateauId == "nationalrailuk"
                         val hasTo = longName.contains(" to ", ignoreCase = true)
-                        if (!isNationalRail || !hasTo) {
+                        if (!isNationalRail || !hasTo || chateauId == "viarail") {
                             Text(text = longName, style = textStyle, color = displayColor)
                         }
                     }

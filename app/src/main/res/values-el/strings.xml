@@ -119,4 +119,5 @@
     <string name="waiting_for_gps">Αναμονή για GPS…</string>
     <string name="single_trip_info_screen_original">Αρχικό</string>
     <string name="single_trip_info_screen_countdown">Αντίστροφη μέτρηση</string>
+    <string name="more_departures">Περισσότερες αναχωρήσεις</string>
 </resources>
