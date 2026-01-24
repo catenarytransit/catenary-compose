@@ -515,7 +515,12 @@ fun AddStops(
                 filter =
                         all(
                                 has("local_ref").not(),
-                                get("station_type").cast<StringValue>().eq(const("station")),
+                                any(
+                                        get("station_type")
+                                                .cast<StringValue>()
+                                                .eq(const("tram_stop")),
+                                        get("station_type").cast<StringValue>().eq(const("station"))
+                                ),
                                 any(
                                         get("mode_type").cast<StringValue>().eq(const("tram")),
                                         get("mode_type").cast<StringValue>().eq(const("light_rail"))
@@ -555,7 +560,12 @@ fun AddStops(
                 filter =
                         all(
                                 has("local_ref").not(),
-                                get("station_type").cast<StringValue>().eq(const("station")),
+                                any(
+                                        get("station_type")
+                                                .cast<StringValue>()
+                                                .eq(const("tram_stop")),
+                                        get("station_type").cast<StringValue>().eq(const("station"))
+                                ),
                                 any(
                                         get("mode_type").cast<StringValue>().eq(const("tram")),
                                         get("mode_type").cast<StringValue>().eq(const("light_rail"))
