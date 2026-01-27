@@ -182,7 +182,14 @@ fun RouteHeading(
                         }
                     } else {
                         // Default Text Rendering for Short Name
-                        if (!shortName.isNullOrBlank()) {
+                        // Default Text Rendering for Short Name
+                        val isNationalRail = chateauId == "nationalrailuk"
+                        val isLondonOverground = shortName?.startsWith("LO-") == true
+                        val isElizabethLine = shortName == "XR-ELIZABETH"
+
+                        if (!shortName.isNullOrBlank() &&
+                            (!isNationalRail || isLondonOverground || isElizabethLine)
+                        ) {
                             Text(
                                     text = shortName,
                                     style = textStyle.copy(fontWeight = FontWeight.Bold),
@@ -192,11 +199,21 @@ fun RouteHeading(
                         }
                     }
 
-                    // Long Namef
+                    // Long Name
                     if (!longName.isNullOrBlank()) {
                         val isNationalRail = chateauId == "nationalrailuk"
                         val hasTo = longName.contains(" to ", ignoreCase = true)
-                        if (!isNationalRail || !hasTo || chateauId == "viarail") {
+                        val isLondonOverground = shortName?.startsWith("LO-") == true
+                        val isElizabethLine = shortName == "XR-ELIZABETH"
+
+                        val shouldShow =
+                            when {
+                                chateauId == "viarail" -> true
+                                !isNationalRail -> true
+                                else -> !hasTo || isLondonOverground || isElizabethLine
+                            }
+
+                        if (shouldShow) {
                             Text(text = longName, style = textStyle, color = displayColor)
                         }
                     }

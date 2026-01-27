@@ -767,7 +767,12 @@ private fun StationGroupCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                 colors =
-                        CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        CardDefaults.cardColors(
+                                containerColor =
+                                        MaterialTheme.colorScheme.surfaceContainerLow.copy(
+                                                alpha = if (darkMode) 0.5f else 1f
+                                        )
+                        ),
                 border =
                         androidx.compose.foundation.BorderStroke(
                                 1.dp,
