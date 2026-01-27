@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -221,22 +220,14 @@ fun RouteHeading(
 
                 if (headsign != null || tripShortName != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (tripShortName != null) {
-                            Box(
-                                    modifier =
-                                        Modifier
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(routeColor)
-                                            .padding(horizontal = 4.dp, vertical = 1.dp)
-                            ) { Text(text = tripShortName, color = routeTextColor) }
-
-                            Spacer(Modifier.size(4.dp))
-                        }
-
                         if (headsign != null) {
                             Text(
                                     text = headsign,
                             )
+                        }
+
+                        if (tripShortName != null) {
+                            Text(text = tripShortName, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
