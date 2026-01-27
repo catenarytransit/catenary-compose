@@ -174,12 +174,32 @@ private data class StopEventPageData(
 @Serializable
 data class OsmStationLookupResponse(
     val found: Boolean,
-    val osm_station_id: String?,
+    val osm_station_id: Long?,
+    val gtfs_stop_id: String,
+    val chateau_id: String,
+    val osm_platform_id: Long?,
     val osm_station_info: OsmStationInfo?
 )
 
 @Serializable
-data class OsmStationInfo(val name: String?, val mode_type: String?)
+data class OsmStationInfo(
+    val osm_id: Long,
+    val osm_type: String,
+    val name: String?,
+    val name_translations: JsonObject? = null,
+    val station_type: String?,
+    val railway_tag: String?,
+    val mode_type: String,
+    val uic_ref: String? = null,
+    val ref_: String? = null,
+    val wikidata: String? = null,
+    val operator: String? = null,
+    val network: String? = null,
+    val level: String? = null,
+    val local_ref: String? = null,
+    val lat: Double,
+    val lon: Double
+)
 
 // Main Composable
 @Composable
@@ -214,14 +234,14 @@ fun StopScreen(
     // In Svelte, OsmStationScreen uses GenericStopScreen directly.
 
     val scope = rememberCoroutineScope()
-    var fetchedInitial by remember { mutableStateOf(false) }
 
     // State to track if we found an OSM station for this GTFS stop
     // If so, we might want to redirect (as per Svelte logic which replaces the stack item)
     LaunchedEffect(key) {
-        if (stopData != null && !fetchedInitial) {
+        if (stopData != null) {
             // Check for OSM station
             try {
+                println("Checking for OSM station for stop ${stopData.stop_id}")
                 // "https://birch.catenarymaps.org/osm_station_lookup?chateau_id=${chateau}&gtfs_stop_id=${stop_id}"
                 val lookupUrl =
                     "https://birch.catenarymaps.org/osm_station_lookup?chateau_id=${stopData.chateau_id}&gtfs_stop_id=${stopData.stop_id}"
@@ -233,9 +253,11 @@ fun StopScreen(
                     )
                     val newStackItem =
                         CatenaryStackEnum.OsmStationStack(
-                            osm_station_id = response.osm_station_id,
+                            osm_station_id = response.osm_station_id.toString(),
                             station_name = response.osm_station_info?.name,
-                            mode_type = response.osm_station_info?.mode_type
+                            mode_type = response.osm_station_info?.mode_type,
+                            lat = response.osm_station_info?.lat,
+                            lon = response.osm_station_info?.lon
                         )
 
                     // Replace current item in stack
@@ -249,7 +271,8 @@ fun StopScreen(
             } catch (e: Exception) {
                 println("Error checking OSM station: $e")
             }
-            fetchedInitial = true
+        } else {
+            println("No stop data for OSM station lookup")
         }
     }
 
