@@ -93,11 +93,10 @@ fun RouteHeading(
             // Main text content; padded on the end so it "wraps around" controls
             Column(
                     modifier =
-                        Modifier
-                            .align(Alignment.TopStart)
-                            .padding(
-                                end = 48.dp
-                            ) // adjust if your controls are wider/narrower
+                            Modifier.align(Alignment.TopStart)
+                                    .padding(
+                                            end = 48.dp
+                                    ) // adjust if your controls are wider/narrower
             ) {
                 // Route Name Header
                 Row(modifier = clickableModifier, verticalAlignment = Alignment.CenterVertically) {
@@ -106,24 +105,23 @@ fun RouteHeading(
                         if (iconUrl != null) {
                             val context = LocalContext.current
                             val imageLoader =
-                                androidx.compose.runtime.remember(context) {
-                                    coil.ImageLoader.Builder(context)
-                                        .components {
-                                            add(coil.decode.SvgDecoder.Factory())
-                                        }
-                                        .build()
-                                }
+                                    androidx.compose.runtime.remember(context) {
+                                        coil.ImageLoader.Builder(context)
+                                                .components {
+                                                    add(coil.decode.SvgDecoder.Factory())
+                                                }
+                                                .build()
+                                    }
                             AsyncImage(
                                     model =
-                                        ImageRequest.Builder(context)
+                                            ImageRequest.Builder(context)
                                                     .data(iconUrl)
                                                     .crossfade(true)
                                                     .build(),
-                                imageLoader = imageLoader,
+                                    imageLoader = imageLoader,
                                     contentDescription = shortName,
                                     modifier =
-                                        Modifier
-                                            .height(32.dp) // Match roughly the text height
+                                            Modifier.height(32.dp) // Match roughly the text height
                                                     .padding(end = 8.dp)
                             )
                         } else {
@@ -140,41 +138,38 @@ fun RouteHeading(
                         if (iconUrl != null) {
                             val context = LocalContext.current
                             val imageLoader =
-                                androidx.compose.runtime.remember(context) {
-                                    coil.ImageLoader.Builder(context)
-                                        .components {
-                                            add(coil.decode.SvgDecoder.Factory())
-                                        }
-                                        .build()
-                                }
+                                    androidx.compose.runtime.remember(context) {
+                                        coil.ImageLoader.Builder(context)
+                                                .components {
+                                                    add(coil.decode.SvgDecoder.Factory())
+                                                }
+                                                .build()
+                                    }
                             AsyncImage(
-                                model =
-                                    ImageRequest.Builder(context)
-                                        .data(iconUrl)
-                                        .crossfade(true)
-                                        .build(),
-                                imageLoader = imageLoader,
-                                contentDescription = shortName,
-                                modifier = Modifier
-                                    .height(32.dp)
-                                    .padding(end = 8.dp)
+                                    model =
+                                            ImageRequest.Builder(context)
+                                                    .data(iconUrl)
+                                                    .crossfade(true)
+                                                    .build(),
+                                    imageLoader = imageLoader,
+                                    contentDescription = shortName,
+                                    modifier = Modifier.height(32.dp).padding(end = 8.dp)
                             )
                         } else {
                             val mtaColor = MtaSubwayUtils.getMtaSubwayColor(shortName)
                             val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(shortName)
                             Box(
-                                modifier =
-                                    Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape)
-                                        .background(mtaColor),
-                                contentAlignment = Alignment.Center
+                                    modifier =
+                                            Modifier.size(24.dp)
+                                                    .clip(CircleShape)
+                                                    .background(mtaColor),
+                                    contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = symbolShortName,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
+                                        text = symbolShortName,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
@@ -187,7 +182,7 @@ fun RouteHeading(
                         val isElizabethLine = shortName == "XR-ELIZABETH"
 
                         if (!shortName.isNullOrBlank() &&
-                            (!isNationalRail || isLondonOverground || isElizabethLine)
+                                        (!isNationalRail || isLondonOverground || isElizabethLine)
                         ) {
                             Text(
                                     text = shortName,
@@ -206,11 +201,11 @@ fun RouteHeading(
                         val isElizabethLine = shortName == "XR-ELIZABETH"
 
                         val shouldShow =
-                            when {
-                                chateauId == "viarail" -> true
-                                !isNationalRail -> true
-                                else -> !hasTo || isLondonOverground || isElizabethLine
-                            }
+                                when {
+                                    chateauId == "viarail" -> true
+                                    !isNationalRail -> true
+                                    else -> !hasTo || isLondonOverground || isElizabethLine
+                                }
 
                         if (shouldShow) {
                             Text(text = longName, style = textStyle, color = displayColor)
@@ -224,6 +219,10 @@ fun RouteHeading(
                             Text(
                                     text = headsign,
                             )
+                        }
+
+                        if (headsign != null && tripShortName != null) {
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
 
                         if (tripShortName != null) {

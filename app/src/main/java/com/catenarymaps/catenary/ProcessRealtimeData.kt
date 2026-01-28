@@ -288,7 +288,7 @@ suspend fun rerenderCategoryLiveDots(
             vehicleData.trip?.let { trip ->
                 tripIdLabel = trip.trip_short_name ?: ""
                 tripShortName = trip.trip_short_name
-                if (tripIdLabel.isEmpty() && chateauId == "metra") {
+                if (tripIdLabel.isEmpty()) {
                     tripIdLabel =
                         trip.trip_id?.split('_')?.getOrNull(1)?.filter { it.isDigit() } ?: ""
                 }
