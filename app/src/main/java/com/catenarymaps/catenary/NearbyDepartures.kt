@@ -907,9 +907,9 @@ private fun StationGroupCard(
                                                                         )
                                                         else java.time.ZoneId.systemDefault(),
                                                 locale = Locale.getDefault(),
-                                                showSeconds = false, // Svelte default false
-                                                useSymbolSign = false, // Defaults
-                                                showAgencyName = false, // Svelte default false
+                                                showSeconds = false,
+                                                useSymbolSign = true,
+                                                showAgencyName = false,
                                                 showTimeDiff = false,
                                                 onTripClick = {
                                                         onTripClick(

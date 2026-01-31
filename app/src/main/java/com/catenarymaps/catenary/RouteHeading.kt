@@ -70,12 +70,12 @@ fun RouteHeading(
 
     val textStyle =
             if (routeClickable) {
-                MaterialTheme.typography.titleLarge.copy(
+                MaterialTheme.typography.titleMedium.copy(
                         textDecoration = TextDecoration.Underline,
                         lineHeight = MaterialTheme.typography.titleLarge.fontSize * 0.8
                 )
             } else {
-                MaterialTheme.typography.titleLarge.copy(
+                MaterialTheme.typography.titleMedium.copy(
                         lineHeight = MaterialTheme.typography.titleLarge.fontSize * 0.8
                 )
             }
@@ -93,10 +93,11 @@ fun RouteHeading(
             // Main text content; padded on the end so it "wraps around" controls
             Column(
                     modifier =
-                            Modifier.align(Alignment.TopStart)
-                                    .padding(
-                                            end = 48.dp
-                                    ) // adjust if your controls are wider/narrower
+                            Modifier
+                                .align(Alignment.TopStart)
+                                .padding(
+                                    end = 48.dp
+                                ) // adjust if your controls are wider/narrower
             ) {
                 // Route Name Header
                 Row(modifier = clickableModifier, verticalAlignment = Alignment.CenterVertically) {
@@ -121,7 +122,8 @@ fun RouteHeading(
                                     imageLoader = imageLoader,
                                     contentDescription = shortName,
                                     modifier =
-                                            Modifier.height(32.dp) // Match roughly the text height
+                                            Modifier
+                                                .height(32.dp) // Match roughly the text height
                                                     .padding(end = 8.dp)
                             )
                         } else {
@@ -153,16 +155,19 @@ fun RouteHeading(
                                                     .build(),
                                     imageLoader = imageLoader,
                                     contentDescription = shortName,
-                                    modifier = Modifier.height(32.dp).padding(end = 8.dp)
+                                    modifier = Modifier
+                                        .height(32.dp)
+                                        .padding(end = 8.dp)
                             )
                         } else {
                             val mtaColor = MtaSubwayUtils.getMtaSubwayColor(shortName)
                             val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(shortName)
                             Box(
                                     modifier =
-                                            Modifier.size(24.dp)
-                                                    .clip(CircleShape)
-                                                    .background(mtaColor),
+                                            Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(mtaColor),
                                     contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -173,6 +178,8 @@ fun RouteHeading(
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
+
+
                         }
                     } else {
                         // Default Text Rendering for Short Name
@@ -185,7 +192,7 @@ fun RouteHeading(
                                         (!isNationalRail || isLondonOverground || isElizabethLine)
                         ) {
                             Text(
-                                    text = shortName,
+                                text = shortName.replace(" Line", ""),
                                     style = textStyle.copy(fontWeight = FontWeight.Bold),
                                     color = displayColor
                             )
@@ -194,7 +201,7 @@ fun RouteHeading(
                     }
 
                     // Long Name
-                    if (!longName.isNullOrBlank()) {
+                    if (!longName.isNullOrBlank() && chateauId != "metrolinktrains") {
                         val isNationalRail = chateauId == "nationalrailuk"
                         val hasTo = longName.contains(" to ", ignoreCase = true)
                         val isLondonOverground = shortName?.startsWith("LO-") == true
@@ -211,23 +218,23 @@ fun RouteHeading(
                             Text(text = longName, style = textStyle, color = displayColor)
                         }
                     }
+
+                    if (tripShortName != null) {
+                        Text(
+                            text = tripShortName,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(
+                                start = 8.dp
+                            )
+                        )
+                    }
                 }
 
-                if (headsign != null || tripShortName != null) {
+                if (headsign != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (headsign != null) {
                             Text(
                                     text = headsign,
                             )
-                        }
-
-                        if (headsign != null && tripShortName != null) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                        }
-
-                        if (tripShortName != null) {
-                            Text(text = tripShortName, fontWeight = FontWeight.Bold)
-                        }
                     }
                 }
 
