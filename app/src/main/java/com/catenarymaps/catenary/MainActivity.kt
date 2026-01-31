@@ -1414,19 +1414,47 @@ class MainActivity : ComponentActivity() {
                         // Realtime Fetcher Logic
                         val rtScope = rememberCoroutineScope()
 
-                        // Periodic fetcher (e.g., every 5 seconds)
                         // Periodic map update request via WebSocket
                         LaunchedEffect(isAppInForeground) {
                                 if (isAppInForeground) {
+                                        var lastSentZoom: Double? = null
+                                        var lastSentSettings: AllLayerSettings? = null
+                                        var lastSentVisibleChateaus: List<String>? = null
+                                        var lastSentCameraTarget: Position? = null
+
                                         while (true) {
-                                                delay(1_000L) // 1 second refresh interval
-                                                sendMapUpdate(
-                                                        scope = rtScope,
-                                                        zoom = camera.position.zoom,
-                                                        settings = layerSettings.value,
-                                                        visibleChateaus = visibleChateaus,
-                                                        camera = camera
-                                                )
+                                                delay(200L) // 200 ms refresh interval
+
+                                                val currentZoom = camera.position.zoom
+                                                val currentSettings = layerSettings.value
+                                                val currentVisibleChateaus = visibleChateaus
+                                                val currentCameraTarget = camera.position.target
+
+                                                val hasChanged =
+                                                        lastSentZoom != currentZoom ||
+                                                                lastSentSettings !=
+                                                                        currentSettings ||
+                                                                lastSentVisibleChateaus !=
+                                                                        currentVisibleChateaus ||
+                                                                lastSentCameraTarget !=
+                                                                        currentCameraTarget
+
+                                                if (hasChanged) {
+                                                        sendMapUpdate(
+                                                                scope = rtScope,
+                                                                zoom = currentZoom,
+                                                                settings = currentSettings,
+                                                                visibleChateaus =
+                                                                        currentVisibleChateaus,
+                                                                camera = camera
+                                                        )
+
+                                                        lastSentZoom = currentZoom
+                                                        lastSentSettings = currentSettings
+                                                        lastSentVisibleChateaus =
+                                                                currentVisibleChateaus
+                                                        lastSentCameraTarget = currentCameraTarget
+                                                }
                                         }
                                 }
                         }
