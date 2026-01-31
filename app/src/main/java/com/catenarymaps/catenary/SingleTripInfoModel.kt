@@ -186,7 +186,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                 val url =
                         "https://birch.catenarymaps.org/get_vehicle_information_from_label/${encodedChateauId}/$vehicleId"
                 val response = ktorClient.get(url).body<VehicleRealtimeDataResponse>()
-                _vehicleData.value = response.data
+                _vehicleData.value = response.data?.firstOrNull()
             } catch (e: Exception) {
                 Log.e("SingleTripViewModel", "Error fetching vehicle info: ${e.message}")
             }
