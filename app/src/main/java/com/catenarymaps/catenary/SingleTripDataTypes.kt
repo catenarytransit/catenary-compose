@@ -93,7 +93,7 @@ data class StopTimeRefresh(
 @Serializable
 data class VehicleRealtimeData(
         val timestamp: Long? = null,
-        val position: VehiclePositionData? = null,
+        val position: SingleTripVehiclePosition? = null,
         val occupancy_status: String? = null,
         val occupancy_percentage: Int? = null,
         val vehicle: VehicleRealtimeVehicleInfo? = null,
@@ -101,7 +101,7 @@ data class VehicleRealtimeData(
 )
 
 @Serializable
-data class VehiclePositionData(
+data class SingleTripVehiclePosition(
         val latitude: Double? = null,
         val longitude: Double? = null,
         val bearing: Float? = null,
