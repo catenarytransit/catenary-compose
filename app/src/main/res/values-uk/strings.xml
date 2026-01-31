@@ -122,4 +122,5 @@
     <string name="single_trip_info_screen_original">Оригінал</string>
     <string name="single_trip_info_screen_countdown">Зворотний відлік</string>
     <string name="more_departures">Більше відправлень</string>
+    <string name="single_trip_info_screen_connections">Пересадки</string>
 </resources>

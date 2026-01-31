@@ -122,4 +122,5 @@
     <string name="single_trip_info_screen_original">Původní</string>
     <string name="single_trip_info_screen_countdown">Odpočet</string>
     <string name="more_departures">Více odjezdů</string>
+    <string name="single_trip_info_screen_connections">Spojení</string>
 </resources>

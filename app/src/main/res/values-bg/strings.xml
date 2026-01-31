@@ -120,4 +120,5 @@
     <string name="single_trip_info_screen_original">Оригинал</string>
     <string name="single_trip_info_screen_countdown">Обратно броене</string>
     <string name="more_departures">Още заминавания</string>
+    <string name="single_trip_info_screen_connections">Връзки</string>
 </resources>

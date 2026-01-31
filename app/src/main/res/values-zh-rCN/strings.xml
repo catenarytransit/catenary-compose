@@ -121,4 +121,5 @@
     <string name="single_trip_info_screen_original">原始</string>
     <string name="single_trip_info_screen_countdown">倒计时</string>
     <string name="more_departures">更多出发</string>
+    <string name="single_trip_info_screen_connections">换乘</string>
 </resources>

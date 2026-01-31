@@ -963,6 +963,7 @@ class MainActivity : ComponentActivity() {
                 installSplashScreen()
                 super.onCreate(savedInstanceState)
                 enableEdgeToEdge()
+                SpruceWebSocket.init()
 
                 lifecycleScope.launch {
                         // 1) Try warm start from cache.
@@ -1414,29 +1415,41 @@ class MainActivity : ComponentActivity() {
                         val rtScope = rememberCoroutineScope()
 
                         // Periodic fetcher (e.g., every 5 seconds)
+                        // Periodic map update request via WebSocket
                         LaunchedEffect(isAppInForeground) {
                                 if (isAppInForeground) {
                                         while (true) {
                                                 delay(1_000L) // 1 second refresh interval
-                                                fetchRealtimeData(
+                                                sendMapUpdate(
                                                         scope = rtScope,
                                                         zoom = camera.position.zoom,
                                                         settings = layerSettings.value,
-                                                        isFetchingRealtimeData =
-                                                                isFetchingRealtimeData,
                                                         visibleChateaus = visibleChateaus,
+                                                        camera = camera
+                                                )
+                                        }
+                                }
+                        }
+
+                        // Collect WebSocket Map Data
+                        LaunchedEffect(Unit) {
+                                SpruceWebSocket.spruceMapData.collect { msg ->
+                                        if (msg != null) {
+                                                val boundsInput = boundsInputCalculate(camera)
+                                                processRealtimeDataV2(
+                                                        response = msg,
+                                                        bounds = boundsInput,
+                                                        realtimeVehicleLocationsStoreV2 =
+                                                                realtimeVehicleLocationsStoreV2,
+                                                        previousTileBoundariesStore =
+                                                                previousTileBoundariesStore,
                                                         realtimeVehicleLocationsLastUpdated =
                                                                 realtimeVehicleLocationsLastUpdated,
-                                                        ktorClient = ktorClient,
                                                         realtimeVehicleRouteCache =
                                                                 realtimeVehicleRouteCache,
                                                         routeCacheAgenciesKnown =
                                                                 routeCacheAgenciesKnown,
-                                                        camera = camera,
-                                                        previousTileBoundariesStore =
-                                                                previousTileBoundariesStore,
-                                                        realtimeVehicleLocationsStoreV2 =
-                                                                realtimeVehicleLocationsStoreV2
+                                                        ktorClient = ktorClient
                                                 )
                                         }
                                 }
@@ -1870,11 +1883,10 @@ class MainActivity : ComponentActivity() {
 
                                         MaplibreMap(
                                                 modifier =
-                                                        Modifier
-                                                                .fillMaxSize()
-                                                                .onSizeChanged { newSize ->
-                                                                        mapSize = newSize
-                                                                },
+                                                        Modifier.fillMaxSize().onSizeChanged {
+                                                                newSize ->
+                                                                mapSize = newSize
+                                                        },
                                                 baseStyle = BaseStyle.Uri(styleUri),
                                                 cameraState = camera,
                                                 onMapClick = { latlng, screenPos ->
@@ -2037,25 +2049,12 @@ class MainActivity : ComponentActivity() {
 
                                                         val now = SystemClock.uptimeMillis()
 
-                                                        fetchRealtimeData(
+                                                        sendMapUpdate(
                                                                 scope = rtScope,
                                                                 zoom = pos.zoom,
                                                                 settings = layerSettings.value,
-                                                                isFetchingRealtimeData =
-                                                                        isFetchingRealtimeData,
                                                                 visibleChateaus = visibleChateaus,
-                                                                realtimeVehicleLocationsLastUpdated =
-                                                                        realtimeVehicleLocationsLastUpdated,
-                                                                ktorClient = ktorClient,
-                                                                realtimeVehicleRouteCache =
-                                                                        realtimeVehicleRouteCache,
-                                                                camera = camera,
-                                                                previousTileBoundariesStore =
-                                                                        previousTileBoundariesStore,
-                                                                realtimeVehicleLocationsStoreV2 =
-                                                                        realtimeVehicleLocationsStoreV2,
-                                                                routeCacheAgenciesKnown =
-                                                                        routeCacheAgenciesKnown
+                                                                camera = camera
                                                         )
                                                         queryVisibleChateaus(
                                                                 scope,
@@ -2266,7 +2265,7 @@ class MainActivity : ComponentActivity() {
                                                                                                 lastFetchedAt >=
                                                                                                 fetchDebounceMs
                                                                                 ) {
-                                                                                        fetchRealtimeData(
+                                                                                        sendMapUpdate(
                                                                                                 scope =
                                                                                                         rtScope,
                                                                                                 zoom =
@@ -2274,24 +2273,10 @@ class MainActivity : ComponentActivity() {
                                                                                                 settings =
                                                                                                         layerSettings
                                                                                                                 .value,
-                                                                                                isFetchingRealtimeData =
-                                                                                                        isFetchingRealtimeData,
                                                                                                 visibleChateaus =
                                                                                                         visibleChateaus,
-                                                                                                realtimeVehicleLocationsLastUpdated =
-                                                                                                        realtimeVehicleLocationsLastUpdated,
-                                                                                                ktorClient =
-                                                                                                        ktorClient,
-                                                                                                realtimeVehicleRouteCache =
-                                                                                                        realtimeVehicleRouteCache,
                                                                                                 camera =
-                                                                                                        camera,
-                                                                                                previousTileBoundariesStore =
-                                                                                                        previousTileBoundariesStore,
-                                                                                                realtimeVehicleLocationsStoreV2 =
-                                                                                                        realtimeVehicleLocationsStoreV2,
-                                                                                                routeCacheAgenciesKnown =
-                                                                                                        routeCacheAgenciesKnown
+                                                                                                        camera
                                                                                         )
                                                                                         lastFetchedAt =
                                                                                                 now
@@ -3306,8 +3291,7 @@ class MainActivity : ComponentActivity() {
 
                                         // Main Draggable Bottom Sheet
                                         val sheetModifier =
-                                                Modifier
-                                                        .fillMaxWidth(contentWidthFraction)
+                                                Modifier.fillMaxWidth(contentWidthFraction)
                                                         .align(Alignment.BottomStart)
 
                                         Surface(
@@ -3336,8 +3320,7 @@ class MainActivity : ComponentActivity() {
                                         ) {
                                                 Column(
                                                         modifier =
-                                                                Modifier
-                                                                        .fillMaxWidth()
+                                                                Modifier.fillMaxWidth()
                                                                         .fillMaxHeight()
                                                                         .padding( // This padding
                                                                                 // ensures content
@@ -3350,7 +3333,7 @@ class MainActivity : ComponentActivity() {
                                                                                                         .current
                                                                                         ) {
                                                                                                 ((draggableState
-                                                                                                        .requireOffset()))
+                                                                                                                .requireOffset()))
                                                                                                         .toDp()
                                                                                                         .coerceAtLeast(
                                                                                                                 0.dp
@@ -3373,8 +3356,7 @@ class MainActivity : ComponentActivity() {
                                                 ) {
                                                         Box(
                                                                 modifier =
-                                                                        Modifier
-                                                                                .padding(
+                                                                        Modifier.padding(
                                                                                         vertical =
                                                                                                 10.dp
                                                                                 )
@@ -3895,8 +3877,7 @@ class MainActivity : ComponentActivity() {
                                                 visible = !sheetIsExpanded, // hide when sheet is
                                                 // fully expanded
                                                 modifier =
-                                                        Modifier
-                                                                .align(searchAlignment)
+                                                        Modifier.align(searchAlignment)
                                                                 .fillMaxWidth(contentWidthFraction)
                                                                 .windowInsetsPadding(
                                                                         WindowInsets.safeDrawing
@@ -3998,15 +3979,14 @@ class MainActivity : ComponentActivity() {
                                                                 !(isSearchFocused &&
                                                                         contentWidthFraction == 1f),
                                                 modifier =
-                                                        Modifier
-                                                                .align(Alignment.TopEnd)
+                                                        Modifier.align(Alignment.TopEnd)
                                                                 .windowInsetsPadding(
                                                                         WindowInsets.safeDrawing
                                                                 )
                                                                 .padding(
                                                                         top =
                                                                                 if (contentWidthFraction ==
-                                                                                        1.0f
+                                                                                                1.0f
                                                                                 )
                                                                                         64.dp
                                                                                 else 16.dp,
@@ -4042,15 +4022,14 @@ class MainActivity : ComponentActivity() {
                                                                 !(isSearchFocused &&
                                                                         contentWidthFraction == 1f),
                                                 modifier =
-                                                        Modifier
-                                                                .align(Alignment.TopEnd)
+                                                        Modifier.align(Alignment.TopEnd)
                                                                 .windowInsetsPadding(
                                                                         WindowInsets.safeDrawing
                                                                 )
                                                                 .padding(
                                                                         top =
                                                                                 if (contentWidthFraction ==
-                                                                                        1.0f
+                                                                                                1.0f
                                                                                 )
                                                                                         110.dp
                                                                                 else 64.dp,
@@ -4090,8 +4069,7 @@ class MainActivity : ComponentActivity() {
                                                                         ),
                                                                 contentDescription = "Set to North",
                                                                 modifier =
-                                                                        Modifier
-                                                                                .size(24.dp)
+                                                                        Modifier.size(24.dp)
                                                                                 .rotate(
                                                                                         -camera.position
                                                                                                 .bearing
@@ -4130,8 +4108,7 @@ class MainActivity : ComponentActivity() {
                                                 if (contentWidthFraction == 1f) {
                                                         // Full-width sheet -> float *above* the
                                                         // drawer and move with it
-                                                        Modifier
-                                                                .align(Alignment.TopEnd)
+                                                        Modifier.align(Alignment.TopEnd)
                                                                 .offset {
                                                                         IntOffset(
                                                                                 x =
@@ -4154,8 +4131,7 @@ class MainActivity : ComponentActivity() {
                                                         // Half-width sheet -> keep it in the
                                                         // bottom-right corner (not over
                                                         // the drawer)
-                                                        Modifier
-                                                                .align(Alignment.BottomEnd)
+                                                        Modifier.align(Alignment.BottomEnd)
                                                                 .padding(
                                                                         end = 16.dp,
                                                                         bottom = 16.dp
@@ -4240,8 +4216,7 @@ class MainActivity : ComponentActivity() {
                                         AnimatedVisibility(
                                                 visible = isSearchFocused,
                                                 modifier =
-                                                        Modifier
-                                                                .align(Alignment.TopStart)
+                                                        Modifier.align(Alignment.TopStart)
                                                                 .zIndex(
                                                                         2f
                                                                 ), // below the bar (z=3), above the
@@ -4251,8 +4226,7 @@ class MainActivity : ComponentActivity() {
                                         ) {
                                                 val overlayBase =
                                                         if (contentWidthFraction < 1f) {
-                                                                Modifier
-                                                                        .fillMaxHeight()
+                                                                Modifier.fillMaxHeight()
                                                                         .fillMaxWidth(
                                                                                 contentWidthFraction
                                                                         )
@@ -4360,8 +4334,7 @@ class MainActivity : ComponentActivity() {
                                         AnimatedVisibility(
                                                 visible = showLayersPanel,
                                                 modifier =
-                                                        Modifier
-                                                                .align(Alignment.BottomCenter)
+                                                        Modifier.align(Alignment.BottomCenter)
                                                                 .zIndex(5f), // Ensure it's on top
                                                 enter = slideInVertically(initialOffsetY = { it }),
                                                 exit = slideOutVertically(targetOffsetY = { it })
@@ -4382,8 +4355,7 @@ class MainActivity : ComponentActivity() {
 
                                                 Surface(
                                                         modifier =
-                                                                Modifier
-                                                                        .fillMaxWidth()
+                                                                Modifier.fillMaxWidth()
                                                                         .heightIn(
                                                                                 min = 100.dp,
                                                                                 max = 700.dp
@@ -4397,8 +4369,7 @@ class MainActivity : ComponentActivity() {
                                                 ) {
                                                         Column(
                                                                 modifier =
-                                                                        Modifier
-                                                                                .windowInsetsPadding(
+                                                                        Modifier.windowInsetsPadding(
                                                                                         WindowInsets(
                                                                                                 bottom =
                                                                                                         WindowInsets
@@ -5098,8 +5069,7 @@ class MainActivity : ComponentActivity() {
                                                                                         Alignment
                                                                                                 .CenterVertically,
                                                                                 modifier =
-                                                                                        Modifier
-                                                                                                .fillMaxWidth()
+                                                                                        Modifier.fillMaxWidth()
                                                                                                 .clickable {
                                                                                                         showZombieBuses =
                                                                                                                 !showZombieBuses
@@ -5130,8 +5100,7 @@ class MainActivity : ComponentActivity() {
                                                                                         Alignment
                                                                                                 .CenterVertically,
                                                                                 modifier =
-                                                                                        Modifier
-                                                                                                .fillMaxWidth()
+                                                                                        Modifier.fillMaxWidth()
                                                                                                 .clickable {
                                                                                                         usUnits =
                                                                                                                 !usUnits
@@ -5165,8 +5134,7 @@ class MainActivity : ComponentActivity() {
                                         SnackbarHost(
                                                 hostState = snackbars,
                                                 modifier =
-                                                        Modifier
-                                                                .align(Alignment.BottomCenter)
+                                                        Modifier.align(Alignment.BottomCenter)
                                                                 .zIndex(10f)
                                                                 .windowInsetsPadding(
                                                                         WindowInsets(
@@ -5462,17 +5430,14 @@ fun LayerTabs(selectedTab: String, onTabSelected: (String) -> Unit) {
         val tabs = listOf("intercityrail", "localrail", "bus", "other")
 
         Row(
-                modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
         ) {
                 tabs.forEach { tab ->
                         val isSelected = tab == selectedTab
                         Box(
                                 modifier =
-                                        Modifier
-                                                .background(
+                                        Modifier.background(
                                                         if (isSelected)
                                                                 MaterialTheme.colorScheme.primary
                                                                         .copy(alpha = 0.2f)

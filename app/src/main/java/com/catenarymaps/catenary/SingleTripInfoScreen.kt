@@ -197,6 +197,13 @@ fun SingleTripInfoScreen(
                 prefs.edit().putBoolean(K_SHOW_COUNTDOWN, showCountdown).apply()
         }
 
+        var showConnections by remember {
+                mutableStateOf(prefs.getBoolean("show_connections", false))
+        }
+        LaunchedEffect(showConnections) {
+                prefs.edit().putBoolean("show_connections", showConnections).apply()
+        }
+
         val timeColumnWidth by
                 androidx.compose.animation.core.animateDpAsState(
                         targetValue =
@@ -931,6 +938,7 @@ fun SingleTripInfoScreen(
                                                         showOriginalTimetable =
                                                                 showOriginalTimetable,
                                                         showCountdown = showCountdown,
+                                                        showConnections = showConnections,
                                                         timeColumnWidth = timeColumnWidth
                                                 )
                                         }
@@ -999,59 +1007,94 @@ fun SingleTripInfoScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 shadowElevation = 4.dp
                         ) {
-                                Row(
+                                Column(
                                         modifier =
                                                 Modifier.padding(
                                                         horizontal = 16.dp,
                                                         vertical = 8.dp
                                                 ),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                        horizontalAlignment = Alignment.Start,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                                androidx.compose.material3.Switch(
-                                                        checked = showOriginalTimetable,
-                                                        onCheckedChange = {
-                                                                showOriginalTimetable = it
-                                                        },
-                                                        modifier =
-                                                                Modifier.scale(0.8f)
-                                                                        .padding(end = 4.dp)
-                                                )
-                                                Text(
-                                                        text =
-                                                                stringResource(
-                                                                        R.string
-                                                                                .single_trip_info_screen_original
-                                                                ),
-                                                        style = MaterialTheme.typography.labelSmall
-                                                )
-                                        }
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                                androidx.compose.material3.Switch(
-                                                        checked = showCountdown,
-                                                        onCheckedChange = { showCountdown = it },
-                                                        modifier =
-                                                                Modifier.scale(0.8f)
-                                                                        .padding(end = 4.dp)
-                                                )
-                                                Text(
-                                                        text =
-                                                                stringResource(
-                                                                        R.string
-                                                                                .single_trip_info_screen_countdown
-                                                                ),
-                                                        style = MaterialTheme.typography.labelSmall
-                                                )
-                                        }
                                         IconButton(
                                                 onClick = { showFloatingControls = false },
-                                                modifier = Modifier.size(24.dp)
+                                                modifier = Modifier.size(24.dp).align(Alignment.End)
                                         ) {
                                                 Icon(
                                                         imageVector = Icons.Filled.Close,
                                                         contentDescription = "Close Controls",
                                                         modifier = Modifier.size(16.dp)
+                                                )
+                                        }
+                                        Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                                Row(
+                                                        verticalAlignment =
+                                                                Alignment.CenterVertically
+                                                ) {
+                                                        androidx.compose.material3.Switch(
+                                                                checked = showOriginalTimetable,
+                                                                onCheckedChange = {
+                                                                        showOriginalTimetable = it
+                                                                },
+                                                                modifier =
+                                                                        Modifier.scale(0.8f)
+                                                                                .padding(end = 4.dp)
+                                                        )
+                                                        Text(
+                                                                text =
+                                                                        stringResource(
+                                                                                R.string
+                                                                                        .single_trip_info_screen_original
+                                                                        ),
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall
+                                                        )
+                                                }
+                                                Row(
+                                                        verticalAlignment =
+                                                                Alignment.CenterVertically
+                                                ) {
+                                                        androidx.compose.material3.Switch(
+                                                                checked = showCountdown,
+                                                                onCheckedChange = {
+                                                                        showCountdown = it
+                                                                },
+                                                                modifier =
+                                                                        Modifier.scale(0.8f)
+                                                                                .padding(end = 4.dp)
+                                                        )
+                                                        Text(
+                                                                text =
+                                                                        stringResource(
+                                                                                R.string
+                                                                                        .single_trip_info_screen_countdown
+                                                                        ),
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall
+                                                        )
+                                                }
+                                        }
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                androidx.compose.material3.Switch(
+                                                        checked = showConnections,
+                                                        onCheckedChange = { showConnections = it },
+                                                        modifier =
+                                                                Modifier.scale(0.8f)
+                                                                        .padding(end = 4.dp)
+                                                )
+                                                Text(
+                                                        text =
+                                                                stringResource(
+                                                                        R.string
+                                                                                .single_trip_info_screen_connections
+                                                                ),
+                                                        style = MaterialTheme.typography.labelSmall
                                                 )
                                         }
                                 }
@@ -1186,6 +1229,7 @@ fun StopListItem(
         showSeconds: Boolean,
         showOriginalTimetable: Boolean,
         showCountdown: Boolean,
+        showConnections: Boolean,
         timeColumnWidth: androidx.compose.ui.unit.Dp,
         connections: List<StopConnectionChip>? = null,
         isAtStop: Boolean = false,
@@ -1239,7 +1283,7 @@ fun StopListItem(
                                         Row(verticalAlignment = Alignment.Top) {
                                                 if (showOriginalTimetable && schedArr != null) {
                                                         Box(
-                                                                modifier = Modifier.height(32.dp),
+                                                                modifier = Modifier.height(20.dp),
                                                                 contentAlignment =
                                                                         Alignment.CenterEnd
                                                         ) {
@@ -1269,9 +1313,9 @@ fun StopListItem(
                                                 }
                                                 Column(horizontalAlignment = Alignment.End) {
                                                         Box(
-                                                                modifier = Modifier.height(32.dp),
+                                                                modifier = Modifier.height(20.dp),
                                                                 contentAlignment =
-                                                                        Alignment.CenterEnd
+                                                                        Alignment.BottomEnd
                                                         ) {
                                                                 FormattedTimeText(
                                                                         timezone = tz,
@@ -1301,19 +1345,11 @@ fun StopListItem(
                                                                         show_seconds = showSeconds,
                                                                         fontSizeOfPolarity = 10.sp,
                                                                         use_symbol_sign = true,
-                                                                        modifier =
-                                                                                Modifier.offset(
-                                                                                        y = (-4).dp
-                                                                                )
+                                                                        modifier = Modifier
                                                                 )
                                                         }
                                                         if (showCountdown) {
-                                                                Box(
-                                                                        modifier =
-                                                                                Modifier.offset(
-                                                                                        y = (-8).dp
-                                                                                )
-                                                                ) {
+                                                                Box(modifier = Modifier) {
                                                                         SelfUpdatingDiffTimer(
                                                                                 targetTimeSeconds =
                                                                                         arrTime,
@@ -1342,7 +1378,7 @@ fun StopListItem(
                         showOriginalTimetable,
                         showCountdown
                 ) {
-                        val headerHeightLocal = 24.dp
+                        val headerHeightLocal = if (isDoubleTime) 20.dp else 24.dp
                         if (isDoubleTime) {
                                 // DEPARTURE
                                 val depTime = rtDeparture ?: schedDep ?: 0L
@@ -1435,7 +1471,7 @@ fun StopListItem(
                                                                         use_symbol_sign = true,
                                                                         modifier =
                                                                                 Modifier.offset(
-                                                                                        y = (-4).dp
+                                                                                        y = (-6).dp
                                                                                 )
                                                                 )
                                                         }
@@ -1626,7 +1662,7 @@ fun StopListItem(
                 modifier = Modifier.fillMaxWidth().zIndex(if (movingDotProgress != null) 1f else 0f)
         ) {
                 // 1. Render Above Rows
-                aboveContent.forEach { content ->
+                aboveContent.forEachIndexed { index, content ->
                         Row(
                                 modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                                 verticalAlignment = Alignment.Bottom
@@ -1634,7 +1670,13 @@ fun StopListItem(
                                 // Time
                                 Box(
                                         modifier =
-                                                Modifier.width(timeColumnWidth).padding(end = 4.dp),
+                                                Modifier.width(timeColumnWidth)
+                                                        .padding(end = 4.dp)
+                                                        .padding(
+                                                                top =
+                                                                        if (index == 0) 12.dp
+                                                                        else 0.dp
+                                                        ),
                                         contentAlignment = Alignment.CenterEnd
                                 ) { content() }
 
@@ -1657,6 +1699,7 @@ fun StopListItem(
                 }
 
                 // 2. Render Main Row
+                val mainRowTopPadding = if (aboveContent.isEmpty()) 12.dp else 0.dp
                 Row(
                         modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                         verticalAlignment = Alignment.Top
@@ -1668,7 +1711,8 @@ fun StopListItem(
                                         Modifier.width(timeColumnWidth)
                                                 // .height(headerHeight) // Removed to allow delay
                                                 // expansion
-                                                .padding(end = 4.dp),
+                                                .padding(end = 4.dp)
+                                                .padding(top = mainRowTopPadding),
                                 contentAlignment =
                                         Alignment.TopEnd // Align content to top (time inside)
                         ) { mainContent?.invoke() }
@@ -1684,7 +1728,7 @@ fun StopListItem(
                                         isBottomPast = isBottomSegmentPast,
                                         modifier = Modifier.fillMaxSize(),
                                         // Center dot in the headerHeight
-                                        dotOffset = headerHeight / 2,
+                                        dotOffset = (headerHeight / 2) + mainRowTopPadding,
                                         isAtStop = isAtStop,
                                         movingDotProgress = movingDotProgress
                                 )
@@ -1692,7 +1736,10 @@ fun StopListItem(
 
                         // Content (Station Name + Platform)
                         Column(
-                                modifier = Modifier.weight(1f).padding(start = 8.dp),
+                                modifier =
+                                        Modifier.weight(1f)
+                                                .padding(start = 8.dp)
+                                                .padding(top = mainRowTopPadding),
                                 verticalArrangement = Arrangement.Top
                         ) {
                                 Row(
@@ -1762,7 +1809,7 @@ fun StopListItem(
                                         }
                                 }
 
-                                if (!connections.isNullOrEmpty()) {
+                                if (!connections.isNullOrEmpty() && showConnections) {
                                         Spacer(modifier = Modifier.height(4.dp))
                                         SelectionRouteBadges(
                                                 routeIds = connections.map { it.routeId },
