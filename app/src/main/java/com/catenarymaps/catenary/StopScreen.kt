@@ -494,7 +494,7 @@ fun StopScreen(
 
         val useUrl =
             if (osmStackData != null) {
-                "https://birch.catenarymaps.org/departures_at_osm_station?osm_station_id=${key}&start_time=${startSec}&end_time=${endSec}"
+                "https://birch.catenarymaps.org/departures_at_osm_station?osm_station_id=${key}&start_time=${startSec}&end_time=${endSec}&include_shapes=false"
             } else {
                 "https://birchdeparturesfromstop.catenarymaps.org/departures_at_stop?chateau_id=${chateauId}&stop_id=${key}&start_time=${startSec}&end_time=${endSec}&include_shapes=false"
             }
