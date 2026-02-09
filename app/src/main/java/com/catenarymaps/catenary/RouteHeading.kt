@@ -93,11 +93,11 @@ fun RouteHeading(
             // Main text content; padded on the end so it "wraps around" controls
             Column(
                     modifier =
-                            Modifier
-                                .align(Alignment.TopStart)
-                                .padding(
-                                    end = 48.dp
-                                ) // adjust if your controls are wider/narrower
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(
+                                end = 48.dp
+                            ) // adjust if your controls are wider/narrower
             ) {
                 // Route Name Header
                 Row(modifier = clickableModifier, verticalAlignment = Alignment.CenterVertically) {
@@ -122,8 +122,8 @@ fun RouteHeading(
                                     imageLoader = imageLoader,
                                     contentDescription = shortName,
                                     modifier =
-                                            Modifier
-                                                .height(32.dp) // Match roughly the text height
+                                        Modifier
+                                            .height(32.dp) // Match roughly the text height
                                                     .padding(end = 8.dp)
                             )
                         } else {
@@ -155,19 +155,19 @@ fun RouteHeading(
                                                     .build(),
                                     imageLoader = imageLoader,
                                     contentDescription = shortName,
-                                    modifier = Modifier
-                                        .height(32.dp)
-                                        .padding(end = 8.dp)
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .padding(end = 8.dp)
                             )
                         } else {
                             val mtaColor = MtaSubwayUtils.getMtaSubwayColor(shortName)
                             val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(shortName)
                             Box(
                                     modifier =
-                                            Modifier
-                                                .size(24.dp)
-                                                .clip(CircleShape)
-                                                .background(mtaColor),
+                                        Modifier
+                                            .size(24.dp)
+                                            .clip(CircleShape)
+                                            .background(mtaColor),
                                     contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -178,8 +178,6 @@ fun RouteHeading(
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-
-
                         }
                     } else {
                         // Default Text Rendering for Short Name
@@ -223,18 +221,16 @@ fun RouteHeading(
                         Text(
                             text = tripShortName,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(
-                                start = 8.dp
-                            )
+                            modifier = Modifier.padding(start = 8.dp)
                         )
                     }
                 }
 
                 if (headsign != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                    text = headsign,
-                            )
+                        Text(
+                            text = headsign,
+                        )
                     }
                 }
 

@@ -1115,43 +1115,35 @@ fun StopScreen(
                                         }
                                 )
                             } else {
-                                StopScreenRow(
+                                StopScreenRowV2(
                                     event = event,
                                     routeInfo = routeInfo,
                                     currentTime = currentTime,
                                     zoneId = zoneId,
                                     locale = locale,
                                     showArrivals = event.last_stop == true,
-                                    useSymbolSign = false,
+                                    useSymbolSign =
+                                        false, // StopScreenRowV2 handles icons internally
+                                    // based on route type logic
                                     vertical = false,
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                onTripClick(
+                                    onTripClick = {
+                                        onTripClick(
                                                     CatenaryStackEnum.SingleTrip(
-                                                        chateau_id =
-                                                            event.chateau,
+                                                        chateau_id = event.chateau,
                                                         trip_id = event.trip_id,
-                                                        route_id =
-                                                            event.route_id,
+                                                        route_id = event.route_id,
                                                         start_time = null,
                                                         start_date =
-                                                            event.service_date
-                                                                ?.replace(
-                                                                    "-",
-                                                                    ""
-                                                                ),
+                                                            event.service_date?.replace(
+                                                                "-",
+                                                                ""
+                                                            ),
                                                         vehicle_id = null,
-                                                        route_type =
-                                                            null // This
-                                                        // will be
-                                                        // fetched in
-                                                        // SingleTrip
+                                                        route_type = null
                                                     )
-                                                )
-                                            }
-                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp)
                                 )
                             }
                             HorizontalDivider(
