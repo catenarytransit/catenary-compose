@@ -2030,10 +2030,17 @@ class MainActivity : ComponentActivity() {
                                                                         newStack // Update state
 
                                                                 scope.launch {
-                                                                        draggableState.animateTo(
+                                                                        if (draggableState
+                                                                                        .currentValue ==
                                                                                 SheetSnapPoint
-                                                                                        .PartiallyExpanded
-                                                                        )
+                                                                                        .Collapsed
+                                                                        ) {
+                                                                                draggableState
+                                                                                        .animateTo(
+                                                                                                SheetSnapPoint
+                                                                                                        .PartiallyExpanded
+                                                                                        )
+                                                                        }
                                                                 }
                                                         }
                                                         ClickResult.Pass

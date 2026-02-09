@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,8 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
@@ -233,24 +237,33 @@ fun StationScreenTrainRow(
                         .weight(1f)
                         .padding(end = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                        text = event.headsign ?: "",
-                                        style = MaterialTheme.typography.bodyMedium
-                                )
-                                if (!event.trip_short_name.isNullOrBlank()) {
-                                        Text(
-                                                text = " ${event.trip_short_name}",
-                                                style =
-                                                        MaterialTheme.typography.bodyMedium.copy(
-                                                                fontWeight = FontWeight.Bold
-                                                        ),
-                                                modifier = Modifier.padding(start = 4.dp)
-                                        )
+                                // ---------------------------------------------------------
+                                // ROW 1: Headsign + Trip Name (Merged)
+                                // ---------------------------------------------------------
+                                val headsignText = buildAnnotatedString {
+                                        append(event.headsign ?: "")
+
+                                        if (!event.trip_short_name.isNullOrBlank()) {
+                                                // Add a space before the trip name if headsign exists
+                                                if (length > 0) append(" ")
+
+                                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                        append(event.trip_short_name)
+                                                }
+                                        }
                                 }
+
+                                Text(
+                                        text = headsignText,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        // Modifier.fillMaxWidth() allows wrapping; removing weight/width constraints
+                                        // helps it behave like a natural paragraph.
+                                        modifier = Modifier.padding(bottom = 2.dp)
+                                )
                         }
-                        Row(
+                        FlowRow(
                                 modifier = Modifier.padding(top = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically,
+                                // verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                                 val agencyInfo =
@@ -338,7 +351,7 @@ fun StationScreenTrainRow(
                 }
 
                 // Right: Platform
-                Column(modifier = Modifier.width(80.dp), horizontalAlignment = Alignment.End) {
+                Column(modifier = Modifier.width(40.dp), horizontalAlignment = Alignment.End) {
                         if (!event.platform_string_realtime.isNullOrBlank()) {
                                 Text(
                                         text =
@@ -1004,23 +1017,30 @@ fun StationScreenTrainRowCompact(
                                 .padding(horizontal = 4.dp),
                         verticalArrangement = Arrangement.Center
                 ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                        text = event.headsign ?: "",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        maxLines = 1
-                                )
+                        // ---------------------------------------------------------
+                        // ROW 1: Headsign + Trip Name (Merged)
+                        // ---------------------------------------------------------
+                        val headsignText = buildAnnotatedString {
+                                append(event.headsign ?: "")
+
                                 if (!event.trip_short_name.isNullOrBlank()) {
-                                        Text(
-                                                text = " ${event.trip_short_name}",
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontWeight = FontWeight.Bold
-                                                        ),
-                                                modifier = Modifier.padding(start = 2.dp)
-                                        )
+                                        // Add a space before the trip name if headsign exists
+                                        if (length > 0) append(" ")
+
+                                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                append(event.trip_short_name)
+                                        }
                                 }
                         }
+
+                        Text(
+                                text = headsignText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                // Modifier.fillMaxWidth() allows wrapping; removing weight/width constraints
+                                // helps it behave like a natural paragraph.
+                                modifier = Modifier.padding(bottom = 2.dp)
+                        )
+
                         // Agency Name / Long Name
                         Row(
                                 modifier = Modifier.padding(top = 0.dp),
@@ -1078,7 +1098,10 @@ fun StationScreenTrainRowCompact(
                                         routeInfo?.short_name == null &&
                                         routeInfo?.long_name != null
                                 ) {
-                                        if (showAgencyName && resolvedAgencyName != null) {
+                                        if (showAgencyName &&
+                                                resolvedAgencyName != null &&
+                                                routeInfo?.long_name != null
+                                        ) {
                                                 Text(
                                                         text = " • ",
                                                         style =
@@ -1130,18 +1153,10 @@ fun StationScreenTrainRowCompact(
                                                         .replace("Platform", "")
                                                         .trim(),
                                         style =
-                                                MaterialTheme.typography.labelSmall.copy(
+                                                MaterialTheme.typography.labelMedium.copy(
                                                         fontWeight = FontWeight.Bold,
                                                         fontSize = 10.sp
                                                 ),
-                                        modifier =
-                                                Modifier
-                                                        .background(
-                                                                MaterialTheme.colorScheme
-                                                                        .surfaceVariant,
-                                                                RoundedCornerShape(4.dp)
-                                                        )
-                                                        .padding(horizontal = 4.dp, vertical = 2.dp)
                                 )
                         }
                 }

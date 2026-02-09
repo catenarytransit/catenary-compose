@@ -480,17 +480,25 @@ fun SingleTripInfoScreen(
 
         // --- UI Rendering ---
         Box(modifier = Modifier.fillMaxSize()) {
-                Column(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
+                Column(
+                        modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 8.dp),
+                        verticalArrangement = Arrangement.Top
+                ) {
                         if (isLoading) {
                                 LinearProgressIndicator(
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                                        modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 8.dp)
                                 )
                         } else if (error != null) {
                                 Column(modifier = Modifier.fillMaxSize()) {
                                         // Header with Navigation Controls
                                         Row(
                                                 modifier =
-                                                        Modifier.fillMaxWidth()
+                                                        Modifier
+                                                                .fillMaxWidth()
                                                                 .padding(bottom = 16.dp),
                                                 horizontalArrangement = Arrangement.Start,
                                                 verticalAlignment = Alignment.CenterVertically
@@ -511,7 +519,8 @@ fun SingleTripInfoScreen(
                                                 .SelectionContainer {
                                                         Column(
                                                                 modifier =
-                                                                        Modifier.weight(1f)
+                                                                        Modifier
+                                                                                .weight(1f)
                                                                                 .verticalScroll(
                                                                                         rememberScrollState()
                                                                                 )
@@ -610,8 +619,10 @@ fun SingleTripInfoScreen(
                                         LocalMinimumInteractiveComponentEnforcement provides false
                                 ) {
                                         Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically
+                                                modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(24.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
                                                 // horizontalArrangement = Arrangement.SpaceBetween
                                                 ) {
                                                 if (data.vehicle?.label != null ||
@@ -760,7 +771,8 @@ fun SingleTripInfoScreen(
                                                         Column(modifier = Modifier.fillMaxSize()) {
                                                                 Row(
                                                                         modifier =
-                                                                                Modifier.fillMaxWidth()
+                                                                                Modifier
+                                                                                        .fillMaxWidth()
                                                                                         .padding(
                                                                                                 16.dp
                                                                                         ),
@@ -799,7 +811,8 @@ fun SingleTripInfoScreen(
                                                                 }
                                                                 Column(
                                                                         modifier =
-                                                                                Modifier.fillMaxWidth()
+                                                                                Modifier
+                                                                                        .fillMaxWidth()
                                                                                         .weight(1f)
                                                                                         .verticalScroll(
                                                                                                 rememberScrollState()
@@ -880,7 +893,8 @@ fun SingleTripInfoScreen(
 
                                 LazyColumn(
                                         modifier =
-                                                Modifier.fillMaxWidth()
+                                                Modifier
+                                                        .fillMaxWidth()
                                                         // .windowInsetsBottomHeight(WindowInsets(bottom =
                                                         // WindowInsets.safeDrawing.getBottom(density =
                                                         // LocalDensity.current)))
@@ -950,7 +964,8 @@ fun SingleTripInfoScreen(
                 androidx.compose.animation.AnimatedVisibility(
                         visible = showScrollToCurrentButton,
                         modifier =
-                                Modifier.align(Alignment.BottomEnd)
+                                Modifier
+                                        .align(Alignment.BottomEnd)
                                         .padding(
                                                 bottom = 80.dp,
                                                 end = 16.dp
@@ -983,7 +998,8 @@ fun SingleTripInfoScreen(
                 androidx.compose.animation.AnimatedVisibility(
                         visible = showFloatingControls,
                         modifier =
-                                Modifier.align(Alignment.BottomCenter)
+                                Modifier
+                                        .align(Alignment.BottomCenter)
                                         .padding(bottom = 16.dp)
                                         .windowInsetsPadding(
                                                 WindowInsets(
@@ -1018,7 +1034,9 @@ fun SingleTripInfoScreen(
                                 ) {
                                         IconButton(
                                                 onClick = { showFloatingControls = false },
-                                                modifier = Modifier.size(24.dp).align(Alignment.End)
+                                                modifier = Modifier
+                                                        .size(24.dp)
+                                                        .align(Alignment.End)
                                         ) {
                                                 Icon(
                                                         imageVector = Icons.Filled.Close,
@@ -1041,7 +1059,8 @@ fun SingleTripInfoScreen(
                                                                         showOriginalTimetable = it
                                                                 },
                                                                 modifier =
-                                                                        Modifier.scale(0.8f)
+                                                                        Modifier
+                                                                                .scale(0.8f)
                                                                                 .padding(end = 4.dp)
                                                         )
                                                         Text(
@@ -1065,7 +1084,8 @@ fun SingleTripInfoScreen(
                                                                         showCountdown = it
                                                                 },
                                                                 modifier =
-                                                                        Modifier.scale(0.8f)
+                                                                        Modifier
+                                                                                .scale(0.8f)
                                                                                 .padding(end = 4.dp)
                                                         )
                                                         Text(
@@ -1085,7 +1105,8 @@ fun SingleTripInfoScreen(
                                                         checked = showConnections,
                                                         onCheckedChange = { showConnections = it },
                                                         modifier =
-                                                                Modifier.scale(0.8f)
+                                                                Modifier
+                                                                        .scale(0.8f)
                                                                         .padding(end = 4.dp)
                                                 )
                                                 Text(
@@ -1105,11 +1126,15 @@ fun SingleTripInfoScreen(
 
 @Composable
 fun VehicleInfoDetails(vehicleData: VehicleRealtimeData, usUnits: Boolean) {
-        Column(modifier = Modifier.padding(vertical = 0.dp)) {
+        Column(
+                modifier = Modifier.padding(vertical = 0.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
                 // Last updated
                 Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
+
                 ) {
                         Text(
                                 text = stringResource(R.string.lastupdated) + ": ",
@@ -1478,7 +1503,8 @@ fun StopListItem(
                                                         if (showCountdown) {
                                                                 Box(
                                                                         modifier =
-                                                                                Modifier.padding(
+                                                                                Modifier
+                                                                                        .padding(
                                                                                                 start =
                                                                                                         4.dp
                                                                                         )
@@ -1615,12 +1641,14 @@ fun StopListItem(
                                                                                                 y =
                                                                                                         (-4).dp
                                                                                         )
+
                                                                         )
                                                                 }
                                                                 if (showCountdown) {
                                                                         Box(
                                                                                 modifier =
-                                                                                        Modifier.padding(
+                                                                                        Modifier
+                                                                                                .padding(
                                                                                                         start =
                                                                                                                 4.dp
                                                                                                 )
@@ -1659,18 +1687,23 @@ fun StopListItem(
         val headerHeight = 24.dp
 
         Column(
-                modifier = Modifier.fillMaxWidth().zIndex(if (movingDotProgress != null) 1f else 0f)
+                modifier = Modifier
+                        .fillMaxWidth()
+                        .zIndex(if (movingDotProgress != null) 1f else 0f)
         ) {
                 // 1. Render Above Rows
                 aboveContent.forEachIndexed { index, content ->
                         Row(
-                                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                                modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(IntrinsicSize.Min),
                                 verticalAlignment = Alignment.Bottom
                         ) {
                                 // Time
                                 Box(
                                         modifier =
-                                                Modifier.width(timeColumnWidth)
+                                                Modifier
+                                                        .width(timeColumnWidth)
                                                         .padding(end = 4.dp)
                                                         .padding(
                                                                 top =
@@ -1681,7 +1714,9 @@ fun StopListItem(
                                 ) { content() }
 
                                 // Timeline (Line Only)
-                                Box(modifier = Modifier.width(16.dp).fillMaxHeight()) {
+                                Box(modifier = Modifier
+                                        .width(16.dp)
+                                        .fillMaxHeight()) {
                                         if (!isFirst) {
                                                 TimelineLine(
                                                         color = neutralColor,
@@ -1692,7 +1727,9 @@ fun StopListItem(
                                 }
 
                                 // Content Spacer
-                                Box(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                                Box(modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 8.dp)) {
                                         // Empty
                                 }
                         }
@@ -1701,14 +1738,17 @@ fun StopListItem(
                 // 2. Render Main Row
                 val mainRowTopPadding = if (aboveContent.isEmpty()) 12.dp else 0.dp
                 Row(
-                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                        modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min),
                         verticalAlignment = Alignment.Top
                 ) {
                         // Time
                         // We constrain the time to the header height to align with the dot and name
                         Box(
                                 modifier =
-                                        Modifier.width(timeColumnWidth)
+                                        Modifier
+                                                .width(timeColumnWidth)
                                                 // .height(headerHeight) // Removed to allow delay
                                                 // expansion
                                                 .padding(end = 4.dp)
@@ -1718,7 +1758,9 @@ fun StopListItem(
                         ) { mainContent?.invoke() }
 
                         // Timeline (Dot + Lines)
-                        Box(modifier = Modifier.width(16.dp).fillMaxHeight()) {
+                        Box(modifier = Modifier
+                                .width(16.dp)
+                                .fillMaxHeight()) {
                                 TripProgressIndicator(
                                         color = tripColor,
                                         neutralColor = neutralColor,
@@ -1737,14 +1779,16 @@ fun StopListItem(
                         // Content (Station Name + Platform)
                         Column(
                                 modifier =
-                                        Modifier.weight(1f)
+                                        Modifier
+                                                .weight(1f)
                                                 .padding(start = 8.dp)
                                                 .padding(top = mainRowTopPadding),
                                 verticalArrangement = Arrangement.Top
                         ) {
                                 Row(
                                         modifier =
-                                                Modifier.fillMaxWidth()
+                                                Modifier
+                                                        .fillMaxWidth()
                                                         .defaultMinSize(minHeight = headerHeight),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
@@ -1761,7 +1805,8 @@ fun StopListItem(
                                                                                 .onSurface,
                                                         fontWeight = FontWeight.Normal,
                                                         modifier =
-                                                                Modifier.clickable(
+                                                                Modifier
+                                                                        .clickable(
                                                                                 onClick =
                                                                                         onStopClick
                                                                         )
@@ -1844,9 +1889,13 @@ fun StopListItem(
 
                 // Continuous line/spacer
                 if (!isLast) {
-                        Row(Modifier.fillMaxWidth().height(4.dp)) {
+                        Row(Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)) {
                                 Box(Modifier.width(timeColumnWidth))
-                                Box(Modifier.width(16.dp).fillMaxHeight()) {
+                                Box(Modifier
+                                        .width(16.dp)
+                                        .fillMaxHeight()) {
                                         TimelineLine(
                                                 color = neutralColor,
                                                 isPast = isBottomSegmentPast,
