@@ -7,8 +7,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import java.net.URLEncoder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,108 +67,89 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
     private val json = Json { ignoreUnknownKeys = true }
 
     init {
-        fetchInitialTripData()
+        SpruceWebSocket.subscribeTrip(
+            chateau = tripSelected.chateau_id ?: "",
+            tripId = tripSelected.trip_id ?: "",
+            startDate = tripSelected.start_date,
+            startTime = tripSelected.start_time
+        )
+        observeWebSocketData()
         startTimers()
     }
 
-    private fun fetchInitialTripData() {
+    private fun observeWebSocketData() {
         viewModelScope.launch {
-            var url = ""
-            try {
-
-                val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
-                val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
-
-                val params = mutableListOf<String>()
-                if (tripSelected.trip_id != null) params.add("trip_id=${encodedTripId}")
-                if (tripSelected.start_date != null)
-                        params.add("start_date=${tripSelected.start_date}")
-                if (tripSelected.start_time != null)
-                        params.add("start_time=${tripSelected.start_time}")
-
-                url =
-                        "https://birch.catenarymaps.org/get_trip_information/${encodedChateauId}/?" +
-                                params.joinToString("&")
-
-                println("fetching url ${url}")
-
-                // Use HttpResponse to get raw text safely
-                val response: HttpResponse = ktorClient.get(url)
-                val responseBody = response.bodyAsText()
-
-                // Handle errors
-                try {
-                    val data = json.decodeFromString<TripDataResponse>(responseBody)
-
-                    _tripData.value = data
-                    _alerts.value = data.alert_id_to_alert
-                    // processStopIdToAlertIds(data.alert_id_to_alert)
-
-                    // Process stoptimes into the "cleaned" dataset
-                    _stopTimes.value = data.stoptimes.map { processStopTime(it) }
-                    updateStopProgress()
-
-                    _isLoading.value = false
-                    _error.value = null
-
-                    // Fetch vehicle info once we have trip data
-                    fetchVehicleInfo()
-                } catch (e: Exception) {
-                    Log.e("SingleTripViewModel", "Error parsing trip data: ${e.message}", e)
-                    _error.value =
-                            "URL: $url\n\nError parsing data: ${e.message}\n\nRaw Response:\n$responseBody"
-                    _isLoading.value = false
+            SpruceWebSocket.spruceTripData.collect { element ->
+                if (element != null) {
+                    try {
+                        val data = json.decodeFromJsonElement<TripDataResponse>(element)
+                        // Filter by trip_id to ensure we only update for THIS trip
+                        if (data.trip_id == tripSelected.trip_id) {
+                            handleInitialTripData(data)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SingleTripViewModel", "Error parsing initial trip data", e)
+                        // Only set error if we don't have data yet? Or maybe logging is enough if
+                        // it's not our trip?
+                        // If parsing fails we don't know the trip_id, so we can't filter safely.
+                        // But if it fails it might be a general error.
+                    }
                 }
-            } catch (e: Exception) {
-                Log.e("SingleTripViewModel", "Error fetching initial trip: ${e.message}", e)
-                _error.value = "URL: $url\n\nError fetching data: ${e.message}"
-                _isLoading.value = false
+            }
+        }
+
+        viewModelScope.launch {
+            SpruceWebSocket.spruceUpdateData.collect { element ->
+                if (element != null) {
+                    try {
+                        val data = json.decodeFromJsonElement<TripRtUpdateData>(element)
+                        // Filter by trip_id
+                        if (data.trip_id == tripSelected.trip_id || data.trip_id == null) {
+                            // If trip_id is missing in update, assume it might be ours?
+                            // But GtfsRtRefreshData in Rust has Option<String> for trip_id. It
+                            // should be there.
+                            if (data.trip_id == tripSelected.trip_id) {
+                                handleRealtimeUpdate(data)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SingleTripViewModel", "Error parsing trip update data", e)
+                    }
+                }
             }
         }
     }
 
-    private fun fetchRealtimeUpdate() {
-        if (_isLoading.value) return // Don't fetch if still on initial load
-        viewModelScope.launch {
-            try {
-                val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
-                val encodedTripId = URLEncoder.encode(tripSelected.trip_id ?: "", "UTF-8")
+    private fun handleInitialTripData(data: TripDataResponse) {
+        _tripData.value = data
+        _alerts.value = data.alert_id_to_alert
+        _stopTimes.value = data.stoptimes.map { processStopTime(it) }
+        updateStopProgress()
 
-                val url =
-                        "https://birch.catenarymaps.org/get_trip_information_rt_update/${encodedChateauId}/?" +
-                                "trip_id=${encodedTripId}&" +
-                                "start_date=${tripSelected.start_date ?: ""}&" +
-                                "start_time=${tripSelected.start_time ?: ""}"
+        _isLoading.value = false
+        _error.value = null
 
-                val rtUpdate = ktorClient.get(url).body<TripRtUpdateResponse>()
+        fetchVehicleInfo()
+    }
 
-                if (rtUpdate.found_data && rtUpdate.data != null) {
-                    val newStopTimesMap =
-                            rtUpdate.data.stoptimes.associateBy {
-                                it.gtfs_stop_sequence ?: it.stop_id
-                            }
+    private fun handleRealtimeUpdate(data: TripRtUpdateData) {
+        val newStopTimesMap = data.stoptimes.associateBy { it.gtfs_stop_sequence ?: it.stop_id }
 
-                    // Merge RT data into existing list
-                    _stopTimes.update { currentList ->
-                        currentList.map { existingCleanedStop ->
-                            val key =
-                                    existingCleanedStop.raw.gtfs_stop_sequence
-                                            ?: existingCleanedStop.raw.stop_id
-                            val newRtData = newStopTimesMap[key]
+        _stopTimes.update { currentList ->
+            currentList.map { existingCleanedStop ->
+                val key =
+                    existingCleanedStop.raw.gtfs_stop_sequence
+                        ?: existingCleanedStop.raw.stop_id
+                val newRtData = newStopTimesMap[key]
 
-                            if (newRtData != null) {
-                                // This merges new RT data, like in your Svelte logic
-                                mergeRtStopTime(existingCleanedStop, newRtData)
-                            } else {
-                                existingCleanedStop
-                            }
-                        }
-                    }
+                if (newRtData != null) {
+                    mergeRtStopTime(existingCleanedStop, newRtData)
+                } else {
+                    existingCleanedStop
                 }
-            } catch (e: Exception) {
-                Log.e("SingleTripViewModel", "Error fetching RT update: ${e.message}")
             }
         }
+        updateStopProgress()
     }
 
     private fun fetchVehicleInfo() {
@@ -194,20 +173,11 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
     }
 
     private fun startTimers() {
-        // 1-second RT update timer
+        // Vehicle info poller (separate from trip WS)
         viewModelScope.launch {
             while (true) {
                 delay(1_000L)
-                fetchRealtimeUpdate()
-                fetchVehicleInfo() // Svelte logic also fetches vehicle rt
-            }
-        }
-
-        // 30-second full refresh timer
-        viewModelScope.launch {
-            while (true) {
-                delay(30_000L)
-                fetchInitialTripData() // Refetch everything
+                fetchVehicleInfo()
             }
         }
 
@@ -221,11 +191,14 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        tripSelected.chateau_id?.let { SpruceWebSocket.unsubscribeTrip(it) }
+    }
+
     // --- Logic ported from Svelte ---
 
     private fun processStopTime(stoptime: TripStoptime): StopTimeCleaned {
-        // This function replicates the initial processing of stoptimes
-        // (calculating diffs, strike-throughs, etc.)
         val cleaned = StopTimeCleaned(raw = stoptime)
 
         if (cleaned.rtArrivalTime != null && stoptime.scheduled_arrival_time_unix_seconds != null) {
@@ -239,13 +212,10 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                     cleaned.rtDepartureTime!! - stoptime.scheduled_departure_time_unix_seconds
         }
 
-        // ... add more logic from your Svelte file (e.g., show_both_departure_and_arrival) ...
-
         return cleaned
     }
 
     private fun mergeRtStopTime(existing: StopTimeCleaned, rt: StopTimeRefresh): StopTimeCleaned {
-        // This function merges new RT data, like in your Svelte update_realtime_data
         val updated =
                 existing.copy(raw = existing.raw.copy(rt_platform_string = rt.rt_platform_string))
 
@@ -268,8 +238,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
             }
         }
 
-        // ... add logic for arrival/departure time conflicts ...
-
         return updated
     }
 
@@ -287,33 +255,13 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
         val stopList = _stopTimes.value
 
-        // Strict RT check: Do we have ANY realtime data?
         val hasAnyRealtime = stopList.any { it.rtArrivalTime != null || it.rtDepartureTime != null }
 
         stopList.forEachIndexed { i, stoptime ->
-            // Logic ported from web frontend + Strict RT Fix
             var arrivalTimeToUse = stoptime.rtArrivalTime
             var departureTimeToUse = stoptime.rtDepartureTime
 
-            // If we have ANY realtime data for the trip, we strictly ignore scheduled times
-            // for the purpose of determining active stop / passed stops.
-            // UNLESS the specific stop has no RT data, in which case it is implicitly
-            // "unknown/future"
-            // if we are strictly in RT mode (handled by null check below).
-            // Actually, if a stop has NO RT data but the trip HAS RT data,
-            // it usually means we haven't reached it yet or it's skipped?
-            // "Active stop needs to be based on the realtime data and NOT the schedule data IF
-            // there is realtime data."
-
-            // However, we still need fallbacks for processing logic if we are NOT in strict RT
-            // mode.
-
             if (hasAnyRealtime) {
-                // Do not fallback to schedule.
-                // arrivalTimeToUse and departureTimeToUse remain as is (possibly null).
-
-                // However, we still need to apply the logic for "departed before arrival" fixups
-                // just in case RT data is weird
                 if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
                                 arrivalTimeToUse != null
                 ) {
@@ -322,8 +270,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                     }
                 }
             } else {
-                // Fallback to schedule if no RT at all
-                // Same fixup logic
                 if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
                                 arrivalTimeToUse != null
                 ) {
@@ -333,7 +279,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                 }
             }
 
-            // Express / Overtake edge case fixup
             if (arrivalTimeToUse != null &&
                             stoptime.raw.scheduled_arrival_time_unix_seconds != null &&
                             stoptime.rtDepartureTime != null
@@ -343,9 +288,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                 }
             }
 
-            // Fallback for missing departure lookup in strict RT mode
-            // If we have strict RT, and departure is null, but arrival is NOT null,
-            // we should assume departure = arrival (just departed).
             if (hasAnyRealtime && departureTimeToUse == null && arrivalTimeToUse != null) {
                 departureTimeToUse = arrivalTimeToUse
             }
@@ -356,9 +298,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
             val arr =
                     if (hasAnyRealtime) arrivalTimeToUse
                     else (arrivalTimeToUse ?: stoptime.raw.scheduled_arrival_time_unix_seconds)
-
-            // If we are in strict RT mode and a stop has NO RT data, it effectively hasn't happened
-            // yet (is null).
 
             val hasDeparted = dep != null && dep <= nowSec
             val hasArrived = arr != null && arr <= nowSec
@@ -373,7 +312,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
         _lastInactiveStopIdx.value = lastDepartedIdx
         _currentAtStopIdx.value = currentAtStopIdx
 
-        // --- Moving Dot Calculation (Moved from Screen) ---
         var newMovingDotSegmentIdx = -1
         var newMovingDotProgress = 0f
 
@@ -383,10 +321,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
             val prevStop = stopList[lastDepartedIdx]
             val nextStop = stopList[lastDepartedIdx + 1]
 
-            val hasAnyRealtime =
-                    stopList.any { it.rtArrivalTime != null || it.rtDepartureTime != null }
-
-            // Apply same strict RT rule for dot interpolation
             val dep =
                     if (hasAnyRealtime) {
                         prevStop.rtDepartureTime?.toDouble() ?: prevStop.rtArrivalTime?.toDouble()
@@ -425,7 +359,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
         _showPreviousStops.update { !it }
     }
 
-    // Factory to inject the tripSelected parameter
     companion object {
         fun factory(tripSelected: CatenaryStackEnum.SingleTrip): ViewModelProvider.Factory {
             return object : ViewModelProvider.Factory {

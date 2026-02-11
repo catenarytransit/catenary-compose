@@ -73,7 +73,13 @@ data class TripDataResponse(
 @Serializable
 data class TripRtUpdateResponse(val found_data: Boolean, val data: TripRtUpdateData? = null)
 
-@Serializable data class TripRtUpdateData(val stoptimes: List<StopTimeRefresh> = emptyList())
+@Serializable
+data class TripRtUpdateData(
+    val stoptimes: List<StopTimeRefresh> = emptyList(),
+    val timestamp: Long? = null,
+    val trip_id: String? = null,
+    val chateau: String? = null
+)
 
 @Serializable
 data class StopTimeRefresh(

@@ -34,10 +34,41 @@ data class MapViewportUpdate(
 data class SubscribeTrip(
         @EncodeDefault val type: String = "subscribe_trip",
         val chateau: String,
-        val trip_id: String? = null,
-        val route_id: String? = null,
-// Add other fields as needed for QueryTripInformationParams
+        val params: SubscribeTripParams
 )
+
+@Serializable
+data class SubscribeTripParams(
+    val trip_id: String,
+        val route_id: String? = null,
+    val start_date: String? = null,
+    val start_time: String? = null
+)
+
+// ...
+
+fun subscribeTrip(
+    chateau: String,
+    tripId: String,
+    routeId: String? = null,
+    startDate: String? = null,
+    startTime: String? = null
+) {
+    ensureConnection()
+    val params =
+        SubscribeTrip(
+            chateau = chateau,
+            params =
+                SubscribeTripParams(
+                    trip_id = tripId,
+                    route_id = routeId,
+                    start_date = startDate,
+                    start_time = startTime
+                )
+        )
+    activeTripParams = params
+    sendTripSubscription(params)
+}
 
 @Serializable
 data class UnsubscribeTrip(
@@ -79,7 +110,7 @@ object SpruceWebSocket {
 
     private var activeMapParams: MapViewportUpdate? = null
     // Keep track of active trip subscription if we implement trip stuff later
-    // private var activeTripParams: SubscribeTrip? = null
+    private var activeTripParams: SubscribeTrip? = null
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -109,6 +140,11 @@ object SpruceWebSocket {
                                 activeMapParams?.let {
                                     Log.d(TAG, "Resending active map params")
                                     sendMapUpdate(it)
+                                }
+
+                                activeTripParams?.let {
+                                    Log.d(TAG, "Resending active trip params")
+                                    sendTripSubscription(it)
                                 }
                             }
 
@@ -180,6 +216,41 @@ object SpruceWebSocket {
         sendMapUpdate(params)
     }
 
+    fun subscribeTrip(
+        chateau: String,
+        tripId: String,
+        routeId: String? = null,
+        startDate: String? = null,
+        startTime: String? = null
+    ) {
+        ensureConnection()
+        val params =
+            SubscribeTrip(
+                chateau = chateau,
+                trip_id = tripId,
+                route_id = routeId
+                // Add start_date/time if needed in SubscribeTrip
+            )
+        // If SubscribeTrip needs more fields (like start_date), update the data class first.
+        // For now, using what was defined.
+        activeTripParams = params
+        sendTripSubscription(params)
+    }
+
+    fun unsubscribeTrip(chateau: String) {
+        // Clear active subscription so it doesn't resend on reconnect
+        activeTripParams = null
+        if (_spruceStatus.value == "connected") {
+            try {
+                val msg = UnsubscribeTrip(chateau = chateau)
+                val text = json.encodeToString(msg)
+                webSocket?.send(text)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error sending unsubscribe trip", e)
+            }
+        }
+    }
+
     private fun sendMapUpdate(params: MapViewportUpdate) {
         if (_spruceStatus.value == "connected") {
             try {
@@ -187,6 +258,17 @@ object SpruceWebSocket {
                 webSocket?.send(text)
             } catch (e: Exception) {
                 Log.e(TAG, "Error sending map update", e)
+            }
+        }
+    }
+
+    private fun sendTripSubscription(params: SubscribeTrip) {
+        if (_spruceStatus.value == "connected") {
+            try {
+                val text = json.encodeToString(params)
+                webSocket?.send(text)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error sending trip subscription", e)
             }
         }
     }
