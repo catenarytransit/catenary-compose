@@ -82,7 +82,8 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
             SpruceWebSocket.spruceTripData.collect { element ->
                 if (element != null) {
                     try {
-                        val data = json.decodeFromJsonElement<TripDataResponse>(element)
+                        val data =
+                            json.decodeFromJsonElement(TripDataResponse.serializer(), element)
                         // Filter by trip_id to ensure we only update for THIS trip
                         if (data.trip_id == tripSelected.trip_id) {
                             handleInitialTripData(data)
@@ -102,7 +103,8 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
             SpruceWebSocket.spruceUpdateData.collect { element ->
                 if (element != null) {
                     try {
-                        val data = json.decodeFromJsonElement<TripRtUpdateData>(element)
+                        val data =
+                            json.decodeFromJsonElement(TripRtUpdateData.serializer(), element)
                         // Filter by trip_id
                         if (data.trip_id == tripSelected.trip_id || data.trip_id == null) {
                             // If trip_id is missing in update, assume it might be ours?

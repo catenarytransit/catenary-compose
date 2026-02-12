@@ -34,46 +34,22 @@ data class MapViewportUpdate(
 data class SubscribeTrip(
         @EncodeDefault val type: String = "subscribe_trip",
         val chateau: String,
-        val params: SubscribeTripParams
-)
-
-@Serializable
-data class SubscribeTripParams(
-    val trip_id: String,
+        val trip_id: String,
         val route_id: String? = null,
-    val start_date: String? = null,
-    val start_time: String? = null
+        val start_date: String? = null,
+        val start_time: String? = null
 )
 
 // ...
 
-fun subscribeTrip(
-    chateau: String,
-    tripId: String,
-    routeId: String? = null,
-    startDate: String? = null,
-    startTime: String? = null
-) {
-    ensureConnection()
-    val params =
-        SubscribeTrip(
-            chateau = chateau,
-            params =
-                SubscribeTripParams(
-                    trip_id = tripId,
-                    route_id = routeId,
-                    start_date = startDate,
-                    start_time = startTime
-                )
-        )
-    activeTripParams = params
-    sendTripSubscription(params)
-}
-
 @Serializable
 data class UnsubscribeTrip(
         @EncodeDefault val type: String = "unsubscribe_trip",
-        val chateau: String
+        val chateau: String,
+        val trip_id: String? = null,
+        val route_id: String? = null,
+        val start_date: String? = null,
+        val start_time: String? = null
 )
 
 @Serializable
@@ -228,21 +204,30 @@ object SpruceWebSocket {
             SubscribeTrip(
                 chateau = chateau,
                 trip_id = tripId,
-                route_id = routeId
-                // Add start_date/time if needed in SubscribeTrip
+                route_id = routeId,
+                start_date = startDate,
+                start_time = startTime
             )
-        // If SubscribeTrip needs more fields (like start_date), update the data class first.
-        // For now, using what was defined.
         activeTripParams = params
         sendTripSubscription(params)
     }
 
     fun unsubscribeTrip(chateau: String) {
         // Clear active subscription so it doesn't resend on reconnect
+        val paramsToSend = activeTripParams
         activeTripParams = null
+
         if (_spruceStatus.value == "connected") {
             try {
-                val msg = UnsubscribeTrip(chateau = chateau)
+                // Ideally we send the same params we subscribed with, if available
+                val msg =
+                    UnsubscribeTrip(
+                        chateau = chateau,
+                        trip_id = paramsToSend?.trip_id,
+                        route_id = paramsToSend?.route_id,
+                        start_date = paramsToSend?.start_date,
+                        start_time = paramsToSend?.start_time
+                    )
                 val text = json.encodeToString(msg)
                 webSocket?.send(text)
             } catch (e: Exception) {
