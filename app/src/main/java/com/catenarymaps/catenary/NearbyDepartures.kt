@@ -582,10 +582,20 @@ fun NearbyDepartures(
                         val finalList = mutableListOf<NearbyItem>()
                         val mixedItems = mutableListOf<NearbyItem>()
 
-                        if (stationItems.isNotEmpty()) {
+                        // Check if the closest station is within the 1000m "hoist" threshold
+                        val shouldHoist =
+                                stationItems.isNotEmpty() && stationItems.first().sortDistance < 1000.0
+
+                        if (shouldHoist) {
+                                // Hoist the closest station to the very top
                                 finalList.add(stationItems.first())
+                                // Add the rest of the stations to the pool to be mixed with local routes
                                 mixedItems.addAll(stationItems.drop(1))
+                        } else {
+                                // If no station is close enough, treat all stations as regular items in the mixed list
+                                mixedItems.addAll(stationItems)
                         }
+
                         mixedItems.addAll(localItems)
 
                         // Sort mixed
@@ -629,7 +639,10 @@ fun NearbyDepartures(
         }
         Column(
                 modifier =
-                        Modifier.fillMaxSize().padding(horizontal = 12.dp).padding(bottom = 12.dp)
+                        Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 12.dp)
+                                .padding(bottom = 12.dp)
         ) {
                 TopRow(
                         currentPickModeIsPin = usePickedLocation,
@@ -671,7 +684,9 @@ fun NearbyDepartures(
 
                 if (loading) {
                         LinearProgressIndicator(
-                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                                modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 4.dp)
                         )
                 } else {
                         // Spacer(Modifier.height(8.dp))
@@ -682,7 +697,8 @@ fun NearbyDepartures(
                 Box(Modifier.fillMaxSize()) {
                         LazyColumn(
                                 modifier =
-                                        Modifier.fillMaxSize()
+                                        Modifier
+                                                .fillMaxSize()
                                                 .windowInsetsPadding(
                                                         WindowInsets(
                                                                 bottom =
@@ -758,7 +774,9 @@ private fun StationGroupCard(
         darkMode: Boolean
 ) {
         Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
+                modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
                 colors =
                         CardDefaults.cardColors(
                                 containerColor =
@@ -777,7 +795,8 @@ private fun StationGroupCard(
                         // Header
                         Row(
                                 modifier =
-                                        Modifier.fillMaxWidth()
+                                        Modifier
+                                                .fillMaxWidth()
                                                 .padding(bottom = 8.dp)
                                                 .padding(bottom = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -942,7 +961,9 @@ private fun StationGroupCard(
                                                 val first = departures.first()
                                                 onStopClick(first.chateauId, first.stopId)
                                         },
-                                        modifier = Modifier.fillMaxWidth().height(36.dp),
+                                        modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(36.dp),
                                         shape = RoundedCornerShape(4.dp),
                                         contentPadding = PaddingValues(vertical = 0.dp)
                                 ) {
@@ -974,14 +995,17 @@ private fun TopRow(
                 if (darkMode) Color(0xFF00532F)
                 else Color(0xFF48DC90) // Dark green for dark mode, light green for light mode
         Row(
-                Modifier.fillMaxWidth().padding(top = 0.dp),
+                Modifier
+                        .fillMaxWidth()
+                        .padding(top = 0.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         IconButton(
                                 onClick = onMyLocation,
                                 modifier =
-                                        Modifier.size(36.dp)
+                                        Modifier
+                                                .size(36.dp)
                                                 .border(
                                                         2.dp,
                                                         Color(
@@ -999,7 +1023,8 @@ private fun TopRow(
 
                         Row(
                                 modifier =
-                                        Modifier.border(
+                                        Modifier
+                                                .border(
                                                         2.dp,
                                                         Color(0xFFC9A2C8),
                                                         RoundedCornerShape(8.dp)
@@ -1032,7 +1057,9 @@ private fun TopRow(
                                                 MaterialTheme.colorScheme.outline.copy(
                                                         alpha = 0.6f
                                                 ),
-                                        modifier = Modifier.fillMaxHeight().width(1.dp)
+                                        modifier = Modifier
+                                                .fillMaxHeight()
+                                                .width(1.dp)
                                 )
                                 TextButton(
                                         onClick = onCenterPin,
@@ -1062,7 +1089,8 @@ private fun TopRow(
                 // Sort toggle (A–Z | Distance)
                 Row(
                         modifier =
-                                Modifier.clip(RoundedCornerShape(999.dp))
+                                Modifier
+                                        .clip(RoundedCornerShape(999.dp))
                                         .height(42.dp)
                                         .border(
                                                 2.dp,
@@ -1081,7 +1109,8 @@ private fun TopRow(
                                                         else Color.Transparent
                                         ),
                                 modifier =
-                                        Modifier.border(width = 0.dp, color = Color.Transparent)
+                                        Modifier
+                                                .border(width = 0.dp, color = Color.Transparent)
                                                 .fillMaxHeight(),
                                 contentPadding = PaddingValues(horizontal = 6.dp)
                         ) {
@@ -1103,7 +1132,8 @@ private fun TopRow(
                                                         else Color.Transparent
                                         ),
                                 modifier =
-                                        Modifier.border(width = 0.dp, color = Color.Transparent)
+                                        Modifier
+                                                .border(width = 0.dp, color = Color.Transparent)
                                                 .fillMaxHeight(),
                                 contentPadding = PaddingValues(horizontal = 6.dp)
                         ) {
@@ -1178,7 +1208,8 @@ private fun RouteGroupCard(
 
         Column(
                 modifier =
-                        Modifier.fillMaxWidth()
+                        Modifier
+                                .fillMaxWidth()
                                 .padding(vertical = 4.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(bg)
@@ -1209,7 +1240,9 @@ private fun RouteGroupCard(
                                                                 .build(),
                                                 contentDescription = route.shortName,
                                                 modifier =
-                                                        Modifier.height(24.dp).padding(end = 4.dp)
+                                                        Modifier
+                                                                .height(24.dp)
+                                                                .padding(end = 4.dp)
                                         )
                                 } else {
                                         Text(
@@ -1236,7 +1269,8 @@ private fun RouteGroupCard(
                                         MtaSubwayUtils.getMtaSymbolShortName(route.shortName)
                                 androidx.compose.foundation.layout.Box(
                                         modifier =
-                                                Modifier.size(24.dp)
+                                                Modifier
+                                                        .size(24.dp)
                                                         .clip(
                                                                 androidx.compose.foundation.shape
                                                                         .CircleShape
@@ -1297,14 +1331,17 @@ private fun RouteGroupCard(
 
                         Row(
                                 modifier =
-                                        Modifier.padding(start = 2.dp, bottom = 1.dp)
+                                        Modifier
+                                                .padding(start = 2.dp, bottom = 1.dp)
                                                 .horizontalScroll(rememberScrollState()),
                                 verticalAlignment = Alignment.CenterVertically
                         ) {
                                 Icon(
                                         Icons.Filled.ChevronRight,
                                         contentDescription = null,
-                                        modifier = Modifier.size(20.dp).offset(y = 0.dp)
+                                        modifier = Modifier
+                                                .size(20.dp)
+                                                .offset(y = 0.dp)
                                 )
                                 Text(
                                         headsign.replace("Underground Station", "")
@@ -1324,7 +1361,8 @@ private fun RouteGroupCard(
                                                                 MaterialTheme.colorScheme
                                                                         .surfaceContainerHigh,
                                                         modifier =
-                                                                Modifier.offset(y = (-1).dp)
+                                                                Modifier
+                                                                        .offset(y = (-1).dp)
                                                                         .clickable {
                                                                                 onStopClick(
                                                                                         route.chateauId,
@@ -1439,7 +1477,8 @@ private fun TripPill(
         ) {
                 Column(
                         modifier =
-                                Modifier.widthIn(min = 76.dp)
+                                Modifier
+                                        .widthIn(min = 76.dp)
                                         .padding(horizontal = 8.dp, vertical = 2.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy((-4).dp)
