@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -66,16 +67,12 @@ fun StationScreenTrainRow(
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
 
         Row(
-                modifier = modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // 1. Route Name Bubble (Leftmost)
                 androidx.compose.foundation.layout.Box(
-                        modifier = Modifier
-                                .width(40.dp)
-                                .padding(horizontal = 2.dp),
+                        modifier = Modifier.width(40.dp).padding(horizontal = 2.dp),
                         contentAlignment = Alignment.Center
                 ) {
                         if (showRouteName && routeInfo?.short_name != null) {
@@ -88,8 +85,7 @@ fun StationScreenTrainRow(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier
-                                                        .clip(RoundedCornerShape(2.dp))
+                                                Modifier.clip(RoundedCornerShape(2.dp))
                                                         .background(
                                                                 parseColor(
                                                                         routeInfo.color,
@@ -102,9 +98,7 @@ fun StationScreenTrainRow(
                 }
                 // Left: Time (Vertical Stack)
                 Column(
-                        modifier = Modifier
-                                .width(70.dp)
-                                .padding(horizontal = 2.dp),
+                        modifier = Modifier.width(70.dp).padding(horizontal = 2.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -233,9 +227,7 @@ fun StationScreenTrainRow(
                 }
 
                 // Middle: Info
-                Column(modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp)) {
+                Column(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                                 // ---------------------------------------------------------
                                 // ROW 1: Headsign + Trip Name (Merged)
@@ -244,7 +236,8 @@ fun StationScreenTrainRow(
                                         append(event.headsign ?: "")
 
                                         if (!event.trip_short_name.isNullOrBlank()) {
-                                                // Add a space before the trip name if headsign exists
+                                                // Add a space before the trip name if headsign
+                                                // exists
                                                 if (length > 0) append(" ")
 
                                                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -256,7 +249,8 @@ fun StationScreenTrainRow(
                                 Text(
                                         text = headsignText,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        // Modifier.fillMaxWidth() allows wrapping; removing weight/width constraints
+                                        // Modifier.fillMaxWidth() allows wrapping; removing
+                                        // weight/width constraints
                                         // helps it behave like a natural paragraph.
                                         modifier = Modifier.padding(bottom = 2.dp)
                                 )
@@ -333,8 +327,7 @@ fun StationScreenTrainRow(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
                                                 modifier =
-                                                        Modifier
-                                                                .clip(RoundedCornerShape(2.dp))
+                                                        Modifier.clip(RoundedCornerShape(2.dp))
                                                                 .background(
                                                                         parseColor(
                                                                                 routeInfo.color,
@@ -365,8 +358,7 @@ fun StationScreenTrainRow(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier
-                                                        .background(
+                                                Modifier.background(
                                                                 MaterialTheme.colorScheme
                                                                         .surfaceVariant,
                                                                 RoundedCornerShape(4.dp)
@@ -526,8 +518,7 @@ fun StopScreenRow(
                                                                                 routeInfo
                                                                                         ?.short_name,
                                                                         modifier =
-                                                                                Modifier
-                                                                                        .height(
+                                                                                Modifier.height(
                                                                                                 20.dp
                                                                                         )
                                                                                         .padding(
@@ -548,8 +539,7 @@ fun StopScreenRow(
                                                                         )
                                                         androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier
-                                                                                .size(20.dp)
+                                                                        Modifier.size(20.dp)
                                                                                 .clip(CircleShape)
                                                                                 .background(
                                                                                         mtaColor
@@ -593,8 +583,7 @@ fun StopScreenRow(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier
-                                                                                .clip(
+                                                                        Modifier.clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -631,8 +620,7 @@ fun StopScreenRow(
                                                                                                 .SemiBold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier
-                                                                                .clip(
+                                                                        Modifier.clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -819,17 +807,14 @@ fun StationScreenTrainRowCompact(
 
         Row(
                 modifier =
-                        modifier
-                                .fillMaxWidth()
+                        modifier.fillMaxWidth()
                                 .clickable { onTripClick(event) }
                                 .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // 1. Route Name Bubble (Leftmost)
                 androidx.compose.foundation.layout.Box(
-                        modifier = Modifier
-                                .width(40.dp)
-                                .padding(horizontal = 2.dp),
+                        modifier = Modifier.width(40.dp).padding(horizontal = 2.dp),
                         contentAlignment = Alignment.Center
                 ) {
                         if (showRouteName && routeInfo?.short_name != null) {
@@ -842,8 +827,7 @@ fun StationScreenTrainRowCompact(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier
-                                                        .clip(RoundedCornerShape(2.dp))
+                                                Modifier.clip(RoundedCornerShape(2.dp))
                                                         .background(
                                                                 parseColor(
                                                                         routeInfo.color,
@@ -857,9 +841,7 @@ fun StationScreenTrainRowCompact(
 
                 // 2. Time (Vertical Stack)
                 Column(
-                        modifier = Modifier
-                                .width(70.dp)
-                                .padding(horizontal = 2.dp),
+                        modifier = Modifier.width(70.dp).padding(horizontal = 2.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -963,8 +945,8 @@ fun StationScreenTrainRowCompact(
                                                                 if (isPast)
                                                                         MaterialTheme.colorScheme
                                                                                 .primary.copy(
-                                                                                        alpha = 0.7f
-                                                                                )
+                                                                                alpha = 0.7f
+                                                                        )
                                                                 else
                                                                         MaterialTheme.colorScheme
                                                                                 .primary
@@ -987,8 +969,8 @@ fun StationScreenTrainRowCompact(
                                                                 if (isPast)
                                                                         MaterialTheme.colorScheme
                                                                                 .onSurface.copy(
-                                                                                        alpha = 0.7f
-                                                                                )
+                                                                                alpha = 0.7f
+                                                                        )
                                                                 else
                                                                         MaterialTheme.colorScheme
                                                                                 .onSurface
@@ -1012,9 +994,7 @@ fun StationScreenTrainRowCompact(
 
                 // 3. Info (Middle)
                 Column(
-                        modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 4.dp),
+                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
                         verticalArrangement = Arrangement.Center
                 ) {
                         // ---------------------------------------------------------
@@ -1036,7 +1016,8 @@ fun StationScreenTrainRowCompact(
                         Text(
                                 text = headsignText,
                                 style = MaterialTheme.typography.bodyMedium,
-                                // Modifier.fillMaxWidth() allows wrapping; removing weight/width constraints
+                                // Modifier.fillMaxWidth() allows wrapping; removing weight/width
+                                // constraints
                                 // helps it behave like a natural paragraph.
                                 modifier = Modifier.padding(bottom = 2.dp)
                         )
@@ -1078,8 +1059,7 @@ fun StationScreenTrainRowCompact(
                                                         imageLoader = imageLoader,
                                                         contentDescription = agencyName,
                                                         modifier =
-                                                                Modifier
-                                                                        .size(12.dp)
+                                                                Modifier.size(12.dp)
                                                                         .padding(end = 2.dp),
                                                         colorFilter = null
                                                 )
@@ -1095,12 +1075,12 @@ fun StationScreenTrainRowCompact(
                                 }
 
                                 if (showRouteName &&
-                                        routeInfo?.short_name == null &&
-                                        routeInfo?.long_name != null
+                                                routeInfo?.short_name == null &&
+                                                routeInfo?.long_name != null
                                 ) {
                                         if (showAgencyName &&
-                                                resolvedAgencyName != null &&
-                                                routeInfo?.long_name != null
+                                                        resolvedAgencyName != null &&
+                                                        routeInfo?.long_name != null
                                         ) {
                                                 Text(
                                                         text = " • ",
@@ -1125,8 +1105,7 @@ fun StationScreenTrainRowCompact(
                                                                 fontWeight = FontWeight.SemiBold
                                                         ),
                                                 modifier =
-                                                        Modifier
-                                                                .clip(RoundedCornerShape(2.dp))
+                                                        Modifier.clip(RoundedCornerShape(2.dp))
                                                                 .background(
                                                                         parseColor(
                                                                                 routeInfo.color,
@@ -1198,314 +1177,196 @@ fun StopScreenRowV2(
 
         val routeName = routeInfo?.short_name ?: routeInfo?.long_name
         val isLongName = !isRatp && !isMta && (routeName?.length ?: 0) > 8
+        val isBusOrMetro = routeInfo?.route_type in listOf(3, 11, 700, 0, 1, 5, 7, 12, 900)
 
         Column(
                 modifier =
-                        modifier
-                                .fillMaxWidth()
+                        modifier.fillMaxWidth()
                                 .clickable { onTripClick(event) }
-                                .padding(vertical = 2.dp)
+                                .defaultMinSize(minHeight = 48.dp)
+                                .padding(vertical = 4.dp)
         ) {
-                if (isLongName && routeName != null) {
-                        Text(
-                                text = routeName,
-                                color = parseColor(routeInfo?.text_color, Color.White),
-                                style =
-                                        MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold
-                                        ),
-                                modifier =
-                                        Modifier
-                                                .padding(start = 4.dp, bottom = 2.dp)
-                                                .clip(RoundedCornerShape(2.dp))
-                                                .background(
-                                                        parseColor(routeInfo?.color, Color.Gray)
-                                                )
-                                                .padding(horizontal = 4.dp, vertical = 1.dp)
-                        )
-                }
-
                 Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                 ) {
                         // 1. Name Column (Left) - Mode Specific Indicators
-                        androidx.compose.foundation.layout.Box(
-                                modifier = Modifier
-                                        .width(40.dp)
-                                        .padding(horizontal = 2.dp),
-                                contentAlignment = Alignment.Center
-                        ) {
-                                if (isRatp) {
-                                        val iconUrl =
-                                                RatpUtils.getRatpIconUrl(routeInfo?.short_name)
-                                        if (iconUrl != null) {
-                                                val context = LocalContext.current
-                                                val imageLoader =
-                                                        androidx.compose.runtime.remember(context) {
-                                                                ImageLoader.Builder(context)
-                                                                        .components {
-                                                                                add(
-                                                                                        SvgDecoder
-                                                                                                .Factory()
+                        if (isRatp || isMta || (!isLongName && routeName != null)) {
+                                androidx.compose.foundation.layout.Box(
+                                        modifier = Modifier.width(40.dp).padding(horizontal = 2.dp),
+                                        contentAlignment = Alignment.Center
+                                ) {
+                                        if (isRatp) {
+                                                val iconUrl =
+                                                        RatpUtils.getRatpIconUrl(
+                                                                routeInfo?.short_name
+                                                        )
+                                                if (iconUrl != null) {
+                                                        val context = LocalContext.current
+                                                        val imageLoader =
+                                                                androidx.compose.runtime.remember(
+                                                                        context
+                                                                ) {
+                                                                        ImageLoader.Builder(context)
+                                                                                .components {
+                                                                                        add(
+                                                                                                SvgDecoder
+                                                                                                        .Factory()
+                                                                                        )
+                                                                                }
+                                                                                .build()
+                                                                }
+                                                        AsyncImage(
+                                                                model =
+                                                                        ImageRequest.Builder(
+                                                                                        context
                                                                                 )
-                                                                        }
-                                                                        .build()
-                                                        }
-                                                AsyncImage(
-                                                        model =
-                                                                ImageRequest.Builder(context)
-                                                                        .data(iconUrl)
-                                                                        .crossfade(true)
-                                                                        .build(),
-                                                        imageLoader = imageLoader,
-                                                        contentDescription = routeInfo?.short_name,
+                                                                                .data(iconUrl)
+                                                                                .crossfade(true)
+                                                                                .build(),
+                                                                imageLoader = imageLoader,
+                                                                contentDescription =
+                                                                        routeInfo?.short_name,
+                                                                modifier =
+                                                                        Modifier.height(20.dp)
+                                                                                .padding(end = 4.dp)
+                                                        )
+                                                }
+                                        } else if (isMta) {
+                                                val mtaColor =
+                                                        MtaSubwayUtils.getMtaSubwayColor(
+                                                                routeInfo?.short_name!!
+                                                        )
+                                                val symbolShortName =
+                                                        MtaSubwayUtils.getMtaSymbolShortName(
+                                                                routeInfo.short_name
+                                                        )
+                                                androidx.compose.foundation.layout.Box(
                                                         modifier =
-                                                                Modifier
-                                                                        .height(20.dp)
-                                                                        .padding(end = 4.dp)
-                                                )
-                                        }
-                                } else if (isMta) {
-                                        val mtaColor =
-                                                MtaSubwayUtils.getMtaSubwayColor(
-                                                        routeInfo?.short_name!!
-                                                )
-                                        val symbolShortName =
-                                                MtaSubwayUtils.getMtaSymbolShortName(
-                                                        routeInfo.short_name
-                                                )
-                                        androidx.compose.foundation.layout.Box(
-                                                modifier =
-                                                        Modifier
-                                                                .size(20.dp)
-                                                                .clip(CircleShape)
-                                                                .background(mtaColor),
-                                                contentAlignment = Alignment.Center
-                                        ) {
-                                                Text(
-                                                        text = symbolShortName,
-                                                        color = Color.White,
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
+                                                                Modifier.size(20.dp)
+                                                                        .clip(CircleShape)
+                                                                        .background(mtaColor),
+                                                        contentAlignment = Alignment.Center
+                                                ) {
+                                                        Text(
+                                                                text = symbolShortName,
+                                                                color = Color.White,
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall.copy(
                                                                                 fontWeight =
                                                                                         FontWeight
                                                                                                 .Bold,
                                                                                 fontSize = 10.sp
                                                                         ),
-                                                        textAlign =
-                                                                androidx.compose.ui.text.style
-                                                                        .TextAlign.Center
-                                                )
-                                        }
-                                } else if (!isLongName) {
-                                        if (routeInfo?.short_name != null) {
-                                                Text(
-                                                        text = routeInfo.short_name,
-                                                        color =
-                                                                parseColor(
-                                                                        routeInfo.text_color,
-                                                                        Color.White
-                                                                ),
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
+                                                                textAlign =
+                                                                        androidx.compose.ui.text
+                                                                                .style.TextAlign
+                                                                                .Center
+                                                        )
+                                                }
+                                        } else if (!isLongName) {
+                                                if (routeInfo?.short_name != null) {
+                                                        Text(
+                                                                text = routeInfo.short_name,
+                                                                color =
+                                                                        parseColor(
+                                                                                routeInfo
+                                                                                        .text_color,
+                                                                                Color.White
+                                                                        ),
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall.copy(
                                                                                 fontWeight =
                                                                                         FontWeight
                                                                                                 .Bold,
                                                                                 fontSize = 10.sp
                                                                         ),
-                                                        modifier =
-                                                                Modifier
-                                                                        .clip(
-                                                                                RoundedCornerShape(
-                                                                                        2.dp
+                                                                modifier =
+                                                                        Modifier.clip(
+                                                                                        RoundedCornerShape(
+                                                                                                2.dp
+                                                                                        )
                                                                                 )
-                                                                        )
-                                                                        .background(
-                                                                                parseColor(
-                                                                                        routeInfo
-                                                                                                .color,
-                                                                                        Color.Gray
+                                                                                .background(
+                                                                                        parseColor(
+                                                                                                routeInfo
+                                                                                                        .color,
+                                                                                                Color.Gray
+                                                                                        )
                                                                                 )
-                                                                        )
-                                                                        .padding(
-                                                                                horizontal = 4.dp,
-                                                                                vertical = 1.dp
-                                                                        )
-                                                )
-                                        } else if (routeInfo?.long_name != null) {
-                                                Text(
-                                                        text = routeInfo.long_name,
-                                                        color =
-                                                                parseColor(
-                                                                        routeInfo.text_color,
-                                                                        Color.White
-                                                                ),
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
+                                                                                .padding(
+                                                                                        horizontal =
+                                                                                                4.dp,
+                                                                                        vertical =
+                                                                                                1.dp
+                                                                                )
+                                                        )
+                                                } else if (routeInfo?.long_name != null) {
+                                                        Text(
+                                                                text = routeInfo.long_name,
+                                                                color =
+                                                                        parseColor(
+                                                                                routeInfo
+                                                                                        .text_color,
+                                                                                Color.White
+                                                                        ),
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall.copy(
                                                                                 fontWeight =
                                                                                         FontWeight
                                                                                                 .SemiBold,
                                                                                 fontSize = 10.sp
                                                                         ),
-                                                        modifier =
-                                                                Modifier
-                                                                        .clip(
-                                                                                RoundedCornerShape(
-                                                                                        2.dp
+                                                                modifier =
+                                                                        Modifier.clip(
+                                                                                        RoundedCornerShape(
+                                                                                                2.dp
+                                                                                        )
                                                                                 )
-                                                                        )
-                                                                        .background(
-                                                                                parseColor(
-                                                                                        routeInfo
-                                                                                                .color,
-                                                                                        Color.Gray
+                                                                                .background(
+                                                                                        parseColor(
+                                                                                                routeInfo
+                                                                                                        .color,
+                                                                                                Color.Gray
+                                                                                        )
                                                                                 )
-                                                                        )
-                                                                        .padding(
-                                                                                horizontal = 4.dp,
-                                                                                vertical = 1.dp
-                                                                        )
-                                                )
+                                                                                .padding(
+                                                                                        horizontal =
+                                                                                                4.dp,
+                                                                                        vertical =
+                                                                                                1.dp
+                                                                                )
+                                                        )
+                                                }
                                         }
                                 }
                         }
 
                         // 2. Time Column (Vertical Stack) - Reused from
                         // StationScreenTrainRowCompact logic
-                        Column(
-                                modifier = Modifier
-                                        .width(70.dp)
-                                        .padding(horizontal = 2.dp),
-                                horizontalAlignment = Alignment.Start
-                        ) {
-                                if (event.trip_cancelled == true) {
-                                        Text(
-                                                text = stringResource(R.string.cancelled),
-                                                color = MaterialTheme.colorScheme.error,
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontSize = 10.sp,
-                                                                fontWeight = FontWeight.Bold
-                                                        )
-                                        )
-                                        if (schedTime != null) {
-                                                FormattedTimeText(
-                                                        timezone = zoneId.id,
-                                                        timeSeconds = schedTime,
-                                                        showSeconds = effectiveShowSeconds,
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(fontSize = 10.sp),
-                                                        textDecoration = TextDecoration.LineThrough,
-                                                        color =
-                                                                MaterialTheme.colorScheme
-                                                                        .onSurfaceVariant.copy(
-                                                                                alpha = 0.7f
-                                                                        )
-                                                )
-                                        }
-                                } else if (event.trip_deleted == true) {
-                                        Text(
-                                                text = stringResource(R.string.deleted),
-                                                color = MaterialTheme.colorScheme.error,
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontSize = 10.sp
-                                                        )
-                                        )
-                                } else if (event.stop_cancelled == true) {
-                                        Text(
-                                                text = stringResource(R.string.stop_cancelled),
-                                                color = MaterialTheme.colorScheme.error,
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontSize = 10.sp
-                                                        )
-                                        )
-                                } else {
-                                        if (rtTime != null &&
-                                                schedTime != null &&
-                                                rtTime != schedTime
-                                        ) {
-                                                // Sched (crossed)
-                                                FormattedTimeText(
-                                                        timezone = zoneId.id,
-                                                        timeSeconds = schedTime,
-                                                        showSeconds = effectiveShowSeconds,
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(fontSize = 10.sp),
-                                                        textDecoration = TextDecoration.LineThrough,
-                                                        color =
-                                                                MaterialTheme.colorScheme
-                                                                        .onSurfaceVariant.copy(
-                                                                                alpha = 0.7f
-                                                                        )
-                                                )
-                                                // Delay
-                                                DelayDiff(
-                                                        diff = rtTime - schedTime,
-                                                        show_seconds = effectiveShowSeconds,
-                                                        use_symbol_sign = useSymbolSign
-                                                )
-                                                // Realtime
-                                                FormattedTimeText(
-                                                        timezone = zoneId.id,
-                                                        timeSeconds = rtTime,
-                                                        showSeconds = effectiveShowSeconds,
+                        val timeColumn: @Composable () -> Unit = {
+                                Column(
+                                        modifier = Modifier.width(80.dp).padding(horizontal = 2.dp),
+                                        horizontalAlignment =
+                                                if (isBusOrMetro) Alignment.End else Alignment.Start
+                                ) {
+                                        if (event.trip_cancelled == true) {
+                                                Text(
+                                                        text = stringResource(R.string.cancelled),
+                                                        color = MaterialTheme.colorScheme.error,
                                                         style =
                                                                 MaterialTheme.typography.labelSmall
                                                                         .copy(
-                                                                                fontSize = 11.sp,
+                                                                                fontSize = 13.sp,
                                                                                 fontWeight =
                                                                                         FontWeight
-                                                                                                .Medium
-                                                                        ),
-                                                        color =
-                                                                if (isPast)
-                                                                        MaterialTheme.colorScheme
-                                                                                .primary.copy(
-                                                                                        alpha = 0.7f
-                                                                                )
-                                                                else
-                                                                        MaterialTheme.colorScheme
-                                                                                .primary
+                                                                                                .Bold
+                                                                        )
                                                 )
-                                        } else {
-                                                // On Time OR No Realtime Data
-                                                if (rtTime != null) {
-                                                        FormattedTimeText(
-                                                                timezone = zoneId.id,
-                                                                timeSeconds = rtTime,
-                                                                showSeconds = effectiveShowSeconds,
-                                                                style =
-                                                                        MaterialTheme.typography
-                                                                                .labelSmall.copy(
-                                                                                        fontSize = 11.sp,
-                                                                                        fontWeight =
-                                                                                                FontWeight
-                                                                                                        .Medium
-                                                                                ),
-                                                                color =
-                                                                        if (isPast)
-                                                                                MaterialTheme
-                                                                                        .colorScheme
-                                                                                        .primary
-                                                                                        .copy(
-                                                                                                alpha =
-                                                                                                        0.7f
-                                                                                        )
-                                                                        else
-                                                                                MaterialTheme
-                                                                                        .colorScheme
-                                                                                        .primary
-                                                        )
-                                                } else if (schedTime != null) {
+                                                if (schedTime != null) {
                                                         FormattedTimeText(
                                                                 timezone = zoneId.id,
                                                                 timeSeconds = schedTime,
@@ -1513,16 +1374,81 @@ fun StopScreenRowV2(
                                                                 style =
                                                                         MaterialTheme.typography
                                                                                 .labelSmall.copy(
-                                                                                        fontSize = 11.sp,
-                                                                                        fontWeight =
-                                                                                                FontWeight
-                                                                                                        .Medium
-                                                                                ),
+                                                                                fontSize = 13.sp
+                                                                        ),
+                                                                textDecoration =
+                                                                        TextDecoration.LineThrough,
+                                                                color =
+                                                                        MaterialTheme.colorScheme
+                                                                                .onSurfaceVariant
+                                                                                .copy(alpha = 0.7f)
+                                                        )
+                                                }
+                                        } else if (event.trip_deleted == true) {
+                                                Text(
+                                                        text = stringResource(R.string.deleted),
+                                                        color = MaterialTheme.colorScheme.error,
+                                                        style =
+                                                                MaterialTheme.typography.labelSmall
+                                                                        .copy(fontSize = 10.sp)
+                                                )
+                                        } else if (event.stop_cancelled == true) {
+                                                Text(
+                                                        text =
+                                                                stringResource(
+                                                                        R.string.stop_cancelled
+                                                                ),
+                                                        color = MaterialTheme.colorScheme.error,
+                                                        style =
+                                                                MaterialTheme.typography.labelSmall
+                                                                        .copy(fontSize = 10.sp)
+                                                )
+                                        } else {
+                                                if (rtTime != null &&
+                                                                schedTime != null &&
+                                                                rtTime != schedTime
+                                                ) {
+                                                        // Sched (crossed)
+                                                        FormattedTimeText(
+                                                                timezone = zoneId.id,
+                                                                timeSeconds = schedTime,
+                                                                showSeconds = effectiveShowSeconds,
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall.copy(
+                                                                                fontSize = 13.sp
+                                                                        ),
+                                                                textDecoration =
+                                                                        TextDecoration.LineThrough,
+                                                                color =
+                                                                        MaterialTheme.colorScheme
+                                                                                .onSurfaceVariant
+                                                                                .copy(alpha = 0.7f)
+                                                        )
+                                                        // Delay
+                                                        DelayDiff(
+                                                                diff = rtTime - schedTime,
+                                                                show_seconds = effectiveShowSeconds,
+                                                                use_symbol_sign = useSymbolSign
+                                                        )
+                                                        // Realtime
+                                                        FormattedTimeText(
+                                                                timezone = zoneId.id,
+                                                                timeSeconds = rtTime,
+                                                                showSeconds = effectiveShowSeconds,
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall.copy(
+                                                                                fontSize = 14.sp,
+                                                                                fontWeight =
+                                                                                        FontWeight
+                                                                                                .Medium
+                                                                        ),
                                                                 color =
                                                                         if (isPast)
                                                                                 MaterialTheme
                                                                                         .colorScheme
-                                                                                        .onSurface
+                                                                                        .primary
                                                                                         .copy(
                                                                                                 alpha =
                                                                                                         0.7f
@@ -1530,115 +1456,243 @@ fun StopScreenRowV2(
                                                                         else
                                                                                 MaterialTheme
                                                                                         .colorScheme
-                                                                                        .onSurface
+                                                                                        .primary
                                                         )
+                                                } else {
+                                                        // On Time OR No Realtime Data
+                                                        if (rtTime != null) {
+                                                                FormattedTimeText(
+                                                                        timezone = zoneId.id,
+                                                                        timeSeconds = rtTime,
+                                                                        showSeconds =
+                                                                                effectiveShowSeconds,
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .labelSmall
+                                                                                        .copy(
+                                                                                                fontSize =
+                                                                                                        14.sp,
+                                                                                                fontWeight =
+                                                                                                        FontWeight
+                                                                                                                .Medium
+                                                                                        ),
+                                                                        color =
+                                                                                if (isPast)
+                                                                                        MaterialTheme
+                                                                                                .colorScheme
+                                                                                                .primary
+                                                                                                .copy(
+                                                                                                        alpha =
+                                                                                                                0.7f
+                                                                                                )
+                                                                                else
+                                                                                        MaterialTheme
+                                                                                                .colorScheme
+                                                                                                .primary
+                                                                )
+                                                        } else if (schedTime != null) {
+                                                                FormattedTimeText(
+                                                                        timezone = zoneId.id,
+                                                                        timeSeconds = schedTime,
+                                                                        showSeconds =
+                                                                                effectiveShowSeconds,
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .labelSmall
+                                                                                        .copy(
+                                                                                                fontSize =
+                                                                                                        14.sp,
+                                                                                                fontWeight =
+                                                                                                        FontWeight
+                                                                                                                .Medium
+                                                                                        ),
+                                                                        color =
+                                                                                if (isPast)
+                                                                                        MaterialTheme
+                                                                                                .colorScheme
+                                                                                                .onSurface
+                                                                                                .copy(
+                                                                                                        alpha =
+                                                                                                                0.7f
+                                                                                                )
+                                                                                else
+                                                                                        MaterialTheme
+                                                                                                .colorScheme
+                                                                                                .onSurface
+                                                                )
+                                                        }
                                                 }
                                         }
-                                }
-                                // TimeDiff (Countdown)
-                                val diff = (rtTime ?: schedTime ?: 0) - currentTime
-                                if (diff < 3600 && (rtTime ?: schedTime) != null) {
-                                        SelfUpdatingDiffTimer(
-                                                targetTimeSeconds = rtTime ?: schedTime ?: 0,
-                                                showBrackets = false,
-                                                showSeconds = effectiveShowSeconds && diff < 3600,
-                                                showDays = false,
-                                                numSize = 10.sp,
-                                                showPlus = false
-                                        )
+                                        // TimeDiff (Countdown)
+                                        val diff = (rtTime ?: schedTime ?: 0) - currentTime
+                                        if (diff < 3600 && (rtTime ?: schedTime) != null) {
+                                                SelfUpdatingDiffTimer(
+                                                        targetTimeSeconds = rtTime
+                                                                        ?: schedTime ?: 0,
+                                                        showBrackets = false,
+                                                        showSeconds =
+                                                                effectiveShowSeconds && diff < 3600,
+                                                        showDays = false,
+                                                        numSize = 13.sp,
+                                                        showPlus = false
+                                                )
+                                        }
                                 }
                         }
 
                         // 3. Info (Middle) - Headsign
-                        Column(
-                                modifier = Modifier
-                                        .weight(1f)
-                                        .padding(horizontal = 4.dp),
-                                verticalArrangement = Arrangement.Center
-                        ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                                text = event.headsign ?: "",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                maxLines = 1,
-                                                overflow =
-                                                        androidx.compose.ui.text.style.TextOverflow
-                                                                .Ellipsis
-                                        )
-                                        if (!event.trip_short_name.isNullOrBlank()) {
+                        val headsignColumn: @Composable () -> Unit = {
+                                Column(
+                                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                                        verticalArrangement = Arrangement.Center
+                                ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                if (isLongName && routeName != null) {
+                                                        Text(
+                                                                text = routeName,
+                                                                color =
+                                                                        parseColor(
+                                                                                routeInfo
+                                                                                        ?.text_color,
+                                                                                Color.White
+                                                                        ),
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall.copy(
+                                                                                fontSize = 10.sp,
+                                                                                fontWeight =
+                                                                                        FontWeight
+                                                                                                .Bold
+                                                                        ),
+                                                                modifier =
+                                                                        Modifier.padding(end = 4.dp)
+                                                                                .clip(
+                                                                                        RoundedCornerShape(
+                                                                                                2.dp
+                                                                                        )
+                                                                                )
+                                                                                .background(
+                                                                                        parseColor(
+                                                                                                routeInfo
+                                                                                                        ?.color,
+                                                                                                Color.Gray
+                                                                                        )
+                                                                                )
+                                                                                .padding(
+                                                                                        horizontal =
+                                                                                                4.dp,
+                                                                                        vertical =
+                                                                                                1.dp
+                                                                                )
+                                                        )
+                                                }
                                                 Text(
-                                                        text = " ${event.trip_short_name}",
+                                                        text = event.headsign ?: "",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        maxLines = 1,
+                                                        overflow =
+                                                                androidx.compose.ui.text.style
+                                                                        .TextOverflow.Ellipsis
+                                                )
+                                                if (!event.trip_short_name.isNullOrBlank()) {
+                                                        Text(
+                                                                text = " ${event.trip_short_name}",
+                                                                style =
+                                                                        MaterialTheme.typography
+                                                                                .labelSmall.copy(
+                                                                                fontWeight =
+                                                                                        FontWeight
+                                                                                                .Bold
+                                                                        ),
+                                                                modifier =
+                                                                        Modifier.padding(
+                                                                                start = 2.dp
+                                                                        )
+                                                        )
+                                                }
+                                        }
+                                        if (event.last_stop == true) {
+                                                Text(
+                                                        text = stringResource(R.string.last_stop),
+                                                        style =
+                                                                MaterialTheme.typography.labelSmall
+                                                                        .copy(fontSize = 10.sp),
+                                                        fontWeight = FontWeight.Bold,
+                                                        color =
+                                                                MaterialTheme.colorScheme
+                                                                        .onSurfaceVariant
+                                                )
+                                        }
+                                        // Display vehicle number if available
+                                        if (!event.vehicle_number.isNullOrBlank()) {
+                                                Text(
+                                                        text =
+                                                                "${stringResource(R.string.vehicle)}: ${event.vehicle_number}",
+                                                        style =
+                                                                MaterialTheme.typography.labelSmall
+                                                                        .copy(fontSize = 10.sp),
+                                                        color =
+                                                                MaterialTheme.colorScheme
+                                                                        .onSurfaceVariant
+                                                )
+                                        }
+                                }
+                        }
+
+                        // 4. Platform (Right)
+                        val platformColumn: @Composable () -> Unit = {
+                                if (!event.platform_string_realtime.isNullOrBlank()) {
+                                        Column(
+                                                modifier = Modifier.width(80.dp),
+                                                horizontalAlignment = Alignment.End
+                                        ) {
+                                                Text(
+                                                        text =
+                                                                event.platform_string_realtime
+                                                                        .replace("Track", "")
+                                                                        .replace(
+                                                                                "platform",
+                                                                                "",
+                                                                                ignoreCase = true
+                                                                        )
+                                                                        .replace("Platform", "")
+                                                                        .trim(),
                                                         style =
                                                                 MaterialTheme.typography.labelSmall
                                                                         .copy(
                                                                                 fontWeight =
                                                                                         FontWeight
-                                                                                                .Bold
+                                                                                                .Bold,
+                                                                                fontSize = 10.sp
                                                                         ),
-                                                        modifier = Modifier.padding(start = 2.dp)
+                                                        modifier =
+                                                                Modifier.background(
+                                                                                MaterialTheme
+                                                                                        .colorScheme
+                                                                                        .surfaceVariant,
+                                                                                RoundedCornerShape(
+                                                                                        4.dp
+                                                                                )
+                                                                        )
+                                                                        .padding(
+                                                                                horizontal = 4.dp,
+                                                                                vertical = 2.dp
+                                                                        )
                                                 )
                                         }
                                 }
-                                if (event.last_stop == true) {
-                                        Text(
-                                                text = stringResource(R.string.last_stop),
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontSize = 10.sp
-                                                        ),
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                }
-                                // Display vehicle number if available
-                                if (!event.vehicle_number.isNullOrBlank()) {
-                                        Text(
-                                                text =
-                                                        "${stringResource(R.string.vehicle)}: ${event.vehicle_number}",
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontSize = 10.sp
-                                                        ),
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                }
                         }
 
-                        // 4. Platform (Right)
-                        Column(
-                                modifier = Modifier.width(80.dp),
-                                horizontalAlignment = Alignment.End
-                        ) {
-                                if (!event.platform_string_realtime.isNullOrBlank()) {
-                                        Text(
-                                                text =
-                                                        event.platform_string_realtime
-                                                                .replace("Track", "")
-                                                                .replace(
-                                                                        "platform",
-                                                                        "",
-                                                                        ignoreCase = true
-                                                                )
-                                                                .replace("Platform", "")
-                                                                .trim(),
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 10.sp
-                                                        ),
-                                                modifier =
-                                                        Modifier
-                                                                .background(
-                                                                        MaterialTheme.colorScheme
-                                                                                .surfaceVariant,
-                                                                        RoundedCornerShape(4.dp)
-                                                                )
-                                                                .padding(
-                                                                        horizontal = 4.dp,
-                                                                        vertical = 2.dp
-                                                                )
-                                        )
-                                }
+                        if (isBusOrMetro) {
+                                headsignColumn()
+                                timeColumn()
+                                platformColumn()
+                        } else {
+                                timeColumn()
+                                headsignColumn()
+                                platformColumn()
                         }
                 }
         }
