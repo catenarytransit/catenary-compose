@@ -1618,7 +1618,7 @@ fun StopScreenRowV2(
                                                 }
                                                 Text(
                                                         text = event.headsign ?: "",
-                                                        style = MaterialTheme.typography.bodySmall,
+                                                        style = MaterialTheme.typography.bodyMedium,
                                                         maxLines = 1,
                                                         overflow =
                                                                 androidx.compose.ui.text.style
