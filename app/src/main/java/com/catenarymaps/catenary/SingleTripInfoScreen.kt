@@ -1134,7 +1134,6 @@ fun VehicleInfoDetails(vehicleData: VehicleRealtimeData, usUnits: Boolean) {
                 Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
-
                 ) {
                         Text(
                                 text = stringResource(R.string.lastupdated) + ": ",
@@ -1326,9 +1325,6 @@ fun StopListItem(
                                                                                                         FontWeight
                                                                                                                 .Normal
                                                                                         ),
-                                                                        textDecoration =
-                                                                                TextDecoration
-                                                                                        .LineThrough,
                                                                         modifier =
                                                                                 Modifier.padding(
                                                                                         end = 4.dp
@@ -1438,9 +1434,6 @@ fun StopListItem(
                                                                                                         FontWeight
                                                                                                                 .Normal
                                                                                         ),
-                                                                        textDecoration =
-                                                                                TextDecoration
-                                                                                        .LineThrough,
                                                                         modifier =
                                                                                 Modifier.padding(
                                                                                         end = 4.dp
@@ -1571,9 +1564,6 @@ fun StopListItem(
                                                                                                                 FontWeight
                                                                                                                         .Normal
                                                                                                 ),
-                                                                                textDecoration =
-                                                                                        TextDecoration
-                                                                                                .LineThrough,
                                                                                 modifier =
                                                                                         Modifier.padding(
                                                                                                 end =
@@ -1641,7 +1631,6 @@ fun StopListItem(
                                                                                                 y =
                                                                                                         (-4).dp
                                                                                         )
-
                                                                         )
                                                                 }
                                                                 if (showCountdown) {
@@ -2206,8 +2195,7 @@ fun SbbTimeBlock(
                                 color =
                                         if (isInactive) Color.Gray
                                         else MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelSmall,
-                                textDecoration = TextDecoration.LineThrough
+                                style = MaterialTheme.typography.labelSmall
                         )
                 }
 
