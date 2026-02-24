@@ -55,9 +55,9 @@ fun AddStops(
                 rememberVectorSource(uri = STOP_SOURCES.getValue("stationfeatures"))
 
         // Fonts
-        val barlowRegular = const(listOf("Barlow-Regular"))
-        val barlowMedium = const(listOf("Barlow-Medium"))
-        val barlowBold = const(listOf("Barlow-Bold"))
+        val barlowRegular = const(listOf("Arimo-Regular"))
+        val barlowMedium = const(listOf("Arimo-Medium"))
+        val barlowBold = const(listOf("Arimo-Bold"))
 
         // Colors (inside/outside dot)
         val circleInside = if (isDark) Color(0xFF1C2636) else Color(0xFFFFFFFF)

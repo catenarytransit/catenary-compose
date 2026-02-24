@@ -66,16 +66,12 @@ fun StationScreenTrainRow(
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
 
         Row(
-                modifier = modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // 1. Route Name Bubble (Leftmost)
                 androidx.compose.foundation.layout.Box(
-                        modifier = Modifier
-                                .width(40.dp)
-                                .padding(horizontal = 2.dp),
+                        modifier = Modifier.width(40.dp).padding(horizontal = 2.dp),
                         contentAlignment = Alignment.Center
                 ) {
                         if (showRouteName && routeInfo?.short_name != null) {
@@ -88,8 +84,7 @@ fun StationScreenTrainRow(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier
-                                                        .clip(RoundedCornerShape(2.dp))
+                                                Modifier.clip(RoundedCornerShape(2.dp))
                                                         .background(
                                                                 parseColor(
                                                                         routeInfo.color,
@@ -102,9 +97,7 @@ fun StationScreenTrainRow(
                 }
                 // Left: Time (Vertical Stack)
                 Column(
-                        modifier = Modifier
-                                .width(70.dp)
-                                .padding(horizontal = 2.dp),
+                        modifier = Modifier.width(70.dp).padding(horizontal = 2.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -231,9 +224,7 @@ fun StationScreenTrainRow(
                 }
 
                 // Middle: Info
-                Column(modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp)) {
+                Column(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                                 // ---------------------------------------------------------
                                 // ROW 1: Headsign + Trip Name (Merged)
@@ -333,8 +324,7 @@ fun StationScreenTrainRow(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
                                                 modifier =
-                                                        Modifier
-                                                                .clip(RoundedCornerShape(2.dp))
+                                                        Modifier.clip(RoundedCornerShape(2.dp))
                                                                 .background(
                                                                         parseColor(
                                                                                 routeInfo.color,
@@ -365,8 +355,7 @@ fun StationScreenTrainRow(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier
-                                                        .background(
+                                                Modifier.background(
                                                                 MaterialTheme.colorScheme
                                                                         .surfaceVariant,
                                                                 RoundedCornerShape(4.dp)
@@ -523,8 +512,7 @@ fun StopScreenRow(
                                                                                 routeInfo
                                                                                         ?.short_name,
                                                                         modifier =
-                                                                                Modifier
-                                                                                        .height(
+                                                                                Modifier.height(
                                                                                                 20.dp
                                                                                         )
                                                                                         .padding(
@@ -545,8 +533,7 @@ fun StopScreenRow(
                                                                         )
                                                         androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier
-                                                                                .size(20.dp)
+                                                                        Modifier.size(20.dp)
                                                                                 .clip(CircleShape)
                                                                                 .background(
                                                                                         mtaColor
@@ -590,8 +577,7 @@ fun StopScreenRow(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier
-                                                                                .clip(
+                                                                        Modifier.clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -628,8 +614,7 @@ fun StopScreenRow(
                                                                                                 .SemiBold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier
-                                                                                .clip(
+                                                                        Modifier.clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -816,17 +801,14 @@ fun StationScreenTrainRowCompact(
 
         Row(
                 modifier =
-                        modifier
-                                .fillMaxWidth()
+                        modifier.fillMaxWidth()
                                 .clickable { onTripClick(event) }
                                 .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // 1. Route Name Bubble (Leftmost)
                 androidx.compose.foundation.layout.Box(
-                        modifier = Modifier
-                                .width(40.dp)
-                                .padding(horizontal = 2.dp),
+                        modifier = Modifier.width(40.dp).padding(horizontal = 2.dp),
                         contentAlignment = Alignment.Center
                 ) {
                         if (showRouteName && routeInfo?.short_name != null) {
@@ -839,8 +821,7 @@ fun StationScreenTrainRowCompact(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier
-                                                        .clip(RoundedCornerShape(2.dp))
+                                                Modifier.clip(RoundedCornerShape(2.dp))
                                                         .background(
                                                                 parseColor(
                                                                         routeInfo.color,
@@ -854,9 +835,7 @@ fun StationScreenTrainRowCompact(
 
                 // 2. Time (Vertical Stack)
                 Column(
-                        modifier = Modifier
-                                .width(70.dp)
-                                .padding(horizontal = 2.dp),
+                        modifier = Modifier.width(70.dp).padding(horizontal = 2.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -1007,9 +986,7 @@ fun StationScreenTrainRowCompact(
 
                 // 3. Info (Middle)
                 Column(
-                        modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 4.dp),
+                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
                         verticalArrangement = Arrangement.Center
                 ) {
                         // ---------------------------------------------------------
@@ -1074,8 +1051,7 @@ fun StationScreenTrainRowCompact(
                                                         imageLoader = imageLoader,
                                                         contentDescription = agencyName,
                                                         modifier =
-                                                                Modifier
-                                                                        .size(12.dp)
+                                                                Modifier.size(12.dp)
                                                                         .padding(end = 2.dp),
                                                         colorFilter = null
                                                 )
@@ -1121,8 +1097,7 @@ fun StationScreenTrainRowCompact(
                                                                 fontWeight = FontWeight.SemiBold
                                                         ),
                                                 modifier =
-                                                        Modifier
-                                                                .clip(RoundedCornerShape(2.dp))
+                                                        Modifier.clip(RoundedCornerShape(2.dp))
                                                                 .background(
                                                                         parseColor(
                                                                                 routeInfo.color,
@@ -1198,8 +1173,7 @@ fun StopScreenRowV2(
 
         Column(
                 modifier =
-                        modifier
-                                .fillMaxWidth()
+                        modifier.fillMaxWidth()
                                 .clickable { onTripClick(event) }
                                 .defaultMinSize(minHeight = 48.dp)
                                 .padding(vertical = 4.dp),
@@ -1210,161 +1184,185 @@ fun StopScreenRowV2(
                         verticalAlignment = Alignment.CenterVertically
                 ) {
                         // 1. Name Column (Left) - Mode Specific Indicators
-                        if (isRatp || isMta || (!isLongName && routeName != null)) {
-                                androidx.compose.foundation.layout.Box(
-                                        modifier = Modifier
-                                                .width(40.dp)
-                                                .padding(horizontal = 2.dp),
-                                        contentAlignment = Alignment.Center
-                                ) {
-                                        if (isRatp) {
-                                                val iconUrl =
-                                                        RatpUtils.getRatpIconUrl(
-                                                                routeInfo?.short_name
-                                                        )
-                                                if (iconUrl != null) {
-                                                        val context = LocalContext.current
-                                                        val imageLoader =
-                                                                androidx.compose.runtime.remember(
-                                                                        context
-                                                                ) {
-                                                                        ImageLoader.Builder(context)
-                                                                                .components {
-                                                                                        add(
-                                                                                                SvgDecoder
-                                                                                                        .Factory()
-                                                                                        )
+                        val nameColumn: @Composable () -> Unit = {
+                                if (isRatp || isMta || (!isLongName && routeName != null)) {
+                                        androidx.compose.foundation.layout.Box(
+                                                modifier =
+                                                        Modifier.width(40.dp)
+                                                                .padding(horizontal = 2.dp),
+                                                contentAlignment = Alignment.Center
+                                        ) {
+                                                if (isRatp) {
+                                                        val iconUrl =
+                                                                RatpUtils.getRatpIconUrl(
+                                                                        routeInfo?.short_name
+                                                                )
+                                                        if (iconUrl != null) {
+                                                                val context = LocalContext.current
+                                                                val imageLoader =
+                                                                        androidx.compose.runtime
+                                                                                .remember(context) {
+                                                                                        ImageLoader
+                                                                                                .Builder(
+                                                                                                        context
+                                                                                                )
+                                                                                                .components {
+                                                                                                        add(
+                                                                                                                SvgDecoder
+                                                                                                                        .Factory()
+                                                                                                        )
+                                                                                                }
+                                                                                                .build()
                                                                                 }
-                                                                                .build()
-                                                                }
-                                                        AsyncImage(
-                                                                model =
-                                                                        ImageRequest.Builder(
-                                                                                        context
-                                                                                )
-                                                                                .data(iconUrl)
-                                                                                .crossfade(true)
-                                                                                .build(),
-                                                                imageLoader = imageLoader,
-                                                                contentDescription =
-                                                                        routeInfo?.short_name,
-                                                                modifier =
-                                                                        Modifier
-                                                                                .height(20.dp)
-                                                                                .padding(end = 4.dp)
-                                                        )
-                                                }
-                                        } else if (isMta) {
-                                                val mtaColor =
-                                                        MtaSubwayUtils.getMtaSubwayColor(
-                                                                routeInfo?.short_name!!
-                                                        )
-                                                val symbolShortName =
-                                                        MtaSubwayUtils.getMtaSymbolShortName(
-                                                                routeInfo.short_name
-                                                        )
-                                                androidx.compose.foundation.layout.Box(
-                                                        modifier =
-                                                                Modifier
-                                                                        .size(20.dp)
-                                                                        .clip(CircleShape)
-                                                                        .background(mtaColor),
-                                                        contentAlignment = Alignment.Center
-                                                ) {
-                                                        Text(
-                                                                text = symbolShortName,
-                                                                color = Color.White,
-                                                                style =
-                                                                        MaterialTheme.typography
-                                                                                .labelSmall.copy(
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .Bold,
-                                                                                fontSize = 10.sp
-                                                                        ),
-                                                                textAlign =
-                                                                        androidx.compose.ui.text
-                                                                                .style.TextAlign
-                                                                                .Center
-                                                        )
-                                                }
-                                        } else if (!isLongName) {
-                                                if (routeInfo?.short_name != null) {
-                                                        Text(
-                                                                text = routeInfo.short_name,
-                                                                color =
-                                                                        parseColor(
+                                                                AsyncImage(
+                                                                        model =
+                                                                                ImageRequest
+                                                                                        .Builder(
+                                                                                                context
+                                                                                        )
+                                                                                        .data(
+                                                                                                iconUrl
+                                                                                        )
+                                                                                        .crossfade(
+                                                                                                true
+                                                                                        )
+                                                                                        .build(),
+                                                                        imageLoader = imageLoader,
+                                                                        contentDescription =
                                                                                 routeInfo
-                                                                                        .text_color,
-                                                                                Color.White
-                                                                        ),
-                                                                style =
-                                                                        MaterialTheme.typography
-                                                                                .labelSmall.copy(
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .Bold,
-                                                                                fontSize = 10.sp
-                                                                        ),
+                                                                                        ?.short_name,
+                                                                        modifier =
+                                                                                Modifier.height(
+                                                                                                20.dp
+                                                                                        )
+                                                                                        .padding(
+                                                                                                end =
+                                                                                                        4.dp
+                                                                                        )
+                                                                )
+                                                        }
+                                                } else if (isMta) {
+                                                        val mtaColor =
+                                                                MtaSubwayUtils.getMtaSubwayColor(
+                                                                        routeInfo?.short_name!!
+                                                                )
+                                                        val symbolShortName =
+                                                                MtaSubwayUtils
+                                                                        .getMtaSymbolShortName(
+                                                                                routeInfo.short_name
+                                                                        )
+                                                        androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier
-                                                                                .clip(
-                                                                                        RoundedCornerShape(
-                                                                                                2.dp
-                                                                                        )
-                                                                                )
+                                                                        Modifier.size(20.dp)
+                                                                                .clip(CircleShape)
                                                                                 .background(
-                                                                                        parseColor(
-                                                                                                routeInfo
-                                                                                                        .color,
-                                                                                                Color.Gray
+                                                                                        mtaColor
+                                                                                ),
+                                                                contentAlignment = Alignment.Center
+                                                        ) {
+                                                                Text(
+                                                                        text = symbolShortName,
+                                                                        color = Color.White,
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .labelSmall
+                                                                                        .copy(
+                                                                                                fontWeight =
+                                                                                                        FontWeight
+                                                                                                                .Bold,
+                                                                                                fontSize =
+                                                                                                        10.sp
+                                                                                        ),
+                                                                        textAlign =
+                                                                                androidx.compose.ui
+                                                                                        .text.style
+                                                                                        .TextAlign
+                                                                                        .Center
+                                                                )
+                                                        }
+                                                } else if (!isLongName) {
+                                                        if (routeInfo?.short_name != null) {
+                                                                Text(
+                                                                        text = routeInfo.short_name,
+                                                                        color =
+                                                                                parseColor(
+                                                                                        routeInfo
+                                                                                                .text_color,
+                                                                                        Color.White
+                                                                                ),
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .labelSmall
+                                                                                        .copy(
+                                                                                                fontWeight =
+                                                                                                        FontWeight
+                                                                                                                .Bold,
+                                                                                                fontSize =
+                                                                                                        10.sp
+                                                                                        ),
+                                                                        modifier =
+                                                                                Modifier.clip(
+                                                                                                RoundedCornerShape(
+                                                                                                        2.dp
+                                                                                                )
                                                                                         )
-                                                                                )
-                                                                                .padding(
-                                                                                        horizontal =
-                                                                                                4.dp,
-                                                                                        vertical =
-                                                                                                1.dp
-                                                                                )
-                                                        )
-                                                } else if (routeInfo?.long_name != null) {
-                                                        Text(
-                                                                text = routeInfo.long_name,
-                                                                color =
-                                                                        parseColor(
-                                                                                routeInfo
-                                                                                        .text_color,
-                                                                                Color.White
-                                                                        ),
-                                                                style =
-                                                                        MaterialTheme.typography
-                                                                                .labelSmall.copy(
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .SemiBold,
-                                                                                fontSize = 10.sp
-                                                                        ),
-                                                                modifier =
-                                                                        Modifier
-                                                                                .clip(
-                                                                                        RoundedCornerShape(
-                                                                                                2.dp
+                                                                                        .background(
+                                                                                                parseColor(
+                                                                                                        routeInfo
+                                                                                                                .color,
+                                                                                                        Color.Gray
+                                                                                                )
                                                                                         )
-                                                                                )
-                                                                                .background(
-                                                                                        parseColor(
-                                                                                                routeInfo
-                                                                                                        .color,
-                                                                                                Color.Gray
+                                                                                        .padding(
+                                                                                                horizontal =
+                                                                                                        4.dp,
+                                                                                                vertical =
+                                                                                                        1.dp
                                                                                         )
-                                                                                )
-                                                                                .padding(
-                                                                                        horizontal =
-                                                                                                4.dp,
-                                                                                        vertical =
-                                                                                                1.dp
-                                                                                )
-                                                        )
+                                                                )
+                                                        } else if (routeInfo?.long_name != null) {
+                                                                Text(
+                                                                        text = routeInfo.long_name,
+                                                                        color =
+                                                                                parseColor(
+                                                                                        routeInfo
+                                                                                                .text_color,
+                                                                                        Color.White
+                                                                                ),
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .labelSmall
+                                                                                        .copy(
+                                                                                                fontWeight =
+                                                                                                        FontWeight
+                                                                                                                .SemiBold,
+                                                                                                fontSize =
+                                                                                                        10.sp
+                                                                                        ),
+                                                                        modifier =
+                                                                                Modifier.clip(
+                                                                                                RoundedCornerShape(
+                                                                                                        2.dp
+                                                                                                )
+                                                                                        )
+                                                                                        .background(
+                                                                                                parseColor(
+                                                                                                        routeInfo
+                                                                                                                .color,
+                                                                                                        Color.Gray
+                                                                                                )
+                                                                                        )
+                                                                                        .padding(
+                                                                                                horizontal =
+                                                                                                        4.dp,
+                                                                                                vertical =
+                                                                                                        1.dp
+                                                                                        )
+                                                                )
+                                                        }
                                                 }
                                         }
                                 }
@@ -1374,12 +1372,8 @@ fun StopScreenRowV2(
                         // StationScreenTrainRowCompact logic
                         val timeColumn: @Composable () -> Unit = {
                                 Column(
-                                        modifier = Modifier
-                                                .width(80.dp)
-                                                .padding(horizontal = 2.dp),
-                                        horizontalAlignment =
-                                                if (isBusOrMetro) Alignment.End
-                                                else Alignment.Start,
+                                        modifier = Modifier.width(80.dp).padding(horizontal = 2.dp),
+                                        horizontalAlignment = Alignment.Start,
                                         verticalArrangement = Arrangement.Center
                                 ) {
                                         if (event.trip_cancelled == true) {
@@ -1570,9 +1564,7 @@ fun StopScreenRowV2(
                         // 3. Info (Middle) - Headsign
                         val headsignColumn: @Composable () -> Unit = {
                                 Column(
-                                        modifier = Modifier
-                                                .weight(1f)
-                                                .padding(horizontal = 4.dp),
+                                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
                                         verticalArrangement = Arrangement.Center
                                 ) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1594,8 +1586,7 @@ fun StopScreenRowV2(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier
-                                                                                .padding(end = 4.dp)
+                                                                        Modifier.padding(end = 4.dp)
                                                                                 .clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
@@ -1696,8 +1687,7 @@ fun StopScreenRowV2(
                                                                                 fontSize = 10.sp
                                                                         ),
                                                         modifier =
-                                                                Modifier
-                                                                        .background(
+                                                                Modifier.background(
                                                                                 MaterialTheme
                                                                                         .colorScheme
                                                                                         .surfaceVariant,
@@ -1714,15 +1704,10 @@ fun StopScreenRowV2(
                                 }
                         }
 
-                        if (isBusOrMetro) {
-                                headsignColumn()
-                                timeColumn()
-                                platformColumn()
-                        } else {
-                                timeColumn()
-                                headsignColumn()
-                                platformColumn()
-                        }
+                        timeColumn()
+                        nameColumn()
+                        headsignColumn()
+                        platformColumn()
                 }
         }
 }
