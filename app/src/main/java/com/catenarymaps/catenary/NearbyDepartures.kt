@@ -490,12 +490,18 @@ fun NearbyDepartures(
                 }
         }
 
+        val currentUserLocation by rememberUpdatedState(userLocation)
+        val currentUsePickedLocation by rememberUpdatedState(usePickedLocation)
+
         // --- POLLING LOOP: immediate fetch, then every 10s. Not tied to raw origin updates. ---
         LaunchedEffect(pollSession, isAppInForeground) {
-                val origin = lockedOrigin ?: return@LaunchedEffect
                 if (isAppInForeground) {
                         // Function to perform the actual fetch
                         suspend fun doFetch() {
+                                if (!currentUsePickedLocation && currentUserLocation != null) {
+                                        lockedOrigin = currentUserLocation
+                                }
+                                val origin = lockedOrigin ?: return
                                 loading = true
                                 firstAttemptSent = true
                                 println("Fetching nearby departures for $origin")
@@ -584,15 +590,18 @@ fun NearbyDepartures(
 
                         // Check if the closest station is within the 1000m "hoist" threshold
                         val shouldHoist =
-                                stationItems.isNotEmpty() && stationItems.first().sortDistance < 1000.0
+                                stationItems.isNotEmpty() &&
+                                        stationItems.first().sortDistance < 1000.0
 
                         if (shouldHoist) {
                                 // Hoist the closest station to the very top
                                 finalList.add(stationItems.first())
-                                // Add the rest of the stations to the pool to be mixed with local routes
+                                // Add the rest of the stations to the pool to be mixed with local
+                                // routes
                                 mixedItems.addAll(stationItems.drop(1))
                         } else {
-                                // If no station is close enough, treat all stations as regular items in the mixed list
+                                // If no station is close enough, treat all stations as regular
+                                // items in the mixed list
                                 mixedItems.addAll(stationItems)
                         }
 
