@@ -87,6 +87,7 @@
     <string name="settings_disable_google_analytics">Google Analytics 비활성화</string>
     <string name="settings_enable_google_analytics">Google Analytics 활성화</string>
     <string name="settings_test_crash">테스트 충돌</string>
+    <string name="settings_use_imperial_units">미터법 대신 마일/피트를 사용</string>
 
     <string name="block_screen_block_id">블록: %1$s</string>
     <string name="block_screen_duration">기간: </string>
@@ -122,4 +123,6 @@
     <string name="single_trip_info_screen_countdown">카운트다운</string>
     <string name="more_departures">더 많은 출발</string>
     <string name="single_trip_info_screen_connections">환승</string>
+    <string name="layers_toggle_button_content_description">레이어 전환</string>
+    <string name="layers_close_button_content_description">레이어 닫기</string>
 </resources>

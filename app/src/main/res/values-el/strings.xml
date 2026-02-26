@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Απενεργοποίηση του Google Analytics</string>
     <string name="settings_enable_google_analytics">Ενεργοποίηση του Google Analytics</string>
     <string name="settings_test_crash">Δοκιμαστική συντριβή</string>
+    <string name="settings_use_imperial_units">Χρήση μιλίων/ποδιών αντί για το μετρικό σύστημα</string>
 
     <string name="block_screen_block_id">Μπλοκ: %1$s</string>
     <string name="block_screen_duration">Διάρκεια: </string>
@@ -121,4 +122,6 @@
     <string name="single_trip_info_screen_countdown">Αντίστροφη μέτρηση</string>
     <string name="more_departures">Περισσότερες αναχωρήσεις</string>
     <string name="single_trip_info_screen_connections">Ανταποκρίσεις</string>
+    <string name="layers_toggle_button_content_description">Εναλλαγή επιπέδων χάρτη</string>
+    <string name="layers_close_button_content_description">Κλείσιμο επιπέδων χάρτη</string>
 </resources>

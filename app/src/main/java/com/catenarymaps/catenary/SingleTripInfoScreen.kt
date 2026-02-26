@@ -208,7 +208,7 @@ fun SingleTripInfoScreen(
                 androidx.compose.animation.core.animateDpAsState(
                         targetValue =
                                 (if (showSeconds) 80.dp else 66.dp) +
-                                        (if (showOriginalTimetable) 55.dp else 0.dp),
+                                        (if (showOriginalTimetable) 35.dp else 0.dp),
                         label = "timeColumnWidth"
                 )
 

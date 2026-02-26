@@ -34,6 +34,8 @@ fun SettingsScreen(
     onGaConsentChanged: (Boolean) -> Unit,
     showSeconds: Boolean,
     onShowSecondsChange: (Boolean) -> Unit,
+    usUnits: Boolean,
+    onUsUnitsChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onHome: () -> Unit
 ) {
@@ -96,6 +98,24 @@ fun SettingsScreen(
                 )
             }
             Switch(checked = showSeconds, onCheckedChange = onShowSecondsChange)
+        }
+
+        // Units (miles/ft vs metric)
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onUsUnitsChange(!usUnits) }
+                    .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(id = R.string.settings_use_imperial_units),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+            Switch(checked = usUnits, onCheckedChange = onUsUnitsChange)
         }
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))

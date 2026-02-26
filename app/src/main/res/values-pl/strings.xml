@@ -88,6 +88,7 @@
     <string name="settings_disable_google_analytics">Wyłącz Google Analytics</string>
     <string name="settings_enable_google_analytics">Włącz Google Analytics</string>
     <string name="settings_test_crash">Testuj awarię</string>
+    <string name="settings_use_imperial_units">Używaj mil/stóp zamiast systemu metrycznego</string>
 
     <string name="block_screen_block_id">Blok: %1$s</string>
     <string name="block_screen_duration">Czas trwania: </string>
@@ -123,4 +124,6 @@
     <string name="single_trip_info_screen_countdown">Odliczanie</string>
     <string name="more_departures">Więcej odjazdów</string>
     <string name="single_trip_info_screen_connections">Połączenia</string>
+    <string name="layers_toggle_button_content_description">Przełącz warstwy</string>
+    <string name="layers_close_button_content_description">Zamknij warstwy</string>
 </resources>

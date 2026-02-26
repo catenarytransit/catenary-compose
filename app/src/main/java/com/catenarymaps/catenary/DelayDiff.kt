@@ -126,7 +126,7 @@ fun DelayDiff(
                 )
             }
             if (h > 0 || m > 0 || (!show_seconds && m >= 0 && diff != 0L)) {
-                val minuteText = if (!show_seconds && abs(diff) < 60) "<1" else m.toString()
+                val minuteText = m.toString()
                 Text(
                     text = minuteText,
                     fontSize = 14.sp,

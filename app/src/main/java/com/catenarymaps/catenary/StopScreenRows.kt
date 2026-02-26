@@ -56,7 +56,7 @@ fun StationScreenTrainRow(
                 if (event.last_stop == true) event.scheduled_arrival else event.scheduled_departure
 
         // Only show seconds if the scheduled time isn't on an exact minute
-        val effectiveShowSeconds = showSeconds && (schedTime?.rem(60) != 0L)
+        val effectiveShowSeconds = showSeconds
 
         val agencyId = routeInfo?.agency_id
         val agencyName = if (agencyId != null) agencies?.get(agencyId)?.agency_name else null
@@ -67,13 +67,17 @@ fun StationScreenTrainRow(
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
 
         Row(
-                modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+                modifier = modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // 1. Route Name Bubble (Leftmost)
                 if (eurostyle) {
                         androidx.compose.foundation.layout.Box(
-                                modifier = Modifier.width(40.dp).padding(horizontal = 2.dp),
+                                modifier = Modifier
+                                        .width(40.dp)
+                                        .padding(horizontal = 2.dp),
                                 contentAlignment = Alignment.Center
                         ) {
                                 if (showRouteName && routeInfo?.short_name != null) {
@@ -90,7 +94,8 @@ fun StationScreenTrainRow(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
                                                 modifier =
-                                                        Modifier.clip(RoundedCornerShape(2.dp))
+                                                        Modifier
+                                                                .clip(RoundedCornerShape(2.dp))
                                                                 .background(
                                                                         parseColor(
                                                                                 routeInfo.color,
@@ -107,7 +112,9 @@ fun StationScreenTrainRow(
                 }
                 // Left: Time (Vertical Stack)
                 Column(
-                        modifier = Modifier.width(70.dp).padding(horizontal = 2.dp),
+                        modifier = Modifier
+                                .width(70.dp)
+                                .padding(horizontal = 2.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -234,7 +241,9 @@ fun StationScreenTrainRow(
                 }
 
                 // Middle: Info
-                Column(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
+                Column(modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                                 // ---------------------------------------------------------
                                 // ROW 1: Headsign + Trip Name (Merged)
@@ -343,7 +352,8 @@ fun StationScreenTrainRow(
                                                                                                 .Bold
                                                                         ),
                                                         modifier =
-                                                                Modifier.clip(
+                                                                Modifier
+                                                                        .clip(
                                                                                 RoundedCornerShape(
                                                                                         2.dp
                                                                                 )
@@ -377,7 +387,8 @@ fun StationScreenTrainRow(
                                                                                                 .Bold
                                                                         ),
                                                         modifier =
-                                                                Modifier.clip(
+                                                                Modifier
+                                                                        .clip(
                                                                                 RoundedCornerShape(
                                                                                         2.dp
                                                                                 )
@@ -414,7 +425,8 @@ fun StationScreenTrainRow(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier.background(
+                                                Modifier
+                                                        .background(
                                                                 MaterialTheme.colorScheme
                                                                         .surfaceVariant,
                                                                 RoundedCornerShape(4.dp)
@@ -571,7 +583,8 @@ fun StopScreenRow(
                                                                                 routeInfo
                                                                                         ?.short_name,
                                                                         modifier =
-                                                                                Modifier.height(
+                                                                                Modifier
+                                                                                        .height(
                                                                                                 20.dp
                                                                                         )
                                                                                         .padding(
@@ -592,7 +605,8 @@ fun StopScreenRow(
                                                                         )
                                                         androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier.size(20.dp)
+                                                                        Modifier
+                                                                                .size(20.dp)
                                                                                 .clip(CircleShape)
                                                                                 .background(
                                                                                         mtaColor
@@ -636,7 +650,8 @@ fun StopScreenRow(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier.clip(
+                                                                        Modifier
+                                                                                .clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -673,7 +688,8 @@ fun StopScreenRow(
                                                                                                 .SemiBold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier.clip(
+                                                                        Modifier
+                                                                                .clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
                                                                                         )
@@ -851,7 +867,7 @@ fun StationScreenTrainRowCompact(
         val schedTime =
                 if (event.last_stop == true) event.scheduled_arrival else event.scheduled_departure
 
-        val effectiveShowSeconds = showSeconds && (schedTime?.rem(60) != 0L)
+        val effectiveShowSeconds = showSeconds
         val agencyId = routeInfo?.agency_id
         val agencyName = if (agencyId != null) agencies?.get(agencyId)?.agency_name else null
         val showRouteName =
@@ -861,7 +877,8 @@ fun StationScreenTrainRowCompact(
 
         Row(
                 modifier =
-                        modifier.fillMaxWidth()
+                        modifier
+                                .fillMaxWidth()
                                 .clickable { onTripClick(event) }
                                 .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -869,7 +886,9 @@ fun StationScreenTrainRowCompact(
                 // 1. Route Name Bubble (Leftmost)
                 if (eurostyle) {
                         androidx.compose.foundation.layout.Box(
-                                modifier = Modifier.width(40.dp).padding(horizontal = 2.dp),
+                                modifier = Modifier
+                                        .width(40.dp)
+                                        .padding(horizontal = 2.dp),
                                 contentAlignment = Alignment.Center
                         ) {
                                 if (showRouteName && routeInfo?.short_name != null) {
@@ -886,7 +905,8 @@ fun StationScreenTrainRowCompact(
                                                                 fontWeight = FontWeight.Bold
                                                         ),
                                                 modifier =
-                                                        Modifier.clip(RoundedCornerShape(2.dp))
+                                                        Modifier
+                                                                .clip(RoundedCornerShape(2.dp))
                                                                 .background(
                                                                         parseColor(
                                                                                 routeInfo.color,
@@ -904,7 +924,9 @@ fun StationScreenTrainRowCompact(
 
                 // 2. Time (Vertical Stack)
                 Column(
-                        modifier = Modifier.width(70.dp).padding(horizontal = 2.dp),
+                        modifier = Modifier
+                                .width(70.dp)
+                                .padding(horizontal = 2.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -1055,7 +1077,9 @@ fun StationScreenTrainRowCompact(
 
                 // 3. Info (Middle)
                 Column(
-                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                        modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp),
                         verticalArrangement = Arrangement.Center
                 ) {
                         // ---------------------------------------------------------
@@ -1120,7 +1144,8 @@ fun StationScreenTrainRowCompact(
                                                         imageLoader = imageLoader,
                                                         contentDescription = agencyName,
                                                         modifier =
-                                                                Modifier.size(12.dp)
+                                                                Modifier
+                                                                        .size(12.dp)
                                                                         .padding(end = 2.dp),
                                                         colorFilter = null
                                                 )
@@ -1173,7 +1198,8 @@ fun StationScreenTrainRowCompact(
                                                                                                 .Bold
                                                                         ),
                                                         modifier =
-                                                                Modifier.clip(
+                                                                Modifier
+                                                                        .clip(
                                                                                 RoundedCornerShape(
                                                                                         2.dp
                                                                                 )
@@ -1207,7 +1233,8 @@ fun StationScreenTrainRowCompact(
                                                                                                 .SemiBold
                                                                         ),
                                                         modifier =
-                                                                Modifier.clip(
+                                                                Modifier
+                                                                        .clip(
                                                                                 RoundedCornerShape(
                                                                                         2.dp
                                                                                 )
@@ -1272,7 +1299,7 @@ fun StopScreenRowV2(
                 else event.scheduled_departure
 
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
-        val effectiveShowSeconds = showSeconds && (schedTime?.rem(60) != 0L)
+        val effectiveShowSeconds = showSeconds
 
         // Pre-calculate conditions for route display
         val isRatp =
@@ -1289,7 +1316,8 @@ fun StopScreenRowV2(
 
         Column(
                 modifier =
-                        modifier.fillMaxWidth()
+                        modifier
+                                .fillMaxWidth()
                                 .clickable { onTripClick(event) }
                                 .defaultMinSize(minHeight = 48.dp)
                                 .padding(vertical = 4.dp),
@@ -1304,7 +1332,8 @@ fun StopScreenRowV2(
                                 if (isRatp || isMta || (!isLongName && routeName != null)) {
                                         androidx.compose.foundation.layout.Box(
                                                 modifier =
-                                                        Modifier.width(40.dp)
+                                                        Modifier
+                                                                .width(40.dp)
                                                                 .padding(horizontal = 2.dp),
                                                 contentAlignment = Alignment.Center
                                         ) {
@@ -1348,7 +1377,8 @@ fun StopScreenRowV2(
                                                                                 routeInfo
                                                                                         ?.short_name,
                                                                         modifier =
-                                                                                Modifier.height(
+                                                                                Modifier
+                                                                                        .height(
                                                                                                 20.dp
                                                                                         )
                                                                                         .padding(
@@ -1369,7 +1399,8 @@ fun StopScreenRowV2(
                                                                         )
                                                         androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier.size(20.dp)
+                                                                        Modifier
+                                                                                .size(20.dp)
                                                                                 .clip(CircleShape)
                                                                                 .background(
                                                                                         mtaColor
@@ -1419,7 +1450,8 @@ fun StopScreenRowV2(
                                                                                                         10.sp
                                                                                         ),
                                                                         modifier =
-                                                                                Modifier.clip(
+                                                                                Modifier
+                                                                                        .clip(
                                                                                                 RoundedCornerShape(
                                                                                                         2.dp
                                                                                                 )
@@ -1459,7 +1491,8 @@ fun StopScreenRowV2(
                                                                                                         10.sp
                                                                                         ),
                                                                         modifier =
-                                                                                Modifier.clip(
+                                                                                Modifier
+                                                                                        .clip(
                                                                                                 RoundedCornerShape(
                                                                                                         2.dp
                                                                                                 )
@@ -1680,7 +1713,9 @@ fun StopScreenRowV2(
                         // 3. Info (Middle) - Headsign
                         val headsignColumn: @Composable () -> Unit = {
                                 Column(
-                                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                                        modifier = Modifier
+                                                .weight(1f)
+                                                .padding(horizontal = 4.dp),
                                         verticalArrangement = Arrangement.Center
                                 ) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1702,7 +1737,8 @@ fun StopScreenRowV2(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier.padding(end = 4.dp)
+                                                                        Modifier
+                                                                                .padding(end = 4.dp)
                                                                                 .clip(
                                                                                         RoundedCornerShape(
                                                                                                 2.dp
@@ -1805,7 +1841,8 @@ fun StopScreenRowV2(
                                                                                 fontSize = 10.sp
                                                                         ),
                                                         modifier =
-                                                                Modifier.background(
+                                                                Modifier
+                                                                        .background(
                                                                                 MaterialTheme
                                                                                         .colorScheme
                                                                                         .surfaceVariant,

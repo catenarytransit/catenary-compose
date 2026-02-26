@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Inaktivera Google Analytics</string>
     <string name="settings_enable_google_analytics">Aktivera Google Analytics</string>
     <string name="settings_test_crash">Testkrasch</string>
+    <string name="settings_use_imperial_units">Använd miles/fot i stället för metersystemet</string>
 
     <string name="block_screen_block_id">Block: %1$s</string>
     <string name="block_screen_duration">Varaktighet: </string>
@@ -121,4 +122,6 @@
     <string name="single_trip_info_screen_countdown">Nedräkning</string>
     <string name="more_departures">Fler avgångar</string>
     <string name="single_trip_info_screen_connections">Anslutningar</string>
+    <string name="layers_toggle_button_content_description">Växla lager</string>
+    <string name="layers_close_button_content_description">Stäng lager</string>
 </resources>

@@ -88,6 +88,7 @@
     <string name="settings_disable_google_analytics">Zakázat Google Analytics</string>
     <string name="settings_enable_google_analytics">Povolit Google Analytics</string>
     <string name="settings_test_crash">Testovací pád</string>
+    <string name="settings_use_imperial_units">Používat míle/ft místo metrického systému</string>
 
     <string name="block_screen_block_id">Blok: %1$s</string>
     <string name="block_screen_duration">Doba trvání: </string>
@@ -123,4 +124,6 @@
     <string name="single_trip_info_screen_countdown">Odpočet</string>
     <string name="more_departures">Více odjezdů</string>
     <string name="single_trip_info_screen_connections">Spojení</string>
+    <string name="layers_toggle_button_content_description">Přepnout vrstvy</string>
+    <string name="layers_close_button_content_description">Zavřít vrstvy</string>
 </resources>

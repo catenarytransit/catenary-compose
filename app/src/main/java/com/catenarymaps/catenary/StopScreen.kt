@@ -215,6 +215,7 @@ fun StopScreen(
         camera: CameraState,
         onSetStopsToHide: (Set<String>) -> Unit,
         geoLock: GeoLockController,
+        showSeconds: Boolean,
         onBack: () -> Unit,
         onHome: () -> Unit
 ) {
@@ -897,7 +898,7 @@ fun StopScreen(
                     FormattedTimeText(
                             timezone = zoneId.id,
                             timeSeconds = currentTime,
-                            showSeconds = true,
+                        showSeconds = showSeconds,
                             // The style from LiveClock is now applied here
                             )
                     Text(
@@ -1113,7 +1114,7 @@ fun StopScreen(
                                         currentTime = currentTime,
                                         zoneId = zoneId,
                                         locale = locale,
-                                        showSeconds = false,
+                                    showSeconds = showSeconds,
                                         useSymbolSign = true,
                                     eurostyle = isEurostyle,
                                         modifier =
@@ -1145,9 +1146,9 @@ fun StopScreen(
                                         locale = locale,
                                         showArrivals = event.last_stop == true,
                                         useSymbolSign =
-                                                false, // StopScreenRowV2 handles icons internally
-                                        // based on route type logic
+                                            true,
                                         vertical = false,
+                                    showSeconds = showSeconds,
                                         onTripClick = {
                                             onTripClick(
                                                     CatenaryStackEnum.SingleTrip(

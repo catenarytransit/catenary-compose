@@ -87,6 +87,7 @@
     <string name="settings_disable_google_analytics">禁用 Google Analytics</string>
     <string name="settings_enable_google_analytics">启用 Google Analytics</string>
     <string name="settings_test_crash">测试崩溃</string>
+    <string name="settings_use_imperial_units">使用英里/英尺而不是公制</string>
 
     <string name="block_screen_block_id">区块： %1$s</string>
     <string name="block_screen_duration">持续时间： </string>
@@ -122,4 +123,6 @@
     <string name="single_trip_info_screen_countdown">倒计时</string>
     <string name="more_departures">更多出发</string>
     <string name="single_trip_info_screen_connections">换乘</string>
+    <string name="layers_toggle_button_content_description">切换图层</string>
+    <string name="layers_close_button_content_description">关闭图层</string>
 </resources>

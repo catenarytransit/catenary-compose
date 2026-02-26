@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Деактивиране на Google Анализ</string>
     <string name="settings_enable_google_analytics">Активиране на Google Анализ</string>
     <string name="settings_test_crash">Тестов срив</string>
+    <string name="settings_use_imperial_units">Използвай мили/футове вместо метрична система</string>
 
     <string name="block_screen_block_id">Блок: %1$s</string>
     <string name="block_screen_duration">Продължителност: </string>
@@ -121,4 +122,6 @@
     <string name="single_trip_info_screen_countdown">Обратно броене</string>
     <string name="more_departures">Още заминавания</string>
     <string name="single_trip_info_screen_connections">Връзки</string>
+    <string name="layers_toggle_button_content_description">Превключване на слоевете</string>
+    <string name="layers_close_button_content_description">Затвори слоевете</string>
 </resources>

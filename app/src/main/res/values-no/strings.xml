@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Deaktiver Google Analytics</string>
     <string name="settings_enable_google_analytics">Aktiver Google Analytics</string>
     <string name="settings_test_crash">Testkrasj</string>
+    <string name="settings_use_imperial_units">Bruk miles/fot i stedet for metersystemet</string>
 
     <string name="block_screen_block_id">Blokk: %1$s</string>
     <string name="block_screen_duration">Varighet: </string>
@@ -121,4 +122,6 @@
     <string name="single_trip_info_screen_countdown">Nedtelling</string>
     <string name="more_departures">Flere avganger</string>
     <string name="single_trip_info_screen_connections">Forbindelser</string>
+    <string name="layers_toggle_button_content_description">Bytt lag</string>
+    <string name="layers_close_button_content_description">Lukk lagene</string>
 </resources>

@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Google Analytics uitschakelen</string>
     <string name="settings_enable_google_analytics">Google Analytics inschakelen</string>
     <string name="settings_test_crash">Testcrash</string>
+    <string name="settings_use_imperial_units">Mijl/ft gebruiken in plaats van het metrische stelsel</string>
 
     <string name="block_screen_block_id">Blok: %1$s</string>
     <string name="block_screen_duration">Duur: </string>
@@ -121,4 +122,6 @@
     <string name="single_trip_info_screen_countdown">Aftellen</string>
     <string name="more_departures">Meer vertrektijden</string>
     <string name="single_trip_info_screen_connections">Overstappen</string>
+    <string name="layers_toggle_button_content_description">Lagen wisselen</string>
+    <string name="layers_close_button_content_description">Lagen sluiten</string>
 </resources>

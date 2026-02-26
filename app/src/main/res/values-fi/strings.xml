@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Poista Google Analytics käytöstä</string>
     <string name="settings_enable_google_analytics">Ota Google Analytics käyttöön</string>
     <string name="settings_test_crash">Testaa kaatuminen</string>
+    <string name="settings_use_imperial_units">Käytä mailia/jalkoja metrijärjestelmän sijaan</string>
 
     <string name="block_screen_block_id">Lohko: %1$s</string>
     <string name="block_screen_duration">Kesto: </string>
@@ -121,4 +122,6 @@
     <string name="single_trip_info_screen_countdown">Lähtölaskenta</string>
     <string name="more_departures">Lisää lähtöjä</string>
     <string name="single_trip_info_screen_connections">Yhteydet</string>
+    <string name="layers_toggle_button_content_description">Vaihda karttatasoja</string>
+    <string name="layers_close_button_content_description">Sulje tasot</string>
 </resources>

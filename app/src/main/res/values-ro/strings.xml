@@ -87,6 +87,7 @@
     <string name="settings_disable_google_analytics">Dezactivați Google Analytics</string>
     <string name="settings_enable_google_analytics">Activați Google Analytics</string>
     <string name="settings_test_crash">Test de blocare</string>
+    <string name="settings_use_imperial_units">Folosește mile/picioare în locul sistemului metric</string>
 
     <string name="block_screen_block_id">Bloc: %1$s</string>
     <string name="block_screen_duration">Durată: </string>
@@ -122,4 +123,6 @@
     <string name="single_trip_info_screen_countdown">Numărătoare inversă</string>
     <string name="more_departures">Mai multe plecări</string>
     <string name="single_trip_info_screen_connections">Legături</string>
+    <string name="layers_toggle_button_content_description">Comută straturile</string>
+    <string name="layers_close_button_content_description">Închide straturile</string>
 </resources>

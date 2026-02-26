@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Disable Google Analytics</string>
     <string name="settings_enable_google_analytics">Enable Google Analytics</string>
     <string name="settings_test_crash">Test crash</string>
+    <string name="settings_use_imperial_units">Use miles/ft instead of metric system</string>
     <string name="block_screen_block_id">Block: %1$s</string>
     <string name="block">Block</string>
     <string name="block_screen_duration">"Duration: "</string>
@@ -112,4 +113,6 @@
     <string name="single_trip_info_screen_countdown">Countdown</string>
     <string name="more_departures">More departures</string>
     <string name="single_trip_info_screen_connections">Connections</string>
+    <string name="layers_toggle_button_content_description">Toggle layers</string>
+    <string name="layers_close_button_content_description">Close layers</string>
 </resources>

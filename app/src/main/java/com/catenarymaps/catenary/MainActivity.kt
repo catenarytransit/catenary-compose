@@ -1911,10 +1911,11 @@ class MainActivity : ComponentActivity() {
 
                                         MaplibreMap(
                                                 modifier =
-                                                        Modifier.fillMaxSize().onSizeChanged {
-                                                                newSize ->
-                                                                mapSize = newSize
-                                                        },
+                                                        Modifier
+                                                                .fillMaxSize()
+                                                                .onSizeChanged { newSize ->
+                                                                        mapSize = newSize
+                                                                },
                                                 baseStyle = BaseStyle.Uri(styleUri),
                                                 cameraState = camera,
                                                 onMapClick = { latlng, screenPos ->
@@ -3326,7 +3327,8 @@ class MainActivity : ComponentActivity() {
 
                                         // Main Draggable Bottom Sheet
                                         val sheetModifier =
-                                                Modifier.fillMaxWidth(contentWidthFraction)
+                                                Modifier
+                                                        .fillMaxWidth(contentWidthFraction)
                                                         .align(Alignment.BottomStart)
 
                                         Surface(
@@ -3355,7 +3357,8 @@ class MainActivity : ComponentActivity() {
                                         ) {
                                                 Column(
                                                         modifier =
-                                                                Modifier.fillMaxWidth()
+                                                                Modifier
+                                                                        .fillMaxWidth()
                                                                         .fillMaxHeight()
                                                                         .padding( // This padding
                                                                                 // ensures content
@@ -3368,7 +3371,7 @@ class MainActivity : ComponentActivity() {
                                                                                                         .current
                                                                                         ) {
                                                                                                 ((draggableState
-                                                                                                                .requireOffset()))
+                                                                                                        .requireOffset()))
                                                                                                         .toDp()
                                                                                                         .coerceAtLeast(
                                                                                                                 0.dp
@@ -3391,7 +3394,8 @@ class MainActivity : ComponentActivity() {
                                                 ) {
                                                         Box(
                                                                 modifier =
-                                                                        Modifier.padding(
+                                                                        Modifier
+                                                                                .padding(
                                                                                         vertical =
                                                                                                 10.dp
                                                                                 )
@@ -3659,6 +3663,12 @@ class MainActivity : ComponentActivity() {
                                                                                                         showSeconds =
                                                                                                                 it
                                                                                                 },
+                                                                                                usUnits =
+                                                                                                        usUnits,
+                                                                                                onUsUnitsChange = {
+                                                                                                        usUnits =
+                                                                                                                it
+                                                                                                },
                                                                                                 onBack =
                                                                                                         onBack,
                                                                                                 onHome =
@@ -3786,6 +3796,8 @@ class MainActivity : ComponentActivity() {
                                                                                                         },
                                                                                                         geoLock =
                                                                                                                 geoLock,
+                                                                                                        showSeconds =
+                                                                                                                showSeconds,
                                                                                                         onBack =
                                                                                                                 onBack,
                                                                                                         onHome =
@@ -3850,6 +3862,8 @@ class MainActivity : ComponentActivity() {
                                                                                                         },
                                                                                                         geoLock =
                                                                                                                 geoLock,
+                                                                                                        showSeconds =
+                                                                                                                showSeconds,
                                                                                                         onBack =
                                                                                                                 onBack,
                                                                                                         onHome =
@@ -3915,7 +3929,8 @@ class MainActivity : ComponentActivity() {
                                                 // is
                                                 // fully expanded
                                                 modifier =
-                                                        Modifier.align(searchAlignment)
+                                                        Modifier
+                                                                .align(searchAlignment)
                                                                 .fillMaxWidth(contentWidthFraction)
                                                                 .windowInsetsPadding(
                                                                         WindowInsets.safeDrawing
@@ -4017,14 +4032,15 @@ class MainActivity : ComponentActivity() {
                                                                 !(isSearchFocused &&
                                                                         contentWidthFraction == 1f),
                                                 modifier =
-                                                        Modifier.align(Alignment.TopEnd)
+                                                        Modifier
+                                                                .align(Alignment.TopEnd)
                                                                 .windowInsetsPadding(
                                                                         WindowInsets.safeDrawing
                                                                 )
                                                                 .padding(
                                                                         top =
                                                                                 if (contentWidthFraction ==
-                                                                                                1.0f
+                                                                                        1.0f
                                                                                 )
                                                                                         64.dp
                                                                                 else 16.dp,
@@ -4046,7 +4062,12 @@ class MainActivity : ComponentActivity() {
                                                         Icon(
                                                                 Icons.Filled.Layers,
                                                                 contentDescription =
-                                                                        "Toggle Layers",
+                                                                        stringResource(
+                                                                                id =
+                                                                                        R
+                                                                                                .string
+                                                                                                .layers_toggle_button_content_description
+                                                                        ),
                                                                 Modifier.size(24.dp)
                                                         )
                                                 }
@@ -4060,14 +4081,15 @@ class MainActivity : ComponentActivity() {
                                                                 !(isSearchFocused &&
                                                                         contentWidthFraction == 1f),
                                                 modifier =
-                                                        Modifier.align(Alignment.TopEnd)
+                                                        Modifier
+                                                                .align(Alignment.TopEnd)
                                                                 .windowInsetsPadding(
                                                                         WindowInsets.safeDrawing
                                                                 )
                                                                 .padding(
                                                                         top =
                                                                                 if (contentWidthFraction ==
-                                                                                                1.0f
+                                                                                        1.0f
                                                                                 )
                                                                                         110.dp
                                                                                 else 64.dp,
@@ -4107,7 +4129,8 @@ class MainActivity : ComponentActivity() {
                                                                         ),
                                                                 contentDescription = "Set to North",
                                                                 modifier =
-                                                                        Modifier.size(24.dp)
+                                                                        Modifier
+                                                                                .size(24.dp)
                                                                                 .rotate(
                                                                                         -camera.position
                                                                                                 .bearing
@@ -4146,7 +4169,8 @@ class MainActivity : ComponentActivity() {
                                                 if (contentWidthFraction == 1f) {
                                                         // Full-width sheet -> float *above* the
                                                         // drawer and move with it
-                                                        Modifier.align(Alignment.TopEnd)
+                                                        Modifier
+                                                                .align(Alignment.TopEnd)
                                                                 .offset {
                                                                         IntOffset(
                                                                                 x =
@@ -4169,7 +4193,8 @@ class MainActivity : ComponentActivity() {
                                                         // Half-width sheet -> keep it in the
                                                         // bottom-right corner (not over
                                                         // the drawer)
-                                                        Modifier.align(Alignment.BottomEnd)
+                                                        Modifier
+                                                                .align(Alignment.BottomEnd)
                                                                 .padding(
                                                                         end = 16.dp,
                                                                         bottom = 16.dp
@@ -4254,7 +4279,8 @@ class MainActivity : ComponentActivity() {
                                         AnimatedVisibility(
                                                 visible = isSearchFocused,
                                                 modifier =
-                                                        Modifier.align(Alignment.TopStart)
+                                                        Modifier
+                                                                .align(Alignment.TopStart)
                                                                 .zIndex(
                                                                         2f
                                                                 ), // below the bar (z=3), above the
@@ -4264,7 +4290,8 @@ class MainActivity : ComponentActivity() {
                                         ) {
                                                 val overlayBase =
                                                         if (contentWidthFraction < 1f) {
-                                                                Modifier.fillMaxHeight()
+                                                                Modifier
+                                                                        .fillMaxHeight()
                                                                         .fillMaxWidth(
                                                                                 contentWidthFraction
                                                                         )
@@ -4372,7 +4399,8 @@ class MainActivity : ComponentActivity() {
                                         AnimatedVisibility(
                                                 visible = showLayersPanel,
                                                 modifier =
-                                                        Modifier.align(Alignment.BottomCenter)
+                                                        Modifier
+                                                                .align(Alignment.BottomCenter)
                                                                 .zIndex(5f), // Ensure it's on top
                                                 enter = slideInVertically(initialOffsetY = { it }),
                                                 exit = slideOutVertically(targetOffsetY = { it })
@@ -4393,7 +4421,8 @@ class MainActivity : ComponentActivity() {
 
                                                 Surface(
                                                         modifier =
-                                                                Modifier.fillMaxWidth()
+                                                                Modifier
+                                                                        .fillMaxWidth()
                                                                         .heightIn(
                                                                                 min = 100.dp,
                                                                                 max = 700.dp
@@ -4407,7 +4436,8 @@ class MainActivity : ComponentActivity() {
                                                 ) {
                                                         Column(
                                                                 modifier =
-                                                                        Modifier.windowInsetsPadding(
+                                                                        Modifier
+                                                                                .windowInsetsPadding(
                                                                                         WindowInsets(
                                                                                                 bottom =
                                                                                                         WindowInsets
@@ -4453,7 +4483,12 @@ class MainActivity : ComponentActivity() {
                                                                                         Icons.Filled
                                                                                                 .Close,
                                                                                         contentDescription =
-                                                                                                "Close Layers"
+                                                                                                stringResource(
+                                                                                                        id =
+                                                                                                                R
+                                                                                                                        .string
+                                                                                                                        .layers_close_button_content_description
+                                                                                                )
                                                                                 )
                                                                         }
                                                                 }
@@ -5107,7 +5142,8 @@ class MainActivity : ComponentActivity() {
                                                                                         Alignment
                                                                                                 .CenterVertically,
                                                                                 modifier =
-                                                                                        Modifier.fillMaxWidth()
+                                                                                        Modifier
+                                                                                                .fillMaxWidth()
                                                                                                 .clickable {
                                                                                                         showZombieBuses =
                                                                                                                 !showZombieBuses
@@ -5133,37 +5169,6 @@ class MainActivity : ComponentActivity() {
                                                                                                         .bodyMedium
                                                                                 )
                                                                         }
-                                                                        Row(
-                                                                                verticalAlignment =
-                                                                                        Alignment
-                                                                                                .CenterVertically,
-                                                                                modifier =
-                                                                                        Modifier.fillMaxWidth()
-                                                                                                .clickable {
-                                                                                                        usUnits =
-                                                                                                                !usUnits
-                                                                                                }
-                                                                                                .padding(
-                                                                                                        vertical =
-                                                                                                                4.dp
-                                                                                                )
-                                                                        ) {
-                                                                                Checkbox(
-                                                                                        checked =
-                                                                                                usUnits,
-                                                                                        onCheckedChange = {
-                                                                                                usUnits =
-                                                                                                        it
-                                                                                        }
-                                                                                )
-                                                                                Text(
-                                                                                        "Use US Units (mph)",
-                                                                                        style =
-                                                                                                MaterialTheme
-                                                                                                        .typography
-                                                                                                        .bodyMedium
-                                                                                )
-                                                                        }
                                                                 }
                                                         }
                                                 }
@@ -5172,7 +5177,8 @@ class MainActivity : ComponentActivity() {
                                         SnackbarHost(
                                                 hostState = snackbars,
                                                 modifier =
-                                                        Modifier.align(Alignment.BottomCenter)
+                                                        Modifier
+                                                                .align(Alignment.BottomCenter)
                                                                 .zIndex(10f)
                                                                 .windowInsetsPadding(
                                                                         WindowInsets(
@@ -5468,14 +5474,35 @@ fun LayerTabs(selectedTab: String, onTabSelected: (String) -> Unit) {
         val tabs = listOf("intercityrail", "localrail", "bus", "other")
 
         Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
         ) {
                 tabs.forEach { tab ->
                         val isSelected = tab == selectedTab
+                        val textResId =
+                                when (tab) {
+                                        "intercityrail" ->
+                                                R.string
+                                                        .heading_intercity_rail
+
+                                        "localrail" ->
+                                                R.string
+                                                        .heading_local_rail
+
+                                        "bus" ->
+                                                R.string.heading_bus
+
+                                        "other" ->
+                                                R.string.heading_other
+
+                                        else -> R.string.app_name
+                                }
                         Box(
                                 modifier =
-                                        Modifier.background(
+                                        Modifier
+                                                .background(
                                                         if (isSelected)
                                                                 MaterialTheme.colorScheme.primary
                                                                         .copy(alpha = 0.2f)
@@ -5487,7 +5514,7 @@ fun LayerTabs(selectedTab: String, onTabSelected: (String) -> Unit) {
                                                 .clickable { onTabSelected(tab) }
                         ) {
                                 Text(
-                                        text = tab.replaceFirstChar { it.uppercase() },
+                                        text = stringResource(id = textResId),
                                         color =
                                                 if (isSelected) MaterialTheme.colorScheme.primary
                                                 else MaterialTheme.colorScheme.onSurface

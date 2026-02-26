@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Disabilita Google Analytics</string>
     <string name="settings_enable_google_analytics">Abilita Google Analytics</string>
     <string name="settings_test_crash">Test crash</string>
+    <string name="settings_use_imperial_units">Usa miglia/piedi invece del sistema metrico</string>
 
     <string name="block_screen_block_id">Blocco: %1$s</string>
     <string name="block_screen_duration">Durata: </string>
@@ -121,4 +122,6 @@
     <string name="single_trip_info_screen_countdown">Conto alla rovescia</string>
     <string name="more_departures">Altre partenze</string>
     <string name="single_trip_info_screen_connections">Coincidenze</string>
+    <string name="layers_toggle_button_content_description">Attiva/disattiva livelli</string>
+    <string name="layers_close_button_content_description">Chiudi livelli</string>
 </resources>

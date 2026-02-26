@@ -88,6 +88,7 @@
     <string name="settings_disable_google_analytics">Вимкнути Google Analytics</string>
     <string name="settings_enable_google_analytics">Увімкнути Google Analytics</string>
     <string name="settings_test_crash">Тестовий збій</string>
+    <string name="settings_use_imperial_units">Використовувати милі/фути замість метричної системи</string>
 
     <string name="block_screen_block_id">Блок: %1$s</string>
     <string name="block_screen_duration">Тривалість: </string>
@@ -123,4 +124,6 @@
     <string name="single_trip_info_screen_countdown">Зворотний відлік</string>
     <string name="more_departures">Більше відправлень</string>
     <string name="single_trip_info_screen_connections">Пересадки</string>
+    <string name="layers_toggle_button_content_description">Перемикати шари</string>
+    <string name="layers_close_button_content_description">Закрити шари</string>
 </resources>

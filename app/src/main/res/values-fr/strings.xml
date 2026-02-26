@@ -87,6 +87,7 @@
     <string name="settings_disable_google_analytics">Désactiver Google Analytics</string>
     <string name="settings_enable_google_analytics">Activer Google Analytics</string>
     <string name="settings_test_crash">Tester le crash</string>
+    <string name="settings_use_imperial_units">Utiliser miles/pieds au lieu du système métrique</string>
     <string name="block_screen_block_id">Roulement: : %1$s</string>
     <string name="block">Roulement</string>
     <string name="block_screen_duration">Durée :</string>
@@ -118,4 +119,6 @@
     <string name="single_trip_info_screen_countdown">Compte à rebours</string>
     <string name="more_departures">Plus de départs</string>
     <string name="single_trip_info_screen_connections">Correspondances</string>
+    <string name="layers_toggle_button_content_description">Basculer les couches</string>
+    <string name="layers_close_button_content_description">Fermer les couches</string>
 </resources>

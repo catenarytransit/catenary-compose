@@ -86,6 +86,7 @@
     <string name="settings_disable_google_analytics">Google Analytics letiltása</string>
     <string name="settings_enable_google_analytics">Google Analytics engedélyezése</string>
     <string name="settings_test_crash">Tesztesés</string>
+    <string name="settings_use_imperial_units">Mérföld/láb használata a metrikus rendszer helyett</string>
 
     <string name="block_screen_block_id">Blokk: %1$s</string>
     <string name="block_screen_duration">Időtartam: </string>
@@ -121,4 +122,6 @@
     <string name="single_trip_info_screen_countdown">Visszaszámlálás</string>
     <string name="more_departures">További indulások</string>
     <string name="single_trip_info_screen_connections">Csatlakozások</string>
+    <string name="layers_toggle_button_content_description">Rétegek váltása</string>
+    <string name="layers_close_button_content_description">Rétegek bezárása</string>
 </resources>
