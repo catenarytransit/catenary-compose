@@ -64,8 +64,8 @@
         <item quantity="one">%d Servicemeldung</item>
         <item quantity="other">%d Servicemeldungen</item>
     </plurals>
-    <string name="heading_intercity_rail">Bahn</string>
-    <string name="heading_local_rail">S-Bahn/U-Bahn</string>
+    <string name="heading_intercity_rail">Fern/Regio/S</string>
+    <string name="heading_local_rail">U/straßen</string>
     <string name="heading_bus">Bus</string>
     <string name="heading_other">Andere</string>
     <string name="vehicle">Fahrzeug</string>
