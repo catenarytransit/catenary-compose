@@ -898,7 +898,7 @@ fun StopScreen(
                     FormattedTimeText(
                             timezone = zoneId.id,
                             timeSeconds = currentTime,
-                        showSeconds = showSeconds,
+                        showSeconds = true,
                             // The style from LiveClock is now applied here
                             )
                     Text(
