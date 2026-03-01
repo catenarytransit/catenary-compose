@@ -376,25 +376,26 @@ fun StopScreen(
         }
     }
 
-    val lat by
-    remember(dataMeta, osmStackData) {
-        derivedStateOf { dataMeta?.primary?.stop_lat ?: osmStackData?.lat }
+    val lat by remember {
+        derivedStateOf {
+            dataMeta?.primary?.stop_lat
+                ?: dataMeta?.stops?.firstOrNull()?.stop_lat ?: osmStackData?.lat
+        }
     }
-    val lon by
-    remember(dataMeta, osmStackData) {
-        derivedStateOf { dataMeta?.primary?.stop_lon ?: osmStackData?.lon }
+    val lon by remember {
+        derivedStateOf {
+            dataMeta?.primary?.stop_lon
+                ?: dataMeta?.stops?.firstOrNull()?.stop_lon ?: osmStackData?.lon
+        }
     }
-    val isEurostyle by
-    remember(lat, lon) {
+    val isEurostyle by remember {
         derivedStateOf {
             if (lat != null && lon != null) EurostyleZone.isInside(lat!!, lon!!) else false
         }
     }
-    val isSwiss by
-    remember(lat, lon) {
+    val isSwiss by remember {
         derivedStateOf {
-            if (lat != null && lon != null) EurostyleZone.isSwitzerland(lat!!, lon!!)
-            else false
+            if (lat != null && lon != null) EurostyleZone.isSwitzerland(lat!!, lon!!) else false
         }
     }
 

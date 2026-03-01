@@ -1,4 +1,4 @@
-package com.catenarymaps.catenary
+﻿package com.catenarymaps.catenary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,6 +36,13 @@ import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import java.time.ZoneId
 import java.util.Locale
+
+private fun getRouteShape(chateau: String, shortName: String?): androidx.compose.ui.graphics.Shape {
+        val isSBahn =
+                (chateau == "dbregioag" || chateau == "deutschland") &&
+                        shortName?.matches(Regex("^S\\d+")) == true
+        return if (isSBahn) RoundedCornerShape(30.dp) else RoundedCornerShape(2.dp)
+}
 
 @Composable
 fun StationScreenTrainRow(
@@ -116,8 +123,10 @@ fun StationScreenTrainRow(
                                                         modifier =
                                                                 Modifier
                                                                         .clip(
-                                                                                RoundedCornerShape(
-                                                                                        2.dp
+                                                                                getRouteShape(
+                                                                                        event.chateau,
+                                                                                        routeInfo
+                                                                                                ?.short_name
                                                                                 )
                                                                         )
                                                                         .background(
@@ -361,7 +370,7 @@ fun StationScreenTrainRow(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Text(
-                                                text = "•",
+                                                text = "â€¢",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -394,8 +403,10 @@ fun StationScreenTrainRow(
                                                         modifier =
                                                                 Modifier
                                                                         .clip(
-                                                                                RoundedCornerShape(
-                                                                                        2.dp
+                                                                                getRouteShape(
+                                                                                        event.chateau,
+                                                                                        routeInfo
+                                                                                                ?.short_name
                                                                                 )
                                                                         )
                                                                         .background(
@@ -429,8 +440,10 @@ fun StationScreenTrainRow(
                                                         modifier =
                                                                 Modifier
                                                                         .clip(
-                                                                                RoundedCornerShape(
-                                                                                        2.dp
+                                                                                getRouteShape(
+                                                                                        event.chateau,
+                                                                                        routeInfo
+                                                                                                ?.short_name
                                                                                 )
                                                                         )
                                                                         .background(
@@ -692,8 +705,10 @@ fun StopScreenRow(
                                                                 modifier =
                                                                         Modifier
                                                                                 .clip(
-                                                                                        RoundedCornerShape(
-                                                                                                2.dp
+                                                                                        getRouteShape(
+                                                                                                event.chateau,
+                                                                                                routeInfo
+                                                                                                        ?.short_name
                                                                                         )
                                                                                 )
                                                                                 .background(
@@ -730,8 +745,10 @@ fun StopScreenRow(
                                                                 modifier =
                                                                         Modifier
                                                                                 .clip(
-                                                                                        RoundedCornerShape(
-                                                                                                2.dp
+                                                                                        getRouteShape(
+                                                                                                event.chateau,
+                                                                                                routeInfo
+                                                                                                        ?.short_name
                                                                                         )
                                                                                 )
                                                                                 .background(
@@ -967,8 +984,10 @@ fun StationScreenTrainRowCompact(
                                                         modifier =
                                                                 Modifier
                                                                         .clip(
-                                                                                RoundedCornerShape(
-                                                                                        2.dp
+                                                                                getRouteShape(
+                                                                                        event.chateau,
+                                                                                        routeInfo
+                                                                                                ?.short_name
                                                                                 )
                                                                         )
                                                                         .background(
@@ -1246,7 +1265,7 @@ fun StationScreenTrainRowCompact(
                                                                 routeInfo?.long_name != null)
                                         ) {
                                                 Text(
-                                                        text = " • ",
+                                                        text = " â€¢ ",
                                                         style =
                                                                 MaterialTheme.typography.labelSmall
                                                                         .copy(fontSize = 10.sp),
@@ -1278,8 +1297,10 @@ fun StationScreenTrainRowCompact(
                                                         modifier =
                                                                 Modifier
                                                                         .clip(
-                                                                                RoundedCornerShape(
-                                                                                        2.dp
+                                                                                getRouteShape(
+                                                                                        event.chateau,
+                                                                                        routeInfo
+                                                                                                ?.short_name
                                                                                 )
                                                                         )
                                                                         .background(
@@ -1313,8 +1334,10 @@ fun StationScreenTrainRowCompact(
                                                         modifier =
                                                                 Modifier
                                                                         .clip(
-                                                                                RoundedCornerShape(
-                                                                                        2.dp
+                                                                                getRouteShape(
+                                                                                        event.chateau,
+                                                                                        routeInfo
+                                                                                                ?.short_name
                                                                                 )
                                                                         )
                                                                         .background(
@@ -1538,8 +1561,10 @@ fun StopScreenRowV2(
                                                                         modifier =
                                                                                 Modifier
                                                                                         .clip(
-                                                                                                RoundedCornerShape(
-                                                                                                        2.dp
+                                                                                                getRouteShape(
+                                                                                                        event.chateau,
+                                                                                                        routeInfo
+                                                                                                                ?.short_name
                                                                                                 )
                                                                                         )
                                                                                         .background(
@@ -1583,8 +1608,10 @@ fun StopScreenRowV2(
                                                                         modifier =
                                                                                 Modifier
                                                                                         .clip(
-                                                                                                RoundedCornerShape(
-                                                                                                        2.dp
+                                                                                                getRouteShape(
+                                                                                                        event.chateau,
+                                                                                                        routeInfo
+                                                                                                                ?.short_name
                                                                                                 )
                                                                                         )
                                                                                         .background(
@@ -1830,8 +1857,10 @@ fun StopScreenRowV2(
                                                                         Modifier
                                                                                 .padding(end = 4.dp)
                                                                                 .clip(
-                                                                                        RoundedCornerShape(
-                                                                                                2.dp
+                                                                                        getRouteShape(
+                                                                                                event.chateau,
+                                                                                                routeInfo
+                                                                                                        ?.short_name
                                                                                         )
                                                                                 )
                                                                                 .background(
