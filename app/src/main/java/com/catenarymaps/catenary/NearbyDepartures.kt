@@ -746,6 +746,23 @@ fun NearbyDepartures(
                                 ) { item ->
                                         when (item) {
                                                 is NearbyItem.RouteGroupItem -> {
+                                                        val lat =
+                                                                item.stopsMap.values.firstOrNull()
+                                                                        ?.lat
+                                                                        ?: lockedOrigin?.first
+                                                                        ?: 0.0
+                                                        val lon =
+                                                                item.stopsMap.values.firstOrNull()
+                                                                        ?.lon
+                                                                        ?: lockedOrigin?.second
+                                                                        ?: 0.0
+                                                        val isEurostyle =
+                                                                EurostyleZone.isInside(lat, lon)
+                                                        val isSwiss =
+                                                                EurostyleZone.isSwitzerland(
+                                                                        lat,
+                                                                        lon
+                                                                )
                                                         RouteGroupCard(
                                                                 item.group,
                                                                 item.stopsMap,
@@ -753,17 +770,31 @@ fun NearbyDepartures(
                                                                 onTripClick,
                                                                 onRouteClick,
                                                                 onStopClick,
-                                                                nowSec = nowSec
+                                                                nowSec = nowSec,
+                                                                eurostyle = isEurostyle,
+                                                                swiss = isSwiss
                                                         )
                                                 }
                                                 is NearbyItem.StationGroupItem -> {
+                                                        val isEurostyle =
+                                                                EurostyleZone.isInside(
+                                                                        item.group.lat,
+                                                                        item.group.lon
+                                                                )
+                                                        val isSwiss =
+                                                                EurostyleZone.isSwitzerland(
+                                                                        item.group.lat,
+                                                                        item.group.lon
+                                                                )
                                                         StationGroupCard(
                                                                 group = item.group,
                                                                 routesMap = routesMap,
                                                                 nowSec = nowSec,
                                                                 onTripClick = onTripClick,
                                                                 onStopClick = onStopClick,
-                                                                darkMode = darkMode
+                                                                darkMode = darkMode,
+                                                                eurostyle = isEurostyle,
+                                                                swiss = isSwiss
                                                         )
                                                 }
                                         }
@@ -780,7 +811,9 @@ private fun StationGroupCard(
         nowSec: Long,
         onTripClick: (TripClickResponse) -> Unit,
         onStopClick: (chateauId: String, stopId: String) -> Unit,
-        darkMode: Boolean
+        darkMode: Boolean,
+        eurostyle: Boolean,
+        swiss: Boolean
 ) {
         Card(
                 modifier = Modifier
@@ -931,6 +964,8 @@ private fun StationGroupCard(
                                                 useSymbolSign = true,
                                                 showAgencyName = false,
                                                 showTimeDiff = false,
+                                                eurostyle = eurostyle,
+                                                swiss = swiss,
                                                 onTripClick = {
                                                         onTripClick(
                                                                 TripClickResponse(
@@ -1206,7 +1241,9 @@ private fun RouteGroupCard(
         onTripClick: (TripClickResponse) -> Unit,
         onRouteClick: (chateauId: String, routeId: String) -> Unit,
         onStopClick: (chateauId: String, stopId: String) -> Unit,
-        nowSec: Long
+        nowSec: Long,
+        eurostyle: Boolean,
+        swiss: Boolean
 ) {
         val bg =
                 MaterialTheme.colorScheme.surfaceContainerLow.copy(

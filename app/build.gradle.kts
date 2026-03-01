@@ -33,8 +33,8 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 224
-        versionName = "2.0.122"
+        versionCode = 225
+        versionName = "2.0.123"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

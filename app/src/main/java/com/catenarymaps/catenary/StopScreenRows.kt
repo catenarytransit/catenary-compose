@@ -48,6 +48,7 @@ fun StationScreenTrainRow(
         showSeconds: Boolean = true,
         useSymbolSign: Boolean = true,
         eurostyle: Boolean = false,
+        swiss: Boolean = false,
         modifier: Modifier = Modifier
 ) {
         val rtTime =
@@ -72,49 +73,79 @@ fun StationScreenTrainRow(
                         .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
-                // 1. Route Name Bubble (Leftmost)
-                if (eurostyle) {
-                        androidx.compose.foundation.layout.Box(
-                                modifier = Modifier
-                                        .width(40.dp)
-                                        .padding(horizontal = 2.dp),
-                                contentAlignment = Alignment.Center
-                        ) {
-                                if (showRouteName && routeInfo?.short_name != null) {
-                                        Text(
-                                                text = routeInfo.short_name.replace(" Line", ""),
-                                                color =
-                                                        parseColor(
-                                                                routeInfo.text_color,
-                                                                Color.White
-                                                        ),
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontSize = 10.sp,
-                                                                fontWeight = FontWeight.Bold
-                                                        ),
-                                                modifier =
-                                                        Modifier
-                                                                .clip(RoundedCornerShape(2.dp))
-                                                                .background(
-                                                                        parseColor(
-                                                                                routeInfo.color,
-                                                                                Color.Gray
+                // Determine order
+                // Standard: Time - Headsign (with Route under Headsign)
+                // Eurostyle: Time - Route - Headsign
+                // Swiss: Route - Time - Headsign
+
+                val routeBubbleParams =
+                        @Composable
+                        {
+                                androidx.compose.foundation.layout.Box(
+                                        modifier =
+                                                Modifier
+                                                        .width(if (swiss) 50.dp else 40.dp)
+                                                        .padding(horizontal = 2.dp),
+                                        contentAlignment =
+                                                if (swiss) Alignment.CenterStart
+                                                else Alignment.Center
+                                ) {
+                                        if (showRouteName && routeInfo?.short_name != null) {
+                                                Text(
+                                                        text =
+                                                                routeInfo.short_name.replace(
+                                                                        " Line",
+                                                                        ""
+                                                                ),
+                                                        color =
+                                                                parseColor(
+                                                                        routeInfo.text_color,
+                                                                        Color.White
+                                                                ),
+                                                        style =
+                                                                MaterialTheme.typography.labelSmall
+                                                                        .copy(
+                                                                                fontSize =
+                                                                                        if (swiss)
+                                                                                                12.sp
+                                                                                        else 10.sp,
+                                                                                fontWeight =
+                                                                                        FontWeight
+                                                                                                .Bold
+                                                                        ),
+                                                        modifier =
+                                                                Modifier
+                                                                        .clip(
+                                                                                RoundedCornerShape(
+                                                                                        2.dp
+                                                                                )
                                                                         )
-                                                                )
-                                                                .padding(
-                                                                        horizontal = 4.dp,
-                                                                        vertical = 1.dp
-                                                                )
-                                        )
+                                                                        .background(
+                                                                                parseColor(
+                                                                                        routeInfo
+                                                                                                .color,
+                                                                                        Color.Gray
+                                                                                )
+                                                                        )
+                                                                        .padding(
+                                                                                horizontal = 4.dp,
+                                                                                vertical = 1.dp
+                                                                        )
+                                                )
+                                        }
                                 }
                         }
+
+                if (swiss) {
+                        routeBubbleParams()
+                } else if (eurostyle) {
+                        // Eurostyle route bubble is between Time and Headsign, it's rendered below.
                 }
-                // Left: Time (Vertical Stack)
+                // Left (or Middle if Swiss): Time (Vertical Stack)
                 Column(
                         modifier = Modifier
                                 .width(70.dp)
-                                .padding(horizontal = 2.dp),
+                                .padding(horizontal = 4.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -240,10 +271,17 @@ fun StationScreenTrainRow(
                         }
                 }
 
-                // Middle: Info
-                Column(modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp)) {
+                if (eurostyle && !swiss) {
+                        routeBubbleParams()
+                }
+
+                // Middle (or Right if Swiss): Info
+                Column(
+                        modifier =
+                                Modifier
+                                        .weight(1f)
+                                        .padding(start = if (swiss) 4.dp else 0.dp, end = 4.dp)
+                ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                                 // ---------------------------------------------------------
                                 // ROW 1: Headsign + Trip Name (Merged)
@@ -329,7 +367,9 @@ fun StationScreenTrainRow(
                                         )
                                 }
 
-                                if (showRouteName && !(eurostyle && routeInfo?.short_name != null)
+                                if (showRouteName &&
+                                        !(eurostyle || swiss) &&
+                                        routeInfo?.short_name != null
                                 ) {
                                         if (routeInfo?.short_name != null) {
                                                 Text(
@@ -859,6 +899,7 @@ fun StationScreenTrainRowCompact(
         showAgencyName: Boolean = true,
         showTimeDiff: Boolean = true,
         eurostyle: Boolean = false,
+        swiss: Boolean = false,
         modifier: Modifier = Modifier,
         onTripClick: (StopEvent) -> Unit = {}
 ) {
@@ -883,50 +924,80 @@ fun StationScreenTrainRowCompact(
                                 .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
-                // 1. Route Name Bubble (Leftmost)
-                if (eurostyle) {
-                        androidx.compose.foundation.layout.Box(
-                                modifier = Modifier
-                                        .width(40.dp)
-                                        .padding(horizontal = 2.dp),
-                                contentAlignment = Alignment.Center
-                        ) {
-                                if (showRouteName && routeInfo?.short_name != null) {
-                                        Text(
-                                                text = routeInfo.short_name.replace(" Line", ""),
-                                                color =
-                                                        parseColor(
-                                                                routeInfo.text_color,
-                                                                Color.White
-                                                        ),
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontSize = 10.sp,
-                                                                fontWeight = FontWeight.Bold
-                                                        ),
-                                                modifier =
-                                                        Modifier
-                                                                .clip(RoundedCornerShape(2.dp))
-                                                                .background(
-                                                                        parseColor(
-                                                                                routeInfo.color,
-                                                                                Color.Gray
+                // Determine order
+                // Standard: Time - Headsign (with Route under Headsign)
+                // Eurostyle: Time - Route - Headsign
+                // Swiss: Route - Time - Headsign
+
+                val routeBubbleParams =
+                        @Composable
+                        {
+                                androidx.compose.foundation.layout.Box(
+                                        modifier =
+                                                Modifier
+                                                        .width(if (swiss) 50.dp else 40.dp)
+                                                        .padding(horizontal = 2.dp),
+                                        contentAlignment =
+                                                if (swiss) Alignment.CenterStart
+                                                else Alignment.Center
+                                ) {
+                                        if (showRouteName && routeInfo?.short_name != null) {
+                                                Text(
+                                                        text =
+                                                                routeInfo.short_name.replace(
+                                                                        " Line",
+                                                                        ""
+                                                                ),
+                                                        color =
+                                                                parseColor(
+                                                                        routeInfo.text_color,
+                                                                        Color.White
+                                                                ),
+                                                        style =
+                                                                MaterialTheme.typography.labelSmall
+                                                                        .copy(
+                                                                                fontSize =
+                                                                                        if (swiss)
+                                                                                                12.sp
+                                                                                        else 10.sp,
+                                                                                fontWeight =
+                                                                                        FontWeight
+                                                                                                .Bold
+                                                                        ),
+                                                        modifier =
+                                                                Modifier
+                                                                        .clip(
+                                                                                RoundedCornerShape(
+                                                                                        2.dp
+                                                                                )
                                                                         )
-                                                                )
-                                                                .padding(
-                                                                        horizontal = 4.dp,
-                                                                        vertical = 1.dp
-                                                                )
-                                        )
+                                                                        .background(
+                                                                                parseColor(
+                                                                                        routeInfo
+                                                                                                .color,
+                                                                                        Color.Gray
+                                                                                )
+                                                                        )
+                                                                        .padding(
+                                                                                horizontal = 4.dp,
+                                                                                vertical = 1.dp
+                                                                        )
+                                                )
+                                        }
                                 }
                         }
+
+                if (swiss) {
+                        routeBubbleParams()
+                } else if (eurostyle) {
+                        // Eurostyle route bubble is between Time and Headsign, it's rendered below.
                 }
 
-                // 2. Time (Vertical Stack)
+                // Left (or Middle if Swiss): Time (Vertical Stack)
                 Column(
                         modifier = Modifier
                                 .width(70.dp)
-                                .padding(horizontal = 2.dp),
+                                .padding(horizontal = 4.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -1075,11 +1146,16 @@ fun StationScreenTrainRowCompact(
                         }
                 }
 
-                // 3. Info (Middle)
+                if (eurostyle && !swiss) {
+                        routeBubbleParams()
+                }
+
+                // Middle (or Right if Swiss): Info
                 Column(
-                        modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 4.dp),
+                        modifier =
+                                Modifier
+                                        .weight(1f)
+                                        .padding(start = if (swiss) 4.dp else 0.dp, end = 4.dp),
                         verticalArrangement = Arrangement.Center
                 ) {
                         // ---------------------------------------------------------
@@ -1160,7 +1236,9 @@ fun StationScreenTrainRowCompact(
                                         )
                                 }
 
-                                if (showRouteName && !(eurostyle && routeInfo?.short_name != null)
+                                if (showRouteName &&
+                                        !(eurostyle || swiss) &&
+                                        routeInfo?.short_name != null
                                 ) {
                                         if (showAgencyName &&
                                                         resolvedAgencyName != null &&
@@ -1288,6 +1366,8 @@ fun StopScreenRowV2(
         showArrivals: Boolean = false,
         useSymbolSign: Boolean = false,
         vertical: Boolean = false,
+        eurostyle: Boolean = false,
+        swiss: Boolean = false,
         modifier: Modifier = Modifier,
         onTripClick: (StopEvent) -> Unit = {}
 ) {
@@ -1327,15 +1407,17 @@ fun StopScreenRowV2(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                 ) {
-                        // 1. Name Column (Left) - Mode Specific Indicators
+                        // 1. Name Column - Mode Specific Indicators
                         val nameColumn: @Composable () -> Unit = {
                                 if (isRatp || isMta || (!isLongName && routeName != null)) {
                                         androidx.compose.foundation.layout.Box(
                                                 modifier =
                                                         Modifier
-                                                                .width(40.dp)
+                                                                .width(if (swiss) 50.dp else 40.dp)
                                                                 .padding(horizontal = 2.dp),
-                                                contentAlignment = Alignment.Center
+                                                contentAlignment =
+                                                        if (swiss) Alignment.CenterStart
+                                                        else Alignment.Center
                                         ) {
                                                 if (isRatp) {
                                                         val iconUrl =
@@ -1447,7 +1529,11 @@ fun StopScreenRowV2(
                                                                                                         FontWeight
                                                                                                                 .Bold,
                                                                                                 fontSize =
-                                                                                                        10.sp
+                                                                                                        if (swiss
+                                                                                                        )
+                                                                                                                12.sp
+                                                                                                        else
+                                                                                                                10.sp
                                                                                         ),
                                                                         modifier =
                                                                                 Modifier
@@ -1488,7 +1574,11 @@ fun StopScreenRowV2(
                                                                                                         FontWeight
                                                                                                                 .SemiBold,
                                                                                                 fontSize =
-                                                                                                        10.sp
+                                                                                                        if (swiss
+                                                                                                        )
+                                                                                                                12.sp
+                                                                                                        else
+                                                                                                                10.sp
                                                                                         ),
                                                                         modifier =
                                                                                 Modifier
@@ -1859,9 +1949,20 @@ fun StopScreenRowV2(
                                 }
                         }
 
-                        timeColumn()
-                        nameColumn()
-                        headsignColumn()
+                        if (swiss) {
+                                nameColumn()
+                                timeColumn()
+                                headsignColumn()
+                        } else if (eurostyle) {
+                                timeColumn()
+                                nameColumn()
+                                headsignColumn()
+                        } else {
+                                // Default for Bus/Metro (matches Eurostyle order originally)
+                                timeColumn()
+                                nameColumn()
+                                headsignColumn()
+                        }
                         platformColumn()
                 }
         }

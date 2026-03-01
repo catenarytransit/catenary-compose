@@ -390,6 +390,13 @@ fun StopScreen(
             if (lat != null && lon != null) EurostyleZone.isInside(lat!!, lon!!) else false
         }
     }
+    val isSwiss by
+    remember(lat, lon) {
+        derivedStateOf {
+            if (lat != null && lon != null) EurostyleZone.isSwitzerland(lat!!, lon!!)
+            else false
+        }
+    }
 
     val datesToEventsFiltered by remember {
         derivedStateOf {
@@ -849,15 +856,15 @@ fun StopScreen(
     if (meta == null && !hasFallback) {
         Column {
             Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 0.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 0.dp),
                     horizontalArrangement = Arrangement.End
             ) { NavigationControls(onBack = onBack, onHome = onHome) }
             Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
                     contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         }
@@ -919,24 +926,24 @@ fun StopScreen(
                     stickyHeader {
                         Box(
                                 modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.surface)
-                                            .clickable { showAlertsSheet = true }
-                                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .clickable { showAlertsSheet = true }
+                                        .padding(horizontal = 8.dp, vertical = 8.dp)
                         ) {
                             Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.error,
-                                                    RoundedCornerShape(8.dp)
-                                                )
-                                                .padding(12.dp)
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.error,
+                                                RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(12.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -977,10 +984,10 @@ fun StopScreen(
                     item {
                         Row(
                                 modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 8.dp, bottom = 8.dp)
-                                            .background(MaterialTheme.colorScheme.background),
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 8.dp, bottom = 8.dp)
+                                        .background(MaterialTheme.colorScheme.background),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             availableModes.forEach { mode ->
@@ -997,12 +1004,12 @@ fun StopScreen(
                                 // Simple Tab Button
                                 Column(
                                         modifier =
-                                                Modifier
-                                                    .clickable { activeTab = mode }
-                                                    .padding(
-                                                        vertical = 8.dp,
-                                                        horizontal = 12.dp
-                                                    ),
+                                            Modifier
+                                                .clickable { activeTab = mode }
+                                                .padding(
+                                                    vertical = 8.dp,
+                                                    horizontal = 12.dp
+                                                ),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
@@ -1025,12 +1032,12 @@ fun StopScreen(
                                     )
                                     if (isSelected) {
                                         Box(
-                                                Modifier
-                                                    .height(2.dp)
-                                                    .width(20.dp)
-                                                    .background(
-                                                        MaterialTheme.colorScheme.primary
-                                                    )
+                                            Modifier
+                                                .height(2.dp)
+                                                .width(20.dp)
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary
+                                                )
                                         )
                                     }
                                 }
@@ -1081,15 +1088,15 @@ fun StopScreen(
                         stickyHeader {
                             Row(
                                     modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .background(MaterialTheme.colorScheme.surface)
-                                                .padding(
-                                                    start = 8.dp,
-                                                    end = 8.dp,
-                                                    top = 16.dp,
-                                                    bottom = 8.dp
-                                                )
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.surface)
+                                            .padding(
+                                                start = 8.dp,
+                                                end = 8.dp,
+                                                top = 16.dp,
+                                                bottom = 8.dp
+                                            )
                             ) {
                                 Text(
                                         text = dateHeaderFormatter.format(date),
@@ -1117,6 +1124,7 @@ fun StopScreen(
                                     showSeconds = showSeconds,
                                         useSymbolSign = true,
                                     eurostyle = isEurostyle,
+                                    swiss = isSwiss,
                                         modifier =
                                                 Modifier.clickable {
                                                     onTripClick(
@@ -1145,10 +1153,11 @@ fun StopScreen(
                                         zoneId = zoneId,
                                         locale = locale,
                                         showArrivals = event.last_stop == true,
-                                        useSymbolSign =
-                                            true,
+                                    useSymbolSign = true,
                                         vertical = false,
                                     showSeconds = showSeconds,
+                                    eurostyle = isEurostyle,
+                                    swiss = isSwiss,
                                         onTripClick = {
                                             onTripClick(
                                                     CatenaryStackEnum.SingleTrip(
@@ -1182,9 +1191,9 @@ fun StopScreen(
                 // Loading / Load More footer
                 item {
                     Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
                             contentAlignment = Alignment.Center
                     ) {
                         if (pages.any { it.loading }) {
@@ -1209,9 +1218,9 @@ fun StopScreen(
                     ) {
                         Column(modifier = Modifier.fillMaxSize()) {
                             Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1228,11 +1237,11 @@ fun StopScreen(
                             }
                             Column(
                                     modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .weight(1f)
-                                                .verticalScroll(rememberScrollState())
-                                                .padding(horizontal = 16.dp)
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .weight(1f)
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(horizontal = 16.dp)
                             ) {
                                 meta?.alerts?.forEach { (chateauId, alertsmap) ->
                                     AlertsBox(
