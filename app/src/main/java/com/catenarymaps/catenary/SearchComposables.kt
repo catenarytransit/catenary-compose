@@ -28,12 +28,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,159 +41,35 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
-// ────────────────────────────────────────────────────────────────────────────────
-// Weight knobs: tune relative influence of each category on the combined ranking.
-// Example: increase NOMINATIM_WEIGHT to prefer address/place results; increase
-// STOP_WEIGHT to bias toward stops; increase ROUTE_WEIGHT to bias toward routes.
-// ────────────────────────────────────────────────────────────────────────────────
-private const val CYPRESS_WEIGHT: Double = 2.0
-private const val ROUTE_WEIGHT: Double = 1.0
-private const val STOP_WEIGHT: Double = 1.0
-
-// Internal row model that lets us render different result types in one list
-private sealed class SearchRow(val weightedScore: Double) {
-    class CypressRow(val item: CypressFeature, score: Double) : SearchRow(score)
-
-    class RouteRow(
-            val ranking: RouteRanking,
-            val routeInfo: RouteInfo,
-            val agency: Agency?,
-            score: Double
-    ) : SearchRow(score)
-
-    class StopRow(
-            val ranking: StopRanking,
-            val stopInfo: StopInfo,
-            val routes: List<RouteInfo>,
-            val agencyNames: List<String>,
-            val distanceMetres: Double?,
-            score: Double
-    ) : SearchRow(score)
-}
-
-// Helper to convert a 1-based rank position into a 0..1 score (1.0 is best)
-private fun rankToUnitScore(index: Int, total: Int): Double {
-    if (total <= 0) return 0.0
-    // Top item => 1.0; last => 1/total. Clamped just in case.
-    return ((total - index).toDouble() / total).coerceIn(0.0, 1.0)
-}
-
 @Composable
 fun SearchResultsOverlay(
         modifier: Modifier = Modifier,
         viewModel: SearchViewModel,
-        currentLocation: Pair<Double, Double>?,
         onCypressClick: (CypressFeature) -> Unit,
         onStopClick: (String, String, StopRanking, StopInfo) -> Unit,
-        onRouteClick: (RouteRanking, RouteInfo, Agency?) -> Unit
+        onRouteClick: (RouteRanking, RouteInfo, Agency?) -> Unit,
+        onOsmStationClick: (OsmStationSearchResult) -> Unit
 ) {
-    val cypressResults by viewModel.cypressResults.collectAsState()
-    val catenaryResults by viewModel.catenaryResults.collectAsState()
+    val combinedRows by viewModel.searchRows.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-
-    val stopsSection = catenaryResults?.stopsSection
-    val routesSection = catenaryResults?.routesSection
-
-    // Build a single, intermingled list of rows, each with a weighted score.
-    val combinedRows =
-            remember(cypressResults, stopsSection, routesSection, currentLocation) {
-                val rows = mutableListOf<SearchRow>()
-
-                // Cypress (limit to 10)
-                cypressResults.take(10).forEach { item ->
-                    // Confidence seems to be around 500. Normalize to 0..1 roughly?
-                    // Or just trust the relative ordering.
-                    val conf = item.properties.confidence ?: 0.0
-                    val base = (conf / 1000.0).coerceIn(0.0, 1.0)
-                    val score = base * CYPRESS_WEIGHT
-                    rows += SearchRow.CypressRow(item, score)
-                }
-
-                // Routes (limit to 10, keep existing matching)
-                routesSection?.let { section ->
-                    val ranked = section.ranking.take(10)
-                    val total = ranked.size.coerceAtLeast(1)
-                    ranked.forEachIndexed { index, ranking ->
-                        val routeInfo = section.routes[ranking.chateau]?.get(ranking.gtfsId)
-                        val agency =
-                                routeInfo?.agencyId?.let {
-                                    section.agencies[ranking.chateau]?.get(it)
-                                }
-                        if (routeInfo != null) {
-                            val base = rankToUnitScore(index, total)
-                            val score = base * ROUTE_WEIGHT
-                            rows += SearchRow.RouteRow(ranking, routeInfo, agency, score)
-                        }
-                    }
-                }
-
-                // Stops (limit to 10, keep existing matching)
-                stopsSection?.let { section ->
-                    val ranked = section.ranking.take(10)
-                    val total = ranked.size.coerceAtLeast(1)
-                    ranked.forEachIndexed { index, ranking ->
-                        val stopInfo = section.stops[ranking.chateau]?.get(ranking.gtfsId)
-                        if (stopInfo != null && stopInfo.parentStation == null) {
-                            // Resolve routes for the stop
-                            val routes =
-                                    stopInfo.routes.mapNotNull { routeId ->
-                                        section.routes[ranking.chateau]?.get(routeId)
-                                    }
-
-                            // Resolve agencies for those routes
-                            val agencyNames =
-                                    routes
-                                            .mapNotNull { route ->
-                                                route.agencyId?.let {
-                                                    section.agencies[ranking.chateau]?.get(it)
-                                                            ?.agencyName
-                                                }
-                                            }
-                                            .distinct()
-
-                            // Distance from user, if available
-                            val distanceMetres =
-                                    currentLocation?.let { (userLat, userLon) ->
-                                        haversineDistance(
-                                                userLat,
-                                                userLon,
-                                                stopInfo.point.y,
-                                                stopInfo.point.x
-                                        )
-                                    }
-
-                            val base = rankToUnitScore(index, total)
-                            val score = base * STOP_WEIGHT
-                            rows +=
-                                    SearchRow.StopRow(
-                                            ranking = ranking,
-                                            stopInfo = stopInfo,
-                                            routes = routes,
-                                            agencyNames = agencyNames,
-                                            distanceMetres = distanceMetres,
-                                            score = score
-                                    )
-                        }
-                    }
-                }
-
-                // Sort across categories by weighted score (descending)
-                rows.sortedByDescending { it.weightedScore }
-            }
 
     Surface(
             modifier =
-                    modifier.background(MaterialTheme.colorScheme.surface)
-                            .padding(top = 64.dp), // Offset for the search bar
+                    modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(top = 64.dp), // Offset for the search bar
             tonalElevation = 6.dp,
             shadowElevation = 8.dp
     ) {
-        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)) {
             LazyColumn(
                     modifier =
-                            Modifier.fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                            Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surface)
+                                .windowInsetsPadding(WindowInsets.safeDrawing)
             ) {
                 // Single, intermingled list
                 items(combinedRows) { row ->
@@ -202,6 +78,12 @@ fun SearchResultsOverlay(
                             CypressResultItem(
                                     item = row.item,
                                     onClick = { onCypressClick(row.item) }
+                            )
+                        }
+                        is SearchRow.OsmStationRow -> {
+                            OsmStationResultItem(
+                                result = row.result,
+                                onClick = { onOsmStationClick(row.result) }
                             )
                         }
                         is SearchRow.RouteRow -> {
@@ -237,7 +119,9 @@ fun SearchResultsOverlay(
             }
 
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(32.dp).align(Alignment.Center))
+                CircularProgressIndicator(modifier = Modifier
+                    .size(32.dp)
+                    .align(Alignment.Center))
             }
         }
     }
@@ -270,9 +154,10 @@ fun CypressResultItem(item: CypressFeature, onClick: () -> Unit) {
 
     Column(
             modifier =
-                    Modifier.fillMaxWidth()
-                            .clickable { onClick() }
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onClick() }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -313,9 +198,10 @@ fun StopResultItem(
 ) {
     Column(
             modifier =
-                    Modifier.fillMaxWidth()
-                            .clickable { onClick() }
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onClick() }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         // Row for Name + Distance
@@ -371,22 +257,112 @@ fun StopResultItem(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RouteResultItem(routeInfo: RouteInfo, agency: Agency?, onClick: () -> Unit) {
-    // RouteResultItem doesn't inherently have chateauId passed in directly as argument,
-    // BUT the 'ranking' object in RouteRow has it.
-    // Wait, RouteResultItem definition above (lines 370) takes (routeInfo, agency).
-    // I need to update signature of RouteResultItem to take chateauId too?
-    // In SearchResultsOverlay (line 205), we call RouteResultItem.
-    // Use multi-edit next time? No, I can do it here if I include enough context or rely on
-    // subsequent edits.
-    // I will modify RouteResultItem signature here safely by assuming caller updates (which I can't
-    // do in one chunk if they are far apart).
-    // Actually, I should update RouteResultItem signature and callers in one go or multiple chunks.
-    // Let's update RouteBadge logic first, then fix callers.
-    // Wait, I can't easily update RouteResultItem signature without updating the caller in
-    // SearchResultsOverlay (line 205).
-    // I'll stick to updating RouteBadge first.
-    return // Placeholder to stop this huge block replacement strategy.
-    // I'll use multi_step for safety.
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RouteBadge(route = routeInfo, chateauId = routeInfo.chateau)
+
+                Column(modifier = Modifier.padding(start = 8.dp)) {
+                    Text(
+                        text =
+                            routeInfo.shortName
+                                ?: routeInfo.longName
+                                ?: routeInfo.routeId,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    if (!routeInfo.longName.isNullOrBlank()) {
+                        Text(
+                            text = routeInfo.longName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            if (agency != null) {
+                Text(
+                    text = agency.agencyName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun OsmStationResultItem(result: OsmStationSearchResult, onClick: () -> Unit) {
+    val hierarchy = result.adminHierarchy
+    val subtitleParts =
+        listOfNotNull(
+            hierarchy?.neighbourhood?.name,
+            hierarchy?.county?.name,
+            hierarchy?.region?.name
+        )
+    val subtitle = subtitleParts.joinToString(", ")
+
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = result.name ?: "Unknown station",
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        if (subtitle.isNotBlank()) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        if (result.routes.isNotEmpty()) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                result.routes.forEach { route ->
+                    // For OSM station chips we may not always know the chateau; fall back to
+                    // route.chateau when present, else an empty string.
+                    RouteBadge(route = route, chateauId = route.chateau)
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -416,7 +392,9 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
                                     .crossfade(true)
                                     .build(),
                     contentDescription = route.shortName,
-                    modifier = Modifier.size(20.dp).padding(end = 2.dp)
+                    modifier = Modifier
+                        .size(20.dp)
+                        .padding(end = 2.dp)
             )
             return
         }
@@ -425,9 +403,10 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
         val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(route.shortName)
         Box(
                 modifier =
-                        Modifier.size(20.dp)
-                                .clip(androidx.compose.foundation.shape.CircleShape)
-                                .background(mtaColor),
+                        Modifier
+                            .size(20.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(mtaColor),
                 contentAlignment = Alignment.Center
         ) {
             Text(
@@ -448,9 +427,10 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
             text = text,
             color = textColor,
             modifier =
-                    Modifier.clip(RoundedCornerShape(4.dp))
-                            .background(bgColor)
-                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                    Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(bgColor)
+                        .padding(horizontal = 6.dp, vertical = 1.dp),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium
     )

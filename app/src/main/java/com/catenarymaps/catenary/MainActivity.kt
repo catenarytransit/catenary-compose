@@ -117,6 +117,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.*
@@ -3987,9 +3988,17 @@ class MainActivity : ComponentActivity() {
                                                                                                 mapCenter =
                                                                                                         camera.position
                                                                                                                 .target,
-                                                                                                context =
-                                                                                                        context
                                                                                         )
+
+                                                                                firebaseAnalytics
+                                                                                        .logEvent(
+                                                                                                "search_bar_type"
+                                                                                        ) {
+                                                                                                param(
+                                                                                                        "text",
+                                                                                                        newQuery
+                                                                                                )
+                                                                                        }
                                                                         },
                                                                         onFocusChange = { isFocused
                                                                                 ->
@@ -4302,7 +4311,6 @@ class MainActivity : ComponentActivity() {
                                                 SearchResultsOverlay(
                                                         modifier = overlayBase,
                                                         viewModel = searchViewModel,
-                                                        currentLocation = currentLocation,
                                                         onCypressClick = { result ->
                                                                 geoLock.deactivate()
 
@@ -4381,6 +4389,66 @@ class MainActivity : ComponentActivity() {
                                                                                         chateau,
                                                                                 stop_id = gtfsId
                                                                         )
+                                                                )
+                                                                catenaryStack = newStack
+
+                                                                scope.launch {
+                                                                        draggableState.animateTo(
+                                                                                SheetSnapPoint
+                                                                                        .PartiallyExpanded
+                                                                        )
+                                                                }
+                                                                focusManager.clearFocus()
+                                                        },
+                                                        onOsmStationClick = { station ->
+                                                                geoLock.deactivate()
+
+                                                                val point = station.point
+                                                                if (point != null) {
+                                                                        val pos =
+                                                                                Position(
+                                                                                        point.x,
+                                                                                        point.y
+                                                                                )
+                                                                        scope.launch {
+                                                                                camera.animateTo(
+                                                                                        camera
+                                                                                                .position
+                                                                                                .copy(
+                                                                                                        target =
+                                                                                                                pos,
+                                                                                                        zoom =
+                                                                                                                16.0
+                                                                                                )
+                                                                                )
+                                                                        }
+                                                                }
+
+                                                                val newStack =
+                                                                        ArrayDeque(
+                                                                                catenaryStack
+                                                                        )
+                                                                newStack.addLast(
+                                                                        CatenaryStackEnum
+                                                                                .OsmStationStack(
+                                                                                        osm_station_id =
+                                                                                                station
+                                                                                                        .osmId
+                                                                                                        .toString(),
+                                                                                        station_name =
+                                                                                                station.name,
+                                                                                        mode_type =
+                                                                                                station
+                                                                                                        .modeType,
+                                                                                        lat =
+                                                                                                station
+                                                                                                        .point
+                                                                                                        ?.y,
+                                                                                        lon =
+                                                                                                station
+                                                                                                        .point
+                                                                                                        ?.x
+                                                                                )
                                                                 )
                                                                 catenaryStack = newStack
 

@@ -1,23 +1,23 @@
 // SearchViewModel.kt
 package com.catenarymaps.catenary
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.logEvent
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import io.ktor.serialization.kotlinx.json.json
+import android.util.Log
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,13 +41,46 @@ fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): D
     return r * c // distance in metres
 }
 
+// Weight knobs for combining different sources into one ranked list.
+private const val CYPRESS_WEIGHT: Double = 2.0
+private const val ROUTE_WEIGHT: Double = 1.0
+private const val STOP_WEIGHT: Double = 1.0
+private const val OSM_STATION_WEIGHT: Double = 2.0
+
+// Internal row model that lets us render different result types in one list.
+sealed class SearchRow(val weightedScore: Double) {
+    class CypressRow(val item: CypressFeature, score: Double) : SearchRow(score)
+
+    class OsmStationRow(val result: OsmStationSearchResult, score: Double) : SearchRow(score)
+
+    class RouteRow(
+        val ranking: RouteRanking,
+        val routeInfo: RouteInfo,
+        val agency: Agency?,
+        score: Double
+    ) : SearchRow(score)
+
+    class StopRow(
+        val ranking: StopRanking,
+        val stopInfo: StopInfo,
+        val routes: List<RouteInfo>,
+        val agencyNames: List<String>,
+        val distanceMetres: Double?,
+        score: Double
+    ) : SearchRow(score)
+}
+
+// Helper to convert a 1-based rank position into a 0..1 score (1.0 is best)
+private fun rankToUnitScore(index: Int, total: Int): Double {
+    if (total <= 0) return 0.0
+    // Top item => 1.0; last => 1/total.
+    return ((total - index).toDouble() / total).coerceIn(0.0, 1.0)
+}
+
 class SearchViewModel : ViewModel() {
 
-    private val _cypressResults = MutableStateFlow<List<CypressFeature>>(emptyList())
-    val cypressResults = _cypressResults.asStateFlow()
-
-    private val _catenaryResults = MutableStateFlow<CatenarySearchResponse?>(null)
-    val catenaryResults = _catenaryResults.asStateFlow()
+    private val _searchRows = MutableStateFlow<List<SearchRow>>(emptyList())
+    val searchRows = _searchRows.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -69,13 +102,11 @@ class SearchViewModel : ViewModel() {
             query: String,
             userLocation: Pair<Double, Double>?,
             mapCenter: Position,
-            context: Context
     ) {
         searchJob?.cancel() // Cancel previous job
         if (query.isBlank()) {
             _isLoading.value = false
-            _cypressResults.value = emptyList()
-            _catenaryResults.value = null
+            _searchRows.value = emptyList()
             return
         }
 
@@ -86,7 +117,7 @@ class SearchViewModel : ViewModel() {
 
                     try {
                         // --- Catenary Search API (Ktor) ---
-                        val catenaryJob = launch {
+                        val catenaryDeferred = async {
                             try {
                                 var catenaryUrl =
                                         "https://birch.catenarymaps.org/text_search_v1?text=$query&map_lat=${mapCenter.latitude}&map_lon=${mapCenter.longitude}&map_z=10"
@@ -95,35 +126,91 @@ class SearchViewModel : ViewModel() {
                                             "&user_lat=${userLocation.first}&user_lon=${userLocation.second}"
                                 }
 
-                                val response =
-                                        client.get(catenaryUrl).body<CatenarySearchResponse>()
-                                _catenaryResults.value = response
+                                client.get(catenaryUrl).body<CatenarySearchResponse>()
                             } catch (e: Exception) {
                                 e.printStackTrace()
-                                _catenaryResults.value = null // Clear on error
+                                null
                             }
-
-                            val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
-                            firebaseAnalytics.logEvent("search_bar_type") { param("text", query) }
                         }
 
                         // --- Cypress Autocomplete API (Ktor) ---
-                        val cypressJob = launch {
+                        val cypressDeferred = async {
                             try {
                                 val cypressUrl =
                                         "https://cypress.catenarymaps.org/v1/autocomplete?text=$query"
 
                                 val response = client.get(cypressUrl).body<CypressResponse>()
-                                _cypressResults.value = response.features
+                                response.features
                             } catch (e: Exception) {
                                 e.printStackTrace()
-                                _cypressResults.value = emptyList() // Clear on error
+                                emptyList()
                             }
                         }
 
-                        // Wait for both network requests to complete
-                        catenaryJob.join()
-                        cypressJob.join()
+                        // --- OSM Station Search API (Ktor) ---
+                        val osmDeferred = async {
+                            try {
+                                val httpResponse =
+                                    client.get(
+                                        "https://birch.catenarymaps.org/osm_station_search"
+                                    ) {
+                                        url {
+                                            parameters.append("text", query)
+
+                                            // Mirror Svelte behavior: only apply focus when
+                                            // we have a user location, and focus around the
+                                            // current map center.
+                                            if (userLocation != null) {
+
+                                            }
+                                        }
+                                    }
+
+                                val bodyText = httpResponse.bodyAsText()
+                                Log.d(
+                                    "SearchViewModel",
+                                    "OSM station search raw response: $bodyText"
+                                )
+
+                                try {
+                                    val parsed =
+                                        json.decodeFromString<OsmStationSearchResponse>(
+                                            bodyText
+                                        )
+                                    parsed.results
+                                } catch (e: Exception) {
+                                    Log.e(
+                                        "SearchViewModel",
+                                        "Failed to deserialize OSM station search response",
+                                        e
+                                    )
+                                    Log.e(
+                                        "SearchViewModel",
+                                        "Offending OSM body: $bodyText"
+                                    )
+                                    emptyList()
+                                }
+                            } catch (e: Exception) {
+                                Log.e(
+                                    "SearchViewModel",
+                                    "OSM station search request failed",
+                                    e
+                                )
+                                emptyList()
+                            }
+                        }
+
+                        val catenaryResponse = catenaryDeferred.await()
+                        val cypressResults = cypressDeferred.await()
+                        val osmStationResults = osmDeferred.await()
+
+                        _searchRows.value =
+                            buildCombinedRows(
+                                catenaryResponse,
+                                cypressResults,
+                                osmStationResults,
+                                userLocation
+                            )
                     } finally {
                         // This now correctly runs *after* both jobs are finished
                         _isLoading.value = false
@@ -136,3 +223,100 @@ class SearchViewModel : ViewModel() {
         client.close() // Close the client when the ViewModel is destroyed
     }
 }
+
+private fun buildCombinedRows(
+    catenaryResults: CatenarySearchResponse?,
+    cypressResults: List<CypressFeature>,
+    osmStationResults: List<OsmStationSearchResult>,
+    userLocation: Pair<Double, Double>?,
+): List<SearchRow> {
+    val rows = mutableListOf<SearchRow>()
+
+    // OSM Stations (limit to 10)
+    if (osmStationResults.isNotEmpty()) {
+        val total = osmStationResults.size.coerceAtLeast(1)
+        osmStationResults.take(10).forEachIndexed { index, station ->
+            val base = rankToUnitScore(index, total)
+            val score = base * OSM_STATION_WEIGHT
+            rows += SearchRow.OsmStationRow(station, score)
+        }
+    }
+
+    // Cypress (limit to 10)
+    if (cypressResults.isNotEmpty()) {
+        cypressResults.take(10).forEach { item ->
+            val conf = item.properties.confidence ?: 0.0
+            val base = (conf / 1000.0).coerceIn(0.0, 1.0)
+            val score = base * CYPRESS_WEIGHT
+            rows += SearchRow.CypressRow(item, score)
+        }
+    }
+
+    // Routes (limit to 10)
+    val routesSection = catenaryResults?.routesSection
+    routesSection?.let { section ->
+        val ranked = section.ranking.take(10)
+        val total = ranked.size.coerceAtLeast(1)
+        ranked.forEachIndexed { index, ranking ->
+            val routeInfo = section.routes[ranking.chateau]?.get(ranking.gtfsId)
+            val agency = routeInfo?.agencyId?.let { section.agencies[ranking.chateau]?.get(it) }
+            if (routeInfo != null) {
+                val base = rankToUnitScore(index, total)
+                val score = base * ROUTE_WEIGHT
+                rows += SearchRow.RouteRow(ranking, routeInfo, agency, score)
+            }
+        }
+    }
+
+    // Stops (limit to 10)
+    val stopsSection = catenaryResults?.stopsSection
+    stopsSection?.let { section ->
+        val ranked = section.ranking.take(10)
+        val total = ranked.size.coerceAtLeast(1)
+        ranked.forEachIndexed { index, ranking ->
+            val stopInfo = section.stops[ranking.chateau]?.get(ranking.gtfsId)
+            if (stopInfo != null && stopInfo.parentStation == null) {
+                val routes =
+                    stopInfo.routes.mapNotNull { routeId ->
+                        section.routes[ranking.chateau]?.get(routeId)
+                    }
+
+                val agencyNames =
+                    routes
+                        .mapNotNull { route ->
+                            route.agencyId?.let {
+                                section.agencies[ranking.chateau]?.get(it)?.agencyName
+                            }
+                        }
+                        .distinct()
+
+                val distanceMetres =
+                    userLocation?.let { (userLat, userLon) ->
+                        haversineDistance(
+                            userLat,
+                            userLon,
+                            stopInfo.point.y,
+                            stopInfo.point.x,
+                        )
+                    }
+
+                val base = rankToUnitScore(index, total)
+                val score = base * STOP_WEIGHT
+
+                rows +=
+                    SearchRow.StopRow(
+                        ranking = ranking,
+                        stopInfo = stopInfo,
+                        routes = routes,
+                        agencyNames = agencyNames,
+                        distanceMetres = distanceMetres,
+                        score = score,
+                    )
+            }
+        }
+    }
+
+    // Sort across categories by weighted score (descending)
+    return rows.sortedByDescending { it.weightedScore }
+}
+

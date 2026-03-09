@@ -2,6 +2,7 @@ package com.catenarymaps.catenary
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 // --- Cypress API Response ---
 
@@ -117,3 +118,38 @@ data class Agency(
         val agencyFareUrlTranslations: Map<String, String>? = null,
         val chateau: String
 )
+
+// --- OSM Station Search API Response ---
+
+@Serializable
+data class OsmStationSearchResponse(val results: List<OsmStationSearchResult>)
+
+@Serializable
+data class OsmStationSearchResult(
+        @SerialName("osm_id") val osmId: Long,
+        val name: String? = null,
+        val point: OsmStationPoint? = null,
+        @SerialName("mode_type") val modeType: String,
+        val operator: String? = null,
+        val network: String? = null,
+        @SerialName("admin_hierarchy") val adminHierarchy: AdminHierarchy? = null,
+        val routes: List<RouteInfo> = emptyList(),
+        val confidence: Double
+)
+
+@Serializable
+data class OsmStationPoint(val x: Double, val y: Double)
+
+@Serializable
+data class AdminHierarchy(
+        val country: AdminArea? = null,
+        val neighbourhood: AdminArea? = null,
+        val county: AdminArea? = null,
+        val region: AdminArea? = null,
+        // Keep room for additional admin levels without strict typing
+        val raw: JsonObject? = null
+)
+
+@Serializable
+data class AdminArea(val name: String? = null)
+
