@@ -17,7 +17,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -116,101 +116,121 @@ class SearchViewModel : ViewModel() {
                     delay(200) // Debounce for 200ms
 
                     try {
-                        // --- Catenary Search API (Ktor) ---
-                        val catenaryDeferred = async {
-                            try {
-                                var catenaryUrl =
-                                        "https://birch.catenarymaps.org/text_search_v1?text=$query&map_lat=${mapCenter.latitude}&map_lon=${mapCenter.longitude}&map_z=10"
-                                if (userLocation != null) {
-                                    catenaryUrl +=
-                                            "&user_lat=${userLocation.first}&user_lon=${userLocation.second}"
-                                }
+                        coroutineScope {
+                            data class PartialResults(
+                                var catenary: CatenarySearchResponse? = null,
+                                var cypress: List<CypressFeature> = emptyList(),
+                                var osmStations: List<OsmStationSearchResult> = emptyList(),
+                            )
 
-                                client.get(catenaryUrl).body<CatenarySearchResponse>()
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                null
+                            val partialResults = PartialResults()
+
+                            fun recomputeRows() {
+                                _searchRows.value =
+                                    buildCombinedRows(
+                                        partialResults.catenary,
+                                        partialResults.cypress,
+                                        partialResults.osmStations,
+                                        userLocation,
+                                    )
                             }
-                        }
 
-                        // --- Cypress Autocomplete API (Ktor) ---
-                        val cypressDeferred = async {
-                            try {
-                                val cypressUrl =
-                                        "https://cypress.catenarymaps.org/v1/autocomplete?text=$query"
-
-                                val response = client.get(cypressUrl).body<CypressResponse>()
-                                response.features
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                emptyList()
-                            }
-                        }
-
-                        // --- OSM Station Search API (Ktor) ---
-                        val osmDeferred = async {
-                            try {
-                                val httpResponse =
-                                    client.get(
-                                        "https://birch.catenarymaps.org/osm_station_search"
-                                    ) {
-                                        url {
-                                            parameters.append("text", query)
-
-                                            // Mirror Svelte behavior: only apply focus when
-                                            // we have a user location, and focus around the
-                                            // current map center.
-                                            if (userLocation != null) {
-
-                                            }
+                            // --- Catenary Search API (Ktor) ---
+                            launch {
+                                val response =
+                                    try {
+                                        var catenaryUrl =
+                                            "https://birch.catenarymaps.org/text_search_v1?text=$query&map_lat=${mapCenter.latitude}&map_lon=${mapCenter.longitude}&map_z=10"
+                                        if (userLocation != null) {
+                                            catenaryUrl +=
+                                                "&user_lat=${userLocation.first}&user_lon=${userLocation.second}"
                                         }
+
+                                        client.get(catenaryUrl).body<CatenarySearchResponse>()
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        null
                                     }
 
-                                val bodyText = httpResponse.bodyAsText()
-                                Log.d(
-                                    "SearchViewModel",
-                                    "OSM station search raw response: $bodyText"
-                                )
+                                partialResults.catenary = response
+                                recomputeRows()
+                            }
 
-                                try {
-                                    val parsed =
-                                        json.decodeFromString<OsmStationSearchResponse>(
-                                            bodyText
+                            // --- Cypress Autocomplete API (Ktor) ---
+                            launch {
+                                val features =
+                                    try {
+                                        val cypressUrl =
+                                            "https://cypress.catenarymaps.org/v1/autocomplete?text=$query"
+
+                                        val response = client.get(cypressUrl).body<CypressResponse>()
+                                        response.features
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        emptyList()
+                                    }
+
+                                partialResults.cypress = features
+                                recomputeRows()
+                            }
+
+                            // --- OSM Station Search API (Ktor) ---
+                            launch {
+                                val stations =
+                                    try {
+                                        val httpResponse =
+                                            client.get(
+                                                "https://birch.catenarymaps.org/osm_station_search"
+                                            ) {
+                                                url {
+                                                    parameters.append("text", query)
+
+                                                    // Mirror Svelte behavior: only apply focus when
+                                                    // we have a user location, and focus around the
+                                                    // current map center.
+                                                    if (userLocation != null) {
+
+                                                    }
+                                                }
+                                            }
+
+                                        val bodyText = httpResponse.bodyAsText()
+                                        Log.d(
+                                            "SearchViewModel",
+                                            "OSM station search raw response: $bodyText"
                                         )
-                                    parsed.results
-                                } catch (e: Exception) {
-                                    Log.e(
-                                        "SearchViewModel",
-                                        "Failed to deserialize OSM station search response",
-                                        e
-                                    )
-                                    Log.e(
-                                        "SearchViewModel",
-                                        "Offending OSM body: $bodyText"
-                                    )
-                                    emptyList()
-                                }
-                            } catch (e: Exception) {
-                                Log.e(
-                                    "SearchViewModel",
-                                    "OSM station search request failed",
-                                    e
-                                )
-                                emptyList()
+
+                                        try {
+                                            val parsed =
+                                                json.decodeFromString<
+                                                    OsmStationSearchResponse
+                                                >(bodyText)
+                                            parsed.results
+                                        } catch (e: Exception) {
+                                            Log.e(
+                                                "SearchViewModel",
+                                                "Failed to deserialize OSM station search response",
+                                                e
+                                            )
+                                            Log.e(
+                                                "SearchViewModel",
+                                                "Offending OSM body: $bodyText"
+                                            )
+                                            emptyList()
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            "SearchViewModel",
+                                            "OSM station search request failed",
+                                            e
+                                        )
+                                        emptyList()
+                                    }
+
+                                partialResults.osmStations = stations
+                                recomputeRows()
                             }
                         }
-
-                        val catenaryResponse = catenaryDeferred.await()
-                        val cypressResults = cypressDeferred.await()
-                        val osmStationResults = osmDeferred.await()
-
-                        _searchRows.value =
-                            buildCombinedRows(
-                                catenaryResponse,
-                                cypressResults,
-                                osmStationResults,
-                                userLocation
-                            )
                     } finally {
                         // This now correctly runs *after* both jobs are finished
                         _isLoading.value = false
