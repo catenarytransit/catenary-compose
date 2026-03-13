@@ -1,11 +1,11 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -26,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.FreeBreakfast
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -263,79 +265,11 @@ fun BlockScreen(
                         }
 
                         // Middle: vertical timeline with start/end dots and active indicator
-                        BoxWithConstraints(
-                            modifier = Modifier
-                                .width(24.dp)
-                                .fillMaxHeight(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val lineTopPadding = 16.dp
-                            val lineBottomPadding = 16.dp
-                            val fraction = if (trip.end_time > trip.start_time) {
-                                ((currentTime - trip.start_time).toFloat() / (trip.end_time - trip.start_time).toFloat())
-                                    .coerceIn(0f, 1f)
-                            } else {
-                                0f
-                            }
-
-                            val lineHeight = maxHeight - lineTopPadding - lineBottomPadding
-                            val indicatorOffset = lineTopPadding + (lineHeight * fraction)
-
-                            val primary = MaterialTheme.colorScheme.primary
-                            val onSurface = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-
-                            // Vertical line
-                            Box(
-                                modifier = Modifier
-                                    .width(2.dp)
-                                    .fillMaxHeight()
-                                    .padding(top = lineTopPadding, bottom = lineBottomPadding)
-                                    .background(onSurface)
-                                    .align(Alignment.Center)
-                            )
-
-                            // Start dot
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .border(
-                                        width = 2.dp,
-                                        color = onSurface,
-                                        shape = CircleShape
-                                    )
-                                    .align(Alignment.TopCenter)
-                                    .offset(y = lineTopPadding - 4.dp)
-                            )
-
-                            // End dot
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .border(
-                                        width = 2.dp,
-                                        color = onSurface,
-                                        shape = CircleShape
-                                    )
-                                    .align(Alignment.BottomCenter)
-                                    .offset(y = -(lineBottomPadding - 4.dp))
-                            )
-
-                            // Active position indicator
-                            if (isTripActive) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(primary)
-                                        .align(Alignment.TopCenter)
-                                        .offset(y = indicatorOffset - 5.dp)
-                                )
-                            }
-                        }
+                        BlockTripTimeline(
+                            startTime = trip.start_time,
+                            endTime = trip.end_time,
+                            currentTime = currentTime
+                        )
 
                         // Right: content card
                         Box(
@@ -516,7 +450,7 @@ fun BlockScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.OpenInNew,
+                                    imageVector = Icons.Default.FreeBreakfast,
                                     contentDescription = stringResource(id = R.string.block_screen_layover),
                                     modifier = Modifier.size(16.dp),
                                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -533,6 +467,83 @@ fun BlockScreen(
             }
         } else {
             Text(text = stringResource(id = R.string.block_screen_error))
+        }
+    }
+}
+
+@Composable
+fun BlockTripTimeline(
+    startTime: Long,
+    endTime: Long,
+    currentTime: Long
+) {
+    val primary = MaterialTheme.colorScheme.primary
+    val onSurface = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    val surface = MaterialTheme.colorScheme.surface
+
+    Canvas(
+        modifier = Modifier
+            .width(24.dp)
+            .fillMaxHeight()
+    ) {
+        val lineTopPaddingPx = 16.dp.toPx()
+        val lineBottomPaddingPx = 16.dp.toPx()
+
+        val centerX = size.width / 2f
+        val lineTop = lineTopPaddingPx
+        val lineBottom = size.height - lineBottomPaddingPx
+
+        // Vertical line
+        val lineWidth = 2.dp.toPx()
+        drawRect(
+            color = onSurface,
+            topLeft = Offset(centerX - lineWidth / 2f, lineTop),
+            size = Size(lineWidth, lineBottom - lineTop)
+        )
+
+        // Start and end dots
+        val outerRadius = 4.dp.toPx()
+        val borderWidth = 2.dp.toPx()
+        val innerRadius = (outerRadius - borderWidth).coerceAtLeast(0f)
+
+        // Start dot (top)
+        val startCenter = Offset(centerX, lineTop)
+        drawCircle(color = onSurface, radius = outerRadius, center = startCenter)
+        if (innerRadius > 0f) {
+            drawCircle(
+                color = surface,
+                radius = innerRadius,
+                center = startCenter
+            )
+        }
+
+        // End dot (bottom)
+        val endCenter = Offset(centerX, lineBottom)
+        drawCircle(color = onSurface, radius = outerRadius, center = endCenter)
+        if (innerRadius > 0f) {
+            drawCircle(
+                color = surface,
+                radius = innerRadius,
+                center = endCenter
+            )
+        }
+
+        // Active position indicator
+        val fraction = if (endTime > startTime) {
+            ((currentTime - startTime).toFloat() / (endTime - startTime).toFloat())
+                .coerceIn(0f, 1f)
+        } else {
+            0f
+        }
+
+        if (fraction > 0f && fraction < 1f) {
+            val indicatorY = lineTop + (lineBottom - lineTop) * fraction
+            val indicatorRadius = 5.dp.toPx()
+            drawCircle(
+                color = primary,
+                radius = indicatorRadius,
+                center = Offset(centerX, indicatorY)
+            )
         }
     }
 }
