@@ -250,7 +250,8 @@ fun BlockScreen(
                         Column(
                             modifier = Modifier
                                 .width(72.dp)
-                                .padding(vertical = 12.dp),
+                                .fillMaxHeight()
+                                .padding(vertical = 16.dp),
                             verticalArrangement = Arrangement.SpaceBetween,
                             horizontalAlignment = Alignment.End
                         ) {
