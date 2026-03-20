@@ -33,18 +33,21 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 232
-        versionName = "2.0.130"
+        versionCode = 233
+        versionName = "2.0.131"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            isMinifyEnabled = true
         }
     }
     compileOptions {

@@ -1,4 +1,4 @@
-﻿package com.catenarymaps.catenary
+package com.catenarymaps.catenary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -75,7 +75,9 @@ fun StationScreenTrainRow(
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
 
         Row(
-                modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+                modifier = modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // Determine order
@@ -88,22 +90,25 @@ fun StationScreenTrainRow(
                         {
                                 androidx.compose.foundation.layout.Box(
                                         modifier =
-                                                Modifier.width(if (swiss) 50.dp else 40.dp)
+                                                Modifier
+                                                        .width(if (swiss) 50.dp else 40.dp)
                                                         .padding(horizontal = 2.dp),
                                         contentAlignment =
                                                 if (swiss) Alignment.CenterStart
                                                 else Alignment.Center
                                 ) {
-                                        if (showRouteName && routeInfo?.short_name != null) {
+                                        val routeName =
+                                                routeInfo?.short_name ?: routeInfo?.long_name
+                                        if (showRouteName && routeName != null) {
                                                 Text(
                                                         text =
-                                                                routeInfo.short_name.replace(
+                                                                routeName.replace(
                                                                         " Line",
                                                                         ""
                                                                 ),
                                                         color =
                                                                 parseColor(
-                                                                        routeInfo.text_color,
+                                                                        routeInfo?.text_color,
                                                                         Color.White
                                                                 ),
                                                         style =
@@ -118,7 +123,8 @@ fun StationScreenTrainRow(
                                                                                                 .Bold
                                                                         ),
                                                         modifier =
-                                                                Modifier.clip(
+                                                                Modifier
+                                                                        .clip(
                                                                                 getRouteShape(
                                                                                         event.chateau,
                                                                                         routeInfo
@@ -128,7 +134,7 @@ fun StationScreenTrainRow(
                                                                         .background(
                                                                                 parseColor(
                                                                                         routeInfo
-                                                                                                .color,
+                                                                                                ?.color,
                                                                                         Color.Gray
                                                                                 )
                                                                         )
@@ -148,7 +154,9 @@ fun StationScreenTrainRow(
                 }
                 // Left (or Middle if Swiss): Time (Vertical Stack)
                 Column(
-                        modifier = Modifier.width(70.dp).padding(horizontal = 4.dp),
+                        modifier = Modifier
+                                .width(70.dp)
+                                .padding(horizontal = 4.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -281,7 +289,8 @@ fun StationScreenTrainRow(
                 // Middle (or Right if Swiss): Info
                 Column(
                         modifier =
-                                Modifier.weight(1f)
+                                Modifier
+                                        .weight(1f)
                                         .padding(start = if (swiss) 4.dp else 0.dp, end = 4.dp)
                 ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -366,18 +375,20 @@ fun StationScreenTrainRow(
 
                                 if (showRouteName &&
                                                 !(eurostyle || swiss) &&
-                                                routeInfo?.short_name != null
+                                        (routeInfo?.short_name != null || routeInfo?.long_name != null)
                                 ) {
-                                        if (routeInfo?.short_name != null) {
+                                        val routeName =
+                                                routeInfo?.short_name ?: routeInfo?.long_name
+                                        if (routeName != null) {
                                                 Text(
                                                         text =
-                                                                routeInfo.short_name.replace(
+                                                                routeName.replace(
                                                                         " Line",
                                                                         ""
                                                                 ),
                                                         color =
                                                                 parseColor(
-                                                                        routeInfo.text_color,
+                                                                        routeInfo?.text_color,
                                                                         Color.White
                                                                 ),
                                                         style =
@@ -389,7 +400,8 @@ fun StationScreenTrainRow(
                                                                                                 .Bold
                                                                         ),
                                                         modifier =
-                                                                Modifier.clip(
+                                                                Modifier
+                                                                        .clip(
                                                                                 getRouteShape(
                                                                                         event.chateau,
                                                                                         routeInfo
@@ -399,7 +411,7 @@ fun StationScreenTrainRow(
                                                                         .background(
                                                                                 parseColor(
                                                                                         routeInfo
-                                                                                                .color,
+                                                                                                ?.color,
                                                                                         Color.Gray
                                                                                 )
                                                                         )
@@ -409,41 +421,6 @@ fun StationScreenTrainRow(
                                                                         )
                                                 )
                                                 Spacer(Modifier.width(4.dp))
-                                        } else if (routeInfo?.long_name != null) {
-                                                Text(
-                                                        text = routeInfo.long_name,
-                                                        color =
-                                                                parseColor(
-                                                                        routeInfo.text_color,
-                                                                        Color.White
-                                                                ),
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .Bold
-                                                                        ),
-                                                        modifier =
-                                                                Modifier.clip(
-                                                                                getRouteShape(
-                                                                                        event.chateau,
-                                                                                        routeInfo
-                                                                                                ?.short_name
-                                                                                )
-                                                                        )
-                                                                        .background(
-                                                                                parseColor(
-                                                                                        routeInfo
-                                                                                                .color,
-                                                                                        Color.Gray
-                                                                                )
-                                                                        )
-                                                                        .padding(
-                                                                                horizontal = 4.dp,
-                                                                                vertical = 1.dp
-                                                                        )
-                                                )
                                         }
                                 }
                         }
@@ -464,7 +441,8 @@ fun StationScreenTrainRow(
                                                         fontWeight = FontWeight.Bold
                                                 ),
                                         modifier =
-                                                Modifier.background(
+                                                Modifier
+                                                        .background(
                                                                 MaterialTheme.colorScheme
                                                                         .surfaceVariant,
                                                                 RoundedCornerShape(4.dp)
@@ -621,7 +599,8 @@ fun StopScreenRow(
                                                                                 routeInfo
                                                                                         ?.short_name,
                                                                         modifier =
-                                                                                Modifier.height(
+                                                                                Modifier
+                                                                                        .height(
                                                                                                 20.dp
                                                                                         )
                                                                                         .padding(
@@ -642,7 +621,8 @@ fun StopScreenRow(
                                                                         )
                                                         androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier.size(20.dp)
+                                                                        Modifier
+                                                                                .size(20.dp)
                                                                                 .clip(CircleShape)
                                                                                 .background(
                                                                                         mtaColor
@@ -686,7 +666,8 @@ fun StopScreenRow(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier.clip(
+                                                                        Modifier
+                                                                                .clip(
                                                                                         getRouteShape(
                                                                                                 event.chateau,
                                                                                                 routeInfo
@@ -725,7 +706,8 @@ fun StopScreenRow(
                                                                                                 .SemiBold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier.clip(
+                                                                        Modifier
+                                                                                .clip(
                                                                                         getRouteShape(
                                                                                                 event.chateau,
                                                                                                 routeInfo
@@ -916,7 +898,8 @@ fun StationScreenTrainRowCompact(
 
         Row(
                 modifier =
-                        modifier.fillMaxWidth()
+                        modifier
+                                .fillMaxWidth()
                                 .clickable { onTripClick(event) }
                                 .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -931,22 +914,25 @@ fun StationScreenTrainRowCompact(
                         {
                                 androidx.compose.foundation.layout.Box(
                                         modifier =
-                                                Modifier.width(if (swiss) 50.dp else 40.dp)
+                                                Modifier
+                                                        .width(if (swiss) 50.dp else 40.dp)
                                                         .padding(horizontal = 2.dp),
                                         contentAlignment =
                                                 if (swiss) Alignment.CenterStart
                                                 else Alignment.Center
                                 ) {
-                                        if (showRouteName && routeInfo?.short_name != null) {
+                                        val routeName =
+                                                routeInfo?.short_name ?: routeInfo?.long_name
+                                        if (showRouteName && routeName != null) {
                                                 Text(
                                                         text =
-                                                                routeInfo.short_name.replace(
+                                                                routeName.replace(
                                                                         " Line",
                                                                         ""
                                                                 ),
                                                         color =
                                                                 parseColor(
-                                                                        routeInfo.text_color,
+                                                                        routeInfo?.text_color,
                                                                         Color.White
                                                                 ),
                                                         style =
@@ -961,7 +947,8 @@ fun StationScreenTrainRowCompact(
                                                                                                 .Bold
                                                                         ),
                                                         modifier =
-                                                                Modifier.clip(
+                                                                Modifier
+                                                                        .clip(
                                                                                 getRouteShape(
                                                                                         event.chateau,
                                                                                         routeInfo
@@ -971,7 +958,7 @@ fun StationScreenTrainRowCompact(
                                                                         .background(
                                                                                 parseColor(
                                                                                         routeInfo
-                                                                                                .color,
+                                                                                                ?.color,
                                                                                         Color.Gray
                                                                                 )
                                                                         )
@@ -992,7 +979,9 @@ fun StationScreenTrainRowCompact(
 
                 // Left (or Middle if Swiss): Time (Vertical Stack)
                 Column(
-                        modifier = Modifier.width(70.dp).padding(horizontal = 4.dp),
+                        modifier = Modifier
+                                .width(70.dp)
+                                .padding(horizontal = 4.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -1148,7 +1137,8 @@ fun StationScreenTrainRowCompact(
                 // Middle (or Right if Swiss): Info
                 Column(
                         modifier =
-                                Modifier.weight(1f)
+                                Modifier
+                                        .weight(1f)
                                         .padding(start = if (swiss) 4.dp else 0.dp, end = 4.dp),
                         verticalArrangement = Arrangement.Center
                 ) {
@@ -1214,7 +1204,8 @@ fun StationScreenTrainRowCompact(
                                                         imageLoader = imageLoader,
                                                         contentDescription = agencyName,
                                                         modifier =
-                                                                Modifier.size(12.dp)
+                                                                Modifier
+                                                                        .size(12.dp)
                                                                         .padding(end = 2.dp),
                                                         colorFilter = null
                                                 )
@@ -1231,23 +1222,25 @@ fun StationScreenTrainRowCompact(
 
                                 if (showRouteName &&
                                                 !(eurostyle || swiss) &&
-                                                routeInfo?.short_name != null
+                                        (routeInfo?.short_name != null || routeInfo?.long_name != null)
                                 ) {
                                         if (showAgencyName &&
                                                         resolvedAgencyName != null &&
                                                         (routeInfo?.short_name != null ||
                                                                 routeInfo?.long_name != null)
                                         ) {}
-                                        if (routeInfo?.short_name != null) {
+                                        val routeName =
+                                                routeInfo?.short_name ?: routeInfo?.long_name
+                                        if (routeName != null) {
                                                 Text(
                                                         text =
-                                                                routeInfo.short_name.replace(
+                                                                routeName.replace(
                                                                         " Line",
                                                                         ""
                                                                 ),
                                                         color =
                                                                 parseColor(
-                                                                        routeInfo.text_color,
+                                                                        routeInfo?.text_color,
                                                                         Color.White
                                                                 ),
                                                         style =
@@ -1259,7 +1252,8 @@ fun StationScreenTrainRowCompact(
                                                                                                 .Bold
                                                                         ),
                                                         modifier =
-                                                                Modifier.clip(
+                                                                Modifier
+                                                                        .clip(
                                                                                 getRouteShape(
                                                                                         event.chateau,
                                                                                         routeInfo
@@ -1269,43 +1263,7 @@ fun StationScreenTrainRowCompact(
                                                                         .background(
                                                                                 parseColor(
                                                                                         routeInfo
-                                                                                                .color,
-                                                                                        Color.Gray
-                                                                                )
-                                                                        )
-                                                                        .padding(
-                                                                                horizontal = 4.dp,
-                                                                                vertical = 0.5.dp
-                                                                        )
-                                                )
-                                        } else if (routeInfo?.long_name != null) {
-                                                Text(
-                                                        text = routeInfo.long_name,
-                                                        color =
-                                                                parseColor(
-                                                                        routeInfo.text_color,
-                                                                        Color.White
-                                                                ),
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
-                                                                                fontSize = 10.sp,
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .SemiBold
-                                                                        ),
-                                                        modifier =
-                                                                Modifier.clip(
-                                                                                getRouteShape(
-                                                                                        event.chateau,
-                                                                                        routeInfo
-                                                                                                ?.short_name
-                                                                                )
-                                                                        )
-                                                                        .background(
-                                                                                parseColor(
-                                                                                        routeInfo
-                                                                                                .color,
+                                                                                                ?.color,
                                                                                         Color.Gray
                                                                                 )
                                                                         )
@@ -1381,7 +1339,8 @@ fun StopScreenRowV2(
 
         Column(
                 modifier =
-                        modifier.fillMaxWidth()
+                        modifier
+                                .fillMaxWidth()
                                 .clickable { onTripClick(event) }
                                 .defaultMinSize(minHeight = 48.dp)
                                 .padding(vertical = 4.dp),
@@ -1396,7 +1355,8 @@ fun StopScreenRowV2(
                                 if (isRatp || isMta || (!isLongName && routeName != null)) {
                                         androidx.compose.foundation.layout.Box(
                                                 modifier =
-                                                        Modifier.width(if (swiss) 50.dp else 40.dp)
+                                                        Modifier
+                                                                .width(if (swiss) 50.dp else 40.dp)
                                                                 .padding(horizontal = 2.dp),
                                                 contentAlignment =
                                                         if (swiss) Alignment.CenterStart
@@ -1442,7 +1402,8 @@ fun StopScreenRowV2(
                                                                                 routeInfo
                                                                                         ?.short_name,
                                                                         modifier =
-                                                                                Modifier.height(
+                                                                                Modifier
+                                                                                        .height(
                                                                                                 20.dp
                                                                                         )
                                                                                         .padding(
@@ -1463,7 +1424,8 @@ fun StopScreenRowV2(
                                                                         )
                                                         androidx.compose.foundation.layout.Box(
                                                                 modifier =
-                                                                        Modifier.size(20.dp)
+                                                                        Modifier
+                                                                                .size(20.dp)
                                                                                 .clip(CircleShape)
                                                                                 .background(
                                                                                         mtaColor
@@ -1517,7 +1479,8 @@ fun StopScreenRowV2(
                                                                                                                 10.sp
                                                                                         ),
                                                                         modifier =
-                                                                                Modifier.clip(
+                                                                                Modifier
+                                                                                        .clip(
                                                                                                 getRouteShape(
                                                                                                         event.chateau,
                                                                                                         routeInfo
@@ -1563,7 +1526,8 @@ fun StopScreenRowV2(
                                                                                                                 10.sp
                                                                                         ),
                                                                         modifier =
-                                                                                Modifier.clip(
+                                                                                Modifier
+                                                                                        .clip(
                                                                                                 getRouteShape(
                                                                                                         event.chateau,
                                                                                                         routeInfo
@@ -1786,7 +1750,9 @@ fun StopScreenRowV2(
                         // 3. Info (Middle) - Headsign
                         val headsignColumn: @Composable () -> Unit = {
                                 Column(
-                                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                                        modifier = Modifier
+                                                .weight(1f)
+                                                .padding(horizontal = 4.dp),
                                         verticalArrangement = Arrangement.Center
                                 ) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1808,7 +1774,8 @@ fun StopScreenRowV2(
                                                                                                 .Bold
                                                                         ),
                                                                 modifier =
-                                                                        Modifier.padding(end = 4.dp)
+                                                                        Modifier
+                                                                                .padding(end = 4.dp)
                                                                                 .clip(
                                                                                         getRouteShape(
                                                                                                 event.chateau,
@@ -1913,7 +1880,8 @@ fun StopScreenRowV2(
                                                                                 fontSize = 10.sp
                                                                         ),
                                                         modifier =
-                                                                Modifier.background(
+                                                                Modifier
+                                                                        .background(
                                                                                 MaterialTheme
                                                                                         .colorScheme
                                                                                         .surfaceVariant,

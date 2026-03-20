@@ -296,6 +296,7 @@ fun StopScreen(
     val eventIndex = remember { mutableStateMapOf<String, StopEventPageData>() }
     var dataMeta by remember { mutableStateOf<StopMeta?>(null) }
     var currentTime by remember { mutableStateOf(Instant.now().epochSecond) }
+    var lockToNow by remember { mutableStateOf(true) }
     var showPreviousDepartures by remember { mutableStateOf(false) }
     var currentPageHours by remember { mutableStateOf(1) }
     var flyToAlready by remember { mutableStateOf(false) }
@@ -666,8 +667,8 @@ fun StopScreen(
         flyToAlready = false
         currentPageHours = 1
 
-        val nowSec = Instant.now().epochSecond
-        val start = nowSec - 30 * 60 // 30m back
+        val baseSec = if (lockToNow) Instant.now().epochSecond else currentTime
+        val start = baseSec - 30 * 60 // 30m back
         val end = start + currentPageHours * 3600
         fetchPage(start, end)
     }
@@ -688,10 +689,13 @@ fun StopScreen(
     // Initial load and reload on input change
     LaunchedEffect(chateauId, key) { loadInitialPages() }
 
-    // Ticking clock
-    LaunchedEffect(Unit) {
+    // Ticking clock when locked to "Now". When unlocked, the selected
+    // time is controlled by the time picker and remains fixed.
+    LaunchedEffect(lockToNow) {
         while (true) {
-            currentTime = Instant.now().epochSecond
+            if (lockToNow) {
+                currentTime = Instant.now().epochSecond
+            }
             delay(500)
         }
     }
@@ -898,7 +902,7 @@ fun StopScreen(
                     FormattedTimeText(
                             timezone = zoneId.id,
                             timeSeconds = currentTime,
-                        showSeconds = showSeconds,
+                        showSeconds = true,
                             // The style from LiveClock is now applied here
                             )
                     Text(
@@ -907,6 +911,18 @@ fun StopScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                // Subtle time selector between the header and departures list.
+                Spacer(modifier = Modifier.height(4.dp))
+                TimeSelectorButton(
+                    epochSeconds = currentTime,
+                    timezoneId = zoneId.id,
+                    isNow = lockToNow,
+                    onTimeChange = { newEpoch -> currentTime = newEpoch },
+                    onIsNowChange = { lock -> lockToNow = lock },
+                    modifier = Modifier.padding(top = 4.dp),
+                    labelPrefix = null
+                )
             }
 
             LazyColumn(state = lazyListState, modifier = Modifier

@@ -43,6 +43,7 @@ import coil.request.ImageRequest
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import java.lang.Integer.min
+import java.time.ZoneId
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
@@ -292,15 +293,21 @@ private fun logSerializationError(e: SerializationException, raw: String) {
         Log.e(NEARBY_TAG, "Body head (2k):\n$head")
 }
 
-private suspend fun fetchNearby(lat: Double, lon: Double): NearbyResponseV3? =
+private suspend fun fetchNearby(
+        lat: Double,
+        lon: Double,
+        departureTimeSec: Long? = null
+): NearbyResponseV3? =
         withContext(Dispatchers.IO) {
                 Log.d(
                         NEARBY_TAG,
                         "Fetch nearby departures lat=$lat lon=$lon (thread=${Thread.currentThread().name})"
                 )
 
+                val timeParam =
+                        departureTimeSec?.let { "&departure_time=$it" } ?: ""
                 val url =
-                        "https://birch.catenarymaps.org/nearbydeparturesfromcoordsv3?lat=$lat&lon=$lon&limit_per_station=10&limit_per_headsign=20"
+                        "https://birch.catenarymaps.org/nearbydeparturesfromcoordsv3?lat=$lat&lon=$lon&limit_per_station=10&limit_per_headsign=20$timeParam"
                 val req = Request.Builder().url(url).get().build()
 
                 try {
@@ -416,10 +423,14 @@ fun NearbyDepartures(
         }
 
         var nowSec by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
+        var lockToNow by remember { mutableStateOf(true) }
 
-        LaunchedEffect(Unit) {
+        // Drive "now" when locked; when unlocked, the picker owns nowSec.
+        LaunchedEffect(lockToNow) {
                 while (true) {
-                        nowSec = System.currentTimeMillis() / 1000
+                        if (lockToNow) {
+                                nowSec = System.currentTimeMillis() / 1000
+                        }
                         delay(1_000)
                 }
         }
@@ -492,6 +503,8 @@ fun NearbyDepartures(
 
         val currentUserLocation by rememberUpdatedState(userLocation)
         val currentUsePickedLocation by rememberUpdatedState(usePickedLocation)
+        val currentNowSec by rememberUpdatedState(nowSec)
+        val currentLockToNow by rememberUpdatedState(lockToNow)
 
         // --- POLLING LOOP: immediate fetch, then every 10s. Not tied to raw origin updates. ---
         LaunchedEffect(pollSession, isAppInForeground) {
@@ -502,10 +515,17 @@ fun NearbyDepartures(
                                         lockedOrigin = currentUserLocation
                                 }
                                 val origin = lockedOrigin ?: return
+                                val departureTime =
+                                        if (currentLockToNow) null else currentNowSec
                                 loading = true
                                 firstAttemptSent = true
                                 println("Fetching nearby departures for $origin")
-                                val res = fetchNearby(origin.first, origin.second)
+                                val res =
+                                        fetchNearby(
+                                                origin.first,
+                                                origin.second,
+                                                departureTime
+                                        )
 
                                 if (res != null) {
                                         stopsTableLongDistance = res.longDistance
@@ -554,6 +574,24 @@ fun NearbyDepartures(
                 }
 
         var sorted by remember { mutableStateOf<List<NearbyItem>>(emptyList()) }
+
+        // Derive a reasonable timezone for the nearby view. Prefer the closest
+        // long-distance station, then any stop, falling back to device TZ.
+        val nearbyTimezoneId by remember(stopsTableLongDistance, stopsMap) {
+                mutableStateOf(
+                        run {
+                                val closestStation =
+                                        stopsTableLongDistance.minByOrNull { it.distanceM }
+                                closestStation?.timezone
+                                        ?: stopsMap.values
+                                                .firstOrNull()
+                                                ?.values
+                                                ?.firstOrNull()
+                                                ?.timezone
+                                        ?: ZoneId.systemDefault().id
+                        }
+                )
+        }
 
         LaunchedEffect(filteredLocal, filteredStations, sortMode, lockedOrigin) {
                 val origin = lockedOrigin
@@ -681,6 +719,18 @@ fun NearbyDepartures(
                         sortMode = sortMode,
                         onSortChange = { sortMode = it },
                         darkMode = darkMode
+                )
+
+                // Time selector between the top options and the departures list.
+                Spacer(modifier = Modifier.height(4.dp))
+                TimeSelectorButton(
+                        epochSeconds = nowSec,
+                        timezoneId = nearbyTimezoneId,
+                        isNow = lockToNow,
+                        onTimeChange = { newEpoch -> nowSec = newEpoch },
+                        onIsNowChange = { lock -> lockToNow = lock },
+                        modifier = Modifier.align(Alignment.Start),
+                        labelPrefix = null
                 )
 
                 if (!firstAttemptSent && !usePickedLocation) {
