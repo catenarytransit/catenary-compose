@@ -3,12 +3,14 @@ package com.catenarymaps.catenary
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -19,9 +21,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -295,7 +299,8 @@ private fun TimeSelectorDialog(
                                     }
                                 },
                                 label = { h -> String.format(locale, "%02d", h) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                loopItems = true
                             )
 
                             val minutes = remember { (0..59).toList() }
@@ -311,7 +316,8 @@ private fun TimeSelectorDialog(
                                     }
                                 },
                                 label = { m -> String.format(locale, "%02d", m) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                loopItems = true
                             )
                         }
                     }
@@ -376,7 +382,6 @@ private fun TimeSelectorDialog(
         }
     }
 }
-
 @Composable
 private fun <T> WheelPicker(
     items: List<T>,
@@ -385,29 +390,50 @@ private fun <T> WheelPicker(
     label: (T) -> String,
     modifier: Modifier = Modifier,
     visibleCount: Int = 5,
-    itemHeight: Dp = 40.dp
+    itemHeight: Dp = 40.dp,
+    loopItems: Boolean = false
 ) {
     val listState = rememberLazyListState()
-    val paddedCount = remember(visibleCount) { visibleCount / 2 }
-    var programmaticScroll by remember { mutableStateOf(false) }
+    val effectiveVisibleCount = remember(visibleCount) {
+        if (visibleCount % 2 == 0) visibleCount + 1 else visibleCount
+    }
 
-    // Keep the selected index centered when it changes from the caller.
-    LaunchedEffect(items.size, selectedIndex) {
-        if (items.isNotEmpty()) {
-            val clamped = selectedIndex.coerceIn(0, items.lastIndex)
-            programmaticScroll = true
-            // Center item "clamped" by making it the first visible index.
-            listState.scrollToItem(clamped)
-            programmaticScroll = false
+    // 1. Calculate required padding to align top boundary to the centre
+    val halfVisibleCount = effectiveVisibleCount / 2
+    val verticalPadding = itemHeight * halfVisibleCount
+
+    val baseItems = items
+    val baseCount = baseItems.size
+
+    val repeatCount = if (loopItems && baseCount > 0) 100 else 1
+    val repeatedItems = remember(baseItems, loopItems) {
+        if (loopItems && baseCount > 0) {
+            List(baseCount * repeatCount) { index -> baseItems[index % baseCount] }
+        } else {
+            baseItems
         }
     }
 
-    // When user scrolls and it settles, snap selection to the item that is
-    // visually closest to the center.
-    LaunchedEffect(listState, items.size) {
+    val totalCount = repeatedItems.size
+    val middleStart = if (loopItems && baseCount > 0) (repeatCount / 2) * baseCount else 0
+
+    // 2. Programmatic scroll state variable removed entirely
+
+    LaunchedEffect(baseCount, selectedIndex, loopItems) {
+        if (baseCount == 0 || totalCount == 0) return@LaunchedEffect
+        val clamped = selectedIndex.coerceIn(0, baseCount - 1)
+        val targetIndex = if (loopItems) middleStart + clamped else clamped
+        if (targetIndex in 0 until totalCount) {
+            // With contentPadding applied, this perfectly centres the item
+            listState.scrollToItem(targetIndex)
+        }
+    }
+
+    LaunchedEffect(listState, totalCount, baseCount, loopItems) {
         snapshotFlow { listState.isScrollInProgress }
             .collect { scrolling ->
-                if (!scrolling && !programmaticScroll && items.isNotEmpty()) {
+                // 3. Simplified observer executes only when scrolling completely ceases
+                if (!scrolling && totalCount > 0 && baseCount > 0) {
                     val layoutInfo = listState.layoutInfo
                     val visible = layoutInfo.visibleItemsInfo
                     if (visible.isEmpty()) return@collect
@@ -415,45 +441,70 @@ private fun <T> WheelPicker(
                     val viewportCenter =
                         (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2f
 
-                    val closest =
-                        visible.minByOrNull { info ->
-                            abs((info.offset + info.size / 2f) - viewportCenter)
-                        }
-                    val absoluteIndex = closest?.index ?: return@collect
-                    // Map from LazyColumn absolute index (including padding rows)
-                    // back to an index in "items".
-                    val newIndex = (absoluteIndex - paddedCount).coerceIn(0, items.lastIndex)
+                    val closest = visible.minByOrNull { info ->
+                        val itemCenter = info.offset + info.size / 2f
+                        abs(itemCenter - viewportCenter)
+                    } ?: return@collect
+
+                    val absoluteIndex = closest.index
+                    val newIndex = if (loopItems) {
+                        absoluteIndex % baseCount
+                    } else {
+                        absoluteIndex.coerceIn(0, baseCount - 1)
+                    }
+
                     if (newIndex != selectedIndex) {
-                        programmaticScroll = true
-                        // Make the newly selected item the first visible so it
-                        // lines up with the center highlight.
-                        listState.animateScrollToItem(newIndex)
-                        programmaticScroll = false
                         onSelectedIndexChange(newIndex)
                     }
                 }
             }
     }
 
+    val fadeSurfaceColor = MaterialTheme.colorScheme.surface
+
     Box(
         modifier = modifier
-            .height(itemHeight * visibleCount)
+            .height(itemHeight * effectiveVisibleCount)
+            .drawWithContent {
+                drawContent()
+
+                val fadeHeight = itemHeight.toPx()
+
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(fadeSurfaceColor, Color.Transparent),
+                        startY = 0f,
+                        endY = fadeHeight
+                    )
+                )
+
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, fadeSurfaceColor),
+                        startY = size.height - fadeHeight,
+                        endY = size.height
+                    )
+                )
+            }
     ) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            // 4. Apply vertical padding and native snapping behaviour
+            contentPadding = PaddingValues(vertical = verticalPadding),
+            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
         ) {
-            items(paddedCount) {
-                Spacer(modifier = Modifier.height(itemHeight))
-            }
-            itemsIndexed(items) { index, item ->
-                val isSelected = index == selectedIndex
+            itemsIndexed(repeatedItems) { index, item ->
+                val isSelected = if (loopItems && baseCount > 0) {
+                    (index % baseCount) == selectedIndex
+                } else {
+                    index == selectedIndex
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(itemHeight)
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { onSelectedIndexChange(index) }
                         .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
@@ -468,12 +519,8 @@ private fun <T> WheelPicker(
                     )
                 }
             }
-            items(paddedCount) {
-                Spacer(modifier = Modifier.height(itemHeight))
-            }
         }
 
-        // Center highlight to create the "locked" row feeling.
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -487,5 +534,3 @@ private fun <T> WheelPicker(
         )
     }
 }
-
-
