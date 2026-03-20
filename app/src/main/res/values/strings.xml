@@ -11,6 +11,12 @@
     <string name="fleet">Fleet</string>
     <string name="lastupdated">Last updated</string>
     <string name="now">Now</string>
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="choose_time_title">Choose time</string>
+    <string name="cancel">Cancel</string>
+    <string name="done_with_time">Done 
+																							• %1$s</string>
     <string name="speed">Speed</string>
     <string name="searchhere">Search here</string>
     <string name="early">Early</string>

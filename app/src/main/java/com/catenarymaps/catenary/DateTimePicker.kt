@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -33,6 +34,7 @@ import java.util.Locale
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.Dp
 import kotlin.math.abs
+import com.catenarymaps.catenary.R
 
 /**
  * Lightweight, reusable date+time selector used on multiple screens.
@@ -79,17 +81,17 @@ fun TimeSelectorButton(
             .withLocale(locale)
             .withZone(zone)
     }
+    val todayLabelText = stringResource(R.string.today)
     val timeFormatter = remember(locale, zone) {
         DateTimeFormatter.ofPattern("HH:mm")
             .withLocale(locale)
             .withZone(zone)
     }
 
-    val dateLabel = remember(zoned, today, dateFormatter) {
+    val dateLabel = remember(zoned, today, dateFormatter, todayLabelText) {
         val d = zoned.toLocalDate()
         when {
-            d.isEqual(today) -> "Today"
-            d.isEqual(today.plusDays(1)) -> "Tomorrow"
+            d.isEqual(today) -> todayLabelText
             else -> dateFormatter.format(zoned)
         }
     }
@@ -134,7 +136,7 @@ fun TimeSelectorButton(
 
             if (isNow) {
                 Text(
-                    text = "Now",
+                    text = stringResource(R.string.now),
                     modifier = Modifier.padding(start = 2.dp),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.primary
@@ -174,6 +176,11 @@ private fun TimeSelectorDialog(
             ZoneId.systemDefault()
         }
     }
+
+    val todayLabelText = stringResource(R.string.today)
+    val chooseTimeTitle = stringResource(R.string.choose_time_title)
+    val nowLabelText = stringResource(R.string.now)
+    val cancelLabelText = stringResource(R.string.cancel)
 
     val initialZoned: ZonedDateTime = remember(epochSeconds, zone, isNowInitial) {
         try {
@@ -221,14 +228,14 @@ private fun TimeSelectorDialog(
     ) {
         Surface(
             modifier = Modifier
-				.fillMaxWidth()
-				.padding(16.dp),
+                .fillMaxWidth()
+                .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Choose time",
+                    text = chooseTimeTitle,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -259,8 +266,7 @@ private fun TimeSelectorDialog(
                         },
                         label = { date ->
                             when {
-                                date.isEqual(today) -> "Today"
-                                date.isEqual(today.plusDays(1)) -> "Tomorrow"
+                                date.isEqual(today) -> todayLabelText
                                 else -> dateFormatter.format(date)
                             }
                         },
@@ -332,7 +338,7 @@ private fun TimeSelectorDialog(
                                     selectedMinute = now.minute
                                 }
                             },
-                            label = { Text("Now") }
+                            label = { Text(nowLabelText) }
                         )
                     }
 
@@ -343,7 +349,7 @@ private fun TimeSelectorDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel")
+                            Text(cancelLabelText)
                         }
                         Button(
                             onClick = {
@@ -362,7 +368,7 @@ private fun TimeSelectorDialog(
                                 val localTime = LocalTime.of(selectedHour, selectedMinute)
                                 timeFormatter.format(localTime)
                             }
-                            Text("Done • $previewTime")
+                            Text(stringResource(R.string.done_with_time, previewTime))
                         }
                     }
                 }
@@ -388,16 +394,17 @@ private fun <T> WheelPicker(
     // Keep the selected index centered when it changes from the caller.
     LaunchedEffect(items.size, selectedIndex) {
         if (items.isNotEmpty()) {
-            val target = (selectedIndex + paddedCount).coerceIn(0, items.size + paddedCount * 2)
+            val clamped = selectedIndex.coerceIn(0, items.lastIndex)
             programmaticScroll = true
-            listState.scrollToItem(target)
+            // Center item "clamped" by making it the first visible index.
+            listState.scrollToItem(clamped)
             programmaticScroll = false
         }
     }
 
     // When user scrolls and it settles, snap selection to the item that is
     // visually closest to the center.
-    LaunchedEffect(listState, items) {
+    LaunchedEffect(listState, items.size) {
         snapshotFlow { listState.isScrollInProgress }
             .collect { scrolling ->
                 if (!scrolling && !programmaticScroll && items.isNotEmpty()) {
@@ -413,9 +420,16 @@ private fun <T> WheelPicker(
                             abs((info.offset + info.size / 2f) - viewportCenter)
                         }
                     val absoluteIndex = closest?.index ?: return@collect
-                    val idx = absoluteIndex - paddedCount
-                    if (idx in items.indices && idx != selectedIndex) {
-                        onSelectedIndexChange(idx)
+                    // Map from LazyColumn absolute index (including padding rows)
+                    // back to an index in "items".
+                    val newIndex = (absoluteIndex - paddedCount).coerceIn(0, items.lastIndex)
+                    if (newIndex != selectedIndex) {
+                        programmaticScroll = true
+                        // Make the newly selected item the first visible so it
+                        // lines up with the center highlight.
+                        listState.animateScrollToItem(newIndex)
+                        programmaticScroll = false
+                        onSelectedIndexChange(newIndex)
                     }
                 }
             }
@@ -436,11 +450,11 @@ private fun <T> WheelPicker(
                 val isSelected = index == selectedIndex
                 Row(
                     modifier = Modifier
-						.fillMaxWidth()
-						.height(itemHeight)
-						.clip(RoundedCornerShape(8.dp))
-						.clickable { onSelectedIndexChange(index) }
-						.padding(horizontal = 8.dp),
+                        .fillMaxWidth()
+                        .height(itemHeight)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onSelectedIndexChange(index) }
+                        .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -462,14 +476,14 @@ private fun <T> WheelPicker(
         // Center highlight to create the "locked" row feeling.
         Box(
             modifier = Modifier
-				.align(Alignment.Center)
-				.fillMaxWidth()
-				.height(itemHeight)
-				.border(
-					width = 1.dp,
-					color = MaterialTheme.colorScheme.outlineVariant,
-					shape = RoundedCornerShape(8.dp)
-				)
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .height(itemHeight)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(8.dp)
+                )
         )
     }
 }
