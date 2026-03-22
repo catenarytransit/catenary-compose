@@ -53,7 +53,7 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
     var vehicleData by remember { mutableStateOf<VehicleData?>(null) }
     var loading by remember { mutableStateOf(true) }
 
-    
+
 
     LaunchedEffect(label, chateau, routeId) {
         loading = true
@@ -73,12 +73,16 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
 
         try {
             val response = client.get(url).body<VehicleDetailsResponse>()
+            println("Vehicle info response: $response")
             if (response.found_data) {
                 println("Found vehicle data")
                 vehicleData = response.vehicle
             }
+            loading = false;
         } catch (e: Exception) {
             // Handle error
+            println("Error fetching vehicle data: $e")
+
         } finally {
             loading = false
             client.close()
@@ -86,7 +90,7 @@ fun VehicleInfo(label: String, chateau: String, routeId: String?) {
     }
 
     if (loading) {
-        //Text("...", modifier = Modifier) // TODO: Add loading animation
+        Text("...", modifier = Modifier) // TODO: Add loading animation
     } else {
         vehicleData?.let {
             Column(

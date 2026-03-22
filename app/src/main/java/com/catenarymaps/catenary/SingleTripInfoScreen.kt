@@ -857,6 +857,8 @@ fun SingleTripInfoScreen(
                                                         chateau = tripSelected.chateau_id,
                                                         routeId = data.route_id
                                                 )
+                                        } else {
+                                                println("No vehicle data available ${data.vehicle?.label}, ${data.vehicle?.id}");
                                         }
 
                                         if (vehicleData != null) {

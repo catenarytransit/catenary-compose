@@ -11,6 +11,11 @@
     <string name="fleet">Flåde</string>
     <string name="lastupdated">Sidst opdateret</string>
     <string name="now">Nu</string>
+    <string name="today">I dag</string>
+    <string name="tomorrow">I morgen</string>
+    <string name="choose_time_title">Vælg tidspunkt</string>
+    <string name="cancel">Annuller</string>
+    <string name="done_with_time">Færdig • %1$s</string>
     <string name="speed">Hastighed</string>
     <string name="searchhere">Søg her</string>
     <string name="early">For tidligt</string>

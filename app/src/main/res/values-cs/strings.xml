@@ -11,6 +11,11 @@
     <string name="fleet">Vozový park</string>
     <string name="lastupdated">Poslední aktualizace</string>
     <string name="now">Nyní</string>
+    <string name="today">Dnes</string>
+    <string name="tomorrow">Zítra</string>
+    <string name="choose_time_title">Vyberte čas</string>
+    <string name="cancel">Zrušit</string>
+    <string name="done_with_time">Hotovo • %1$s</string>
     <string name="speed">Rychlost</string>
     <string name="searchhere">Hledat zde</string>
     <string name="early">Dříve</string>

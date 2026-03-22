@@ -11,6 +11,11 @@
     <string name="fleet">Парк</string>
     <string name="lastupdated">Останнє оновлення</string>
     <string name="now">Зараз</string>
+    <string name="today">Сьогодні</string>
+    <string name="tomorrow">Завтра</string>
+    <string name="choose_time_title">Виберіть час</string>
+    <string name="cancel">Скасувати</string>
+    <string name="done_with_time">Готово • %1$s</string>
     <string name="speed">Швидкість</string>
     <string name="searchhere">Шукати тут</string>
     <string name="early">Раніше</string>

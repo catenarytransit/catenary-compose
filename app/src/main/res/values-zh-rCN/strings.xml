@@ -12,6 +12,11 @@
     <string name="fleet">车队</string>
     <string name="lastupdated">最后更新时间</string>
     <string name="now">现在</string>
+    <string name="today">今天</string>
+    <string name="tomorrow">明天</string>
+    <string name="choose_time_title">选择时间</string>
+    <string name="cancel">取消</string>
+    <string name="done_with_time">完成 • %1$s</string>
     <string name="speed">速度</string>
     <string name="searchhere">在此处搜索</string>
     <string name="early">早</string>

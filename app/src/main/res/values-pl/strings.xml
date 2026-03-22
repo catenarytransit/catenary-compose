@@ -11,6 +11,11 @@
     <string name="fleet">Tabor</string>
     <string name="lastupdated">Ostatnia aktualizacja</string>
     <string name="now">Teraz</string>
+    <string name="today">Dzisiaj</string>
+    <string name="tomorrow">Jutro</string>
+    <string name="choose_time_title">Wybierz godzinę</string>
+    <string name="cancel">Anuluj</string>
+    <string name="done_with_time">Gotowe • %1$s</string>
     <string name="speed">Prędkość</string>
     <string name="searchhere">Szukaj tutaj</string>
     <string name="early">Za wcześnie</string>

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import android.text.format.DateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -81,7 +82,8 @@ fun TimeSelectorButton(
 
     val today = remember(zone) { LocalDate.now(zone) }
     val dateFormatter = remember(locale, zone) {
-        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+        val pattern = DateFormat.getBestDateTimePattern(locale, "EEE d MMM")
+        DateTimeFormatter.ofPattern(pattern)
             .withLocale(locale)
             .withZone(zone)
     }
@@ -113,7 +115,7 @@ fun TimeSelectorButton(
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
@@ -122,6 +124,8 @@ fun TimeSelectorButton(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            Spacer(modifier = Modifier.width(6.dp))
 
             Text(
                 text = buildString {
@@ -141,7 +145,7 @@ fun TimeSelectorButton(
             if (isNow) {
                 Text(
                     text = stringResource(R.string.now),
-                    modifier = Modifier.padding(start = 2.dp),
+                    modifier = Modifier.padding(start = 4.dp),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -217,7 +221,8 @@ private fun TimeSelectorDialog(
     }
 
     val dateFormatter = remember(locale, zone) {
-        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+        val pattern = DateFormat.getBestDateTimePattern(locale, "EEE d MMM")
+        DateTimeFormatter.ofPattern(pattern)
             .withLocale(locale)
             .withZone(zone)
     }

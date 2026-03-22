@@ -11,6 +11,11 @@
     <string name="fleet">Στόλος</string>
     <string name="lastupdated">Τελευταία ενημέρωση</string>
     <string name="now">Τώρα</string>
+    <string name="today">Σήμερα</string>
+    <string name="tomorrow">Αύριο</string>
+    <string name="choose_time_title">Επιλογή ώρας</string>
+    <string name="cancel">Άκυρο</string>
+    <string name="done_with_time">Τέλος • %1$s</string>
     <string name="speed">Ταχύτητα</string>
     <string name="searchhere">Αναζήτηση εδώ</string>
     <string name="early">Νωρίς</string>

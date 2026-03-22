@@ -11,6 +11,11 @@
     <string name="fleet">Flotă</string>
     <string name="lastupdated">Ultima actualizare</string>
     <string name="now">Acum</string>
+    <string name="today">Astăzi</string>
+    <string name="tomorrow">Mâine</string>
+    <string name="choose_time_title">Alege ora</string>
+    <string name="cancel">Anulează</string>
+    <string name="done_with_time">Gata • %1$s</string>
     <string name="speed">Viteză</string>
     <string name="searchhere">Caută aici</string>
     <string name="early">Devreme</string>

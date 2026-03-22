@@ -11,6 +11,11 @@
     <string name="fleet">Kalusto</string>
     <string name="lastupdated">Viimeksi päivitetty</string>
     <string name="now">Nyt</string>
+    <string name="today">Tänään</string>
+    <string name="tomorrow">Huomenna</string>
+    <string name="choose_time_title">Valitse aika</string>
+    <string name="cancel">Peruuta</string>
+    <string name="done_with_time">Valmis • %1$s</string>
     <string name="speed">Nopeus</string>
     <string name="searchhere">Hae täältä</string>
     <string name="early">Aikaisin</string>

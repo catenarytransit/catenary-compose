@@ -11,6 +11,11 @@
     <string name="platform">승강장</string>
     <string name="layers">레이어</string>
     <string name="now">지금</string>
+    <string name="today">오늘</string>
+    <string name="tomorrow">내일</string>
+    <string name="choose_time_title">시간 선택</string>
+    <string name="cancel">취소</string>
+    <string name="done_with_time">완료 • %1$s</string>
     <string name="settings">설정</string>
     <string name="speed">속도</string>
     <string name="searchhere">여기서 검색</string>

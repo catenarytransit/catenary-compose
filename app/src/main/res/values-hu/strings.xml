@@ -11,6 +11,11 @@
     <string name="fleet">Flotta</string>
     <string name="lastupdated">Utoljára frissítve</string>
     <string name="now">Most</string>
+    <string name="today">Ma</string>
+    <string name="tomorrow">Holnap</string>
+    <string name="choose_time_title">Időpont kiválasztása</string>
+    <string name="cancel">Mégse</string>
+    <string name="done_with_time">Kész • %1$s</string>
     <string name="speed">Sebesség</string>
     <string name="searchhere">Keresés itt</string>
     <string name="early">Korán</string>

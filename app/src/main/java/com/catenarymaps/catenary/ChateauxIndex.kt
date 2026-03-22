@@ -11,8 +11,13 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.util.Log
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.utils.io.jvm.javaio.toInputStream
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.json.decodeFromStream
 import org.maplibre.spatialk.geojson.*
-
+import kotlinx.serialization.ExperimentalSerializationApi
 
 /** Domain properties for a chateau feature in the provided dataset. */
 @Serializable
@@ -77,6 +82,7 @@ suspend fun buildChateauxIndexFromJson(
 }
 
 // Network + build
+@OptIn(ExperimentalSerializationApi::class)
 suspend fun fetchAndBuildChateauxIndex(
     client: HttpClient,
     maxEntries: Int = 8
@@ -92,6 +98,7 @@ suspend fun fetchAndBuildChateauxIndex(
         Log.d("ChateauxIndex", "Built chateaux index in ${t1 - t0} ms")
         result
     } catch (e: Exception) {
+        Log.e("ChateauxIndex", "Failed to build index", e)
         null
     }
 }

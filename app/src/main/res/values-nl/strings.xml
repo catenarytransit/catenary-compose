@@ -11,6 +11,11 @@
     <string name="fleet">Vloot</string>
     <string name="lastupdated">Laatst bijgewerkt</string>
     <string name="now">Nu</string>
+    <string name="today">Vandaag</string>
+    <string name="tomorrow">Morgen</string>
+    <string name="choose_time_title">Tijd kiezen</string>
+    <string name="cancel">Annuleren</string>
+    <string name="done_with_time">Gereed • %1$s</string>
     <string name="speed">Snelheid</string>
     <string name="searchhere">Zoek hier</string>
     <string name="early">Te vroeg</string>

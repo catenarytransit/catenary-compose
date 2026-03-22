@@ -11,6 +11,11 @@
     <string name="fleet">Frota</string>
     <string name="lastupdated">Última atualização</string>
     <string name="now">Agora</string>
+    <string name="today">Hoje</string>
+    <string name="tomorrow">Amanhã</string>
+    <string name="choose_time_title">Escolher horário</string>
+    <string name="cancel">Cancelar</string>
+    <string name="done_with_time">Concluído • %1$s</string>
     <string name="speed">Velocidade</string>
     <string name="searchhere">Pesquisar aqui</string>
     <string name="early">Adiantado</string>

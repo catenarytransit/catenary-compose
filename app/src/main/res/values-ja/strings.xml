@@ -12,6 +12,11 @@
     <string name="fleet">車両</string>
     <string name="lastupdated">最終更新</string>
     <string name="now">今</string>
+    <string name="today">今日</string>
+    <string name="tomorrow">明日</string>
+    <string name="choose_time_title">時刻を選択</string>
+    <string name="cancel">キャンセル</string>
+    <string name="done_with_time">完了 • %1$s</string>
     <string name="speed">速度</string>
     <string name="searchhere">ここで検索</string>
     <string name="early">早い</string>

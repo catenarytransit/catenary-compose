@@ -11,6 +11,11 @@
     <string name="fleet">Flotte</string>
     <string name="lastupdated">Zuletzt aktualisiert</string>
     <string name="now">Jetzt</string>
+    <string name="today">Heute</string>
+    <string name="tomorrow">Morgen</string>
+    <string name="choose_time_title">Uhrzeit auswählen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="done_with_time">Fertig • %1$s</string>
     <string name="speed">Geschwindigkeit</string>
     <string name="searchhere">Hier suchen</string>
     <string name="early">Zu früh</string>
