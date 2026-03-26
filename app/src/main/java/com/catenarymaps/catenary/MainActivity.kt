@@ -71,6 +71,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -189,6 +190,10 @@ import org.maplibre.spatialk.geojson.Geometry
 import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.Saver
 
 fun parseColor(colorString: String?, default: Color = Color.Black): Color {
         return try {
@@ -1247,7 +1252,47 @@ class MainActivity : ComponentActivity() {
                                 Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? =
                                 null
 
-                        var catenaryStack by remember {
+                        val json = Json { ignoreUnknownKeys = true }
+                        val stackSaver =
+                                androidx.compose.runtime.saveable.Saver<ArrayDeque<CatenaryStackEnum>, String>(
+                                        save = { stack ->
+                                                try {
+                                                        json.encodeToString(
+                                                                kotlinx.serialization.serializer<List<CatenaryStackEnum>>(),
+                                                                stack.toList()
+                                                        )
+                                                } catch (e: Exception) {
+                                                        "[]"
+                                                }
+                                        },
+                                        restore = { savedString ->
+                                                val list = try {
+                                                        json.decodeFromString(
+                                                                kotlinx.serialization.serializer<List<CatenaryStackEnum>>(),
+                                                                savedString
+                                                        )
+                                                } catch (e: Exception) {
+                                                        emptyList()
+                                                }
+                                                ArrayDeque(list)
+                                        }
+                                )
+
+                        val mutableStackSaver =
+                                Saver<MutableState<ArrayDeque<CatenaryStackEnum>>, String>(
+                                        save = { state ->
+                                                // The inner saver's save function returns a String?
+                                                stackSaver.run { save(state.value) } ?: ""
+                                        },
+                                        restore = { value ->
+                                                // Now 'value' is correctly typed as String
+                                                val restoredStack =
+                                                        stackSaver.restore(value) ?: ArrayDeque()
+                                                mutableStateOf(restoredStack)
+                                        }
+                                )
+
+                        var catenaryStack by rememberSaveable(saver = mutableStackSaver) {
                                 mutableStateOf(ArrayDeque<CatenaryStackEnum>())
                         }
 

@@ -1,10 +1,15 @@
 package com.catenarymaps.catenary
 
+import kotlinx.serialization.Serializable
+
 // Wrapper matching the TS `StackInterface`
+@Serializable
 data class StackInterface(val data: CatenaryStackEnum)
 
 // All stack variants the wrapper can hold
+@Serializable
 sealed interface CatenaryStackEnum {
+    @Serializable
     data class SingleTrip(
             val chateau_id: String,
             val trip_id: String?,
@@ -15,29 +20,38 @@ sealed interface CatenaryStackEnum {
             val route_type: Int?
     ) : CatenaryStackEnum
 
+    @Serializable
     data class VehicleSelectedStack(
             val chateau_id: String,
             val vehicle_id: String?,
             val gtfs_id: String
     ) : CatenaryStackEnum
 
+    @Serializable
     data class RouteStack(val chateau_id: String, val route_id: String) : CatenaryStackEnum
 
+    @Serializable
     data class StopStack(val chateau_id: String, val stop_id: String) : CatenaryStackEnum
 
+    @Serializable
     data class NearbyDeparturesStack(val chateau_id: String, val lat: Double, val lon: Double) :
             CatenaryStackEnum
 
+    @Serializable
     data class MapSelectionScreen(val arrayofoptions: List<MapSelectionOption>) : CatenaryStackEnum
 
+    @Serializable
     data class SettingsStack(val hi: Boolean? = true) : CatenaryStackEnum
 
+    @Serializable
     data class BlockStack(val chateau_id: String, val block_id: String, val service_date: String) :
             CatenaryStackEnum
 
+    @Serializable
     data class OsmItemStack(val osm_id: String, val osm_class: String, val osm_type: String?) :
             CatenaryStackEnum
 
+    @Serializable
     data class OsmStationStack(
             val osm_station_id: String,
             val station_name: String?,
@@ -48,12 +62,16 @@ sealed interface CatenaryStackEnum {
 }
 
 // Map selection option + its union of selector types
+@Serializable
 data class MapSelectionOption(val data: MapSelectionSelector)
 
+@Serializable
 sealed interface MapSelectionSelector {
+    @Serializable
     data class StopMapSelector(val chateau_id: String, val stop_id: String, val stop_name: String) :
             MapSelectionSelector
 
+    @Serializable
     data class RouteMapSelector(
             val chateau_id: String,
             val route_id: String,
@@ -62,6 +80,7 @@ sealed interface MapSelectionSelector {
             val route_type: Int?
     ) : MapSelectionSelector
 
+    @Serializable
     data class VehicleMapSelector(
             val chateau_id: String,
             val vehicle_id: String?,
@@ -80,6 +99,7 @@ sealed interface MapSelectionSelector {
             val start_date: String?
     ) : MapSelectionSelector
 
+    @Serializable
     data class OsmStationMapSelector(
             val osm_id: String,
             val name: String,
