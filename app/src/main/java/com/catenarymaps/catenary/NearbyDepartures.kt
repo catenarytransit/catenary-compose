@@ -727,8 +727,14 @@ fun NearbyDepartures(
                         epochSeconds = nowSec,
                         timezoneId = nearbyTimezoneId,
                         isNow = lockToNow,
-                        onTimeChange = { newEpoch -> nowSec = newEpoch },
-                        onIsNowChange = { lock -> lockToNow = lock },
+                        onTimeChange = { newEpoch ->
+                                nowSec = newEpoch
+                                restartPolling()
+                        },
+                        onIsNowChange = { lock ->
+                                lockToNow = lock
+                                if (lock) restartPolling()
+                        },
                         modifier = Modifier.align(Alignment.Start),
                         labelPrefix = null
                 )
@@ -1419,8 +1425,7 @@ private fun RouteGroupCard(
                         val visibleTrips =
                                 trips.filter { t ->
                                         val dep = t.departureRealtime ?: t.departureSchedule ?: 0L
-                                        val now = System.currentTimeMillis() / 1000
-                                        dep in (now - 600)..(now + 64800)
+                                        dep in (nowSec - 600)..(nowSec + 64800)
                                 }
 
                         if (visibleTrips.isEmpty()) return@forEach
@@ -1582,8 +1587,8 @@ private fun TripPill(
                         // “in 5 min” / “now”
                         CompositionLocalProvider(LocalContentColor provides contentColor) {
                                 Row() {
-                                        DiffTimer(
-                                                diff = secondsLeft.toDouble(),
+                                        SelfUpdatingDiffTimer(
+                                                targetTimeSeconds = dep,
                                                 showBrackets = false,
                                                 showSeconds = false,
                                                 showDays = false,

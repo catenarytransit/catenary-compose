@@ -412,7 +412,9 @@ fun StopScreen(
                                 if (event.last_stop == true)
                                         event.realtime_arrival ?: event.scheduled_arrival
                                 else event.realtime_departure ?: event.scheduled_departure
-                        if ((relevantTime ?: 0) < (currentTime - cutoff)) return@filter false
+
+                        val isTooOld = (relevantTime ?: 0) < (currentTime - cutoff)
+                        if (isTooOld) return@filter false
 
                         if (event.last_stop == true) {
                             return@filter false
@@ -422,7 +424,9 @@ fun StopScreen(
                         if (availableModes.size > 1) {
                             val routeDef = dataMeta?.routes?.get(event.chateau)?.get(event.route_id)
                             val rType = routeDef?.route_type ?: 3
-                            if (getModeForRouteType(rType) != activeTab) return@filter false
+                            if (getModeForRouteType(rType) != activeTab) {
+                                return@filter false
+                            }
                         }
                         true
                     }
@@ -502,26 +506,31 @@ fun StopScreen(
 
     suspend fun fetchPage(startSec: Long, endSec: Long) {
         val id = "${startSec}_${endSec}"
-        val existing = pages.find { it.id == id }
-        if (existing != null && existing.loading && existing.error == null) return
+        val existingIndex = pages.indexOfFirst { it.id == id }
+        if (existingIndex != -1 && pages[existingIndex].loading && pages[existingIndex].error == null) return
 
-        val page = existing ?: PageInfo(id, startSec, endSec, loading = true).also { pages.add(it) }
-        page.loading = true
-        page.error = null
+        if (existingIndex != -1) {
+            pages[existingIndex] = pages[existingIndex].copy(loading = true, error = null)
+        } else {
+            pages.add(PageInfo(id, startSec, endSec, loading = true))
+        }
 
         val useUrl =
                 if (osmStackData != null) {
-                    "https://birch.catenarymaps.org/departures_at_osm_station?osm_station_id=${key}&start_time=${startSec}&end_time=${endSec}&include_shapes=false"
+                    "https://birch.catenarymaps.org/departures_at_osm_station?osm_station_id=${key}&greater_than_time=${startSec}&less_than_time=${endSec}&include_shapes=false"
                 } else {
-                    "https://birchdeparturesfromstop.catenarymaps.org/departures_at_stop?chateau_id=${chateauId}&stop_id=${key}&start_time=${startSec}&end_time=${endSec}&include_shapes=false"
+                    "https://birchdeparturesfromstop.catenarymaps.org/departures_at_stop?chateau_id=${chateauId}&stop_id=${key}&greater_than_time=${startSec}&less_than_time=${endSec}&include_shapes=false"
                 }
 
         var responseString: String? = null
         try {
+            println("StopScreen: Fetching page $id ... $useUrl")
             responseString = ktorClient.get(useUrl).body<String>()
             val rawData =
                     Json { ignoreUnknownKeys = true }
-                            .decodeFromString<DeparturesAtStopResponse>(responseString!!)
+                        .decodeFromString<DeparturesAtStopResponse>(responseString)
+
+            println("StopScreen: Fetched ${rawData.events?.size ?: 0} events for page $id")
 
             // Fix for OSM station data: sometimes it marks everything as last_stop
             // If we have a departure time, it's definitely not a last stop for the purpose of this
@@ -542,15 +551,19 @@ fun StopScreen(
             val refreshedAt = Instant.now().epochSecond
             mergePageEvents(id, data, refreshedAt)
             currentPageHours = chooseNextPageHours(data.events?.size ?: 0)
+
+            val idx = pages.indexOfFirst { it.id == id }
+            if (idx != -1) pages[idx] = pages[idx].copy(loading = false, error = null)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
-            page.error = e.message
+            val idx = pages.indexOfFirst { it.id == id }
+            if (idx != -1) pages[idx] = pages[idx].copy(loading = false, error = e.message)
 
             println("Error fetching page: $e")
             if (responseString != null) {
                 println("Raw response body: $responseString")
             }
-
-            page.loading = false
         }
     }
 
@@ -714,22 +727,29 @@ fun StopScreen(
     val isLoading by remember { derivedStateOf { pages.any { it.loading } } }
 
     // Infinite scroll
-    LaunchedEffect(lazyListState, mergedEvents.size, isLoading) {
+    LaunchedEffect(lazyListState) {
         // Check if we need to load more because the list is empty or short (bottom visible)
-        snapshotFlow { lazyListState.layoutInfo }.collect { layoutInfo ->
-            if (pages.none { it.loading }) {
-                val totalItems = layoutInfo.totalItemsCount
-                val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+        snapshotFlow {
+            val layoutInfo = lazyListState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
 
-                // Condition 1: List is completely empty
-                val isEmpty = totalItems == 0 && mergedEvents.isEmpty()
+            val isEmpty = totalItems == 0 && mergedEvents.isEmpty()
+            val isBottomVisible = totalItems > 0 && lastVisibleIndex >= totalItems - 2
+            val shouldLoadMore = isEmpty || isBottomVisible
+            val loading = pages.any { it.loading }
+            val hasError = pages.any { it.error != null }
 
-                // Condition 2: Not enough items to fill the screen (or close to bottom)
-                // If totalItems is small, lastVisibleIndex will be totalItems - 1
-                val isBottomVisible = totalItems > 0 && lastVisibleIndex >= totalItems - 2
-
-                if (isEmpty || isBottomVisible) {
+            Triple(loading, hasError, shouldLoadMore)
+        }.collect { (loading, hasError, shouldLoadMore) ->
+            if (!loading && !hasError && shouldLoadMore) {
+                // Prevent infinite loops when a future date has no events
+                // by only auto-loading if we have events, or if we haven't fetched too far ahead yet.
+                if (datesToEventsFiltered.isNotEmpty() || pages.size <= 6) {
+                    println("StopScreen: Auto-loading next page. pages.size=${pages.size}")
                     loadNextPage()
+                } else {
+                    println("StopScreen: Reached 6+ pages with no events to show. Stopping auto-load.")
                 }
             }
         }
@@ -918,8 +938,15 @@ fun StopScreen(
                     epochSeconds = currentTime,
                     timezoneId = zoneId.id,
                     isNow = lockToNow,
-                    onTimeChange = { newEpoch -> currentTime = newEpoch },
-                    onIsNowChange = { lock -> lockToNow = lock },
+                    onTimeChange = { newEpoch ->
+                        println("StopScreen: TimeSelector onTimeChange -> $newEpoch")
+                        currentTime = newEpoch
+                        scope.launch { loadInitialPages() }
+                    },
+                    onIsNowChange = { lock ->
+                        lockToNow = lock
+                        if (lock) scope.launch { loadInitialPages() }
+                    },
                     modifier = Modifier.padding(top = 4.dp),
                     labelPrefix = null
                 )
