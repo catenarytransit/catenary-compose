@@ -208,8 +208,11 @@ private fun TimeSelectorDialog(
     var lockToNow by remember { mutableStateOf(isNowInitial) }
 
     val today = remember(zone) { LocalDate.now(zone) }
+    // Allow a wider history window for inspecting past trips.
+    // We keep the existing +30 day lookahead, but extend the
+    // lookback from 1 day to 30 days.
     val startDate = remember(today, selectedDate) {
-        minOf(today.minusDays(1), selectedDate)
+        minOf(today.minusDays(30), selectedDate)
     }
     val endDate = remember(today, selectedDate) {
         maxOf(today.plusDays(30), selectedDate)

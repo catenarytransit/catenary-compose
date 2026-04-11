@@ -3,6 +3,7 @@ package com.catenarymaps.catenary
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import java.net.URLEncoder
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -79,6 +81,12 @@ private const val OVERLAP_SECONDS = 5 * 60 // 5 min
 private const val PAGE_REFRESH_MS = 10000L // 10s
 private const val THRESHOLD_HIGH = 150
 private const val THRESHOLD_LOW = 40
+private const val EARLIER_STEP_SECONDS = 60 * 60L
+private const val LIST_KEY_ALERTS_HEADER = "alerts_header"
+private const val LIST_KEY_MODE_TABS = "mode_tabs"
+private const val LIST_KEY_EARLIER_BUTTON = "earlier_button"
+private const val LIST_KEY_NO_DEPARTURES = "no_departures"
+private const val LIST_KEY_FOOTER = "footer"
 
 // --- Data Models for API Response ---
 @Serializable
@@ -291,13 +299,17 @@ fun StopScreen(
         return "${ev.chateau}|${ev.trip_id}|${ev.route_id}|${ev.headsign}|${ev.stop_id}|${ev.service_date}|${sched}"
     }
 
+    fun composeEventListItemKey(ev: StopEvent): String = "event:${composeEventKey(ev)}"
+
+    fun composeDateHeaderKey(date: LocalDate): String = "date:$date"
+
     // --- State ---
     val pages = remember { mutableStateListOf<PageInfo>() }
     val eventIndex = remember { mutableStateMapOf<String, StopEventPageData>() }
     var dataMeta by remember { mutableStateOf<StopMeta?>(null) }
     var currentTime by remember { mutableStateOf(Instant.now().epochSecond) }
+    var realtimeNow by remember { mutableStateOf(Instant.now().epochSecond) }
     var lockToNow by remember { mutableStateOf(true) }
-    var showPreviousDepartures by remember { mutableStateOf(false) }
     var currentPageHours by remember { mutableStateOf(1) }
     var flyToAlready by remember { mutableStateOf(false) }
     val requestedShapes = remember { mutableStateListOf<String>() }
@@ -312,14 +324,6 @@ fun StopScreen(
                 it.realtime_departure
                         ?: it.realtime_arrival ?: it.scheduled_departure ?: it.scheduled_arrival
                                 ?: 0
-            }
-        }
-    }
-
-    val previousCount by remember {
-        derivedStateOf {
-            mergedEvents.count {
-                (it.realtime_departure ?: it.scheduled_departure ?: 0) < (currentTime - 60)
             }
         }
     }
@@ -406,14 +410,13 @@ fun StopScreen(
 
             mergedEvents
                     .filter { event ->
-                        val cutoff = if (showPreviousDepartures) 1800 else 60
                         // Filter by time
                         val relevantTime =
                                 if (event.last_stop == true)
                                         event.realtime_arrival ?: event.scheduled_arrival
                                 else event.realtime_departure ?: event.scheduled_departure
 
-                        val isTooOld = (relevantTime ?: 0) < (currentTime - cutoff)
+                        val isTooOld = (relevantTime ?: 0) < (currentTime - 60)
                         if (isTooOld) return@filter false
 
                         if (event.last_stop == true) {
@@ -697,6 +700,102 @@ fun StopScreen(
         fetchPage(start, end)
     }
 
+    fun buildVisibleListKeys(): List<Any> {
+        val keys = mutableListOf<Any>()
+        val totalAlerts = dataMeta?.alerts?.values?.sumOf { it.size } ?: 0
+
+        if (totalAlerts > 0) keys.add(LIST_KEY_ALERTS_HEADER)
+        if (availableModes.size > 1) keys.add(LIST_KEY_MODE_TABS)
+        keys.add(LIST_KEY_EARLIER_BUTTON)
+
+        val showEmptyState = datesToEventsFiltered.isEmpty() && pages.none { it.loading }
+        if (showEmptyState) {
+            keys.add(LIST_KEY_NO_DEPARTURES)
+        } else {
+            datesToEventsFiltered.forEach { (date, events) ->
+                keys.add(composeDateHeaderKey(date))
+                events.forEach { event -> keys.add(composeEventListItemKey(event)) }
+            }
+        }
+
+        keys.add(LIST_KEY_FOOTER)
+        return keys
+    }
+
+    fun captureScrollAnchor(): Pair<Any?, Int> {
+        val visibleItems = lazyListState.layoutInfo.visibleItemsInfo
+        if (visibleItems.isEmpty()) return null to 0
+
+        val anchorItem =
+            visibleItems.firstOrNull { it.key != LIST_KEY_EARLIER_BUTTON }
+                ?: visibleItems.first()
+        return anchorItem.key to anchorItem.offset
+    }
+
+    fun captureVisibleItemOffset(targetKey: Any): Int? {
+        return lazyListState.layoutInfo.visibleItemsInfo
+            .firstOrNull { it.key == targetKey }
+            ?.offset
+    }
+
+    suspend fun ensureRangeCoversEarlier(targetTimeSec: Long) {
+        val requiredStart = targetTimeSec - 30 * 60
+        if (pages.isEmpty()) {
+            val start = requiredStart
+            val end = start + currentPageHours * 3600
+            fetchPage(start, end)
+            return
+        }
+
+        var earliestStart = pages.minOfOrNull { it.startSec } ?: return
+        var guard = 0
+        while (requiredStart < earliestStart && guard < 12) {
+            val spanSec = currentPageHours.toLong().coerceAtLeast(1) * 3600L
+            val end = earliestStart + OVERLAP_SECONDS
+            val start = end - spanSec
+
+            fetchPage(start, end)
+
+            val newEarliest = pages.minOfOrNull { it.startSec } ?: earliestStart
+            if (newEarliest >= earliestStart) break
+            earliestStart = newEarliest
+            guard++
+        }
+    }
+
+    suspend fun loadEarlierHourPreservingScroll() {
+        val previousEarliestEventKey =
+            datesToEventsFiltered.firstOrNull()?.second?.firstOrNull()?.let {
+                composeEventListItemKey(it)
+            }
+        val previousEarliestOffset =
+            previousEarliestEventKey?.let { captureVisibleItemOffset(it) }
+
+        val (anchorKey, anchorOffset) =
+            if (previousEarliestEventKey != null && previousEarliestOffset != null) {
+                previousEarliestEventKey to previousEarliestOffset
+            } else {
+                captureScrollAnchor()
+            }
+
+        lockToNow = false
+        val targetTime = currentTime - EARLIER_STEP_SECONDS
+        currentTime = targetTime
+
+        ensureRangeCoversEarlier(targetTime)
+        withFrameNanos { }
+
+        if (anchorKey != null) {
+            val targetIndex = buildVisibleListKeys().indexOf(anchorKey)
+            if (targetIndex >= 0) {
+                lazyListState.scrollToItem(targetIndex)
+                if (anchorOffset != 0) {
+                    lazyListState.scrollBy((-anchorOffset).toFloat())
+                }
+            }
+        }
+    }
+
     // --- Effects ---
 
     // Initial load and reload on input change
@@ -710,6 +809,15 @@ fun StopScreen(
                 currentTime = Instant.now().epochSecond
             }
             delay(500)
+        }
+    }
+
+    // Countdown visuals should remain relative to real current time,
+    // even when the user browses historical/future timeline slices.
+    LaunchedEffect(Unit) {
+        while (true) {
+            realtimeNow = Instant.now().epochSecond
+            delay(1000)
         }
     }
 
@@ -959,7 +1067,7 @@ fun StopScreen(
                 // Alerts Sticky Header
                 val totalAlerts = meta?.alerts?.values?.sumOf { it.size } ?: 0
                 if (totalAlerts > 0) {
-                    stickyHeader {
+                    stickyHeader(key = LIST_KEY_ALERTS_HEADER) {
                         Box(
                                 modifier =
                                         Modifier
@@ -1017,7 +1125,7 @@ fun StopScreen(
 
                 // Tabs for filtering
                 if (availableModes.size > 1) {
-                    item {
+                    item(key = LIST_KEY_MODE_TABS) {
                         Row(
                                 modifier =
                                         Modifier
@@ -1082,35 +1190,30 @@ fun StopScreen(
                     }
                 }
 
-                // Previous Departures Toggle
-                if (previousCount > 0) {
-                    item {
-                        TextButton(
-                                onClick = { showPreviousDepartures = !showPreviousDepartures },
-                                modifier = Modifier.padding(horizontal = 2.dp)
-                        ) {
-                            Icon(
-                                    imageVector =
-                                            if (showPreviousDepartures) Icons.Filled.KeyboardArrowUp
-                                            else Icons.Filled.KeyboardArrowDown,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.size(0.dp))
-                            Text(
-                                    text = stringResource(id = R.string.previous_departures),
-                                    style =
-                                            MaterialTheme.typography.bodyMedium.copy(
-                                                    fontWeight = FontWeight.Bold
-                                            )
-                            )
-                        }
+                item(key = LIST_KEY_EARLIER_BUTTON) {
+                    TextButton(
+                        onClick = { scope.launch { loadEarlierHourPreservingScroll() } },
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowUp,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.size(2.dp))
+                        Text(
+                            text = stringResource(id = R.string.earlier),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                        )
                     }
                 }
 
                 // Departures List
                 if (datesToEventsFiltered.isEmpty() && pages.none { it.loading }) {
-                    item {
+                    item(key = LIST_KEY_NO_DEPARTURES) {
                         Text(
                                 text = stringResource(id = R.string.no_departures_found),
                                 modifier = Modifier.padding(8.dp),
@@ -1121,7 +1224,7 @@ fun StopScreen(
                 } else {
                     datesToEventsFiltered.forEach { (date, events) ->
                         // Date Header
-                        stickyHeader {
+                        stickyHeader(key = composeDateHeaderKey(date)) {
                             Row(
                                     modifier =
                                             Modifier
@@ -1143,7 +1246,7 @@ fun StopScreen(
                         }
 
                         // Event Rows
-                        items(events, key = { composeEventKey(it) }) { event ->
+                        items(events, key = { composeEventListItemKey(it) }) { event ->
                             val routeInfo = meta?.routes?.get(event.chateau)?.get(event.route_id)
 
                             val rType = routeInfo?.route_type ?: 3
@@ -1154,7 +1257,7 @@ fun StopScreen(
                                         event = event,
                                         routeInfo = routeInfo,
                                         agencies = meta?.agencies?.get(event.chateau),
-                                        currentTime = currentTime,
+                                    currentTime = realtimeNow,
                                         zoneId = zoneId,
                                         locale = locale,
                                     showSeconds = showSeconds,
@@ -1184,7 +1287,7 @@ fun StopScreen(
                                 StopScreenRowV2(
                                         event = event,
                                         routeInfo = routeInfo,
-                                        currentTime = currentTime,
+                                    currentTime = realtimeNow,
                                         zoneId = zoneId,
                                         locale = locale,
                                         showArrivals = event.last_stop == true,
@@ -1223,7 +1326,7 @@ fun StopScreen(
                 }
 
                 // Loading / Load More footer
-                item {
+                item(key = LIST_KEY_FOOTER) {
                     Box(
                             modifier = Modifier
                                 .fillMaxWidth()

@@ -423,6 +423,7 @@ fun NearbyDepartures(
         }
 
         var nowSec by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
+        var realtimeNowSec by remember { mutableStateOf(System.currentTimeMillis() / 1000) }
         var lockToNow by remember { mutableStateOf(true) }
 
         // Drive "now" when locked; when unlocked, the picker owns nowSec.
@@ -431,6 +432,15 @@ fun NearbyDepartures(
                         if (lockToNow) {
                                 nowSec = System.currentTimeMillis() / 1000
                         }
+                        delay(1_000)
+                }
+        }
+
+        // Keep countdown/past-time visuals relative to real time,
+        // even when browsing departures for a different selected time.
+        LaunchedEffect(Unit) {
+                while (true) {
+                        realtimeNowSec = System.currentTimeMillis() / 1000
                         delay(1_000)
                 }
         }
@@ -826,7 +836,8 @@ fun NearbyDepartures(
                                                                 onTripClick,
                                                                 onRouteClick,
                                                                 onStopClick,
-                                                                nowSec = nowSec,
+                                                                selectedTimeSec = nowSec,
+                                                                realtimeNowSec = realtimeNowSec,
                                                                 eurostyle = isEurostyle,
                                                                 swiss = isSwiss
                                                         )
@@ -845,7 +856,7 @@ fun NearbyDepartures(
                                                         StationGroupCard(
                                                                 group = item.group,
                                                                 routesMap = routesMap,
-                                                                nowSec = nowSec,
+                                                                realtimeNowSec = realtimeNowSec,
                                                                 onTripClick = onTripClick,
                                                                 onStopClick = onStopClick,
                                                                 darkMode = darkMode,
@@ -864,7 +875,7 @@ fun NearbyDepartures(
 private fun StationGroupCard(
         group: StationDepartureGroup,
         routesMap: Map<String, Map<String, RouteInfoExport>>,
-        nowSec: Long,
+        realtimeNowSec: Long,
         onTripClick: (TripClickResponse) -> Unit,
         onStopClick: (chateauId: String, stopId: String) -> Unit,
         darkMode: Boolean,
@@ -1002,7 +1013,7 @@ private fun StationGroupCard(
                                                 event = event,
                                                 routeInfo = stopRouteInfo,
                                                 agencies = null,
-                                                currentTime = nowSec,
+                                                currentTime = realtimeNowSec,
                                                 zoneId =
                                                         if (group.timezone.isNotBlank())
                                                                 runCatching {
@@ -1297,7 +1308,8 @@ private fun RouteGroupCard(
         onTripClick: (TripClickResponse) -> Unit,
         onRouteClick: (chateauId: String, routeId: String) -> Unit,
         onStopClick: (chateauId: String, stopId: String) -> Unit,
-        nowSec: Long,
+        selectedTimeSec: Long,
+        realtimeNowSec: Long,
         eurostyle: Boolean,
         swiss: Boolean
 ) {
@@ -1425,7 +1437,7 @@ private fun RouteGroupCard(
                         val visibleTrips =
                                 trips.filter { t ->
                                         val dep = t.departureRealtime ?: t.departureSchedule ?: 0L
-                                        dep in (nowSec - 600)..(nowSec + 64800)
+                                        dep in (selectedTimeSec - 600)..(selectedTimeSec + 64800)
                                 }
 
                         if (visibleTrips.isEmpty()) return@forEach
@@ -1530,7 +1542,7 @@ private fun RouteGroupCard(
                                                 lineCol = lineCol,
                                                 textCol = textCol,
                                                 onTripClick = onTripClick,
-                                                nowSec = nowSec
+                                                realtimeNowSec = realtimeNowSec
                                         )
                                 }
                         }
@@ -1547,10 +1559,10 @@ private fun TripPill(
         lineCol: Color,
         textCol: Color,
         onTripClick: (TripClickResponse) -> Unit,
-        nowSec: Long
+        realtimeNowSec: Long
 ) {
         val dep = trip.departureRealtime ?: trip.departureSchedule ?: 0L
-        val secondsLeft = dep - nowSec
+        val secondsLeft = dep - realtimeNowSec
         val isPast = secondsLeft < 0
 
         val contentAlpha = if (isPast) 0.7f else 1.0f

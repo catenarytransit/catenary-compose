@@ -22,6 +22,7 @@
     <string name="early">Early</string>
     <string name="late">Late</string>
     <string name="ontime">On time</string>
+    <string name="earlier">Earlier</string>
     <string name="previous_departures">Previous departures</string>
     <string name="no_departures_found">No departures found</string>
     <string name="load_more">Load more</string>
