@@ -3940,11 +3940,23 @@ class MainActivity : ComponentActivity() {
                                                                                                         onHome
                                                                                         )
                                                                                 }
-                                                                                // TODO: Add 'when'
-                                                                                // branches for
-                                                                                // other stack types
-                                                                                // (SingleTrip,
-                                                                                // RouteStack, etc.)
+                                                                                is CatenaryStackEnum.VehicleSelectedStack -> {
+                                                                                        VehicleSelectedScreen(
+                                                                                                chateauId =
+                                                                                                        currentScreen
+                                                                                                                .chateau_id,
+                                                                                                vehicleId =
+                                                                                                        currentScreen
+                                                                                                                .vehicle_id,
+                                                                                                gtfsId =
+                                                                                                        currentScreen
+                                                                                                                .gtfs_id,
+                                                                                                onBack =
+                                                                                                        onBack,
+                                                                                                onHome =
+                                                                                                        onHome
+                                                                                        )
+                                                                                }
                                                                                 else -> {
                                                                                         /*
                                                                                         Text(
