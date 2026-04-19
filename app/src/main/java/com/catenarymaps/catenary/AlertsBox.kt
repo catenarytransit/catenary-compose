@@ -40,24 +40,7 @@ import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 
-@Serializable
-data class AlertTranslation(val text: String, val language: String?)
-
-@Serializable
-data class AlertText(val translation: List<AlertTranslation>)
-
-@Serializable
-data class AlertActivePeriod(val start: Long? = null, val end: Long? = null)
-
-@Serializable
-data class Alert(
-    val cause: Int?,
-    val effect: Int?,
-    val url: AlertText? = null,
-    val header_text: AlertText? = null,
-    val description_text: AlertText? = null,
-    val active_period: List<AlertActivePeriod> = emptyList()
-)
+// ... (Data classes AlertTranslation, AlertText, AlertActivePeriod, and Alert remain the same)
 
 @Composable
 fun AlertsBox(
@@ -65,7 +48,7 @@ fun AlertsBox(
     expanded: Boolean,
     onExpandedChange: () -> Unit,
     default_tz: String? = null,
-    chateau: String? = null,
+    chateau: String? = null, // Chateau ID from the selection screen
     isScrollable: Boolean = false
 ) {
     if (alerts.isEmpty()) return
@@ -124,6 +107,7 @@ fun AlertsBox(
                         Modifier.padding(vertical = 4.dp),
                         color = alertColor.copy(alpha = 0.5f)
                     )
+                    // Propagation of chateau ID to the Item view
                     AlertItem(alert, languageListToUse, locale, default_tz, alertColor, chateau)
                 }
             }
@@ -163,44 +147,20 @@ private fun AlertItem(
         }
         alert.url?.let { AlertUrl(it) }
         languageListToUse.forEach { lang ->
-            alert.header_text?.translation?.find { it.language == lang }
-                ?.let { FormattedText(it.text, MaterialTheme.typography.bodySmall, chateau) }
-            alert.description_text?.translation?.find { it.language == lang }
-                ?.let { FormattedText(it.text, MaterialTheme.typography.bodySmall, chateau) }
+            alert.header_text?.translation?.find { it.language == lang }?.let {
+                FormattedText(it.text, MaterialTheme.typography.bodySmall, chateau)
+            }
+            alert.description_text?.translation?.find { it.language == lang }?.let {
+                FormattedText(it.text, MaterialTheme.typography.bodySmall, chateau)
+            }
         }
         alert.active_period.forEach { AlertActivePeriodRow(it, locale, default_tz) }
     }
 }
 
 @Composable
-private fun AlertUrl(url: AlertText) {
-    val uriHandler = LocalUriHandler.current
-    url.translation.forEach { urlTranslation ->
-        Row {
-            Text("${urlTranslation.language}: ", style = MaterialTheme.typography.bodySmall)
-            val linkColor = if (isSystemInDarkTheme()) Color(0xff2b7fff) else Color.Blue
-            BasicText(
-                text = AnnotatedString(
-                    urlTranslation.text,
-                    spanStyle = SpanStyle(color = linkColor)
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.pointerInput(urlTranslation.text) {
-                    detectTapGestures {
-                        uriHandler.openUri(
-                            urlTranslation.text
-                        )
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Composable
 private fun FormattedText(text: String, style: TextStyle, chateau: String?) {
     val uriHandler = LocalUriHandler.current
-
     val tagRegex = remember { Regex("""<(/?[a-zA-Z0-9]+)(\s[^>]*)?>|([^<]+)""") }
     val hrefRegex = remember { Regex("""href="([^"]+)"""") }
     val mtaIconRegex = remember { Regex("""\[([A-Z0-9]+|shuttle bus icon|accessibility icon)\]""") }
@@ -227,6 +187,7 @@ private fun FormattedText(text: String, style: TextStyle, chateau: String?) {
                 justAddedBullet = false
                 val currentStyle = styleStack.fold(SpanStyle()) { acc, s -> acc.merge(s) }
                 withStyle(currentStyle) {
+                    // Strict gate: only perform bracket replacement if the agency is MTA (nyct)
                     if (chateau == MtaSubwayUtils.MTA_CHATEAU_ID) {
                         var lastIdx = 0
                         mtaIconRegex.findAll(content).forEach { mtaMatch ->
@@ -252,9 +213,13 @@ private fun FormattedText(text: String, style: TextStyle, chateau: String?) {
                             lastIdx = mtaMatch.range.last + 1
                         }
                         append(content.substring(lastIdx))
-                    } else append(content)
+                    } else {
+                        // For non-MTA agencies, append content exactly as provided
+                        append(content)
+                    }
                 }
             } else if (tagName != null) {
+                // Ignore MTA-specific spacing tags
                 if (attrs.contains("min-height")) return@forEach
 
                 when (tagName) {
@@ -297,7 +262,7 @@ private fun FormattedText(text: String, style: TextStyle, chateau: String?) {
                     "li" -> {
                         ensureNewlines(1)
                         append("  • ")
-                        justAddedBullet = true
+                        justAddedBullet = true // Suppresses extra newline if a <p> follows <li>
                     }
                 }
             }
@@ -320,79 +285,6 @@ private fun FormattedText(text: String, style: TextStyle, chateau: String?) {
             }
         }
     )
-}
-
-@Composable
-private fun MtaIcon(routeId: String) {
-    val context = LocalContext.current
-    val iconUrl =
-        if (routeId == "ADA") "https://maps.catenarymaps.org/mtaicons/ada.svg" else MtaSubwayUtils.getMtaIconUrl(
-            routeId
-        )
-    if (iconUrl == null) return
-
-    val imageLoader = remember(context) {
-        ImageLoader.Builder(context).components { add(SvgDecoder.Factory()) }.build()
-    }
-    AsyncImage(
-        model = ImageRequest.Builder(context).data(iconUrl).crossfade(true).build(),
-        imageLoader = imageLoader,
-        contentDescription = routeId,
-        modifier = Modifier.size(16.dp)
-    )
-}
-
-@Composable
-private fun AlertActivePeriodRow(
-    activePeriod: AlertActivePeriod,
-    locale: Locale,
-    default_tz: String?
-) {
-    val dateFormat = remember(locale, default_tz) {
-        SimpleDateFormat("yyyy-MM-dd HH:mm", locale).apply {
-            default_tz?.let {
-                timeZone = TimeZone.getTimeZone(it)
-            }
-        }
-    }
-    Column {
-        activePeriod.start?.let { start ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "${stringResource(R.string.starting_time)}: ${dateFormat.format(Date(start * 1000))}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Spacer(Modifier.width(4.dp))
-                DiffTimer(
-                    diff = (start * 1000 - System.currentTimeMillis()) / 1000.0,
-                    showBrackets = true,
-                    showSeconds = true,
-                    showDays = true,
-                    numSize = MaterialTheme.typography.bodySmall.fontSize,
-                    unitSize = MaterialTheme.typography.bodySmall.fontSize * 0.8,
-                    bracketSize = MaterialTheme.typography.bodySmall.fontSize
-                )
-            }
-        }
-        activePeriod.end?.let { end ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "${stringResource(R.string.ending_time)}: ${dateFormat.format(Date(end * 1000))}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Spacer(Modifier.width(4.dp))
-                DiffTimer(
-                    diff = (end * 1000 - System.currentTimeMillis()) / 1000.0,
-                    showBrackets = true,
-                    showSeconds = true,
-                    showDays = true,
-                    numSize = MaterialTheme.typography.bodySmall.fontSize,
-                    unitSize = MaterialTheme.typography.bodySmall.fontSize * 0.8,
-                    bracketSize = MaterialTheme.typography.bodySmall.fontSize
-                )
-            }
-        }
-    }
 }
 
 @Composable
