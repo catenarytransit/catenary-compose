@@ -156,12 +156,21 @@ class SearchViewModel : ViewModel() {
                                 recomputeRows()
                             }
 
-                            // --- Cypress Autocomplete API (Ktor) ---
+                            // --- Cypress v2 Search API (Ktor) ---
                             launch {
                                 val features =
                                     try {
-                                        val cypressUrl =
-                                            "https://cypress.catenarymaps.org/v1/autocomplete?text=$query"
+                                        val baseUrl = "https://cypress.catenarymaps.org/v2/search"
+                                        val params = mutableListOf(
+                                            "text=${query}"
+                                        )
+                                        // Add focus point if available
+                                        if (mapCenter != null) {
+                                            params += "focus.point.lat=${mapCenter.latitude}"
+                                            params += "focus.point.lon=${mapCenter.longitude}"
+                                            params += "focus.point.weight=4"
+                                        }
+                                        val cypressUrl = baseUrl + "?" + params.joinToString("&")
 
                                         val response = client.get(cypressUrl).body<CypressResponse>()
                                         response.features

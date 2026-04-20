@@ -12,27 +12,32 @@ import kotlinx.serialization.json.JsonObject
 data class CypressFeature(
         val type: String,
         val geometry: CypressGeometry,
-        val properties: CypressProperties
+        val properties: CypressPropertiesV2
 )
 
 @Serializable data class CypressGeometry(val type: String, val coordinates: List<Double>)
 
 @Serializable
-data class CypressProperties(
+data class CypressPropertiesV2(
         val id: String,
-        val layer: String, // "locality", "address", "venue"
-        val name: String? = null,
-        val names: Map<String, String>? = null,
+        val layer: String,
+        val name: String,
+        val names: Map<String, String> = emptyMap(),
         val housenumber: String? = null,
         val street: String? = null,
         val postcode: String? = null,
         val country: String? = null,
+        val country_names: Map<String, String>? = null,
         val region: String? = null,
+        val region_names: Map<String, String>? = null,
         val county: String? = null,
+        val county_names: Map<String, String>? = null,
         val locality: String? = null,
+        val locality_names: Map<String, String>? = null,
         val neighbourhood: String? = null,
-        val categories: List<String>? = null,
-        val confidence: Double? = null
+        val neighbourhood_names: Map<String, String>? = null,
+        val categories: List<String> = emptyList(),
+        val confidence: Double
 )
 
 // --- Catenary Text Search API Response ---
