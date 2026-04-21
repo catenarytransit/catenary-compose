@@ -84,11 +84,15 @@ fun AlertsBox(
     val languageListToUse = remember(alerts) {
         val allLanguages = alerts.values.flatMap { alert ->
             val headerLangs =
-                alert.header_text?.translation?.mapNotNull { it.language } ?: emptyList()
+                alert.header_text?.translation?.map { it.language ?: "" } ?: emptyList()
             val descLangs =
-                alert.description_text?.translation?.mapNotNull { it.language } ?: emptyList()
+                alert.description_text?.translation?.map { it.language ?: "" } ?: emptyList()
             headerLangs + descLangs
         }.distinct()
+
+        if (allLanguages.isEmpty()) {
+            return@remember listOf("")
+        }
 
         val htmlLangs = allLanguages.filter { it.endsWith("-html") }
         val basesToHide = htmlLangs.map { it.substringBefore("-html") }
@@ -198,14 +202,14 @@ private fun AlertItem(
         alert.url?.let { AlertUrl(it) }
 
         languageListToUse.forEach { lang ->
-            alert.header_text?.translation?.find { it.language == lang }?.let {
+            alert.header_text?.translation?.find { (it.language ?: "") == lang }?.let {
                 FormattedText(
                     text = it.text,
                     style = MaterialTheme.typography.bodySmall,
                     chateau = chateau
                 )
             }
-            alert.description_text?.translation?.find { it.language == lang }?.let {
+            alert.description_text?.translation?.find { (it.language ?: "") == lang }?.let {
                 FormattedText(
                     text = it.text,
                     style = MaterialTheme.typography.bodySmall,
@@ -229,8 +233,9 @@ private fun AlertUrl(url: AlertText) {
     val uriHandler = LocalUriHandler.current
     url.translation.forEach { urlTranslation ->
         Row {
+            val languageStr = urlTranslation.language ?: "Link"
             Text(
-                text = "${urlTranslation.language}: ",
+                text = "${languageStr}: ",
                 style = MaterialTheme.typography.bodySmall
             )
             val linkColor = if (isSystemInDarkTheme()) Color(0xff2b7fff) else Color.Blue
