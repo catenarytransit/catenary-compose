@@ -186,10 +186,10 @@ private enum class SortMode {
 }
 
 private data class Filters(
-        val rail: Boolean = true,
-        val metro: Boolean = true,
-        val bus: Boolean = true,
-        val other: Boolean = true
+        val rail: Boolean = false,
+        val metro: Boolean = false,
+        val bus: Boolean = false,
+        val other: Boolean = false
 )
 
 private object FilterPreferences {
@@ -213,23 +213,26 @@ private object FilterPreferences {
         fun loadFilters(context: Context): Filters {
                 val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 return Filters(
-                        rail = prefs.getBoolean(KEY_RAIL, true),
-                        metro = prefs.getBoolean(KEY_METRO, true),
-                        bus = prefs.getBoolean(KEY_BUS, true),
-                        other = prefs.getBoolean(KEY_OTHER, true)
+                        rail = prefs.getBoolean(KEY_RAIL, false),
+                        metro = prefs.getBoolean(KEY_METRO, false),
+                        bus = prefs.getBoolean(KEY_BUS, false),
+                        other = prefs.getBoolean(KEY_OTHER, false)
                 )
         }
 }
 
 // Rough mapping mirroring the JS filter buckets
-private fun isAllowedByFilter(routeType: Int, f: Filters): Boolean =
-        when (routeType) {
+private fun isAllowedByFilter(routeType: Int, f: Filters): Boolean {
+        val allDisabled = !f.rail && !f.metro && !f.bus && !f.other
+        if (allDisabled) return true
+        return when (routeType) {
                 3, 11, 700 -> f.bus
                 0, 1, 5, 7, 12, 900 -> f.metro
                 2, 106, 107, 101, 100, 102, 103 -> f.rail
                 4 -> f.other // ferries
                 else -> true
         }
+}
 
 // Helper functions removed (flattenDirections, haversineMeters, normalizeHex kept if needed)
 private fun normalizeHex(c: String?): Color? {
@@ -304,8 +307,7 @@ private suspend fun fetchNearby(
                         "Fetch nearby departures lat=$lat lon=$lon (thread=${Thread.currentThread().name})"
                 )
 
-                val timeParam =
-                        departureTimeSec?.let { "&departure_time=$it" } ?: ""
+                val timeParam = departureTimeSec?.let { "&departure_time=$it" } ?: ""
                 val url =
                         "https://birch.catenarymaps.org/nearbydeparturesfromcoordsv3?lat=$lat&lon=$lon&limit_per_station=10&limit_per_headsign=20$timeParam"
                 val req = Request.Builder().url(url).get().build()
@@ -525,17 +527,11 @@ fun NearbyDepartures(
                                         lockedOrigin = currentUserLocation
                                 }
                                 val origin = lockedOrigin ?: return
-                                val departureTime =
-                                        if (currentLockToNow) null else currentNowSec
+                                val departureTime = if (currentLockToNow) null else currentNowSec
                                 loading = true
                                 firstAttemptSent = true
                                 println("Fetching nearby departures for $origin")
-                                val res =
-                                        fetchNearby(
-                                                origin.first,
-                                                origin.second,
-                                                departureTime
-                                        )
+                                val res = fetchNearby(origin.first, origin.second, departureTime)
 
                                 if (res != null) {
                                         stopsTableLongDistance = res.longDistance
@@ -575,11 +571,12 @@ fun NearbyDepartures(
         val filteredStations =
                 remember(stopsTableLongDistance, filters) {
                         stopsTableLongDistance.filter { group ->
-                                // Filter out groups with no relevant departures if rail filter is
-                                // off?
-                                // But usually LD is rail.
-                                // If rail filter is off, do we hide LD? Current logic says yes.
-                                filters.rail && group.departures.isNotEmpty()
+                                val allDisabled =
+                                        !filters.rail &&
+                                                !filters.metro &&
+                                                !filters.bus &&
+                                                !filters.other
+                                (allDisabled || filters.rail) && group.departures.isNotEmpty()
                         }
                 }
 
@@ -587,7 +584,8 @@ fun NearbyDepartures(
 
         // Derive a reasonable timezone for the nearby view. Prefer the closest
         // long-distance station, then any stop, falling back to device TZ.
-        val nearbyTimezoneId by remember(stopsTableLongDistance, stopsMap) {
+        val nearbyTimezoneId by
+        remember(stopsTableLongDistance, stopsMap) {
                 mutableStateOf(
                         run {
                                 val closestStation =
@@ -767,8 +765,7 @@ fun NearbyDepartures(
                         // Spacer(Modifier.height(8.dp))
                 }
 
-                FilterRow(filters = filters, onChange = { filters = it })
-
+                FilterRow(filters = filters, darkMode = darkMode, onChange = { filters = it })
                 Box(Modifier.fillMaxSize()) {
                         LazyColumn(
                                 modifier =
@@ -1259,22 +1256,25 @@ private fun TopRow(
 }
 
 @Composable
-private fun FilterRow(filters: Filters, onChange: (Filters) -> Unit) {
-        // Spacer(Modifier.height(2.dp))
+private fun FilterRow(filters: Filters, darkMode: Boolean, onChange: (Filters) -> Unit) {
         Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-                FilterChip(stringResource(R.string.heading_intercity_rail), filters.rail) {
+                FilterChip(
+                        stringResource(R.string.heading_intercity_rail),
+                        filters.rail,
+                        darkMode
+                ) {
                         onChange(filters.copy(rail = !filters.rail))
                 }
-                FilterChip(stringResource(R.string.heading_local_rail), filters.metro) {
+                FilterChip(stringResource(R.string.heading_local_rail), filters.metro, darkMode) {
                         onChange(filters.copy(metro = !filters.metro))
                 }
-                FilterChip(stringResource(R.string.heading_bus), filters.bus) {
+                FilterChip(stringResource(R.string.heading_bus), filters.bus, darkMode) {
                         onChange(filters.copy(bus = !filters.bus))
                 }
-                FilterChip(stringResource(R.string.heading_other), filters.other) {
+                FilterChip(stringResource(R.string.heading_other), filters.other, darkMode) {
                         onChange(filters.copy(other = !filters.other))
                 }
         }
@@ -1282,15 +1282,21 @@ private fun FilterRow(filters: Filters, onChange: (Filters) -> Unit) {
 }
 
 @Composable
-private fun FilterChip(label: String, on: Boolean, onClick: () -> Unit) {
+private fun FilterChip(label: String, on: Boolean, darkMode: Boolean, onClick: () -> Unit) {
+        val borderColor = if (on) {
+                if (darkMode) Color.White else Color.Black
+        } else {
+                Color.Gray
+        }
+
         Surface(
                 onClick = onClick,
                 shape = RoundedCornerShape(999.dp),
                 tonalElevation = if (on) 4.dp else 16.dp,
-                border = if (on) ButtonDefaults.outlinedButtonBorder else null,
+                border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
                 color =
                         if (on) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
-                        else MaterialTheme.colorScheme.surfaceVariant
+                        else Color.Transparent
         ) {
                 Text(
                         label,
