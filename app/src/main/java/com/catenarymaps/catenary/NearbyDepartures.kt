@@ -1286,7 +1286,7 @@ private fun FilterChip(label: String, on: Boolean, darkMode: Boolean, onClick: (
         val borderColor = if (on) {
                 if (darkMode) Color.White else Color.Black
         } else {
-                Color.Gray
+                Color.Gray.copy(alpha = 0.3f)
         }
 
         Surface(
