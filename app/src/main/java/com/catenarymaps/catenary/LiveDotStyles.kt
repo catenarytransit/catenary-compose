@@ -195,10 +195,11 @@ fun getLiveDotStyle(
                             type = linear(),
                             input = zoom(),
                             6.0 to const(3.0.dp),
-                            8.0 to const(3.0.dp),
-                            10.0 to const(4.0.dp),
-                            11.0 to const(6.0.dp),
-                            16.0 to const(12.0.dp)
+                        8.0 to const(2.8.dp),
+                        10.0 to const(3.5.dp),
+                        11.0 to const(5.0.dp),
+                        14.0 to const(7.0.dp),
+                        16.0 to const(11.0.dp)
                     )
             dotStrokeWidth =
                     interpolate(linear(), zoom(), 8.0 to const(0.8.dp), 10.0 to const(1.2.dp))
@@ -240,12 +241,17 @@ fun getLiveDotStyle(
                             type = linear(),
                             input = zoom(),
                             6.0 to const(0.3125f.em),
-                            9.0 to const(0.4375f.em),
-                            10.0 to const(0.5625f.em),
-                            11.0 to const(0.6875f.em),
-                            13.0 to const(0.75f.em)
+                        9.0 to const(0.4.em),
+                        10.0 to const(0.45.em),
+                        11.0 to const(0.5f.em),
+                        13.0 to const(0.6f.em),
+                        15.0 to const(0.8f.em),
                     )
-            labelTextFont = const(listOf("Arimo-Medium"))
+            labelTextFont = step(
+                zoom(),
+                const(listOf("Arimo-Regular")),
+                10.0 to const(listOf("Arimo-Medium"))
+            )
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
             labelTextOpacity =
@@ -253,7 +259,8 @@ fun getLiveDotStyle(
                             linear(),
                             zoom(),
                             2.0 to const(0.0f),
-                            2.5 to const(0.8f),
+                        2.5 to const(0.6f),
+                        9.0 to const(0.9f),
                             10.0 to const(1.0f)
                     )
         }
@@ -267,7 +274,7 @@ fun getLiveDotStyle(
                             10.0 to const(4.0.dp),
                             11.0 to const(4.5.dp),
                             13.0 to const(6.0.dp),
-                            15.0 to const(6.0.dp),
+                        15.0 to const(5.0.dp),
                             16.0 to const(10.0.dp)
                     )
             dotStrokeWidth =
@@ -328,11 +335,16 @@ fun getLiveDotStyle(
                             6.0 to const(0.25f.em),
                             9.0 to const(0.375f.em),
                             10.0 to const(0.4375f.em),
-                            11.0 to const(0.5625f.em),
-                            13.0 to const(0.625f.em),
-                            15.0 to const(0.875f.em)
+                        11.0 to const(0.4f.em),
+                        13.0 to const(0.5f.em),
+                        15.0 to const(0.7f.em)
                     )
-            labelTextFont = const(listOf("Arimo-Medium"))
+            labelTextFont = step(
+                zoom(),
+                const(listOf("Arimo-Regular")),
+                0.0 to const(listOf("Arimo-Regular")),
+                11.0 to const(listOf("Arimo-Medium"))
+            )
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
             labelTextOpacity =
@@ -340,8 +352,9 @@ fun getLiveDotStyle(
                             linear(),
                             zoom(),
                             2.0 to const(0.0f),
-                            2.5 to const(0.8f),
-                            10.0 to const(1.0f)
+                        6.0 to const(0.8f),
+                        9.0 to const(0.9f),
+                        11.0 to const(1.0f)
                     )
         }
         "intercityrail" -> {
