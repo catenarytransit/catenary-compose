@@ -1,5 +1,7 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -135,6 +137,8 @@ fun SingleTripInfoScreen(
         val stopTimes by viewModel.stopTimes.collectAsState()
         // val showPreviousStops by viewModel.showPreviousStops.collectAsState() // Removed
         val lastInactiveStopIdx by viewModel.lastInactiveStopIdx.collectAsState()
+
+        val coachSequenceScreenShown by viewModel.coachSequenceScreenShown.collectAsState()
 
         val vehicleData by viewModel.vehicleData.collectAsState()
 
@@ -848,8 +852,56 @@ fun SingleTripInfoScreen(
                                         }
                                 }
 
-                                Column() { // Clickable Vehicle Label
-                                        if (data.vehicle?.label != null || data.vehicle?.id != null
+                                if (data.consist != null) {
+                                        Row(
+                                                modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(
+                                                                horizontal = 16.dp,
+                                                                vertical = 8.dp
+                                                        ),
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                                Button(
+                                                        onClick = {
+                                                                viewModel.toggleCoachSequenceScreen(
+                                                                        false
+                                                                )
+                                                        },
+                                                        colors = ButtonDefaults.buttonColors(
+                                                                containerColor = if (!coachSequenceScreenShown) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                                                contentColor = if (!coachSequenceScreenShown) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                                        ),
+                                                        modifier = Modifier.weight(1f)
+                                                ) {
+                                                        Text("Journey Info")
+                                                }
+                                                Button(
+                                                        onClick = {
+                                                                viewModel.toggleCoachSequenceScreen(
+                                                                        true
+                                                                )
+                                                        },
+                                                        colors = ButtonDefaults.buttonColors(
+                                                                containerColor = if (coachSequenceScreenShown) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                                                contentColor = if (coachSequenceScreenShown) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                                        ),
+                                                        modifier = Modifier.weight(1f)
+                                                ) {
+                                                        Text("Train Formation")
+                                                }
+                                        }
+                                }
+
+                                if (coachSequenceScreenShown && data.consist != null) {
+                                        CoachSequencePage(
+                                                coachSequence = data.consist
+                                        )
+                                }
+
+                                if (!coachSequenceScreenShown) {
+                                        Column() { // Clickable Vehicle Label
+                                                if (data.vehicle?.label != null || data.vehicle?.id != null
                                         ) {
                                                 VehicleInfo(
                                                         label = data.vehicle.label
@@ -959,6 +1011,7 @@ fun SingleTripInfoScreen(
                                                 )
                                         }
                                 }
+                                } // End of !coachSequenceScreenShown
                         } // End tripData != null block
                 } // End Column
 

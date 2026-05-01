@@ -55,6 +55,13 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
     private val _showPreviousStops = MutableStateFlow(false)
     val showPreviousStops = _showPreviousStops.asStateFlow()
 
+    private val _coachSequenceScreenShown = MutableStateFlow(false)
+    val coachSequenceScreenShown = _coachSequenceScreenShown.asStateFlow()
+
+    fun toggleCoachSequenceScreen(show: Boolean) {
+        _coachSequenceScreenShown.value = show
+    }
+
     private val _currentTime = MutableStateFlow(System.currentTimeMillis())
     val currentTime = _currentTime.asStateFlow()
 
