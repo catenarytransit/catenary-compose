@@ -20,6 +20,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.serialization.json.*
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Accessible
+import androidx.compose.material.icons.filled.AcUnit
+import androidx.compose.material.icons.filled.Accessible
+import androidx.compose.material.icons.filled.ChildFriendly
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PedalBike
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Person2
+import androidx.compose.material.icons.filled.Person3
+import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.VoiceOverOff
+import androidx.compose.material.icons.filled.Wc
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun CoachSequencePage(
@@ -118,10 +133,11 @@ fun CoachSequencePage(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = if (occupancy == SiriOccupancy.High || occupancy == SiriOccupancy.VeryHigh) "👥" else "👤",
-                                    fontSize = 12.sp,
-                                    color = if (occupancy == SiriOccupancy.VeryHigh) Color.Red else MaterialTheme.colorScheme.onSurface
+                                Icon(
+                                    imageVector = if (occupancy == SiriOccupancy.High || occupancy == SiriOccupancy.VeryHigh) Icons.Filled.Group else Icons.Filled.Person,
+                                    contentDescription = "Occupancy",
+                                    modifier = Modifier.size(14.dp),
+                                    tint = if (occupancy == SiriOccupancy.VeryHigh) Color.Red else MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = when (pClass) {
@@ -145,7 +161,12 @@ fun CoachSequencePage(
                                 if (amenity == AmenityType.LowFloor) {
                                     Text("NF", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 } else if (amenity != null) {
-                                    Text("•", fontSize = 10.sp) // Fallback for icons
+                                    Icon(
+                                        imageVector = getAmenityIcon(amenity),
+                                        contentDescription = amenity.name,
+                                        modifier = Modifier.size(12.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
                                 }
                             }
                         }
@@ -172,23 +193,33 @@ fun CoachSequencePage(
             )
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (presentOccupancies.isNotEmpty()) {
-                    LegendItem("👤", "Low to average occupancy expected")
-                    LegendItem("👥", "High occupancy expected")
-                    LegendItem("👥", "Very high occupancy expected", isRed = true)
+                    LegendItem(
+                        vectorIcon = Icons.Filled.Person,
+                        text = "Low to average occupancy expected"
+                    )
+                    LegendItem(vectorIcon = Icons.Filled.Person2, text = "High occupancy expected")
+                    LegendItem(
+                        vectorIcon = Icons.Filled.Person3,
+                        text = "Very high occupancy expected",
+                        isRed = true
+                    )
                 }
 
                 if (presentClasses.contains(PassengerClass.First)) {
-                    LegendItem("1", "1st class coach", box = true)
+                    LegendItem(textIcon = "1", text = "1st class coach", box = true)
                 }
                 if (presentClasses.contains(PassengerClass.Second)) {
-                    LegendItem("2", "2nd class coach", box = true)
+                    LegendItem(textIcon = "2", text = "2nd class coach", box = true)
                 }
 
                 presentAmenities.forEach { amenity ->
                     if (amenity == AmenityType.LowFloor) {
-                        LegendItem("NF", "Low-floor access", italic = true)
+                        LegendItem(textIcon = "NF", text = "Low-floor access", italic = true)
                     } else {
-                        LegendItem("•", amenity.name.replace("([A-Z])".toRegex(), " $1").trim())
+                        LegendItem(
+                            vectorIcon = getAmenityIcon(amenity),
+                            text = amenity.name.replace("([A-Z])".toRegex(), " $1").trim()
+                        )
                     }
                 }
             }
@@ -204,8 +235,9 @@ fun CoachSequencePage(
 
 @Composable
 private fun LegendItem(
-    icon: String,
     text: String,
+    textIcon: String? = null,
+    vectorIcon: ImageVector? = null,
     isRed: Boolean = false,
     box: Boolean = false,
     italic: Boolean = false
@@ -215,9 +247,9 @@ private fun LegendItem(
             contentAlignment = Alignment.Center,
             modifier = Modifier.width(24.dp)
         ) {
-            if (box) {
+            if (box && textIcon != null) {
                 Text(
-                    text = icon,
+                    text = textIcon,
                     modifier = Modifier
                         .border(
                             1.dp,
@@ -228,9 +260,16 @@ private fun LegendItem(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
-            } else {
+            } else if (vectorIcon != null) {
+                Icon(
+                    imageVector = vectorIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = if (isRed) Color.Red else MaterialTheme.colorScheme.onSurface
+                )
+            } else if (textIcon != null) {
                 Text(
-                    text = icon,
+                    text = textIcon,
                     color = if (isRed) Color.Red else MaterialTheme.colorScheme.onSurface,
                     fontSize = if (italic) 12.sp else 14.sp,
                     fontWeight = if (italic) FontWeight.Bold else FontWeight.Normal,
@@ -240,5 +279,19 @@ private fun LegendItem(
         }
         Spacer(modifier = Modifier.width(12.dp))
         Text(text, fontSize = 14.sp)
+    }
+}
+
+private fun getAmenityIcon(amenity: AmenityType): ImageVector {
+    return when (amenity.name.uppercase()) {
+        "AIRCONDITION", "AIR_CONDITION" -> Icons.Filled.AcUnit
+        "WHEELCHAIRSPACE", "WHEELCHAIR_SPACE" -> Icons.AutoMirrored.Filled.Accessible
+        "BIKESPACE", "BIKE_SPACE" -> Icons.Filled.PedalBike
+        "QUIETZONE", "QUIET_ZONE" -> Icons.Filled.VoiceOverOff
+        "FAMILYZONE", "FAMILY_ZONE" -> Icons.Filled.ChildFriendly
+        "INFOPOINT", "INFO_POINT" -> Icons.Filled.Info
+        "DININGCAR", "DINING_CAR" -> Icons.Filled.Restaurant
+        "TOILET" -> Icons.Filled.Wc
+        else -> Icons.Filled.QuestionMark // Maintains the default fallback logic used in Svelte
     }
 }
