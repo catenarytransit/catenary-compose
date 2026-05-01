@@ -25,6 +25,9 @@ import androidx.compose.material.icons.automirrored.filled.Accessible
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Accessible
 import androidx.compose.material.icons.filled.ChildFriendly
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Groups3
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material.icons.filled.Person
@@ -134,7 +137,7 @@ fun CoachSequencePage(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = if (occupancy == SiriOccupancy.High || occupancy == SiriOccupancy.VeryHigh) Icons.Filled.Group else Icons.Filled.Person,
+                                    imageVector = if (occupancy == SiriOccupancy.High) Icons.Filled.Group else if (occupancy == SiriOccupancy.VeryHigh) Icons.Filled.Groups else Icons.Filled.Person,
                                     contentDescription = "Occupancy",
                                     modifier = Modifier.size(14.dp),
                                     tint = if (occupancy == SiriOccupancy.VeryHigh) Color.Red else MaterialTheme.colorScheme.onSurface
@@ -197,9 +200,9 @@ fun CoachSequencePage(
                         vectorIcon = Icons.Filled.Person,
                         text = "Low to average occupancy expected"
                     )
-                    LegendItem(vectorIcon = Icons.Filled.Person2, text = "High occupancy expected")
+                    LegendItem(vectorIcon = Icons.Filled.Group, text = "High occupancy expected")
                     LegendItem(
-                        vectorIcon = Icons.Filled.Person3,
+                        vectorIcon = Icons.Filled.Groups,
                         text = "Very high occupancy expected",
                         isRed = true
                     )
