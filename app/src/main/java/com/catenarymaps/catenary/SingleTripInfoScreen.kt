@@ -446,6 +446,37 @@ fun SingleTripInfoScreen(
                 }
         }
 
+        // Highlight the selected vehicle on the map, mirroring the web app's
+        // livedots_context behaviour for a clicked vehicle/trip.
+        LaunchedEffect(tripData, vehicleData) {
+                val data = tripData
+                val selectedVehicle = vehicleData
+                val selectedTripId =
+                        selectedVehicle?.trip?.trip_id ?: data?.trip_id ?: tripSelected.trip_id
+
+                val contextFeature =
+                        if (data != null && selectedVehicle != null) {
+                                vehicleContextFeatureFromSingleTrip(
+                                        chateauId = tripSelected.chateau_id,
+                                        tripData = data,
+                                        vehicleData = selectedVehicle
+                                )
+                        } else {
+                                null
+                        }
+
+                if (contextFeature != null) {
+                        setVehicleContextSource(majorDotsSource, listOf(contextFeature))
+                        applyFilterToLiveDots.value =
+                                hideSelectedTripLiveDotFilter(
+                                        chateauId = tripSelected.chateau_id,
+                                        tripId = selectedTripId
+                                )
+                } else {
+                        resetVehicleContextSource(majorDotsSource, applyFilterToLiveDots)
+                }
+        }
+
         // Clear hidden stops when this screen leaves composition
         DisposableEffect(Unit) {
                 onDispose {
@@ -472,13 +503,7 @@ fun SingleTripInfoScreen(
                                         )
                                 )
                         )
-                        majorDotsSource.value.setData(
-                                GeoJsonData.Features(
-                                        FeatureCollection(
-                                                emptyList<Feature<Point, Map<String, Any>>>()
-                                        )
-                                )
-                        )
+                        resetVehicleContextSource(majorDotsSource, applyFilterToLiveDots)
                 }
         }
 

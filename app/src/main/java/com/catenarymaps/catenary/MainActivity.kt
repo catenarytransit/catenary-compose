@@ -1911,6 +1911,8 @@ class MainActivity : ComponentActivity() {
                                                         LayersPerCategory.Metro.Labeldots,
                                                         LayersPerCategory.Tram.Livedots,
                                                         LayersPerCategory.Tram.Labeldots,
+                                                        "major-livedots-context-dot",
+                                                        "major-livedots-context-label",
                                                 )
                                         }
                                         val routeLayerIds = remember {
@@ -3314,6 +3316,65 @@ class MainActivity : ComponentActivity() {
                                                         railInFrame = railinframe
                                                 )
 
+                                                // Highlighted vehicle context dots.
+                                                // This is the Compose equivalent of the web
+                                                // livedots_context source used by selected trips
+                                                // and route screens.
+                                                CircleLayer(
+                                                        id = "major-livedots-context-dot",
+                                                        source = majorDotsSource.value,
+                                                        color = get("color").cast<ColorValue>(),
+                                                        radius =
+                                                                interpolate(
+                                                                        linear(),
+                                                                        zoom(),
+                                                                        7.0 to const(5.dp),
+                                                                        10.0 to const(7.dp),
+                                                                        14.0 to const(11.dp)
+                                                                ),
+                                                        strokeColor =
+                                                                if (isDark) const(Color(0xFF1E293B))
+                                                                else const(Color.White),
+                                                        strokeWidth =
+                                                                interpolate(
+                                                                        linear(),
+                                                                        zoom(),
+                                                                        7.0 to const(2.dp),
+                                                                        14.0 to const(3.dp)
+                                                                ),
+                                                        opacity = const(0.95f),
+                                                        strokeOpacity = const(1.0f),
+                                                        minZoom = 5f
+                                                )
+                                                SymbolLayer(
+                                                        id = "major-livedots-context-label",
+                                                        source = majorDotsSource.value,
+                                                        textField = get("maptag").cast<StringValue>(),
+                                                        textFont = const(listOf("Arimo-SemiBold")),
+                                                        textSize =
+                                                                interpolate(
+                                                                        linear(),
+                                                                        zoom(),
+                                                                        7.0 to const(0.55f.em),
+                                                                        10.0 to const(0.65f.em),
+                                                                        14.0 to const(0.85f.em)
+                                                                ),
+                                                        textColor =
+                                                                get(
+                                                                        if (isDark) "contrastdarkmode"
+                                                                        else "contrastlightmode"
+                                                                ).cast<ColorValue>(),
+                                                        textHaloColor = get("color").cast<ColorValue>(),
+                                                        textHaloWidth = const(3.dp),
+                                                        textHaloBlur = const(0.6.dp),
+                                                        textRadialOffset = const(0.55f.em),
+                                                        textAllowOverlap = const(true),
+                                                        textIgnorePlacement = const(true),
+                                                        textAnchor = const(SymbolAnchor.Left),
+                                                        textJustify = const(TextJustify.Left),
+                                                        minZoom = 5f
+                                                )
+
                                                 // Show a dot for the user's current location
                                                 if (currentLocation != null) {
                                                         val (lat, lon) = currentLocation!!
@@ -3738,6 +3799,11 @@ class MainActivity : ComponentActivity() {
                                                                                                         stopsContextSource =
                                                                                                                 stopsContextSourceRef
                                                                                                                         .value!!,
+                                                                                                        majorDotsSource =
+                                                                                                                majorDotsSourceRef
+                                                                                                                        .value,
+                                                                                                        applyFilterToLiveDots =
+                                                                                                                applyFilterToLiveDots,
                                                                                                         onStopClick = {
                                                                                                                 stopStack
                                                                                                                 ->

@@ -30,6 +30,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -63,7 +64,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.maplibre.compose.expressions.ast.Expression
 import org.maplibre.compose.camera.CameraState
+import org.maplibre.compose.expressions.value.BooleanValue
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.GeoJsonSource
 import org.maplibre.spatialk.geojson.BoundingBox
@@ -161,7 +164,9 @@ fun RouteScreen(
         camera: CameraState,
         desiredPadding: PaddingValues,
         onBack: () -> Unit,
-        onHome: () -> Unit
+        onHome: () -> Unit,
+        majorDotsSource: MutableState<GeoJsonSource>? = null,
+        applyFilterToLiveDots: MutableState<Expression<BooleanValue>>? = null
 ) {
     var routeInfo by remember { mutableStateOf<RouteInfoResponse?>(null) }
     var routeRealtime by remember { mutableStateOf<RouteRealtimeResponse?>(null) }
@@ -448,6 +453,43 @@ fun RouteScreen(
     val tripUpdatesByTripId =
             remember(rt) { rt?.trip_updates?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap() }
 
+    // Highlight all vehicles on the selected route, mirroring the web app's
+    // RouteScreen.svelte injection into the livedots_context source.
+    LaunchedEffect(routeRealtime, routeInfo) {
+        val infoForDots = routeInfo
+        val rtForDots = routeRealtime
+
+        if (infoForDots == null || rtForDots == null) {
+            resetVehicleContextSource(majorDotsSource, applyFilterToLiveDots)
+            return@LaunchedEffect
+        }
+
+        val contextFeatures =
+            rtForDots.vehicle_positions.mapNotNull { (vehicleKey, vehicle) ->
+                vehicleContextFeatureFromRouteVehicle(
+                    chateauId = screenData.chateau_id,
+                    routeId = screenData.route_id,
+                    routeColor = infoForDots.color,
+                    routeTextColor = infoForDots.text_color,
+                    routeShortName = infoForDots.short_name,
+                    routeLongName = infoForDots.long_name,
+                    vehicleKey = vehicleKey,
+                    vehicle = vehicle
+                )
+            }
+
+        if (contextFeatures.isEmpty()) {
+            resetVehicleContextSource(majorDotsSource, applyFilterToLiveDots)
+        } else {
+            setVehicleContextSource(majorDotsSource, contextFeatures)
+            applyFilterToLiveDots?.value =
+                hideSelectedRouteLiveDotsFilter(
+                    chateauId = screenData.chateau_id,
+                    routeId = screenData.route_id
+                )
+        }
+    }
+
     // Update map when active pattern changes
     // We add loadedShapes.size to keys to re-trigger when new shapes arrive
     LaunchedEffect(activeParentId, routeInfo, loadedShapes.size) {
@@ -515,6 +557,23 @@ fun RouteScreen(
 
         // 3. Hide these stops from the main layers
         onSetStopsToHide(pattern.rows.map { it.stopId }.toSet())
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            onSetStopsToHide(emptySet())
+            transitShapeSource.value.setData(
+                GeoJsonData.Features(
+                    FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
+                )
+            )
+            stopsContextSource.value.setData(
+                GeoJsonData.Features(
+                    FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
+                )
+            )
+            resetVehicleContextSource(majorDotsSource, applyFilterToLiveDots)
+        }
     }
 
     val activePattern =

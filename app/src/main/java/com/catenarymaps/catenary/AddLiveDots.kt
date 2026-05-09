@@ -249,3 +249,103 @@ fun LiveDotLayers(
         minZoom = styles.minLabelDotsZoom
     )
 }
+
+@Composable
+fun VehicleContextDotLayers(
+    source: GeoJsonSource,
+    usUnits: Boolean,
+    isDark: Boolean,
+    railInFrame: Boolean,
+    settings: LabelSettings = LabelSettings(
+        route = true,
+        trip = true,
+        vehicle = true,
+        headsign = true,
+        occupancy = true,
+        delay = true
+    ),
+    isVisible: Boolean = true,
+    idPrefix: String = "vehicle-context"
+) {
+    val styles = getLiveDotStyle("context", settings, railInFrame, isDark)
+
+    val contrastColorProp = if (isDark) "contrastdarkmode" else "contrastlightmode"
+    val contrastBearingColorProp = if (isDark) "contrastdarkmodebearing" else "contrastlightmode"
+    val vehicleColor = get(contrastColorProp).cast<ColorValue>()
+    val bearingColor = get(contrastBearingColorProp).cast<ColorValue>()
+    val baseFilter = const(true)
+    val bearingFilter = get("has_bearing").cast<BooleanValue>()
+
+    CircleLayer(
+        id = "$idPrefix-livedots",
+        source = source,
+        color = get("color").cast<ColorValue>(),
+        radius = styles.dotRadius,
+        strokeColor = if (isDark) const(Color(0xFF2E394B)) else const(Color.White),
+        strokeWidth = styles.dotStrokeWidth,
+        opacity = styles.dotOpacity,
+        strokeOpacity = styles.dotStrokeOpacity,
+        filter = baseFilter,
+        visible = isVisible,
+        minZoom = styles.minLayerDotsZoom
+    )
+
+    SymbolLayer(
+        id = "$idPrefix-pointingshell",
+        source = source,
+        iconImage = image(painterResource(R.drawable.pointing_shell)),
+        iconColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
+        iconSize = styles.bearingIconSize,
+        iconRotate = get("bearing").cast<FloatValue>(),
+        iconRotationAlignment = const(IconRotationAlignment.Map),
+        iconAllowOverlap = const(true),
+        iconIgnorePlacement = const(true),
+        iconOffset = styles.bearingIconOffset,
+        iconOpacity = styles.bearingShellOpacity,
+        filter = bearingFilter,
+        visible = isVisible,
+        minZoom = styles.minBearingZoom
+    )
+
+    SymbolLayer(
+        id = "$idPrefix-pointing",
+        source = source,
+        iconImage = image(
+            painterResource(R.drawable.pointing50percent),
+            drawAsSdf = true
+        ),
+        iconOpacity = styles.bearingFilledOpacity,
+        iconColor = bearingColor,
+        iconSize = styles.bearingIconSize,
+        iconRotate = get("bearing").cast<FloatValue>(),
+        iconRotationAlignment = const(IconRotationAlignment.Map),
+        iconAllowOverlap = const(true),
+        iconIgnorePlacement = const(true),
+        iconOffset = styles.bearingIconOffset,
+        filter = bearingFilter,
+        visible = isVisible,
+        minZoom = styles.minBearingZoom
+    )
+
+    SymbolLayer(
+        id = "$idPrefix-labeldots",
+        source = source,
+        textField = interpretLabelsToExpression(settings, usUnits),
+        textFont = styles.labelTextFont,
+        textSize = styles.labelTextSize,
+        textColor = vehicleColor,
+        textHaloColor = if (isDark) const(Color(0xFF1E293B)) else const(Color(0xFFEDEDED)),
+        textHaloWidth = styles.labelHaloWidth,
+        textHaloBlur = const(1.0.dp),
+        textRadialOffset = styles.labelRadialOffset,
+        textAllowOverlap = const(true),
+        textIgnorePlacement = const(true),
+        textOpacity = styles.labelTextOpacity,
+        filter = baseFilter,
+        visible = isVisible,
+        textAnchor = const(SymbolAnchor.Left),
+        textJustify = const(TextJustify.Left),
+        minZoom = styles.minLabelDotsZoom
+    )
+}
+

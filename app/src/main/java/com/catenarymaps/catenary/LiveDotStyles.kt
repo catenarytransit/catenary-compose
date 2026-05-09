@@ -61,6 +61,67 @@ fun getLiveDotStyle(
     var labelHaloWidth: Expression<DpValue> = if (isDark) const(2.4.dp) else const(1.0.dp)
 
     when (category) {
+        "context" -> {
+            dotRadius =
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    4.0 to const(3.0.dp),
+                    8.0 to const(4.5.dp),
+                    12.0 to const(6.0.dp),
+                    16.0 to const(8.0.dp)
+                )
+            dotStrokeWidth =
+                interpolate(
+                    linear(),
+                    zoom(),
+                    4.0 to const(1.0.dp),
+                    12.0 to const(1.5.dp)
+                )
+            dotOpacity = const(1.0f)
+            dotStrokeOpacity = const(1.0f)
+            bearingIconSize =
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    4.0 to const(0.35f),
+                    8.0 to const(0.5f),
+                    12.0 to const(0.7f),
+                    15.0 to const(0.85f)
+                )
+            bearingIconOffset =
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    4.0 to offset(0.dp, (-5).dp),
+                    8.0 to offset(0.dp, (-6).dp),
+                    12.0 to offset(0.dp, (-6).dp),
+                    15.0 to offset(0.dp, (-7).dp)
+                )
+            bearingShellOpacity = const(0.9f)
+            bearingFilledOpacity = const(0.9f)
+            labelTextSize =
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    8.0 to const(0.35f.em),
+                    12.0 to const(0.55f.em),
+                    15.0 to const(0.75f.em)
+                )
+            labelTextFont =
+                step(
+                    zoom(),
+                    const(listOf("Arimo-Medium")),
+                    12.0 to const(listOf("Arimo-SemiBold"))
+                )
+            labelRadialOffset = const(0.25f.em)
+            labelIgnorePlacementZoom = 8.0
+            labelTextOpacity = const(1.0f)
+            labelHaloWidth = if (isDark) const(2.0.dp) else const(1.0.dp)
+            minLayerDotsZoom = 0F
+            minLabelDotsZoom = 0F
+            minBearingZoom = 0F
+        }
         "bus" -> {
             dotRadius =
                     interpolate(
