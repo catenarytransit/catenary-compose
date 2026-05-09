@@ -546,6 +546,9 @@ fun RouteScreen(
                                 properties =
                                         buildJsonObject {
                                             put("label", stopDetails.name)
+                                            put("map_label", stopDetails.name)
+                                            put("displayname", stopDetails.name)
+                                            put("gtfs_id", stopTime.stopId)
                                             put("stop_id", stopTime.stopId)
                                             put("chateau", screenData.chateau_id)
                                             put("stop_route_type", info.route_type)

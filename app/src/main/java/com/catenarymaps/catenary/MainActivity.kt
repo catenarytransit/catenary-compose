@@ -1941,7 +1941,13 @@ class MainActivity : ComponentActivity() {
                                                         LayersPerCategory.Metro.Stops,
                                                         LayersPerCategory.Metro.LabelStops,
                                                         LayersPerCategory.Tram.Stops,
-                                                        LayersPerCategory.Tram.LabelStops
+                                                        LayersPerCategory.Tram.LabelStops,
+                                                        "contextbusstops",
+                                                        "contextbusstops_label",
+                                                        "contextmetrostops",
+                                                        "contextmetrostops_label",
+                                                        "contextrailstops",
+                                                        "contextrailstops_label"
                                                 )
                                         }
                                         val osmStationLayerIds = remember {
@@ -2820,7 +2826,7 @@ class MainActivity : ComponentActivity() {
                                                 SymbolLayer(
                                                         id = "contextbusstops_label",
                                                         source = stopsContextSource.value,
-                                                        textField = get("label").cast(),
+                                                        textField = get("map_label").cast(),
                                                         textSize =
                                                                 interpolate(
                                                                         linear(),
@@ -2899,7 +2905,7 @@ class MainActivity : ComponentActivity() {
                                                 SymbolLayer(
                                                         id = "contextmetrostops_label",
                                                         source = stopsContextSource.value,
-                                                        textField = get("label").cast(),
+                                                        textField = get("map_label").cast(),
                                                         textSize =
                                                                 interpolate(
                                                                         linear(),
@@ -2965,7 +2971,7 @@ class MainActivity : ComponentActivity() {
                                                 SymbolLayer(
                                                         id = "contextrailstops_label",
                                                         source = stopsContextSource.value,
-                                                        textField = get("label").cast(),
+                                                        textField = get("map_label").cast(),
                                                         textSize =
                                                                 interpolate(
                                                                         linear(),
@@ -5592,8 +5598,9 @@ class MainActivity : ComponentActivity() {
                 val selectedStopsKeyUnique = mutableSetOf<String>()
 
                 return features.mapNotNull { f ->
-                        // Use chateau + gtfs_id for uniqueness
-                        val key = (f.getString("chateau") ?: "") + (f.getString("gtfs_id") ?: "")
+                        // Context stop layers use stop_id, while the main stop layers use gtfs_id.
+                        val stopId = f.getString("gtfs_id") ?: f.getString("stop_id")
+                        val key = (f.getString("chateau") ?: "") + (stopId ?: "")
                         if (key.isBlank() || !selectedStopsKeyUnique.add(key))
                                 return@mapNotNull null
 
@@ -5601,9 +5608,11 @@ class MainActivity : ComponentActivity() {
                                 MapSelectionOption(
                                         MapSelectionSelector.StopMapSelector(
                                                 chateau_id = f.getString("chateau") ?: "",
-                                                stop_id = f.getString("gtfs_id")
-                                                                ?: "", // JS maps gtfs_id to stop_id
-                                                stop_name = f.getString("displayname")
+                                                stop_id = stopId
+                                                        ?: "", // JS maps gtfs_id to stop_id
+                                                stop_name =
+                                                        f.getString("displayname")
+                                                                ?: f.getString("label")
                                                                 ?: "Unknown Stop"
                                         )
                                 )

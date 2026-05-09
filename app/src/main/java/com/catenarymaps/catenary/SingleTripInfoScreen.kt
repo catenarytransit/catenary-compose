@@ -69,6 +69,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.google.maps.android.PolyUtil.decode as decodePolyutil
+import java.time.DateTimeException
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -84,6 +88,44 @@ import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
+
+private val contextStopTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+private fun contextStopName(stopTime: StopTimeCleaned): String {
+        return stopTime.raw.name?.trim()?.takeIf { it.isNotEmpty() } ?: stopTime.raw.stop_id
+}
+
+private fun contextStopZoneId(stopTimezone: String?, tripTimezone: String?): ZoneId {
+        for (timezone in listOf(stopTimezone, tripTimezone)) {
+                if (!timezone.isNullOrBlank()) {
+                        try {
+                                return ZoneId.of(timezone)
+                        } catch (_: DateTimeException) {
+                                // Try the next timezone fallback.
+                        }
+                }
+        }
+
+        return ZoneId.systemDefault()
+}
+
+private fun contextStopTimePrefix(stopTime: StopTimeCleaned, tripTimezone: String?): String? {
+        val timestampSeconds =
+                stopTime.rtDepartureTime
+                        ?: stopTime.rtArrivalTime
+                        ?: stopTime.raw.scheduled_departure_time_unix_seconds
+                        ?: stopTime.raw.scheduled_arrival_time_unix_seconds
+                        ?: stopTime.raw.interpolated_stoptime_unix_seconds
+                        ?: return null
+
+        return Instant.ofEpochSecond(timestampSeconds)
+                .atZone(contextStopZoneId(stopTime.raw.timezone, tripTimezone))
+                .format(contextStopTimeFormatter)
+}
+
+private fun contextStopMapLabel(stopName: String, labelPrefix: String?): String {
+        return if (labelPrefix.isNullOrBlank()) stopName else "$labelPrefix $stopName"
+}
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -404,11 +446,30 @@ fun SingleTripInfoScreen(
                         // This is your label_stops_on_map() logic
                         val stopFeatures =
                                 stopTimes.mapNotNull { stopTime ->
+                                        val stopName = contextStopName(stopTime)
+                                        val labelPrefix = contextStopTimePrefix(stopTime, data.tz)
                                         val properties = buildJsonObject {
+                                                // Keep the regular stop name separate from the map
+                                                // label so selection screens never need to parse time
+                                                // text back out of a label.
+                                                put("label", JsonPrimitive(stopName))
                                                 put(
-                                                        "label",
-                                                        JsonPrimitive(stopTime.raw.name)
-                                                ) // TODO: Add time formatting and name cleaning
+                                                        "map_label",
+                                                        JsonPrimitive(
+                                                                contextStopMapLabel(
+                                                                        stopName,
+                                                                        labelPrefix
+                                                                )
+                                                        )
+                                                )
+                                                if (labelPrefix != null) {
+                                                        put(
+                                                                "label_prefix",
+                                                                JsonPrimitive(labelPrefix)
+                                                        )
+                                                }
+                                                put("displayname", JsonPrimitive(stopName))
+                                                put("gtfs_id", JsonPrimitive(stopTime.raw.stop_id))
                                                 put("stop_id", JsonPrimitive(stopTime.raw.stop_id))
                                                 put(
                                                         "chateau",
