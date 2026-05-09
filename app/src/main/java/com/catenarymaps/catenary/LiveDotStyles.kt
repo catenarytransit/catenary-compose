@@ -186,8 +186,8 @@ fun getLiveDotStyle(
                             )
             labelHaloWidth = if (isDark) const(2.0.dp) else const(1.0.dp)
             minLayerDotsZoom = 9F
-            minLabelDotsZoom = 10F
-            minBearingZoom = 11F
+            minLabelDotsZoom = 11F
+            minBearingZoom = 11.5F
         }
         "metro" -> {
             dotRadius =

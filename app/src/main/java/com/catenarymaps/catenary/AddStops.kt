@@ -316,7 +316,7 @@ fun AddStops(
                 textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
                 textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
                 textHaloWidth = const(1.dp), // was 1.dp
-                minZoom = 11f,
+                minZoom = 12f,
                 filter = isMetro,
                 textJustify = const(TextJustify.Left),
                 textAnchor = const(SymbolAnchor.Left),
@@ -389,7 +389,7 @@ fun AddStops(
                 textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
                 textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
                 textHaloWidth = const(1.dp),
-                minZoom = 11f,
+                minZoom = 12f,
                 filter =
                         all(
                                 has("local_ref").not(),
@@ -485,7 +485,7 @@ fun AddStops(
                 textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
                 textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
                 textHaloWidth = const(1.dp), // was 1.dp
-                minZoom = 12f,
+                minZoom = 14f,
                 filter = isTram,
                 textJustify = const(TextJustify.Left),
                 textAnchor = const(SymbolAnchor.Left),
@@ -556,7 +556,7 @@ fun AddStops(
                 textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
                 textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
                 textHaloWidth = const(1.dp),
-                minZoom = 12f,
+                minZoom = 14f,
                 filter =
                         all(
                                 has("local_ref").not(),
