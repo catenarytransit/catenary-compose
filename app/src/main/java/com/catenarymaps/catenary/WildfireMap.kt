@@ -33,7 +33,7 @@ import org.maplibre.compose.expressions.dsl.offset
 
 private const val TAG = "WildfireMap"
 
-private const val EVACUATION_CA_FIRE_URL = "https://fireboundscache.catenarymaps.org/data/evac_california.json"
+private const val EVACUATION_CA_FIRE_URL = "https://fireboundscache.catenarymaps.org/data/ca_evacuations.json"
 private const val LOS_ANGELES_EVAC_URL = "https://fireboundscache.catenarymaps.org/data/los_angeles_evac.json"
 private const val WATCHDUTY_EVENTS_URL = "https://fireboundscache.catenarymaps.org/data/watchduty_events.json"
 private const val MODIS_URL = "https://raw.githubusercontent.com/catenarytransit/fire-bounds-cache/refs/heads/main/data/modis.json"
@@ -157,7 +157,7 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "evacuation_ca_fire_txt",
         source = evacuationCaSource,
         minZoom = 6f,
-        textField = get("STATUS").cast<StringValue>(),
+        textField = get("zone_status").cast<StringValue>(),
         textSize = interpolate(
             linear(),
             zoom(),
