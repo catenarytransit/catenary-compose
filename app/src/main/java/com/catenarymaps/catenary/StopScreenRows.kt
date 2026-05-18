@@ -610,44 +610,11 @@ fun StopScreenRow(
                                                                 )
                                                         }
                                                 } else if (isMta) {
-                                                        val mtaColor =
-                                                                MtaSubwayUtils.getMtaSubwayColor(
-                                                                        routeInfo?.short_name!!
-                                                                )
-                                                        val symbolShortName =
-                                                                MtaSubwayUtils
-                                                                        .getMtaSymbolShortName(
-                                                                                routeInfo.short_name
-                                                                        )
-                                                        androidx.compose.foundation.layout.Box(
-                                                                modifier =
-                                                                        Modifier
-                                                                                .size(20.dp)
-                                                                                .clip(CircleShape)
-                                                                                .background(
-                                                                                        mtaColor
-                                                                                ),
-                                                                contentAlignment = Alignment.Center
-                                                        ) {
-                                                                Text(
-                                                                        text = symbolShortName,
-                                                                        color = Color.White,
-                                                                        style =
-                                                                                MaterialTheme
-                                                                                        .typography
-                                                                                        .labelSmall
-                                                                                        .copy(
-                                                                                                fontWeight =
-                                                                                                        FontWeight
-                                                                                                                .Bold
-                                                                                        ),
-                                                                        textAlign =
-                                                                                androidx.compose.ui
-                                                                                        .text.style
-                                                                                        .TextAlign
-                                                                                        .Center
-                                                                )
-                                                        }
+                                                        MtaSubwayIcon(
+                                                                routeId = routeInfo?.short_name!!,
+                                                                size = 20.dp,
+                                                                contentDescription = routeInfo.short_name
+                                                        )
                                                         Spacer(Modifier.width(4.dp))
                                                 } else if (routeInfo?.short_name != null) {
                                                         Text(
@@ -1229,49 +1196,61 @@ fun StationScreenTrainRowCompact(
                                                         (routeInfo?.short_name != null ||
                                                                 routeInfo?.long_name != null)
                                         ) {}
+                                        val routeShortName = routeInfo?.short_name
                                         val routeName =
-                                                routeInfo?.short_name ?: routeInfo?.long_name
+                                                routeShortName ?: routeInfo?.long_name
                                         if (routeName != null) {
-                                                Text(
-                                                        text =
-                                                                routeName.replace(
-                                                                        " Line",
-                                                                        ""
-                                                                ),
-                                                        color =
-                                                                parseColor(
-                                                                        routeInfo?.text_color,
-                                                                        Color.White
-                                                                ),
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
-                                                                                fontSize = 10.sp,
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .Bold
+                                                if (MtaSubwayUtils.MTA_CHATEAU_ID == event.chateau &&
+                                                                routeShortName != null &&
+                                                                MtaSubwayUtils.isSubwayRouteId(routeShortName)
+                                                ) {
+                                                        MtaSubwayIcon(
+                                                                routeId = routeShortName,
+                                                                size = 16.dp,
+                                                                contentDescription = routeShortName
+                                                        )
+                                                } else {
+                                                        Text(
+                                                                text =
+                                                                        routeName.replace(
+                                                                                " Line",
+                                                                                ""
                                                                         ),
-                                                        modifier =
-                                                                Modifier
-                                                                        .clip(
-                                                                                getRouteShape(
-                                                                                        event.chateau,
-                                                                                        routeInfo
-                                                                                                ?.short_name
+                                                                color =
+                                                                        parseColor(
+                                                                                routeInfo?.text_color,
+                                                                                Color.White
+                                                                        ),
+                                                                style =
+                                                                        MaterialTheme.typography.labelSmall
+                                                                                .copy(
+                                                                                        fontSize = 10.sp,
+                                                                                        fontWeight =
+                                                                                                FontWeight
+                                                                                                        .Bold
+                                                                                ),
+                                                                modifier =
+                                                                        Modifier
+                                                                                .clip(
+                                                                                        getRouteShape(
+                                                                                                event.chateau,
+                                                                                                routeInfo
+                                                                                                        ?.short_name
+                                                                                        )
                                                                                 )
-                                                                        )
-                                                                        .background(
-                                                                                parseColor(
-                                                                                        routeInfo
-                                                                                                ?.color,
-                                                                                        Color.Gray
+                                                                                .background(
+                                                                                        parseColor(
+                                                                                                routeInfo
+                                                                                                        ?.color,
+                                                                                                Color.Gray
+                                                                                        )
                                                                                 )
-                                                                        )
-                                                                        .padding(
-                                                                                horizontal = 4.dp,
-                                                                                vertical = 0.5.dp
-                                                                        )
-                                                )
+                                                                                .padding(
+                                                                                        horizontal = 4.dp,
+                                                                                        vertical = 0.5.dp
+                                                                                )
+                                                        )
+                                                }
                                         }
                                 }
                         }
@@ -1413,46 +1392,11 @@ fun StopScreenRowV2(
                                                                 )
                                                         }
                                                 } else if (isMta) {
-                                                        val mtaColor =
-                                                                MtaSubwayUtils.getMtaSubwayColor(
-                                                                        routeInfo?.short_name!!
-                                                                )
-                                                        val symbolShortName =
-                                                                MtaSubwayUtils
-                                                                        .getMtaSymbolShortName(
-                                                                                routeInfo.short_name
-                                                                        )
-                                                        androidx.compose.foundation.layout.Box(
-                                                                modifier =
-                                                                        Modifier
-                                                                                .size(20.dp)
-                                                                                .clip(CircleShape)
-                                                                                .background(
-                                                                                        mtaColor
-                                                                                ),
-                                                                contentAlignment = Alignment.Center
-                                                        ) {
-                                                                Text(
-                                                                        text = symbolShortName,
-                                                                        color = Color.White,
-                                                                        style =
-                                                                                MaterialTheme
-                                                                                        .typography
-                                                                                        .labelSmall
-                                                                                        .copy(
-                                                                                                fontWeight =
-                                                                                                        FontWeight
-                                                                                                                .Bold,
-                                                                                                fontSize =
-                                                                                                        10.sp
-                                                                                        ),
-                                                                        textAlign =
-                                                                                androidx.compose.ui
-                                                                                        .text.style
-                                                                                        .TextAlign
-                                                                                        .Center
-                                                                )
-                                                        }
+                                                        MtaSubwayIcon(
+                                                                routeId = routeInfo?.short_name!!,
+                                                                size = 20.dp,
+                                                                contentDescription = routeInfo.short_name
+                                                        )
                                                 } else if (!isLongName) {
                                                         if (routeInfo?.short_name != null) {
                                                                 Text(

@@ -1384,32 +1384,11 @@ private fun RouteGroupCard(
                                         )
                                 }
                         } else if (isMta) {
-                                val mtaColor = MtaSubwayUtils.getMtaSubwayColor(route.shortName!!)
-                                val symbolShortName =
-                                        MtaSubwayUtils.getMtaSymbolShortName(route.shortName)
-                                androidx.compose.foundation.layout.Box(
-                                        modifier =
-                                                Modifier
-                                                        .size(24.dp)
-                                                        .clip(
-                                                                androidx.compose.foundation.shape
-                                                                        .CircleShape
-                                                        )
-                                                        .background(mtaColor),
-                                        contentAlignment = Alignment.Center
-                                ) {
-                                        Text(
-                                                text = symbolShortName,
-                                                color = Color.White,
-                                                style =
-                                                        MaterialTheme.typography.labelSmall.copy(
-                                                                fontWeight = FontWeight.Bold
-                                                        ),
-                                                textAlign =
-                                                        androidx.compose.ui.text.style.TextAlign
-                                                                .Center
-                                        )
-                                }
+                                MtaSubwayIcon(
+                                        routeId = route.shortName!!,
+                                        size = 24.dp,
+                                        contentDescription = route.shortName
+                                )
                                 Spacer(Modifier.width(4.dp))
                         } else {
                                 Text(
