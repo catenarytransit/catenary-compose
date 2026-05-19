@@ -383,16 +383,36 @@ fun StopScreen(
 
     val lat by
     remember(dataMeta, osmStackData) {
-        derivedStateOf { dataMeta?.primary?.stop_lat ?: osmStackData?.lat }
+        derivedStateOf {
+            dataMeta?.primary?.stop_lat
+                ?: osmStackData?.lat
+                ?: dataMeta?.stops
+                    ?.map { it.stop_lat }
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.average()
+        }
     }
     val lon by
     remember(dataMeta, osmStackData) {
-        derivedStateOf { dataMeta?.primary?.stop_lon ?: osmStackData?.lon }
+        derivedStateOf {
+            dataMeta?.primary?.stop_lon
+                ?: osmStackData?.lon
+                ?: dataMeta?.stops
+                    ?.map { it.stop_lon }
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.average()
+        }
     }
     val isEurostyle by
     remember(lat, lon) {
         derivedStateOf {
             if (lat != null && lon != null) EurostyleZone.isInside(lat!!, lon!!) else false
+        }
+    }
+    val isSwiss by
+    remember(lat, lon) {
+        derivedStateOf {
+            if (lat != null && lon != null) EurostyleZone.isSwitzerland(lat!!, lon!!) else false
         }
     }
 
@@ -1263,6 +1283,7 @@ fun StopScreen(
                                     showSeconds = showSeconds,
                                         useSymbolSign = true,
                                     eurostyle = isEurostyle,
+                                    swiss = isSwiss,
                                         modifier =
                                                 Modifier.clickable {
                                                     onTripClick(
@@ -1295,6 +1316,8 @@ fun StopScreen(
                                             true,
                                         vertical = false,
                                     showSeconds = showSeconds,
+                                    eurostyle = isEurostyle,
+                                    swiss = isSwiss,
                                         onTripClick = {
                                             onTripClick(
                                                     CatenaryStackEnum.SingleTrip(

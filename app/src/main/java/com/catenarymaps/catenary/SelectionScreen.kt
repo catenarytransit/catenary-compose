@@ -831,7 +831,9 @@ fun MapSelectionScreen(
                                                                 CatenaryStackEnum.OsmStationStack(
                                                                         osm_station_id = it.osm_id,
                                                                         station_name = it.name,
-                                                                        mode_type = it.mode_type
+                                                                        mode_type = it.mode_type,
+                                                                        lat = it.lat,
+                                                                        lon = it.lon
                                                                 )
                                                         )
                                                 }
