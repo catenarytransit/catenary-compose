@@ -515,6 +515,7 @@ fun AddStops(
                 filter =
                         all(
                                 has("local_ref").not(),
+                                has("parent_osm_id").not(),
                                 any(
                                         get("station_type")
                                                 .cast<StringValue>()
@@ -562,6 +563,7 @@ fun AddStops(
                 filter =
                         all(
                                 has("local_ref").not(),
+                                has("parent_osm_id").not(),
                                 any(
                                         get("station_type")
                                                 .cast<StringValue>()
