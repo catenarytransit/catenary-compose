@@ -209,6 +209,9 @@ data class OsmStationInfo(
         val lon: Double
 )
 
+@Serializable
+data class OsmStationRedirectResponse(val redirect_to_osm_station_id: Long)
+
 // Main Composable
 @Composable
 fun StopScreen(
@@ -412,7 +415,8 @@ fun StopScreen(
     val isSwiss by
     remember(lat, lon) {
         derivedStateOf {
-            if (lat != null && lon != null) EurostyleZone.isSwitzerland(lat!!, lon!!) else false
+            if (lat != null && lon != null) EurostyleZone.isSwitzerland(lat!!, lon!!)
+            else false
         }
     }
 
@@ -530,7 +534,11 @@ fun StopScreen(
     suspend fun fetchPage(startSec: Long, endSec: Long) {
         val id = "${startSec}_${endSec}"
         val existingIndex = pages.indexOfFirst { it.id == id }
-        if (existingIndex != -1 && pages[existingIndex].loading && pages[existingIndex].error == null) return
+        if (existingIndex != -1 &&
+            pages[existingIndex].loading &&
+            pages[existingIndex].error == null
+        )
+            return
 
         if (existingIndex != -1) {
             pages[existingIndex] = pages[existingIndex].copy(loading = true, error = null)
@@ -549,6 +557,33 @@ fun StopScreen(
         try {
             println("StopScreen: Fetching page $id ... $useUrl")
             responseString = ktorClient.get(useUrl).body<String>()
+
+            if (responseString.contains("\"redirect_to_osm_station_id\"")) {
+                val redirectData =
+                    Json { ignoreUnknownKeys = true }
+                        .decodeFromString<OsmStationRedirectResponse>(responseString)
+
+                val newStackItem =
+                    CatenaryStackEnum.OsmStationStack(
+                        osm_station_id = redirectData.redirect_to_osm_station_id.toString(),
+                        station_name = null,
+                        mode_type = null,
+                        lat = null,
+                        lon = null
+                    )
+
+                val newStack = ArrayDeque(catenaryStack)
+                if (newStack.isNotEmpty()) {
+                    newStack.removeLast()
+                    newStack.addLast(newStackItem)
+                    reassigncatenarystack(newStack)
+                }
+
+                val idx = pages.indexOfFirst { it.id == id }
+                if (idx != -1) pages[idx] = pages[idx].copy(loading = false, error = null)
+                return
+            }
+
             val rawData =
                     Json { ignoreUnknownKeys = true }
                         .decodeFromString<DeparturesAtStopResponse>(responseString)
@@ -753,9 +788,7 @@ fun StopScreen(
     }
 
     fun captureVisibleItemOffset(targetKey: Any): Int? {
-        return lazyListState.layoutInfo.visibleItemsInfo
-            .firstOrNull { it.key == targetKey }
-            ?.offset
+        return lazyListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == targetKey }?.offset
     }
 
     suspend fun ensureRangeCoversEarlier(targetTimeSec: Long) {
@@ -788,8 +821,7 @@ fun StopScreen(
             datesToEventsFiltered.firstOrNull()?.second?.firstOrNull()?.let {
                 composeEventListItemKey(it)
             }
-        val previousEarliestOffset =
-            previousEarliestEventKey?.let { captureVisibleItemOffset(it) }
+        val previousEarliestOffset = previousEarliestEventKey?.let { captureVisibleItemOffset(it) }
 
         val (anchorKey, anchorOffset) =
             if (previousEarliestEventKey != null && previousEarliestOffset != null) {
@@ -803,7 +835,7 @@ fun StopScreen(
         currentTime = targetTime
 
         ensureRangeCoversEarlier(targetTime)
-        withFrameNanos { }
+        withFrameNanos {}
 
         if (anchorKey != null) {
             val targetIndex = buildVisibleListKeys().indexOf(anchorKey)
@@ -869,18 +901,22 @@ fun StopScreen(
             val hasError = pages.any { it.error != null }
 
             Triple(loading, hasError, shouldLoadMore)
-        }.collect { (loading, hasError, shouldLoadMore) ->
-            if (!loading && !hasError && shouldLoadMore) {
-                // Prevent infinite loops when a future date has no events
-                // by only auto-loading if we have events, or if we haven't fetched too far ahead yet.
-                if (datesToEventsFiltered.isNotEmpty() || pages.size <= 6) {
-                    println("StopScreen: Auto-loading next page. pages.size=${pages.size}")
-                    loadNextPage()
-                } else {
-                    println("StopScreen: Reached 6+ pages with no events to show. Stopping auto-load.")
+        }
+            .collect { (loading, hasError, shouldLoadMore) ->
+                if (!loading && !hasError && shouldLoadMore) {
+                    // Prevent infinite loops when a future date has no events
+                    // by only auto-loading if we have events, or if we haven't fetched too far
+                    // ahead yet.
+                    if (datesToEventsFiltered.isNotEmpty() || pages.size <= 6) {
+                        println("StopScreen: Auto-loading next page. pages.size=${pages.size}")
+                        loadNextPage()
+                    } else {
+                        println(
+                            "StopScreen: Reached 6+ pages with no events to show. Stopping auto-load."
+                        )
+                    }
                 }
             }
-        }
     }
 
     // Map interaction
@@ -1001,15 +1037,15 @@ fun StopScreen(
     if (meta == null && !hasFallback) {
         Column {
             Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 0.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 0.dp),
                     horizontalArrangement = Arrangement.End
             ) { NavigationControls(onBack = onBack, onHome = onHome) }
             Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
                     contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         }
@@ -1090,24 +1126,24 @@ fun StopScreen(
                     stickyHeader(key = LIST_KEY_ALERTS_HEADER) {
                         Box(
                                 modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.surface)
-                                            .clickable { showAlertsSheet = true }
-                                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .clickable { showAlertsSheet = true }
+                                        .padding(horizontal = 8.dp, vertical = 8.dp)
                         ) {
                             Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.error,
-                                                    RoundedCornerShape(8.dp)
-                                                )
-                                                .padding(12.dp)
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.error,
+                                                RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(12.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -1148,10 +1184,10 @@ fun StopScreen(
                     item(key = LIST_KEY_MODE_TABS) {
                         Row(
                                 modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 8.dp, bottom = 8.dp)
-                                            .background(MaterialTheme.colorScheme.background),
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 8.dp, bottom = 8.dp)
+                                        .background(MaterialTheme.colorScheme.background),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             availableModes.forEach { mode ->
@@ -1168,12 +1204,12 @@ fun StopScreen(
                                 // Simple Tab Button
                                 Column(
                                         modifier =
-                                                Modifier
-                                                    .clickable { activeTab = mode }
-                                                    .padding(
-                                                        vertical = 8.dp,
-                                                        horizontal = 12.dp
-                                                    ),
+                                            Modifier
+                                                .clickable { activeTab = mode }
+                                                .padding(
+                                                    vertical = 8.dp,
+                                                    horizontal = 12.dp
+                                                ),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
@@ -1196,12 +1232,12 @@ fun StopScreen(
                                     )
                                     if (isSelected) {
                                         Box(
-                                                Modifier
-                                                    .height(2.dp)
-                                                    .width(20.dp)
-                                                    .background(
-                                                        MaterialTheme.colorScheme.primary
-                                                    )
+                                            Modifier
+                                                .height(2.dp)
+                                                .width(20.dp)
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary
+                                                )
                                         )
                                     }
                                 }
@@ -1247,15 +1283,15 @@ fun StopScreen(
                         stickyHeader(key = composeDateHeaderKey(date)) {
                             Row(
                                     modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .background(MaterialTheme.colorScheme.surface)
-                                                .padding(
-                                                    start = 8.dp,
-                                                    end = 8.dp,
-                                                    top = 16.dp,
-                                                    bottom = 8.dp
-                                                )
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.surface)
+                                            .padding(
+                                                start = 8.dp,
+                                                end = 8.dp,
+                                                top = 16.dp,
+                                                bottom = 8.dp
+                                            )
                             ) {
                                 Text(
                                         text = dateHeaderFormatter.format(date),
@@ -1312,8 +1348,7 @@ fun StopScreen(
                                         zoneId = zoneId,
                                         locale = locale,
                                         showArrivals = event.last_stop == true,
-                                        useSymbolSign =
-                                            true,
+                                    useSymbolSign = true,
                                         vertical = false,
                                     showSeconds = showSeconds,
                                     eurostyle = isEurostyle,
@@ -1351,9 +1386,9 @@ fun StopScreen(
                 // Loading / Load More footer
                 item(key = LIST_KEY_FOOTER) {
                     Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
                             contentAlignment = Alignment.Center
                     ) {
                         if (pages.any { it.loading }) {
@@ -1378,9 +1413,9 @@ fun StopScreen(
                     ) {
                         Column(modifier = Modifier.fillMaxSize()) {
                             Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1397,11 +1432,11 @@ fun StopScreen(
                             }
                             Column(
                                     modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .weight(1f)
-                                                .verticalScroll(rememberScrollState())
-                                                .padding(horizontal = 16.dp)
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .weight(1f)
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(horizontal = 16.dp)
                             ) {
                                 meta?.alerts?.forEach { (chateauId, alertsmap) ->
                                     AlertsBox(
