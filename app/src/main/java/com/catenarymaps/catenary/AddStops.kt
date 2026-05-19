@@ -519,7 +519,9 @@ fun AddStops(
                                         get("station_type")
                                                 .cast<StringValue>()
                                                 .eq(const("tram_stop")),
-                                        get("station_type").cast<StringValue>().eq(const("station"))
+                                        get("station_type").cast<StringValue>()
+                                                .eq(const("station")),
+                                        get("station_type").cast<StringValue>().eq(const("halt"))
                                 ),
                                 any(
                                         get("mode_type").cast<StringValue>().eq(const("tram")),
@@ -564,7 +566,9 @@ fun AddStops(
                                         get("station_type")
                                                 .cast<StringValue>()
                                                 .eq(const("tram_stop")),
-                                        get("station_type").cast<StringValue>().eq(const("station"))
+                                        get("station_type").cast<StringValue>()
+                                                .eq(const("station")),
+                                        get("station_type").cast<StringValue>().eq(const("halt"))
                                 ),
                                 any(
                                         get("mode_type").cast<StringValue>().eq(const("tram")),
