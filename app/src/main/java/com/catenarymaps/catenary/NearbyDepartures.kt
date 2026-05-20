@@ -101,6 +101,15 @@ private data class DepartureItemV3(
         @SerialName("last_stop") val lastStop: Boolean
 )
 
+private fun DepartureItemV3.effectiveRealtimeDepartureSec(): Long? =
+        realtimeDeparture
+                ?: realtimeArrival?.takeIf {
+                        scheduledDeparture != null && it > scheduledDeparture
+                }
+
+private fun DepartureItemV3.effectiveDepartureSec(): Long? =
+        effectiveRealtimeDepartureSec() ?: scheduledDeparture
+
 @Serializable
 data class RouteGroupV3(
         @SerialName("chateau_id") val chateauId: String,
@@ -853,6 +862,7 @@ fun NearbyDepartures(
                                                         StationGroupCard(
                                                                 group = item.group,
                                                                 routesMap = routesMap,
+                                                                selectedTimeSec = nowSec,
                                                                 realtimeNowSec = realtimeNowSec,
                                                                 onTripClick = onTripClick,
                                                                 onStopClick = onStopClick,
@@ -872,6 +882,7 @@ fun NearbyDepartures(
 private fun StationGroupCard(
         group: StationDepartureGroup,
         routesMap: Map<String, Map<String, RouteInfoExport>>,
+        selectedTimeSec: Long,
         realtimeNowSec: Long,
         onTripClick: (TripClickResponse) -> Unit,
         onStopClick: (chateauId: String, stopId: String) -> Unit,
@@ -928,7 +939,18 @@ private fun StationGroupCard(
 
                         // Departures
                         // Filter out Last Stop and limit to 10
-                        val departures = group.departures.filter { !it.lastStop }.take(10)
+                        val departures =
+                                group.departures
+                                        .asSequence()
+                                        .filter { !it.lastStop }
+                                        .filter { dep ->
+                                                val t = dep.effectiveDepartureSec()
+                                                        ?: return@filter false
+                                                t in (selectedTimeSec - 600)..(selectedTimeSec + 64800)
+                                        }
+                                        .sortedBy { it.effectiveDepartureSec() ?: Long.MAX_VALUE }
+                                        .take(10)
+                                        .toList()
 
                         Column {
                                 departures.forEachIndexed { index, dep ->
@@ -937,17 +959,7 @@ private fun StationGroupCard(
                                         // Logic mirroring Svelte
                                         // getEffectiveStationRealtimeDeparture
                                         val effectiveRealtimeDeparture =
-                                                dep.realtimeDeparture
-                                                        ?: if (dep.realtimeArrival != null &&
-                                                                        dep.scheduledDeparture !=
-                                                                                null &&
-                                                                        dep.realtimeArrival >
-                                                                                dep.scheduledDeparture
-                                                        ) {
-                                                                dep.realtimeArrival
-                                                        } else {
-                                                                null
-                                                        }
+                                                dep.effectiveRealtimeDepartureSec()
 
                                         // Construct StopEvent
                                         val event =
