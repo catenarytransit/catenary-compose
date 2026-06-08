@@ -1050,6 +1050,11 @@ fun StopScreen(
             ) { CircularProgressIndicator() }
         }
     } else {
+        val nonTripSpecificAlerts = remember(meta?.alerts) {
+            meta?.alerts?.mapValues { (_, alertsmap) ->
+                alertsmap.filter { (_, alert) -> !alert.isTripSpecific() }
+            }?.filterValues { it.isNotEmpty() } ?: emptyMap()
+        }
         val timezone = displayTimezone
         val zoneId =
                 remember(timezone) {
@@ -1121,7 +1126,7 @@ fun StopScreen(
                 .weight(1f)) {
 
                 // Alerts Sticky Header
-                val totalAlerts = meta?.alerts?.values?.sumOf { it.size } ?: 0
+                val totalAlerts = nonTripSpecificAlerts.values.sumOf { it.size }
                 if (totalAlerts > 0) {
                     stickyHeader(key = LIST_KEY_ALERTS_HEADER) {
                         Box(
@@ -1438,7 +1443,7 @@ fun StopScreen(
                                             .verticalScroll(rememberScrollState())
                                             .padding(horizontal = 16.dp)
                             ) {
-                                meta?.alerts?.forEach { (chateauId, alertsmap) ->
+                                nonTripSpecificAlerts.forEach { (chateauId, alertsmap) ->
                                     AlertsBox(
                                             alerts = alertsmap,
                                             chateau = chateauId,

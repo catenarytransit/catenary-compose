@@ -36,8 +36,21 @@ data class TripAlert(val informed_entity: List<AlertEntity>
 )
 
 @Serializable
-data class AlertEntity(val stop_id: String? = null
-// Add other entity properties as needed
+data class AlertEntity(
+    val agency_id: String? = null,
+    val route_id: String? = null,
+    val route_type: Int? = null,
+    val stop_id: String? = null,
+    val trip: AlertTripDescriptor? = null
+)
+
+@Serializable
+data class AlertTripDescriptor(
+    val trip_id: String? = null,
+    val route_id: String? = null,
+    val direction_id: Int? = null,
+    val start_time: String? = null,
+    val start_date: String? = null
 )
 
 @Serializable

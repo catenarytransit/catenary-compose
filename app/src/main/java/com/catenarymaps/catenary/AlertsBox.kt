@@ -64,8 +64,15 @@ data class Alert(
     val url: AlertText? = null,
     val header_text: AlertText? = null,
     val description_text: AlertText? = null,
-    val active_period: List<AlertActivePeriod> = emptyList()
+    val active_period: List<AlertActivePeriod> = emptyList(),
+    val informed_entity: List<AlertEntity>? = null
 )
+
+fun Alert.isTripSpecific(): Boolean {
+    val entities = informed_entity ?: return false
+    if (entities.isEmpty()) return false
+    return entities.all { it.trip?.trip_id != null }
+}
 
 @Composable
 fun AlertsBox(

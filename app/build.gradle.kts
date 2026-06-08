@@ -1,4 +1,4 @@
-import com.datadog.gradle.plugin.InstrumentationMode
+// import com.datadog.gradle.plugin.InstrumentationMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,18 +7,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 
-    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.21.0" apply true
-
     id("com.google.gms.google-services")
 
     // Add the Crashlytics Gradle plugin
     id("com.google.firebase.crashlytics")
-}
-
-buildscript {
-    dependencies {
-        classpath(libs.dd.sdk.android.gradle.plugin)
-    }
 }
 
 android {
@@ -33,8 +25,8 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 261
-        versionName = "2.0.159"
+        versionCode = 262
+        versionName = "2.0.160"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -107,8 +99,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
-    implementation(libs.dd.sdk.android.rum)
-    implementation(libs.dd.sdk.android.compose)
+    // Datadog SDK (disabled)
+    // implementation(libs.dd.sdk.android.rum)
+    // implementation(libs.dd.sdk.android.compose)
     implementation(libs.android.maps.utils)
     implementation(libs.maps.utils.ktx)
     implementation(libs.play.services.maps)
@@ -124,11 +117,11 @@ dependencies {
     implementation(libs.coil.svg)
 }
 
-datadog {
-    // Other configurations that you may set before.
-    //(...)
-
-    // Jetpack Compose instrumentation mode option.
-    composeInstrumentation = InstrumentationMode.AUTO
-}
+// datadog {
+//     // Other configurations that you may set before.
+//     //(...)
+//
+//     // Jetpack Compose instrumentation mode option.
+//     composeInstrumentation = InstrumentationMode.AUTO
+// }
 

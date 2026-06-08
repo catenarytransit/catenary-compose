@@ -28,8 +28,6 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SettingsScreen(
-    datadogConsent: Boolean,
-    onDatadogConsentChanged: (Boolean) -> Unit,
     gaConsent: Boolean,
     onGaConsentChanged: (Boolean) -> Unit,
     showSeconds: Boolean,
@@ -120,30 +118,7 @@ fun SettingsScreen(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-        // --- Datadog Section ---
-        Text(
-            text = stringResource(id = R.string.settings_datadog_analytics_title),
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(
-            text = stringResource(id = R.string.settings_datadog_analytics_description),
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (datadogConsent) {
-            Button(
-                onClick = { onDatadogConsentChanged(false) },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text(stringResource(id = R.string.settings_disable_datadog_tracking)) }
-        } else {
-            OutlinedButton(
-                onClick = { onDatadogConsentChanged(true) },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text(stringResource(id = R.string.settings_enable_datadog_tracking)) }
-        }
-
+        // Datadog analytics section removed
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
         // --- Google Analytics Section ---

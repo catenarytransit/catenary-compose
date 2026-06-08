@@ -102,12 +102,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.datadog.android.Datadog
-import com.datadog.android.DatadogSite
-import com.datadog.android.compose.enableComposeActionTracking
-import com.datadog.android.privacy.TrackingConsent
-import com.datadog.android.rum.Rum
-import com.datadog.android.rum.RumConfiguration
+// import com.datadog.android.Datadog
+// import com.datadog.android.DatadogSite
+// import com.datadog.android.compose.enableComposeActionTracking
+// import com.datadog.android.privacy.TrackingConsent
+// import com.datadog.android.rum.Rum
+// import com.datadog.android.rum.RumConfiguration
 import com.example.catenarycompose.ui.theme.CatenaryComposeTheme
 import com.google.android.gms.analytics.GoogleAnalytics
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -215,7 +215,7 @@ private const val K_PIN_ACTIVE = "pin_active"
 private const val K_PIN_LAT = "pin_lat"
 private const val K_PIN_LON = "pin_lon"
 
-private const val K_DATADOG_CONSENT = "datadog_consent"
+// private const val K_DATADOG_CONSENT = "datadog_consent"
 private const val K_GA_CONSENT = "ga_consent"
 
 private const val K_SHOW_ZOMBIE_BUSES = "show_zombie_buses"
@@ -1018,10 +1018,11 @@ class MainActivity : ComponentActivity() {
                 // --- Load Layer Settings ---
                 val initialLayerSettings = prefs.readLayerSettings() ?: AllLayerSettings()
 
-                val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, true)
-                val trackingConsent =
-                        if (initialDatadogConsent) TrackingConsent.GRANTED
-                        else TrackingConsent.NOT_GRANTED
+                // Datadog consent and tracking disabled
+                // val initialDatadogConsent = prefs.getBoolean(K_DATADOG_CONSENT, true)
+                // val trackingConsent =
+                //         if (initialDatadogConsent) TrackingConsent.GRANTED
+                //         else TrackingConsent.NOT_GRANTED
 
                 val initialGaConsent = prefs.getBoolean(K_GA_CONSENT, true)
 
@@ -1050,28 +1051,29 @@ class MainActivity : ComponentActivity() {
                         Log.e(TAG, "Failed to set initial GA opt-out: ${e.message}")
                 }
 
-                val applicationId = "fc6e17a4-7831-40a6-8af1-90260f2f2e44"
-                val clientToken = "puba920e8b5d25e3fa797bc5877e050ec9d"
-                val environmentName = "prod"
-                val appVariantName = "catenary"
-
-                val configuration =
-                        com.datadog.android.core.configuration.Configuration.Builder(
-                                        clientToken = clientToken,
-                                        env = environmentName,
-                                        variant = appVariantName
-                                )
-                                .useSite(DatadogSite.EU1)
-                                .build()
-                // Initialize with the saved consent state
-                Datadog.initialize(this, configuration, trackingConsent)
-
-                val rumConfiguration =
-                        RumConfiguration.Builder(applicationId)
-                                .trackUserInteractions()
-                                .enableComposeActionTracking()
-                                .build()
-                Rum.enable(rumConfiguration)
+                // Datadog initialization disabled
+                // val applicationId = "fc6e17a4-7831-40a6-8af1-90260f2f2e44"
+                // val clientToken = "puba920e8b5d25e3fa797bc5877e050ec9d"
+                // val environmentName = "prod"
+                // val appVariantName = "catenary"
+                //
+                // val configuration =
+                //         com.datadog.android.core.configuration.Configuration.Builder(
+                //                         clientToken = clientToken,
+                //                         env = environmentName,
+                //                         variant = appVariantName
+                //                 )
+                //                 .useSite(DatadogSite.EU1)
+                //                 .build()
+                // // Initialize with the saved consent state
+                // Datadog.initialize(this, configuration, trackingConsent)
+                //
+                // val rumConfiguration =
+                //         RumConfiguration.Builder(applicationId)
+                //                 .trackUserInteractions()
+                //                 .enableComposeActionTracking()
+                //                 .build()
+                // Rum.enable(rumConfiguration)
 
                 fun fetchLocation(onSuccess: (Double, Double) -> Unit) {
                         // Check permission
@@ -1318,23 +1320,24 @@ class MainActivity : ComponentActivity() {
 
                         var mapSize by remember { mutableStateOf(IntSize.Zero) }
 
-                        val (datadogConsent, setDatadogConsent) =
-                                remember { mutableStateOf(initialDatadogConsent) }
-
-                        // vvv RENAME THIS from onConsentChanged to onDatadogConsentChanged vvv
-                        val onDatadogConsentChanged: (Boolean) -> Unit = { isChecked ->
-                                // Update the UI state
-                                setDatadogConsent(isChecked)
-
-                                // Update Datadog SDK
-                                val newConsent =
-                                        if (isChecked) TrackingConsent.GRANTED
-                                        else TrackingConsent.NOT_GRANTED
-                                Datadog.setTrackingConsent(newConsent)
-
-                                // Save to SharedPreferences
-                                prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()
-                        }
+                        // Datadog consent UI state and handler removed
+                        // val (datadogConsent, setDatadogConsent) =
+                        //         remember { mutableStateOf(initialDatadogConsent) }
+                        //
+                        // // vvv RENAME THIS from onConsentChanged to onDatadogConsentChanged vvv
+                        // val onDatadogConsentChanged: (Boolean) -> Unit = { isChecked ->
+                        //         // Update the UI state
+                        //         setDatadogConsent(isChecked)
+                        //
+                        //         // Update Datadog SDK
+                        //         val newConsent =
+                        //                 if (isChecked) TrackingConsent.GRANTED
+                        //                 else TrackingConsent.NOT_GRANTED
+                        //         Datadog.setTrackingConsent(newConsent)
+                        //
+                        //         // Save to SharedPreferences
+                        //         prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()
+                        // }
 
                         // vvv ADD THIS NEW STATE AND HANDLER FOR GA vvv
                         val (gaConsent, setGaConsent) =
@@ -1388,19 +1391,20 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
 
-                        val onConsentChanged: (Boolean) -> Unit = { isChecked ->
-                                // Update the UI state
-                                setDatadogConsent(isChecked)
-
-                                // Update Datadog SDK
-                                val newConsent =
-                                        if (isChecked) TrackingConsent.GRANTED
-                                        else TrackingConsent.NOT_GRANTED
-                                Datadog.setTrackingConsent(newConsent)
-
-                                // Save to SharedPreferences
-                                prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()
-                        }
+                        // Consent handler removed
+                        // val onConsentChanged: (Boolean) -> Unit = { isChecked ->
+                        //         // Update the UI state
+                        //         setDatadogConsent(isChecked)
+                        //
+                        //         // Update Datadog SDK
+                        //         val newConsent =
+                        //                 if (isChecked) TrackingConsent.GRANTED
+                        //                 else TrackingConsent.NOT_GRANTED
+                        //         Datadog.setTrackingConsent(newConsent)
+                        //
+                        //         // Save to SharedPreferences
+                        //         prefs.edit().putBoolean(K_DATADOG_CONSENT, isChecked).apply()
+                        // }
 
                         // Button actions (same behavior as your JS app)
                         val onMyLocation: () -> Unit = {
@@ -3762,10 +3766,6 @@ class MainActivity : ComponentActivity() {
                                                                                 }
                                                                                 is CatenaryStackEnum.SettingsStack -> {
                                                                                         SettingsScreen(
-                                                                                                datadogConsent =
-                                                                                                        datadogConsent,
-                                                                                                onDatadogConsentChanged =
-                                                                                                        onDatadogConsentChanged,
                                                                                                 gaConsent =
                                                                                                         gaConsent,
                                                                                                 onGaConsentChanged =
