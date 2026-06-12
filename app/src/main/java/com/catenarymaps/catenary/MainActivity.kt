@@ -944,7 +944,7 @@ class MainActivity : ComponentActivity() {
         private val rtreeCacheName = "chateaux.rtree.json"
         private val geojsonCacheName = "chateaux.geojson"
         private val chateauxUrl =
-                "https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json"
+                "https://birch.catenarymaps.org/getchateaus"
 
         // If you kept the encode/decode helpers from the RTree file:
         private val json = Json {
@@ -1223,7 +1223,14 @@ class MainActivity : ComponentActivity() {
                         val snackbars = remember { SnackbarHostState() }
 
                         val appUpdateManager = remember {
-                                AppUpdateManagerFactory.create(this.applicationContext)
+                                if (BuildConfig.DEBUG) null else {
+                                        try {
+                                                AppUpdateManagerFactory.create(this.applicationContext)
+                                        } catch (e: Exception) {
+                                                Log.e("MainActivity", "Failed to create AppUpdateManager", e)
+                                                null
+                                        }
+                                }
                         }
 
                         var stopsToHide by remember { mutableStateOf(emptySet<String>()) }
@@ -1737,8 +1744,7 @@ class MainActivity : ComponentActivity() {
                                                                 ) {
                                                                         // User clicked "RESTART",
                                                                         // complete the update
-                                                                        appUpdateManager
-                                                                                .completeUpdate()
+                                                                        appUpdateManager?.completeUpdate()
                                                                 }
                                                         }
                                                 }
@@ -5464,7 +5470,9 @@ class MainActivity : ComponentActivity() {
                 Triple<RTree<Int>, List<Feature<Geometry?, ChateauProps>>, String>? =
                 withContext(Dispatchers.IO) {
                         try {
-                                val raw = http.get(chateauxUrl).body<String>()
+                                val response = http.get(chateauxUrl)
+                                Log.d("Chateaux", "Network fetch status: ${response.status} for URL: $chateauxUrl")
+                                val raw = response.body<String>()
                                 val fc = parseChateaux(raw)
                                 val (tree, list) = buildRTreeIds(fc, maxEntries)
                                 Triple(tree, list, raw)

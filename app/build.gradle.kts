@@ -57,6 +57,18 @@ android {
         compose = true
         buildConfig = true
     }
+
+    flavorDimensions += "renderer"
+
+    productFlavors {
+        create("vulkan") {
+            dimension = "renderer"
+        }
+
+        create("opengl") {
+            dimension = "renderer"
+        }
+    }
 }
 
 kotlin { jvmToolchain(25) }
@@ -83,8 +95,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.android.sdk.v1201)
-    implementation(libs.maplibre.compose)
+    "vulkanImplementation"(libs.maplibre.compose)
+    // optionally force/declare regular Vulkan/native SDK if you have an alias:
+    // "vulkanImplementation"(libs.maplibre.android)
+
+    "openglImplementation"(libs.maplibre.android.opengl)
+    val maplibreComposeDep = create(libs.maplibre.compose.get()) as org.gradle.api.artifacts.ModuleDependency
+    maplibreComposeDep.exclude(group = "org.maplibre.gl", module = "android-sdk")
+    "openglImplementation"(maplibreComposeDep)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.okhttp)

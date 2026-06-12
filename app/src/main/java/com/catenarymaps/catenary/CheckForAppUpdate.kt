@@ -27,8 +27,19 @@ fun CheckForAppUpdate(
     // when a flexible update is downloaded.
     onFlexibleUpdateDownloaded: () -> Unit
 ) {
+    if (BuildConfig.DEBUG) {
+        return
+    }
+
     val context = LocalContext.current
-    val appUpdateManager = remember { AppUpdateManagerFactory.create(context) }
+    val appUpdateManager = remember {
+        try {
+            AppUpdateManagerFactory.create(context)
+        } catch (e: Exception) {
+            Log.e("InAppUpdate", "Failed to create AppUpdateManager", e)
+            null
+        }
+    } ?: return
 
     // 1. Handle the result of the update flow (this is correct)
     val updateLauncher = rememberLauncherForActivityResult(

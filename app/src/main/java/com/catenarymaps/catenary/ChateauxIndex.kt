@@ -34,7 +34,16 @@ private val jsonLoose = Json { ignoreUnknownKeys = true }
 
 /** Parse the JSON text into a typed FeatureCollection with [ChateauProps]. */
 fun parseChateaux(json: String): FeatureCollection<Geometry?, ChateauProps> {
-    val parsed: GeoJsonObject = GeoJsonObject.Companion.fromJson(json)
+    val parsed: GeoJsonObject = try {
+        GeoJsonObject.Companion.fromJson(json)
+    } catch (e: Exception) {
+        Log.e("ChateauxIndex", "Failed to deserialize GeoJSON. String length: ${json.length}")
+        Log.e("ChateauxIndex", "Raw JSON string prefix (up to 1000 chars): ${json.take(1000)}")
+        if (json.length > 1000) {
+            Log.e("ChateauxIndex", "Raw JSON string suffix (up to 1000 chars): ${json.takeLast(1000)}")
+        }
+        throw e
+    }
     val fcRaw: FeatureCollection<Geometry?, JsonObject?> = when (parsed) {
         is FeatureCollection<*, *> -> parsed as FeatureCollection<Geometry?, JsonObject?>
         is Feature<*, *> -> FeatureCollection(listOf(parsed as Feature<Geometry?, JsonObject?>))
