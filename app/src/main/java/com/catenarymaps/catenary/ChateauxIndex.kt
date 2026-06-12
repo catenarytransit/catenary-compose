@@ -89,7 +89,7 @@ suspend fun fetchAndBuildChateauxIndex(
 ): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? = withContext(Dispatchers.IO) {
     return@withContext try {
         val jsonString: String = client
-            .get("https://raw.githubusercontent.com/catenarytransit/betula-celtiberica-cdn/refs/heads/main/data/chateaus_simp.json")
+            .get("https://betula-celtiberica.catenarymaps.org/data/chateaus_simp.json")
             .body()
 
         val t0 = System.currentTimeMillis()

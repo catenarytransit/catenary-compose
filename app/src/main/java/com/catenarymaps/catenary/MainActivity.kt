@@ -965,6 +965,24 @@ class MainActivity : ComponentActivity() {
                         install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
                 }
 
+        private fun refreshChateauxIndex() {
+                lifecycleScope.launch {
+                        val fresh = recomputePreferNetworkOrCached()
+                        if (fresh != null) {
+                                val (freshTree, freshFeatures, rawGeojson) = fresh
+                                rtree = freshTree
+                                features = freshFeatures
+                                Log.d("Chateaux", "Recomputed index: ${features.size} features")
+                                saveToCache(freshTree, rawGeojson)
+                        }
+                }
+        }
+
+        override fun onRestart() {
+                super.onRestart()
+                refreshChateauxIndex()
+        }
+
         override fun onCreate(savedInstanceState: Bundle?) {
                 installSplashScreen()
                 super.onCreate(savedInstanceState)
@@ -985,22 +1003,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         // 2) Recompute anyway.
-                        val fresh = recomputePreferNetworkOrCached()
-                        if (fresh != null) {
-                                val (freshTree, freshFeatures, rawGeojson) = fresh
-                                rtree = freshTree
-                                features = freshFeatures
-                                Log.d("Chateaux", "Recomputed index: ${features.size} features")
-
-                                // 3) Save refreshed data back to cache.
-                                saveToCache(freshTree, rawGeojson)
-                        }
-
-                        // From here on, use `rtree` + `features` for lookups.
-                        // Example:
-                        // val hits: List<Feature<Geometry?, ChateauProps>> =
-                        //     lookupChateaux(rtree!!, features, bbox(w, s, e, n), strictTouchOnly =
-                        // false)
+                        refreshChateauxIndex()
                 }
 
                 val action: String? = intent?.action

@@ -310,12 +310,38 @@ fun StopScreen(
     val pages = remember { mutableStateListOf<PageInfo>() }
     val eventIndex = remember { mutableStateMapOf<String, StopEventPageData>() }
     var dataMeta by remember { mutableStateOf<StopMeta?>(null) }
-    var currentTime by remember { mutableStateOf(Instant.now().epochSecond) }
+
+    // Restore time selector state from the stack entry.
+    // null timeEpochSeconds means "now".
+    val savedTime = stopData?.timeEpochSeconds ?: osmStackData?.timeEpochSeconds
+    var currentTime by remember { mutableStateOf(savedTime ?: Instant.now().epochSecond) }
     var realtimeNow by remember { mutableStateOf(Instant.now().epochSecond) }
-    var lockToNow by remember { mutableStateOf(true) }
+    var lockToNow by remember { mutableStateOf(savedTime == null) }
     var currentPageHours by remember { mutableStateOf(1) }
     var flyToAlready by remember { mutableStateOf(false) }
     val requestedShapes = remember { mutableStateListOf<String>() }
+
+    // Persist the time selector value into the current stack entry so
+    // hitting "back" and returning restores the same time slice.
+    // Pass null for "now" or a unix timestamp for a specific time.
+    fun updateStackTime(newTimeEpochSeconds: Long?) {
+        // Read current value to avoid no-op stack replacements.
+        val currentStackTime = stopData?.timeEpochSeconds ?: osmStackData?.timeEpochSeconds
+        if (newTimeEpochSeconds == currentStackTime) return
+
+        val newStackItem: CatenaryStackEnum = when {
+            stopData != null -> stopData.copy(timeEpochSeconds = newTimeEpochSeconds)
+            osmStackData != null -> osmStackData.copy(timeEpochSeconds = newTimeEpochSeconds)
+            else -> return
+        }
+
+        val newStack = ArrayDeque(catenaryStack)
+        if (newStack.isNotEmpty()) {
+            newStack.removeLast()
+            newStack.addLast(newStackItem)
+            reassigncatenarystack(newStack)
+        }
+    }
 
     // Alerts Sheet State
     var showAlertsSheet by remember { mutableStateOf(false) }
@@ -833,6 +859,7 @@ fun StopScreen(
         lockToNow = false
         val targetTime = currentTime - EARLIER_STEP_SECONDS
         currentTime = targetTime
+        updateStackTime(targetTime)
 
         ensureRangeCoversEarlier(targetTime)
         withFrameNanos {}
@@ -1090,7 +1117,7 @@ fun StopScreen(
                 if (timezone != null) {
                     FormattedTimeText(
                             timezone = zoneId.id,
-                            timeSeconds = currentTime,
+                            timeSeconds = realtimeNow,
                         showSeconds = true,
                             // The style from LiveClock is now applied here
                             )
@@ -1110,11 +1137,17 @@ fun StopScreen(
                     onTimeChange = { newEpoch ->
                         println("StopScreen: TimeSelector onTimeChange -> $newEpoch")
                         currentTime = newEpoch
+                        // Persist into the stack: non-null = specific time
+                        updateStackTime(newEpoch)
                         scope.launch { loadInitialPages() }
                     },
                     onIsNowChange = { lock ->
                         lockToNow = lock
-                        if (lock) scope.launch { loadInitialPages() }
+                        if (lock) {
+                            // Persist null = "now" into the stack
+                            updateStackTime(null)
+                            scope.launch { loadInitialPages() }
+                        }
                     },
                     modifier = Modifier.padding(top = 4.dp),
                     labelPrefix = null

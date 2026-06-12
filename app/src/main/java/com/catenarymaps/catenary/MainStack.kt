@@ -31,7 +31,7 @@ sealed interface CatenaryStackEnum {
     data class RouteStack(val chateau_id: String, val route_id: String) : CatenaryStackEnum
 
     @Serializable
-    data class StopStack(val chateau_id: String, val stop_id: String) : CatenaryStackEnum
+    data class StopStack(val chateau_id: String, val stop_id: String, val timeEpochSeconds: Long? = null) : CatenaryStackEnum
 
     @Serializable
     data class NearbyDeparturesStack(val chateau_id: String, val lat: Double, val lon: Double) :
@@ -57,7 +57,8 @@ sealed interface CatenaryStackEnum {
             val station_name: String?,
             val mode_type: String?,
             val lat: Double? = null,
-            val lon: Double? = null
+            val lon: Double? = null,
+            val timeEpochSeconds: Long? = null
     ) : CatenaryStackEnum
 }
 
