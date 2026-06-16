@@ -22,6 +22,7 @@ import org.maplibre.compose.expressions.dsl.eq
 import org.maplibre.compose.expressions.dsl.image
 import org.maplibre.compose.expressions.dsl.interpolate
 import org.maplibre.compose.expressions.dsl.linear
+import org.maplibre.compose.expressions.dsl.neq
 import org.maplibre.compose.expressions.dsl.not
 import org.maplibre.compose.expressions.dsl.offset
 import org.maplibre.compose.expressions.dsl.plus
@@ -34,6 +35,8 @@ import org.maplibre.compose.expressions.value.StringValue
 import org.maplibre.compose.expressions.value.SymbolAnchor
 import org.maplibre.compose.expressions.value.TextJustify
 import org.maplibre.compose.expressions.value.VectorValue
+import org.maplibre.compose.expressions.value.BooleanValue
+import org.maplibre.compose.expressions.value.NumberValue
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.sources.rememberVectorSource
@@ -51,6 +54,7 @@ fun AddStops(
         val railStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("railstops"))
         val otherStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("otherstops"))
         val osmStopsSource = rememberVectorSource(uri = STOP_SOURCES.getValue("osmstations"))
+        val osmStopsRankedSource = rememberVectorSource(uri = STOP_SOURCES.getValue("osmstationsranked"))
         val stationFeaturesSource =
                 rememberVectorSource(uri = STOP_SOURCES.getValue("stationfeatures"))
 
@@ -58,10 +62,117 @@ fun AddStops(
         val barlowRegular = const(listOf("Arimo-Regular"))
         val barlowMedium = const(listOf("Arimo-Medium"))
         val barlowBold = const(listOf("Arimo-Bold"))
+        val barlowSemiBold = const(listOf("Arimo-SemiBold"))
 
         // Colors (inside/outside dot)
         val circleInside = if (isDark) Color(0xFF1C2636) else Color(0xFFFFFFFF)
         val circleOutside = if (isDark) Color(0xFFFFFFFF) else Color(0xFF1C2636)
+
+        val ranked3456Inside = if (isDark) Color(0xFFDDDDDD) else Color(0xFF666767)
+        val ranked3456Outside = if (isDark) Color(0xFF1C2636) else Color(0xFFFFFFFF)
+        val ranked12Inside = circleInside
+        val ranked12Outside = if (isDark) Color(0xFFDDDDDD) else Color(0xFF666767)
+
+        val osmSubwayLabelTextColor: Expression<ColorValue> =
+                if (isDark) {
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                13 to const(Color(0xFFAAAAAA)),
+                                15 to const(Color(0xFFFFFFFF))
+                        )
+                } else {
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                13 to const(Color(0xFF555555)),
+                                15 to const(Color(0xFF000000))
+                        )
+                }
+
+        val osmTramLabelTextColor: Expression<ColorValue> =
+                if (isDark) {
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                14 to const(Color(0xFFAAAAAA)),
+                                16 to const(Color(0xFFFFFFFF))
+                        )
+                } else {
+                        interpolate(
+                                type = linear(),
+                                input = zoom(),
+                                14 to const(Color(0xFF555555)),
+                                16 to const(Color(0xFF000000))
+                        )
+                }
+
+        val osmSubwayCircleSize =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        5 to const(0.8.dp),
+                        8 to const(1.4.dp),
+                        12 to const(2.8.dp),
+                        15 to const(4.8.dp)
+                )
+
+        val osmTramCircleSize =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        5 to const(0.6.dp),
+                        8 to const(1.dp),
+                        12 to const(2.dp),
+                        15 to const(4.dp)
+                )
+
+        val ranked12CircleSize =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        3 to const(1.5.dp),
+                        6 to const(2.dp),
+                        8 to const(3.dp),
+                        12 to const(5.5.dp),
+                        15 to const(8.dp)
+                )
+
+        val ranked3CircleSize =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        5 to const(1.2.dp),
+                        8 to const(2.2.dp),
+                        12 to const(4.2.dp),
+                        15 to const(7.dp)
+                )
+
+        val ranked456CircleSize =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        5 to const(1.dp),
+                        8 to const(1.8.dp),
+                        12 to const(3.5.dp),
+                        15 to const(6.dp)
+                )
+
+        val ranked12LabelSize =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        6 to const(0.625f).em, // 10px
+                        13 to const(0.9375f).em // 15px
+                )
+
+        val ranked3456LabelSize =
+                interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        8 to const(0.5625f).em, // 9px
+                        13 to const(0.8125f).em // 13px
+                )
 
         // JS: bus_stop_stop_color(darkMode) -> step(zoom, ...)
         val busStrokeColorExpr: Expression<ColorValue> =
@@ -325,47 +436,34 @@ fun AddStops(
 
         CircleLayer(
                 id = LayersPerCategory.Metro.Stops + "_osm",
-                source = osmStopsSource,
+                source = osmStopsRankedSource,
                 sourceLayer = "data",
-                color = const(circleInside),
-                radius =
-                        interpolate(
-                                type = linear(),
-                                input = zoom(),
-                                8 to const(0.8.dp),
-                                12 to const(3.5.dp),
-                                15 to const(5.dp)
-                        ),
-                strokeColor = const(circleOutside),
+                color = const(ranked3456Inside),
+                radius = osmSubwayCircleSize,
+                strokeColor = const(ranked3456Outside),
                 strokeWidth =
                         step(
                                 input = zoom(),
-                                const(0.4.dp),
-                                10.5 to const(0.8.dp),
-                                11.0 to const(1.2.dp),
-                                13.2 to const(1.5.dp)
+                                const(1.dp),
+                                11.0 to const(1.8.dp),
+                                12.0 to const(3.0.dp)
                         ),
-                strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
-                opacity =
-                        interpolate(
-                                type = linear(),
-                                input = zoom(),
-                                10 to const(0.7f),
-                                16 to const(0.8f)
-                        ),
+                strokeOpacity = const(1f),
+                opacity = const(1f),
                 minZoom = 9f,
                 filter =
                         all(
                                 has("local_ref").not(),
                                 get("station_type").cast<StringValue>().eq(const("station")),
-                                get("mode_type").cast<StringValue>().eq(const("subway"))
+                                get("mode_type").cast<StringValue>().eq(const("subway")),
+                                get("number_of_associated_stops").cast<NumberValue<EquatableValue>>().neq(const(0))
                         ),
                 visible = (layerSettings.localrail as LayerCategorySettings).stops
         )
 
         SymbolLayer(
                 id = LayersPerCategory.Metro.LabelStops + "_osm",
-                source = osmStopsSource,
+                source = osmStopsRankedSource,
                 sourceLayer = "data",
                 textField = get("name").cast(),
                 textSize =
@@ -375,7 +473,7 @@ fun AddStops(
                                 11 to const(0.5f).em, // 8px
                                 12 to const(0.625f).em, // 10px
                                 14 to const(0.75f).em, // 12px
-                                17 to const(0.875f).em // 14px
+                                16 to const(0.875f).em // 14px
                         ),
                 textOffset =
                         interpolate(
@@ -385,16 +483,21 @@ fun AddStops(
                                 10 to offset(0.em, 0.30.em),
                                 12 to offset(0.em, 0.60.em)
                         ),
-                textFont = step(input = zoom(), barlowRegular, 12.0 to barlowMedium),
-                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                textFont = step(
+                        input = zoom(),
+                        barlowRegular,
+                        12.0 to barlowMedium,
+                        15.0 to barlowSemiBold
+                ),
+                textColor = osmSubwayLabelTextColor,
                 textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
                 textHaloWidth = const(1.dp),
-                minZoom = 12f,
+                minZoom = 13f,
                 filter =
                         all(
-                                has("local_ref").not(),
                                 get("station_type").cast<StringValue>().eq(const("station")),
-                                get("mode_type").cast<StringValue>().eq(const("subway"))
+                                get("mode_type").cast<StringValue>().eq(const("subway")),
+                                get("number_of_associated_stops").cast<NumberValue<EquatableValue>>().neq(const(0))
                         ),
                 textJustify = const(TextJustify.Left),
                 textAnchor = const(SymbolAnchor.Left),
@@ -494,36 +597,25 @@ fun AddStops(
 
         CircleLayer(
                 id = LayersPerCategory.Tram.Stops + "_osm",
-                source = osmStopsSource,
+                source = osmStopsRankedSource,
                 sourceLayer = "data",
-                color = const(circleInside),
-                radius =
-                        interpolate(
-                                type = linear(),
-                                input = zoom(),
-                                9 to const(0.9.dp),
-                                10 to const(1.dp),
-                                12 to const(3.dp),
-                                15 to const(4.dp)
-                        ),
-                strokeColor = const(circleOutside),
-                strokeWidth = step(input = zoom(), const(1.2.dp), 13.2 to const(1.5.dp)),
-                strokeOpacity =
-                        step(input = zoom(), const(0.4f), 11.0 to const(0.5f), 15.0 to const(0.6f)),
-                opacity = const(0.8f),
-                minZoom = 9f,
+                color = const(ranked3456Inside),
+                radius = osmTramCircleSize,
+                strokeColor = const(ranked3456Outside),
+                strokeWidth = step(input = zoom(), const(1.8.dp), 12.0 to const(3.0.dp)),
+                strokeOpacity = const(1f),
+                opacity = const(1f),
+                minZoom = 12f,
                 filter =
                         all(
                                 has("local_ref").not(),
                                 has("parent_osm_id").not(),
                                 any(
-                                        get("station_type")
-                                                .cast<StringValue>()
-                                                .eq(const("tram_stop")),
-                                        get("station_type").cast<StringValue>()
-                                                .eq(const("station")),
+                                        get("station_type").cast<StringValue>().eq(const("station")),
+                                        get("station_type").cast<StringValue>().eq(const("tram_stop")),
                                         get("station_type").cast<StringValue>().eq(const("halt"))
                                 ),
+                                get("number_of_associated_stops").cast<NumberValue<EquatableValue>>().neq(const(0)),
                                 any(
                                         get("mode_type").cast<StringValue>().eq(const("tram")),
                                         get("mode_type").cast<StringValue>().eq(const("light_rail"))
@@ -534,7 +626,7 @@ fun AddStops(
 
         SymbolLayer(
                 id = LayersPerCategory.Tram.LabelStops + "_osm",
-                source = osmStopsSource,
+                source = osmStopsRankedSource,
                 sourceLayer = "data",
                 textField = get("name").cast(),
                 textSize =
@@ -545,7 +637,8 @@ fun AddStops(
                                 11 to const(0.4375f).em, // 7px
                                 12 to const(0.5625f).em, // 9px
                                 14 to const(0.625f).em, // 10px
-                                17 to const(0.75f).em,
+                                16 to const(0.75f).em, // 12px
+                                18 to const(0.875f).em // 14px
                         ),
                 textOffset =
                         interpolate(
@@ -555,8 +648,13 @@ fun AddStops(
                                 10 to offset(0.em, 0.3.em),
                                 12 to offset(0.em, 0.5.em)
                         ),
-                textFont = step(input = zoom(), barlowRegular, 12.0 to barlowMedium),
-                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                textFont = step(
+                        input = zoom(),
+                        barlowRegular,
+                        13.0 to barlowMedium,
+                        16.0 to barlowSemiBold
+                ),
+                textColor = osmTramLabelTextColor,
                 textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color(0xFFFFFFFF)),
                 textHaloWidth = const(1.dp),
                 minZoom = 14f,
@@ -565,13 +663,11 @@ fun AddStops(
                                 has("local_ref").not(),
                                 has("parent_osm_id").not(),
                                 any(
-                                        get("station_type")
-                                                .cast<StringValue>()
-                                                .eq(const("tram_stop")),
-                                        get("station_type").cast<StringValue>()
-                                                .eq(const("station")),
+                                        get("station_type").cast<StringValue>().eq(const("station")),
+                                        get("station_type").cast<StringValue>().eq(const("tram_stop")),
                                         get("station_type").cast<StringValue>().eq(const("halt"))
                                 ),
+                                get("number_of_associated_stops").cast<NumberValue<EquatableValue>>().neq(const(0)),
                                 any(
                                         get("mode_type").cast<StringValue>().eq(const("tram")),
                                         get("mode_type").cast<StringValue>().eq(const("light_rail"))
@@ -599,8 +695,8 @@ fun AddStops(
                 interpolate(
                         type = linear(),
                         input = zoom(),
-                        6 to const(0.375f).em, // 6px
-                        13 to const(0.75f).em // 12px
+                        6 to const(0.5f).em, // 8px
+                        13 to const(0.875f).em // 14px
                 )
 
         CircleLayer(
@@ -672,55 +768,72 @@ fun AddStops(
                 visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
         )
 
-        CircleLayer(
-                id = LayersPerCategory.IntercityRail.Stops + "_osm",
-                source = osmStopsSource,
-                sourceLayer = "data",
-                color = const(circleInside),
-                radius = intercityCircleRadius,
-                strokeColor = const(circleOutside),
-                strokeWidth =
-                        interpolate(
-                                type = linear(),
-                                input = zoom(),
-                                9 to const(1.dp),
-                                13.2 to const(1.5.dp)
-                        ),
-                strokeOpacity = step(input = zoom(), const(0.5f), 15.0 to const(0.6f)),
-                opacity = step(input = zoom(), const(0.6f), 13.0 to const(0.8f)),
-                filter =
-                        all(
-                                has("local_ref").not(),
-                                get("station_type").cast<StringValue>().eq(const("station")),
-                                get("mode_type").cast<StringValue>().eq(const("rail"))
-                        ),
-                minZoom = 7.5f,
-                visible = layerSettings.intercityrail.stops
-        )
+        for (i in 6 downTo 1) {
+                val isLevel12 = i <= 2
+                val minZoomCircle = when (i) {
+                        1 -> 4f
+                        2 -> 5f
+                        3 -> 5f
+                        4 -> 6.5f
+                        5 -> 7.5f
+                        else -> 8f
+                }
+                val minZoomLabel = when (i) {
+                        1 -> 4f
+                        2 -> 6.5f
+                        3 -> 7f
+                        4 -> 8f
+                        5 -> 9f
+                        else -> 9f
+                }
 
-        SymbolLayer(
-                id = LayersPerCategory.IntercityRail.LabelStops + "_osm",
-                source = osmStopsSource,
-                sourceLayer = "data",
-                textField = get("name").cast(),
-                textSize = intercityLabelSize,
-                textOffset = offset(0.em, 0.2.em),
-                textFont =
-                        step(input = zoom(), barlowRegular, 10 to barlowMedium, 13 to barlowBold),
-                textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
-                textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
-                textHaloWidth = const(1.dp),
-                minZoom = 8f,
-                textJustify = const(TextJustify.Left),
-                textAnchor = const(SymbolAnchor.Left),
-                filter =
-                        all(
-                                has("local_ref").not(),
-                                get("station_type").cast<StringValue>().eq(const("station")),
-                                get("mode_type").cast<StringValue>().eq(const("rail"))
-                        ),
-                visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
-        )
+                CircleLayer(
+                        id = "intercityrail-ranked-$i",
+                        source = osmStopsRankedSource,
+                        sourceLayer = "data",
+                        color = const(if (isLevel12) ranked12Inside else ranked3456Inside),
+                        radius = when {
+                                isLevel12 -> ranked12CircleSize
+                                i == 3 -> ranked3CircleSize
+                                else -> ranked456CircleSize
+                        },
+                        strokeColor = const(if (isLevel12) ranked12Outside else ranked3456Outside),
+                        strokeWidth = step(input = zoom(), const(1.8.dp), 12.0 to const(2.0.dp)),
+                        strokeOpacity = const(1f),
+                        opacity = const(1f),
+                        minZoom = minZoomCircle,
+                        filter =
+                                all(
+                                        get("importance_level_station").cast<NumberValue<EquatableValue>>().eq(const(i)),
+                                        get("rail").cast<BooleanValue>().eq(const(true)),
+                                        get("mode_type").cast<StringValue>().neq(const("light_rail")),
+                                        get("number_of_associated_stops").cast<NumberValue<EquatableValue>>().neq(const(0))
+                                ),
+                        visible = layerSettings.intercityrail.stops
+                )
+
+                SymbolLayer(
+                        id = "intercityrail-ranked-label-$i",
+                        source = osmStopsRankedSource,
+                        sourceLayer = "data",
+                        textField = get("name").cast(),
+                        textSize = if (isLevel12) ranked12LabelSize else ranked3456LabelSize,
+                        textOffset = offset(0.em, 0.5.em),
+                        textFont = barlowBold,
+                        textColor = if (isDark) const(Color.White) else const(Color(0xFF2A2A2A)),
+                        textHaloColor = if (isDark) const(Color(0xFF0F172A)) else const(Color.White),
+                        textHaloWidth = const(1.dp),
+                        minZoom = minZoomLabel,
+                        filter =
+                                all(
+                                        get("importance_level_station").cast<NumberValue<EquatableValue>>().eq(const(i)),
+                                        get("rail").cast<BooleanValue>().eq(const(true))
+                                ),
+                        textJustify = const(TextJustify.Left),
+                        textAnchor = const(SymbolAnchor.Left),
+                        visible = (layerSettings.intercityrail as LayerCategorySettings).labelstops
+                )
+        }
 
         SymbolLayer(
                 id = "platformlabels_osm_intercity",

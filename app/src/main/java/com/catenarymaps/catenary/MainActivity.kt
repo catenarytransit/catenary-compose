@@ -513,7 +513,8 @@ val STOP_SOURCES =
                 "stationfeatures" to "https://birch7.catenarymaps.org/station_features",
                 "railstops" to "https://birch5.catenarymaps.org/unmatched_railstops",
                 "otherstops" to "https://birch8.catenarymaps.org/otherstops",
-                "osmstations" to "https://birch.catenarymaps.org/osm_stations"
+                "osmstations" to "https://birch.catenarymaps.org/osm_stations",
+                "osmstationsranked" to "https://birch.catenarymaps.org/osm_stations_ranked"
         )
 
 private const val TAG = "CatenaryDebug"
