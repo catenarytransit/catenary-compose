@@ -143,6 +143,7 @@ import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonPrimitive
@@ -1959,6 +1960,12 @@ class MainActivity : ComponentActivity() {
                                                 )
                                         }
                                         val osmStationLayerIds = remember {
+                                                val rankedLayers = (1..6).flatMap { i ->
+                                                        listOf(
+                                                                "intercityrail-ranked-$i",
+                                                                "intercityrail-ranked-label-$i"
+                                                        )
+                                                }
                                                 setOf(
                                                         LayersPerCategory.Metro.Stops + "_osm",
                                                         LayersPerCategory.Metro.LabelStops + "_osm",
@@ -1968,7 +1975,7 @@ class MainActivity : ComponentActivity() {
                                                                 "_osm",
                                                         LayersPerCategory.IntercityRail.LabelStops +
                                                                 "_osm"
-                                                )
+                                                ) + rankedLayers
                                         }
 
                                         MaplibreMap(
@@ -5640,6 +5647,33 @@ class MainActivity : ComponentActivity() {
                         val osmId = f.getString("osm_id")
                         if (osmId.isNullOrBlank() || !selectedStationsUnique.add(osmId))
                                 return@mapNotNull null
+
+                        // Extract properties for filtering as done in web mapClickHandler.ts
+                        val stationType = f.getString("station_type")
+                        val parentOsmId = f.properties?.get("parent_osm_id")
+                        val isParentOsmIdNull = parentOsmId == null || parentOsmId is JsonNull
+
+                        val refProp = f.properties?.get("ref")
+                        val isRefString = refProp != null && refProp !is JsonNull &&
+                                try {
+                                        refProp.jsonPrimitive.isString
+                                } catch (e: Exception) {
+                                        false
+                                }
+
+                        val localRefProp = f.properties?.get("local_ref")
+                        val isLocalRefString = localRefProp != null && localRefProp !is JsonNull &&
+                                try {
+                                        localRefProp.jsonPrimitive.isString
+                                } catch (e: Exception) {
+                                        false
+                                }
+
+                        val matchesOsmFilter =
+                                (stationType == "station" || stationType == "tram_stop" || stationType == "halt") ||
+                                        (isParentOsmIdNull && !(isRefString || isLocalRefString))
+
+                        if (!matchesOsmFilter) return@mapNotNull null
 
                         try {
                                 // Attempt to retrieve geometry from feature
