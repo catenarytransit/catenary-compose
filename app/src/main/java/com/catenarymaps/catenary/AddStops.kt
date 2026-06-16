@@ -112,7 +112,7 @@ fun AddStops(
                         type = linear(),
                         input = zoom(),
                         5 to const(0.8.dp),
-                        8 to const(1.4.dp),
+                        8 to const(1.2.dp),
                         12 to const(2.8.dp),
                         15 to const(4.8.dp)
                 )
@@ -162,16 +162,16 @@ fun AddStops(
                 interpolate(
                         type = linear(),
                         input = zoom(),
-                        6 to const(0.625f).em, // 10px
-                        13 to const(0.9375f).em // 15px
+                        6 to const(0.75f).em, // 12px
+                        13 to const(1.0625f).em // 17px
                 )
 
         val ranked3456LabelSize =
                 interpolate(
                         type = linear(),
                         input = zoom(),
-                        8 to const(0.5625f).em, // 9px
-                        13 to const(0.8125f).em // 13px
+                        8 to const(0.6875f).em, // 11px
+                        13 to const(0.9375f).em // 15px
                 )
 
         // JS: bus_stop_stop_color(darkMode) -> step(zoom, ...)
@@ -450,7 +450,7 @@ fun AddStops(
                         ),
                 strokeOpacity = const(1f),
                 opacity = const(1f),
-                minZoom = 9f,
+                minZoom = 10.5f,
                 filter =
                         all(
                                 has("local_ref").not(),
@@ -695,8 +695,8 @@ fun AddStops(
                 interpolate(
                         type = linear(),
                         input = zoom(),
-                        6 to const(0.5f).em, // 8px
-                        13 to const(0.875f).em // 14px
+                        6 to const(0.625f).em, // 10px
+                        13 to const(1.0f).em // 16px
                 )
 
         CircleLayer(
@@ -782,9 +782,9 @@ fun AddStops(
                         1 -> 4f
                         2 -> 6.5f
                         3 -> 7f
-                        4 -> 8f
-                        5 -> 9f
-                        else -> 9f
+                        4 -> 8.5f
+                        5 -> 9.5f
+                        else -> 10f
                 }
 
                 CircleLayer(
