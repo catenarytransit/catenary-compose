@@ -2026,6 +2026,11 @@ class MainActivity : ComponentActivity() {
 
                                                         // Removed unused vehicleLabelType logic
                                                         // that caused compilation errors
+                                                        val osmStationFeatures =
+                                                                projection.queryRenderedFeatures(
+                                                                        clickRect,
+                                                                        osmStationLayerIds
+                                                                )
                                                         val vehicleFeatures =
                                                                 projection.queryRenderedFeatures(
                                                                         clickRect,
@@ -2041,11 +2046,7 @@ class MainActivity : ComponentActivity() {
                                                                         clickRect,
                                                                         stopLayerIds
                                                                 )
-                                                        val osmStationFeatures =
-                                                                projection.queryRenderedFeatures(
-                                                                        clickRect,
-                                                                        osmStationLayerIds
-                                                                )
+                                                        
 
                                                         if (vehicleFeatures.isEmpty() &&
                                                                         routeFeatures.isEmpty() &&
@@ -2089,12 +2090,59 @@ class MainActivity : ComponentActivity() {
                                                         if (selectionOptions.isNotEmpty()) {
                                                                 val newStack =
                                                                         ArrayDeque(catenaryStack)
-                                                                newStack.addLast(
-                                                                        CatenaryStackEnum
-                                                                                .MapSelectionScreen(
-                                                                                        selectionOptions
-                                                                                )
-                                                                )
+                                                                if (selectionOptions.size == 1) {
+                                                                        val option = selectionOptions.first().data
+                                                                        val stackItem = when (option) {
+                                                                                is MapSelectionSelector.StopMapSelector -> {
+                                                                                        CatenaryStackEnum.StopStack(
+                                                                                                chateau_id = option.chateau_id,
+                                                                                                stop_id = option.stop_id
+                                                                                        )
+                                                                                }
+                                                                                is MapSelectionSelector.RouteMapSelector -> {
+                                                                                        CatenaryStackEnum.RouteStack(
+                                                                                                chateau_id = option.chateau_id,
+                                                                                                route_id = option.route_id
+                                                                                        )
+                                                                                }
+                                                                                is MapSelectionSelector.VehicleMapSelector -> {
+                                                                                        if (option.trip_id != null) {
+                                                                                                CatenaryStackEnum.SingleTrip(
+                                                                                                        chateau_id = option.chateau_id,
+                                                                                                        trip_id = option.trip_id,
+                                                                                                        route_id = option.route_id,
+                                                                                                        start_time = option.start_time,
+                                                                                                        start_date = option.start_date,
+                                                                                                        vehicle_id = option.vehicle_id,
+                                                                                                        route_type = option.route_type
+                                                                                                )
+                                                                                        } else {
+                                                                                                CatenaryStackEnum.VehicleSelectedStack(
+                                                                                                        chateau_id = option.chateau_id,
+                                                                                                        vehicle_id = option.vehicle_id,
+                                                                                                        gtfs_id = option.gtfs_id
+                                                                                                )
+                                                                                        }
+                                                                                }
+                                                                                is MapSelectionSelector.OsmStationMapSelector -> {
+                                                                                        CatenaryStackEnum.OsmStationStack(
+                                                                                                osm_station_id = option.osm_id,
+                                                                                                station_name = option.name,
+                                                                                                mode_type = option.mode_type,
+                                                                                                lat = option.lat,
+                                                                                                lon = option.lon
+                                                                                        )
+                                                                                }
+                                                                        }
+                                                                        newStack.addLast(stackItem)
+                                                                } else {
+                                                                        newStack.addLast(
+                                                                                CatenaryStackEnum
+                                                                                        .MapSelectionScreen(
+                                                                                                selectionOptions
+                                                                                        )
+                                                                        )
+                                                                }
                                                                 catenaryStack =
                                                                         newStack // Update state
 
