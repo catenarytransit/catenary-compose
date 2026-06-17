@@ -37,7 +37,7 @@ private const val EVACUATION_CA_FIRE_URL = "https://fireboundscache.catenarymaps
 private const val LOS_ANGELES_EVAC_URL = "https://fireboundscache.catenarymaps.org/data/los_angeles_evac.json"
 private const val WATCHDUTY_EVENTS_URL = "https://fireboundscache.catenarymaps.org/data/watchduty_events.json"
 private const val MODIS_URL = "https://raw.githubusercontent.com/catenarytransit/fire-bounds-cache/refs/heads/main/data/modis.json"
-private const val VIIRS_URL = "https://raw.githubusercontent.com/catenarytransit/fire-bounds-cache/refs/heads/main/data/viirs_nw.json"
+private const val VIIRS_URL = "https://fireboundscache.catenarymaps.org/data/viirs_nw.json"
 
 @Serializable
 data class WatchdutyFireData(

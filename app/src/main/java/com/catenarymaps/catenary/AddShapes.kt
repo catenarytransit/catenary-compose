@@ -294,9 +294,9 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            3 to const(0.4.dp),
-                            5 to const(0.7.dp),
-                            7 to const(1.0.dp),
+                            3 to const(0.25.dp),
+                            5 to const(0.5.dp),
+                            7 to const(0.9.dp),
                             9 to const(2.0.dp),
                             11 to const(2.5.dp),
                     ),
