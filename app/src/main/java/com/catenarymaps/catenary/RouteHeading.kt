@@ -186,7 +186,7 @@ fun RouteHeading(
                         ) {
                             SbbLogo(
                                 text = shortName,
-                                height = 14.dp,
+                                textSize = textStyle.fontSize,
                                 color = textColorVal
                             )
                         }

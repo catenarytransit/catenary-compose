@@ -432,7 +432,7 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
         ) {
             SbbLogo(
                 text = route.shortName!!,
-                height = 12.dp,
+                textSize = 12.sp,
                 color = textColor
             )
         }

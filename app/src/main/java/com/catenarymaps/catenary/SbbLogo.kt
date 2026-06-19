@@ -13,8 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
@@ -26,7 +27,7 @@ import coil.request.ImageRequest
 fun SbbLogo(
     text: String,
     modifier: Modifier = Modifier,
-    height: Dp = 16.dp,
+    textSize: TextUnit = 12.sp,
     color: Color? = null
 ) {
     val isSbbIcOrIr = text.startsWith("IR") || text.startsWith("IC")
@@ -36,6 +37,7 @@ fun SbbLogo(
         Text(
             text = text,
             fontWeight = FontWeight.Bold,
+            fontSize = textSize,
             modifier = modifier
         )
         return
@@ -47,7 +49,14 @@ fun SbbLogo(
         else -> "https://maps.catenarymaps.org/icons/sbb/SBB_IC_Logo.svg"
     }
 
-    val logoWidth = if (isEc) height * 2.78f else height * 2.5f
+    val density = LocalDensity.current
+    val logoHeightDp = with(density) { (textSize.value * 0.9f).sp.toDp() }
+    val logoWidthDp = with(density) {
+        val emWidth = if (isEc) 2.5f else 2.25f
+        (textSize.value * emWidth).sp.toDp()
+    }
+    val spacerWidthDp = with(density) { (textSize.value * 0.2f).sp.toDp() }
+
     val remainingText = if (isSbbIcOrIr) text.substring(2).trim() else ""
     val tintColor = color ?: LocalContentColor.current
 
@@ -71,18 +80,18 @@ fun SbbLogo(
             contentDescription = text,
             colorFilter = ColorFilter.tint(tintColor),
             modifier = Modifier
-                .height(height)
-                .width(logoWidth)
+                .height(logoHeightDp)
+                .width(logoWidthDp)
         )
 
         if (remainingText.isNotEmpty()) {
-            Spacer(modifier = Modifier.width(height * 0.2f))
+            Spacer(modifier = Modifier.width(spacerWidthDp))
             Text(
                 text = remainingText,
                 color = tintColor,
                 fontWeight = FontWeight.Bold,
-                fontSize = (height.value * 0.8).sp,
-                lineHeight = (height.value * 0.8).sp
+                fontSize = textSize,
+                lineHeight = textSize
             )
         }
     }

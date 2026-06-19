@@ -126,7 +126,7 @@ fun StationScreenTrainRow(
                                                 ) {
                                                     SbbLogo(
                                                         text = routeName,
-                                                        height = if (swiss) 12.dp else 10.dp,
+                                                        textSize = if (swiss) 12.sp else 10.sp,
                                                         color = textColor
                                                     )
                                                 }
@@ -474,12 +474,12 @@ fun StationScreenTrainRow(
                                                 ),
                                         modifier =
                                                 Modifier
-                                                        .background(
-                                                                MaterialTheme.colorScheme
-                                                                        .surfaceVariant,
-                                                                RoundedCornerShape(4.dp)
-                                                        )
-                                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    .background(
+                                                        MaterialTheme.colorScheme
+                                                            .surfaceVariant,
+                                                        RoundedCornerShape(4.dp)
+                                                    )
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                         }
                 }
@@ -637,13 +637,13 @@ fun StopScreenRow(
                                                                                         ?.short_name,
                                                                         modifier =
                                                                                 Modifier
-                                                                                        .height(
-                                                                                                20.dp
-                                                                                        )
-                                                                                        .padding(
-                                                                                                end =
-                                                                                                        4.dp
-                                                                                        )
+                                                                                    .height(
+                                                                                        20.dp
+                                                                                    )
+                                                                                    .padding(
+                                                                                        end =
+                                                                                            4.dp
+                                                                                    )
                                                                 )
                                                         }
                                                 } else if (isMta) {
@@ -679,7 +679,7 @@ fun StopScreenRow(
                                                     ) {
                                                         SbbLogo(
                                                             text = routeInfo?.short_name!!,
-                                                            height = 12.dp,
+                                                            textSize = 12.sp,
                                                             color = textColor
                                                         )
                                                     }
@@ -702,26 +702,26 @@ fun StopScreenRow(
                                                                         ),
                                                                 modifier =
                                                                         Modifier
-                                                                                .clip(
-                                                                                        getRouteShape(
-                                                                                                event.chateau,
-                                                                                                routeInfo
-                                                                                                        ?.short_name
-                                                                                        )
+                                                                            .clip(
+                                                                                getRouteShape(
+                                                                                    event.chateau,
+                                                                                    routeInfo
+                                                                                        ?.short_name
                                                                                 )
-                                                                                .background(
-                                                                                        parseColor(
-                                                                                                routeInfo
-                                                                                                        .color,
-                                                                                                Color.Gray
-                                                                                        )
+                                                                            )
+                                                                            .background(
+                                                                                parseColor(
+                                                                                    routeInfo
+                                                                                        .color,
+                                                                                    Color.Gray
                                                                                 )
-                                                                                .padding(
-                                                                                        horizontal =
-                                                                                                4.dp,
-                                                                                        vertical =
-                                                                                                1.dp
-                                                                                )
+                                                                            )
+                                                                            .padding(
+                                                                                horizontal =
+                                                                                    4.dp,
+                                                                                vertical =
+                                                                                    1.dp
+                                                                            )
                                                         )
                                                         Spacer(Modifier.width(4.dp))
                                                 } else if (routeInfo?.long_name != null) {
@@ -984,7 +984,7 @@ fun StationScreenTrainRowCompact(
                                                 ) {
                                                     SbbLogo(
                                                         text = routeName,
-                                                        height = if (swiss) 12.dp else 10.dp,
+                                                        textSize = if (swiss) 12.sp else 10.sp,
                                                         color = textColor
                                                     )
                                                 }
@@ -1527,7 +1527,7 @@ fun StopScreenRowV2(
                                                     ) {
                                                         SbbLogo(
                                                             text = routeInfo?.short_name!!,
-                                                            height = if (swiss) 12.dp else 10.dp,
+                                                            textSize = if (swiss) 12.sp else 10.sp,
                                                             color = textColor
                                                         )
                                                     }
