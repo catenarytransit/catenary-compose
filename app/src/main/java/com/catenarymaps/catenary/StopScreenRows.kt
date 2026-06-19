@@ -3,6 +3,7 @@ package com.catenarymaps.catenary
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -76,8 +77,8 @@ fun StationScreenTrainRow(
 
         Row(
                 modifier = modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // Determine order
@@ -91,8 +92,8 @@ fun StationScreenTrainRow(
                                 androidx.compose.foundation.layout.Box(
                                         modifier =
                                                 Modifier
-                                                        .width(if (swiss) 50.dp else 40.dp)
-                                                        .padding(horizontal = 2.dp),
+                                                    .width(if (swiss) 50.dp else 40.dp)
+                                                    .padding(horizontal = 2.dp),
                                         contentAlignment =
                                                 if (swiss) Alignment.CenterStart
                                                 else Alignment.Center
@@ -100,49 +101,80 @@ fun StationScreenTrainRow(
                                         val routeName =
                                                 routeInfo?.short_name ?: routeInfo?.long_name
                                         if (showRouteName && routeName != null) {
+                                            val isSbb = event.chateau == "schweiz" &&
+                                                    (routeName.startsWith("IR") ||
+                                                            routeName.startsWith("IC") ||
+                                                            routeName == "EC")
+                                            if (isSbb) {
+                                                val bgColor =
+                                                    parseColor(routeInfo?.color, Color(0xFFEB0000))
+                                                val textColor =
+                                                    parseColor(routeInfo?.text_color, Color.White)
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(
+                                                            getRouteShape(
+                                                                event.chateau,
+                                                                routeInfo?.short_name
+                                                            )
+                                                        )
+                                                        .background(bgColor)
+                                                        .padding(
+                                                            horizontal = 4.dp,
+                                                            vertical = 1.dp
+                                                        )
+                                                ) {
+                                                    SbbLogo(
+                                                        text = routeName,
+                                                        height = if (swiss) 12.dp else 10.dp,
+                                                        color = textColor
+                                                    )
+                                                }
+                                            } else {
                                                 Text(
-                                                        text =
-                                                                routeName.replace(
-                                                                        " Line",
-                                                                        ""
-                                                                ),
-                                                        color =
+                                                    text =
+                                                        routeName.replace(
+                                                            " Line",
+                                                            ""
+                                                        ),
+                                                    color =
+                                                        parseColor(
+                                                            routeInfo?.text_color,
+                                                            Color.White
+                                                        ),
+                                                    style =
+                                                        MaterialTheme.typography.labelSmall
+                                                            .copy(
+                                                                fontSize =
+                                                                    if (swiss)
+                                                                        12.sp
+                                                                    else 10.sp,
+                                                                fontWeight =
+                                                                    FontWeight
+                                                                        .Bold
+                                                            ),
+                                                    modifier =
+                                                        Modifier
+                                                            .clip(
+                                                                getRouteShape(
+                                                                    event.chateau,
+                                                                    routeInfo
+                                                                        ?.short_name
+                                                                )
+                                                            )
+                                                            .background(
                                                                 parseColor(
-                                                                        routeInfo?.text_color,
-                                                                        Color.White
-                                                                ),
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
-                                                                                fontSize =
-                                                                                        if (swiss)
-                                                                                                12.sp
-                                                                                        else 10.sp,
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .Bold
-                                                                        ),
-                                                        modifier =
-                                                                Modifier
-                                                                        .clip(
-                                                                                getRouteShape(
-                                                                                        event.chateau,
-                                                                                        routeInfo
-                                                                                                ?.short_name
-                                                                                )
-                                                                        )
-                                                                        .background(
-                                                                                parseColor(
-                                                                                        routeInfo
-                                                                                                ?.color,
-                                                                                        Color.Gray
-                                                                                )
-                                                                        )
-                                                                        .padding(
-                                                                                horizontal = 4.dp,
-                                                                                vertical = 1.dp
-                                                                        )
+                                                                    routeInfo
+                                                                        ?.color,
+                                                                    Color.Gray
+                                                                )
+                                                            )
+                                                            .padding(
+                                                                horizontal = 4.dp,
+                                                                vertical = 1.dp
+                                                            )
                                                 )
+                                            }
                                         }
                                 }
                         }
@@ -155,8 +187,8 @@ fun StationScreenTrainRow(
                 // Left (or Middle if Swiss): Time (Vertical Stack)
                 Column(
                         modifier = Modifier
-                                .width(70.dp)
-                                .padding(horizontal = 4.dp),
+                            .width(70.dp)
+                            .padding(horizontal = 4.dp),
                         horizontalAlignment = Alignment.Start
                 ) {
                         if (event.trip_cancelled == true) {
@@ -290,8 +322,8 @@ fun StationScreenTrainRow(
                 Column(
                         modifier =
                                 Modifier
-                                        .weight(1f)
-                                        .padding(start = if (swiss) 4.dp else 0.dp, end = 4.dp)
+                                    .weight(1f)
+                                    .padding(start = if (swiss) 4.dp else 0.dp, end = 4.dp)
                 ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                                 // ---------------------------------------------------------
@@ -401,24 +433,24 @@ fun StationScreenTrainRow(
                                                                         ),
                                                         modifier =
                                                                 Modifier
-                                                                        .clip(
-                                                                                getRouteShape(
-                                                                                        event.chateau,
-                                                                                        routeInfo
-                                                                                                ?.short_name
-                                                                                )
+                                                                    .clip(
+                                                                        getRouteShape(
+                                                                            event.chateau,
+                                                                            routeInfo
+                                                                                ?.short_name
                                                                         )
-                                                                        .background(
-                                                                                parseColor(
-                                                                                        routeInfo
-                                                                                                ?.color,
-                                                                                        Color.Gray
-                                                                                )
+                                                                    )
+                                                                    .background(
+                                                                        parseColor(
+                                                                            routeInfo
+                                                                                ?.color,
+                                                                            Color.Gray
                                                                         )
-                                                                        .padding(
-                                                                                horizontal = 4.dp,
-                                                                                vertical = 1.dp
-                                                                        )
+                                                                    )
+                                                                    .padding(
+                                                                        horizontal = 4.dp,
+                                                                        vertical = 1.dp
+                                                                    )
                                                 )
                                                 Spacer(Modifier.width(4.dp))
                                         }
@@ -557,6 +589,11 @@ fun StopScreenRow(
                                                                 MtaSubwayUtils.isSubwayRouteId(
                                                                         routeInfo?.short_name!!
                                                                 )
+                                            val isSbb = event.chateau == "schweiz" &&
+                                                    !routeInfo?.short_name.isNullOrEmpty() &&
+                                                    (routeInfo.short_name.startsWith("IR") ||
+                                                            routeInfo.short_name.startsWith("IC") ||
+                                                            routeInfo.short_name == "EC")
 
                                                 if (isRatp) {
                                                         val iconUrl =
@@ -615,6 +652,37 @@ fun StopScreenRow(
                                                                 size = 20.dp,
                                                                 contentDescription = routeInfo.short_name
                                                         )
+                                                    Spacer(Modifier.width(4.dp))
+                                                } else if (isSbb) {
+                                                    val bgColor = parseColor(
+                                                        routeInfo?.color,
+                                                        Color(0xFFEB0000)
+                                                    )
+                                                    val textColor = parseColor(
+                                                        routeInfo?.text_color,
+                                                        Color.White
+                                                    )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(
+                                                                getRouteShape(
+                                                                    event.chateau,
+                                                                    routeInfo?.short_name
+                                                                )
+                                                            )
+                                                            .background(bgColor)
+                                                            .padding(
+                                                                horizontal = 4.dp,
+                                                                vertical = 1.dp
+                                                            ),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        SbbLogo(
+                                                            text = routeInfo?.short_name!!,
+                                                            height = 12.dp,
+                                                            color = textColor
+                                                        )
+                                                    }
                                                         Spacer(Modifier.width(4.dp))
                                                 } else if (routeInfo?.short_name != null) {
                                                         Text(
@@ -891,49 +959,80 @@ fun StationScreenTrainRowCompact(
                                         val routeName =
                                                 routeInfo?.short_name ?: routeInfo?.long_name
                                         if (showRouteName && routeName != null) {
+                                            val isSbb = event.chateau == "schweiz" &&
+                                                    (routeName.startsWith("IR") ||
+                                                            routeName.startsWith("IC") ||
+                                                            routeName == "EC")
+                                            if (isSbb) {
+                                                val bgColor =
+                                                    parseColor(routeInfo?.color, Color(0xFFEB0000))
+                                                val textColor =
+                                                    parseColor(routeInfo?.text_color, Color.White)
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(
+                                                            getRouteShape(
+                                                                event.chateau,
+                                                                routeInfo?.short_name
+                                                            )
+                                                        )
+                                                        .background(bgColor)
+                                                        .padding(
+                                                            horizontal = 4.dp,
+                                                            vertical = 1.dp
+                                                        )
+                                                ) {
+                                                    SbbLogo(
+                                                        text = routeName,
+                                                        height = if (swiss) 12.dp else 10.dp,
+                                                        color = textColor
+                                                    )
+                                                }
+                                            } else {
                                                 Text(
-                                                        text =
-                                                                routeName.replace(
-                                                                        " Line",
-                                                                        ""
-                                                                ),
-                                                        color =
+                                                    text =
+                                                        routeName.replace(
+                                                            " Line",
+                                                            ""
+                                                        ),
+                                                    color =
+                                                        parseColor(
+                                                            routeInfo?.text_color,
+                                                            Color.White
+                                                        ),
+                                                    style =
+                                                        MaterialTheme.typography.labelSmall
+                                                            .copy(
+                                                                fontSize =
+                                                                    if (swiss)
+                                                                        12.sp
+                                                                    else 10.sp,
+                                                                fontWeight =
+                                                                    FontWeight
+                                                                        .Bold
+                                                            ),
+                                                    modifier =
+                                                        Modifier
+                                                            .clip(
+                                                                getRouteShape(
+                                                                    event.chateau,
+                                                                    routeInfo
+                                                                        ?.short_name
+                                                                )
+                                                            )
+                                                            .background(
                                                                 parseColor(
-                                                                        routeInfo?.text_color,
-                                                                        Color.White
-                                                                ),
-                                                        style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
-                                                                                fontSize =
-                                                                                        if (swiss)
-                                                                                                12.sp
-                                                                                        else 10.sp,
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .Bold
-                                                                        ),
-                                                        modifier =
-                                                                Modifier
-                                                                        .clip(
-                                                                                getRouteShape(
-                                                                                        event.chateau,
-                                                                                        routeInfo
-                                                                                                ?.short_name
-                                                                                )
-                                                                        )
-                                                                        .background(
-                                                                                parseColor(
-                                                                                        routeInfo
-                                                                                                ?.color,
-                                                                                        Color.Gray
-                                                                                )
-                                                                        )
-                                                                        .padding(
-                                                                                horizontal = 4.dp,
-                                                                                vertical = 1.dp
-                                                                        )
+                                                                    routeInfo
+                                                                        ?.color,
+                                                                    Color.Gray
+                                                                )
+                                                            )
+                                                            .padding(
+                                                                horizontal = 4.dp,
+                                                                vertical = 1.dp
+                                                            )
                                                 )
+                                            }
                                         }
                                 }
                         }
@@ -1311,9 +1410,14 @@ fun StopScreenRowV2(
                 MtaSubwayUtils.MTA_CHATEAU_ID == event.chateau &&
                         !routeInfo?.short_name.isNullOrEmpty() &&
                         MtaSubwayUtils.isSubwayRouteId(routeInfo?.short_name!!)
+    val isSbb = event.chateau == "schweiz" &&
+            !routeInfo?.short_name.isNullOrEmpty() &&
+            (routeInfo.short_name.startsWith("IR") ||
+                    routeInfo.short_name.startsWith("IC") ||
+                    routeInfo.short_name == "EC")
 
         val routeName = routeInfo?.short_name ?: routeInfo?.long_name
-        val isLongName = !isRatp && !isMta && (routeName?.length ?: 0) > 8
+    val isLongName = !isRatp && !isMta && !isSbb && (routeName?.length ?: 0) > 8
         val isBusOrMetro = routeInfo?.route_type in listOf(3, 11, 700, 0, 1, 5, 7, 12, 900)
 
         Column(
@@ -1331,7 +1435,7 @@ fun StopScreenRowV2(
                 ) {
                         // 1. Name Column - Mode Specific Indicators
                         val nameColumn: @Composable () -> Unit = {
-                                if (isRatp || isMta || (!isLongName && routeName != null)) {
+                            if (isRatp || isMta || isSbb || (!isLongName && routeName != null)) {
                                         androidx.compose.foundation.layout.Box(
                                                 modifier =
                                                         Modifier
@@ -1397,6 +1501,36 @@ fun StopScreenRowV2(
                                                                 size = 20.dp,
                                                                 contentDescription = routeInfo.short_name
                                                         )
+                                                } else if (isSbb) {
+                                                    val bgColor = parseColor(
+                                                        routeInfo?.color,
+                                                        Color(0xFFEB0000)
+                                                    )
+                                                    val textColor = parseColor(
+                                                        routeInfo?.text_color,
+                                                        Color.White
+                                                    )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(
+                                                                getRouteShape(
+                                                                    event.chateau,
+                                                                    routeInfo?.short_name
+                                                                )
+                                                            )
+                                                            .background(bgColor)
+                                                            .padding(
+                                                                horizontal = 4.dp,
+                                                                vertical = 1.dp
+                                                            ),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        SbbLogo(
+                                                            text = routeInfo?.short_name!!,
+                                                            height = if (swiss) 12.dp else 10.dp,
+                                                            color = textColor
+                                                        )
+                                                    }
                                                 } else if (!isLongName) {
                                                         if (routeInfo?.short_name != null) {
                                                                 Text(

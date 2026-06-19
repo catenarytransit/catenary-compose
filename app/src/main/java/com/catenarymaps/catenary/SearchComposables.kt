@@ -381,6 +381,9 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
             MtaSubwayUtils.MTA_CHATEAU_ID == chateauId &&
                     !route.shortName.isNullOrEmpty() &&
                     MtaSubwayUtils.isSubwayRouteId(route.shortName!!)
+    val isSbb = chateauId == "schweiz" &&
+            !route.shortName.isNullOrEmpty() &&
+            (route.shortName!!.startsWith("IR") || route.shortName!!.startsWith("IC") || route.shortName == "EC")
 
     if (isRatp) {
         val iconUrl = RatpUtils.getRatpIconUrl(route.shortName)
@@ -414,6 +417,23 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+        return
+    } else if (isSbb) {
+        val bgColor = parseColorSafe(route.color, Color(0xFFEB0000))
+        val textColor = parseColorSafe(route.textColor, Color.White)
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(bgColor)
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            SbbLogo(
+                text = route.shortName!!,
+                height = 12.dp,
+                color = textColor
             )
         }
         return

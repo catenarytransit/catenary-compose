@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -84,13 +85,6 @@ fun RouteHeading(
                 )
             }
 
-    // Determine special rendering
-    val isRatp = RatpUtils.isIdfmChateau(chateauId) && RatpUtils.isRatpRoute(shortName)
-    val isMta =
-            MtaSubwayUtils.MTA_CHATEAU_ID == chateauId &&
-                    !shortName.isNullOrEmpty() &&
-                    MtaSubwayUtils.isSubwayRouteId(shortName)
-
     Column {
         // ⬇️ This Box replaces the Row, putting controls in the top-right
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -105,8 +99,13 @@ fun RouteHeading(
             ) {
                 // Route Name Header
                 // Define logic variables early to flatten the UI tree
-                val isRatp = chateauId?.startsWith("ratp") == true // Assuming check based on utils
-                val isMta = chateauId?.startsWith("mta") == true // Assuming check based on utils
+                val isRatp = RatpUtils.isIdfmChateau(chateauId) && RatpUtils.isRatpRoute(shortName)
+                val isMta = MtaSubwayUtils.MTA_CHATEAU_ID == chateauId &&
+                        !shortName.isNullOrEmpty() &&
+                        MtaSubwayUtils.isSubwayRouteId(shortName)
+                val isSbb = chateauId == "schweiz" &&
+                        !shortName.isNullOrEmpty() &&
+                        (shortName.startsWith("IR") || shortName.startsWith("IC") || shortName == "EC")
                 val isNationalRail = chateauId == "nationalrailuk"
                 val isLondonOverground = shortName?.startsWith("LO-") == true
                 val isElizabethLine = shortName == "XR-ELIZABETH"
@@ -174,6 +173,48 @@ fun RouteHeading(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                         }
+                    }
+                } else if (isSbb && shortName != null) {
+                    iconComposable = {
+                        val bgColor = parseColor(color, Color(0xFFEB0000))
+                        val textColorVal = parseColor(textColor, Color.White)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(bgColor)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            SbbLogo(
+                                text = shortName,
+                                height = 14.dp,
+                                color = textColorVal
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                } else if (!shortName.isNullOrBlank() &&
+                    (!isNationalRail || isLondonOverground || isElizabethLine) &&
+                    chateauId != "metrolinktrains"
+                ) {
+                    val isSBahn = (chateauId == "dbregioag" || chateauId == "deutschland") &&
+                            shortName.matches(Regex("^S\\d+"))
+                    val badgeShape = if (isSBahn) CircleShape else RoundedCornerShape(4.dp)
+                    iconComposable = {
+                        Box(
+                            modifier = Modifier
+                                .clip(badgeShape)
+                                .background(routeColor)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = shortName.replace(" Line", ""),
+                                color = routeTextColor,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
 

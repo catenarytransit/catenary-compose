@@ -1639,7 +1639,11 @@ private fun TripPill(
                         if (sched != null && rt != null) {
                                 val diff = rt - sched // seconds
                                 if (diff != 0L) {
-                                        DelayDiff(diff = diff, fontSizeOfPolarity = 12.sp)
+                                        DelayDiff(
+                                                diff = diff,
+                                                fontSizeOfPolarity = 12.sp,
+                                                use_symbol_sign = true
+                                        )
                                 }
                         }
 
