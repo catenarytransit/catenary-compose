@@ -74,6 +74,8 @@
     <string name="heading_bus">Bus</string>
     <string name="heading_other">Autres</string>
     <string name="heading_intercity_rail">Train</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
     <string name="heading_local_rail">Métro/Tram</string>
     <string name="vehicle">Véhicule</string>
     <string name="delay">Retard</string>

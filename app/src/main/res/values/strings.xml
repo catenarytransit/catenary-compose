@@ -79,6 +79,8 @@
     </plurals>
     <string name="service_alerts_header">Service Alerts</string>
     <string name="heading_intercity_rail">Rail</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
     <string name="heading_local_rail">Metro/Tram</string>
     <string name="heading_bus">Bus</string>
     <string name="heading_other">Other</string>

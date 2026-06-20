@@ -362,7 +362,16 @@ fun StopScreen(
     var activeTab by remember(key) { mutableStateOf("rail") }
     var availableModes by remember { mutableStateOf(listOf<String>()) }
 
-    fun getModeForRouteType(routeType: Int): String {
+    fun getModeForEvent(ev: StopEvent, routeType: Int, shortName: String?): String {
+        if (ev.chateau == "île~de~france~mobilités" && shortName != null) {
+            val upperName = shortName.uppercase().trim()
+            if (upperName in setOf("A", "B", "C", "D", "E")) {
+                return "rer"
+            }
+            if (upperName in setOf("H", "J", "K", "L", "N", "P", "R", "U", "V")) {
+                return "transilien"
+            }
+        }
         return when (routeType) {
             3, 11, 700 -> "bus"
             0, 1, 5, 7, 12, 900 -> "metro"
@@ -375,20 +384,12 @@ fun StopScreen(
         val modes = mutableSetOf<String>()
         mergedEvents.forEach { ev ->
             val routeDef = dataMeta?.routes?.get(ev.chateau)?.get(ev.route_id)
-            val rType = routeDef?.route_type ?: 3 // default to bus?
-            // Wait, StopEvent doesn't have route_type directly unless we join?
-            // Actually StopRouteInfo has it. If missing, assume 3?
-            // Svelte logic: const rType = routeDef?.route_type ?? ev.route_type ?? 3;
-            // Does StopEvent have route_type? No, only StopRouteInfo.
-            // But SingleTrip has it? Page logic doesn't join inherently.
-            // Let's check StopEvent definition... it DOES NOT have route_type.
-            // Actually, `StopScreen.kt` Line 100: `StopRouteInfo` has `route_type`.
-            // Line 104 `StopEvent` does not have `route_type`.
-            // I should access it via `dataMeta`.
-            modes.add(getModeForRouteType(rType))
+            val rType = routeDef?.route_type ?: ev.route_type ?: 3
+            val sName = routeDef?.short_name
+            modes.add(getModeForEvent(ev, rType, sName))
         }
 
-        val order = listOf("rail", "metro", "bus", "other")
+        val order = listOf("rail", "rer", "transilien", "metro", "bus", "other")
         val newAvailable = order.filter { modes.contains(it) }
         availableModes = newAvailable
 
@@ -476,8 +477,9 @@ fun StopScreen(
                         // Filter by mode
                         if (availableModes.size > 1) {
                             val routeDef = dataMeta?.routes?.get(event.chateau)?.get(event.route_id)
-                            val rType = routeDef?.route_type ?: 3
-                            if (getModeForRouteType(rType) != activeTab) {
+                            val rType = routeDef?.route_type ?: event.route_type ?: 3
+                            val sName = routeDef?.short_name
+                            if (getModeForEvent(event, rType, sName) != activeTab) {
                                 return@filter false
                             }
                         }
@@ -1234,6 +1236,8 @@ fun StopScreen(
                                         when (mode) {
                                             "rail" ->
                                                     stringResource(R.string.heading_intercity_rail)
+                                            "rer" -> stringResource(R.string.heading_rer)
+                                            "transilien" -> stringResource(R.string.heading_transilien)
                                             "metro" -> stringResource(R.string.heading_local_rail)
                                             "bus" -> stringResource(R.string.heading_bus)
                                             else -> stringResource(R.string.heading_other)
@@ -1343,10 +1347,10 @@ fun StopScreen(
                         items(events, key = { composeEventListItemKey(it) }) { event ->
                             val routeInfo = meta?.routes?.get(event.chateau)?.get(event.route_id)
 
-                            val rType = routeInfo?.route_type ?: 3
-                            val mode = getModeForRouteType(rType)
+                            val rType = routeInfo?.route_type ?: event.route_type ?: 3
+                            val mode = getModeForEvent(event, rType, routeInfo?.short_name)
 
-                            if (activeTab == "rail" && mode == "rail") {
+                            if (activeTab == mode && (mode == "rail" || mode == "rer" || mode == "transilien")) {
                                 StationScreenTrainRow(
                                         event = event,
                                         routeInfo = routeInfo,
