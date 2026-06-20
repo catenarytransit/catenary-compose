@@ -30,7 +30,7 @@ fun SbbLogo(
     textSize: TextUnit = 12.sp,
     color: Color? = null
 ) {
-    val isSbbIcOrIr = text.startsWith("IR") || text.startsWith("IC")
+    val isSbbIcOrIr = (text.startsWith("IR") || text.startsWith("IC")) && !text.startsWith("ICE")
     val isEc = text == "EC"
 
     if (!isSbbIcOrIr && !isEc) {
