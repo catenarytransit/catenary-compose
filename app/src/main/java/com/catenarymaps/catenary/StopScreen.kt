@@ -362,16 +362,79 @@ fun StopScreen(
     var activeTab by remember(key) { mutableStateOf("rail") }
     var availableModes by remember { mutableStateOf(listOf<String>()) }
 
-    fun getModeForEvent(ev: StopEvent, routeType: Int, shortName: String?): String {
-        if (ev.chateau == "île~de~france~mobilités" && shortName != null) {
-            val upperName = shortName.uppercase().trim()
-            if (upperName in setOf("A", "B", "C", "D", "E")) {
-                return "rer"
+    val primaryChateauId by remember(dataMeta, screenData) {
+        derivedStateOf {
+            val fromStack = when (screenData) {
+                is CatenaryStackEnum.StopStack -> screenData.chateau_id
+                else -> null
             }
-            if (upperName in setOf("H", "J", "K", "L", "N", "P", "R", "U", "V")) {
-                return "transilien"
+            if (fromStack != null) {
+                fromStack
+            } else {
+                val chateaus = dataMeta?.routes?.keys ?: emptySet()
+                when {
+                    chateaus.contains("deutschland") -> "deutschland"
+                    chateaus.contains("schweiz") -> "schweiz"
+                    chateaus.contains("île~de~france~mobilités") -> "île~de~france~mobilités"
+                    else -> chateaus.firstOrNull() ?: "osm"
+                }
             }
         }
+    }
+
+    val trainCategories = remember {
+        mapOf(
+            "île~de~france~mobilités" to listOf("Grandes lignes", "RER", "Transilien"),
+            "deutschland" to listOf("S-Bahn", "ICE/TGV/RJX", "IC/EC", "IR", "RE/RB", "Other"),
+            "schweiz" to listOf("ICE/TGV/RJX", "EC/IC", "IR/PE", "RE", "S/SN/R", "ARZ/EXT")
+        )
+    }
+
+    val enabledCategories = remember { mutableStateMapOf<String, Boolean>() }
+
+    LaunchedEffect(primaryChateauId) {
+        enabledCategories.clear()
+        trainCategories[primaryChateauId]?.forEach { cat ->
+            enabledCategories[cat] = true
+        }
+    }
+
+    fun getTrainCategory(primaryChateau: String, shortName: String?, routeType: Int): String {
+        val sn = (shortName ?: "").uppercase().trim()
+        return when (primaryChateau) {
+            "île~de~france~mobilités" -> {
+                when {
+                    sn in setOf("A", "B", "C", "D", "E") -> "RER"
+                    sn in setOf("H", "J", "K", "L", "N", "P", "R", "U", "V") -> "Transilien"
+                    else -> "Grandes lignes"
+                }
+            }
+            "deutschland" -> {
+                when {
+                    sn.matches(Regex("^S\\d+.*")) -> "S-Bahn"
+                    sn.startsWith("ICE") || sn.startsWith("TGV") || sn.startsWith("RJX") -> "ICE/TGV/RJX"
+                    sn.startsWith("IC") || sn.startsWith("EC") -> "IC/EC"
+                    sn.startsWith("IR") -> "IR"
+                    sn.startsWith("RE") || sn.startsWith("RB") -> "RE/RB"
+                    else -> "Other"
+                }
+            }
+            "schweiz" -> {
+                when {
+                    sn.startsWith("ICE") || sn.startsWith("TGV") || sn.startsWith("RJX") -> "ICE/TGV/RJX"
+                    sn.startsWith("EC") || sn.startsWith("IC") -> "EC/IC"
+                    sn.startsWith("IR") || sn.startsWith("PE") -> "IR/PE"
+                    sn.startsWith("RE") -> "RE"
+                    sn.startsWith("S") || sn.startsWith("SN") || sn.startsWith("R") -> "S/SN/R"
+                    sn.startsWith("ARZ") || sn.startsWith("EXT") -> "ARZ/EXT"
+                    else -> "S/SN/R" // Fallback
+                }
+            }
+            else -> "Other"
+        }
+    }
+
+    fun getModeForEvent(ev: StopEvent, routeType: Int, shortName: String?): String {
         return when (routeType) {
             3, 11, 700 -> "bus"
             0, 1, 5, 7, 12, 900 -> "metro"
@@ -480,6 +543,17 @@ fun StopScreen(
                             val rType = routeDef?.route_type ?: event.route_type ?: 3
                             val sName = routeDef?.short_name
                             if (getModeForEvent(event, rType, sName) != activeTab) {
+                                return@filter false
+                            }
+                        }
+
+                        // Category filter for rail
+                        if (activeTab == "rail" && trainCategories.containsKey(primaryChateauId)) {
+                            val routeDef = dataMeta?.routes?.get(event.chateau)?.get(event.route_id)
+                            val rType = routeDef?.route_type ?: event.route_type ?: 3
+                            val sName = routeDef?.short_name
+                            val cat = getTrainCategory(primaryChateauId ?: "", sName, rType)
+                            if (enabledCategories[cat] == false) {
                                 return@filter false
                             }
                         }
@@ -789,6 +863,9 @@ fun StopScreen(
 
         if (totalAlerts > 0) keys.add(LIST_KEY_ALERTS_HEADER)
         if (availableModes.size > 1) keys.add(LIST_KEY_MODE_TABS)
+        if (activeTab == "rail" && trainCategories.containsKey(primaryChateauId)) {
+            keys.add("train_category_filters")
+        }
         keys.add(LIST_KEY_EARLIER_BUTTON)
 
         val showEmptyState = datesToEventsFiltered.isEmpty() && pages.none { it.loading }
@@ -1282,6 +1359,44 @@ fun StopScreen(
                                                 )
                                         )
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (activeTab == "rail" && trainCategories.containsKey(primaryChateauId)) {
+                    item(key = "train_category_filters") {
+                        androidx.compose.foundation.lazy.LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val cats = trainCategories[primaryChateauId] ?: emptyList()
+                            items(cats) { cat ->
+                                val active = enabledCategories[cat] == true
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = if (active) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
+                                            shape = RoundedCornerShape(50)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                            shape = RoundedCornerShape(50)
+                                        )
+                                        .clickable {
+                                            enabledCategories[cat] = !active
+                                        }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = cat,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                    )
                                 }
                             }
                         }
