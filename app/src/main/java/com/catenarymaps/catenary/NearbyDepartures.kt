@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
@@ -1468,6 +1469,7 @@ private fun RouteGroupCard(
                                                         ImageRequest.Builder(LocalContext.current)
                                                                 .data(iconUrl)
                                                                 .crossfade(true)
+                                                                .decoderFactory(SvgDecoder.Factory())
                                                                 .build(),
                                                 contentDescription = route.shortName,
                                                 modifier =
@@ -1502,30 +1504,28 @@ private fun RouteGroupCard(
                                 )
                                 Spacer(Modifier.width(4.dp))
                         } else {
+                                RouteBubble(
+                                        chateau = route.chateauId,
+                                        shortName = route.shortName,
+                                        longName = route.longName,
+                                        color = route.color,
+                                        textColor = route.textColor,
+                                        swiss = swiss
+                                )
+                        }
+
+                        val displayLongName = route.longName?.trim().orEmpty()
+                        if (displayLongName.isNotEmpty() && displayLongName != route.shortName?.trim().orEmpty()) {
                                 Text(
-                                        text = route.shortName?.trim().orEmpty(),
+                                        text = displayLongName,
                                         color =
-                                                if (darkMode)
-                                                        lightenColour(
-                                                                lineCol,
-                                                                minContrast = 6.0,
-                                                        )
+                                                if (darkMode) lightenColour(lineCol, minContrast = 4.5)
                                                 else darkenColour(lineCol, minContrast = 2.0),
-                                        fontWeight = FontWeight.SemiBold,
+                                        fontWeight = FontWeight.Medium,
                                         style = MaterialTheme.typography.titleMedium,
                                         textDecoration = TextDecoration.Underline
                                 )
                         }
-
-                        Text(
-                                text = route.longName?.trim().orEmpty(),
-                                color =
-                                        if (darkMode) lightenColour(lineCol, minContrast = 4.5)
-                                        else darkenColour(lineCol, minContrast = 2.0),
-                                fontWeight = FontWeight.Medium,
-                                style = MaterialTheme.typography.titleMedium,
-                                textDecoration = TextDecoration.Underline
-                        )
                 }
 
                 // Headsigns (No flattening needed for V3)
