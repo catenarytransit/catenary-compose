@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 
 @Composable
@@ -393,6 +394,7 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
                             ImageRequest.Builder(LocalContext.current)
                                     .data(iconUrl)
                                     .crossfade(true)
+                                    .decoderFactory(SvgDecoder.Factory())
                                     .build(),
                     contentDescription = route.shortName,
                     modifier = Modifier
