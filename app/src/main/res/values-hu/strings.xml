@@ -129,4 +129,10 @@
     <string name="single_trip_info_screen_connections">Csatlakozások</string>
     <string name="layers_toggle_button_content_description">Rétegek váltása</string>
     <string name="layers_close_button_content_description">Rétegek bezárása</string>
+
+    <string name="heading_metro">Metró</string>
+    <string name="heading_tram">Villamos</string>
+    <string name="heading_funicular">Sikló</string>
+    <string name="heading_monorail">Egysínű vasút</string>
+    <string name="heading_cable_tram">Felvonó</string>
 </resources>

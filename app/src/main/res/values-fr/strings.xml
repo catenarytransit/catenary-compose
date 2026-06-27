@@ -128,4 +128,10 @@
     <string name="single_trip_info_screen_connections">Correspondances</string>
     <string name="layers_toggle_button_content_description">Basculer les couches</string>
     <string name="layers_close_button_content_description">Fermer les couches</string>
+
+    <string name="heading_metro">Métro</string>
+    <string name="heading_tram">Tram</string>
+    <string name="heading_funicular">Funiculaire</string>
+    <string name="heading_monorail">Monorail</string>
+    <string name="heading_cable_tram">Tramway à câble</string>
 </resources>

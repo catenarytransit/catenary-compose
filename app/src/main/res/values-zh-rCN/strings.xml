@@ -130,4 +130,10 @@
     <string name="single_trip_info_screen_connections">换乘</string>
     <string name="layers_toggle_button_content_description">切换图层</string>
     <string name="layers_close_button_content_description">关闭图层</string>
+
+    <string name="heading_metro">地铁</string>
+    <string name="heading_tram">轻轨</string>
+    <string name="heading_funicular">缆车</string>
+    <string name="heading_monorail">单轨</string>
+    <string name="heading_cable_tram">有轨电车</string>
 </resources>

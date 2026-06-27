@@ -129,4 +129,10 @@
     <string name="single_trip_info_screen_connections">Yhteydet</string>
     <string name="layers_toggle_button_content_description">Vaihda karttatasoja</string>
     <string name="layers_close_button_content_description">Sulje tasot</string>
+
+    <string name="heading_metro">Metro</string>
+    <string name="heading_tram">Raitiovaunu</string>
+    <string name="heading_funicular">Funikulaari</string>
+    <string name="heading_monorail">Monorail</string>
+    <string name="heading_cable_tram">Köysirata</string>
 </resources>

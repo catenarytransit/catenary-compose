@@ -126,4 +126,10 @@
     <string name="single_trip_info_screen_countdown">Countdown</string>
     <string name="more_departures">Weitere Abfahrten</string>
     <string name="single_trip_info_screen_connections">Verbindungen</string>
+
+    <string name="heading_metro">U-Bahn</string>
+    <string name="heading_tram">Straßenbahn</string>
+    <string name="heading_funicular">Standseilbahn</string>
+    <string name="heading_monorail">Einschienenbahn</string>
+    <string name="heading_cable_tram">Kabelstraßenbahn</string>
 </resources>

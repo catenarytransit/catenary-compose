@@ -131,4 +131,10 @@
     <string name="single_trip_info_screen_connections">Пересадки</string>
     <string name="layers_toggle_button_content_description">Перемикати шари</string>
     <string name="layers_close_button_content_description">Закрити шари</string>
+
+    <string name="heading_metro">Метро</string>
+    <string name="heading_tram">Трамвай</string>
+    <string name="heading_funicular">Фунікулер</string>
+    <string name="heading_monorail">Монорейка</string>
+    <string name="heading_cable_tram">Канатна дорога</string>
 </resources>

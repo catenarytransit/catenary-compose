@@ -131,4 +131,10 @@
     <string name="single_trip_info_screen_connections">Spojení</string>
     <string name="layers_toggle_button_content_description">Přepnout vrstvy</string>
     <string name="layers_close_button_content_description">Zavřít vrstvy</string>
+
+    <string name="heading_metro">Metro</string>
+    <string name="heading_tram">Tramvaj</string>
+    <string name="heading_funicular">Lanová dráha</string>
+    <string name="heading_monorail">Jednokolejka</string>
+    <string name="heading_cable_tram">Lanovka</string>
 </resources>

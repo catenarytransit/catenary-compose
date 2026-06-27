@@ -131,4 +131,10 @@
     <string name="single_trip_info_screen_connections">Пересадки</string>
     <string name="layers_toggle_button_content_description">Переключить слои</string>
     <string name="layers_close_button_content_description">Закрыть слои</string>
+
+    <string name="heading_metro">Метро</string>
+    <string name="heading_tram">Трамвай</string>
+    <string name="heading_funicular">Фуникулёр</string>
+    <string name="heading_monorail">Монорельс</string>
+    <string name="heading_cable_tram">Канатный трамвай</string>
 </resources>

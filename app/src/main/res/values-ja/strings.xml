@@ -130,4 +130,10 @@
     <string name="single_trip_info_screen_connections">乗り換え</string>
     <string name="layers_toggle_button_content_description">レイヤーを切り替え</string>
     <string name="layers_close_button_content_description">レイヤーを閉じる</string>
+
+    <string name="heading_metro">地下鉄</string>
+    <string name="heading_tram">路面電車</string>
+    <string name="heading_funicular">ケーブルカー</string>
+    <string name="heading_monorail">モノレール</string>
+    <string name="heading_cable_tram">ケーブルカー</string>
 </resources>

@@ -129,4 +129,10 @@
     <string name="single_trip_info_screen_connections">Forbindelser</string>
     <string name="layers_toggle_button_content_description">Skift lag</string>
     <string name="layers_close_button_content_description">Luk lagene</string>
+
+    <string name="heading_metro">Metro</string>
+    <string name="heading_tram">Letbane</string>
+    <string name="heading_funicular">Kabelbane</string>
+    <string name="heading_monorail">Monorail</string>
+    <string name="heading_cable_tram">Svævebane</string>
 </resources>

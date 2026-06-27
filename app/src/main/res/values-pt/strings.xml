@@ -129,4 +129,10 @@
     <string name="single_trip_info_screen_connections">Conexões</string>
     <string name="layers_toggle_button_content_description">Alternar camadas</string>
     <string name="layers_close_button_content_description">Fechar camadas</string>
+
+    <string name="heading_metro">Metrô</string>
+    <string name="heading_tram">VLT</string>
+    <string name="heading_funicular">Funicular</string>
+    <string name="heading_monorail">Monotrilho</string>
+    <string name="heading_cable_tram">Bonde de cabo</string>
 </resources>

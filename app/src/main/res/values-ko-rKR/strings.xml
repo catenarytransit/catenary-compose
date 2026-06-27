@@ -130,4 +130,10 @@
     <string name="single_trip_info_screen_connections">환승</string>
     <string name="layers_toggle_button_content_description">레이어 전환</string>
     <string name="layers_close_button_content_description">레이어 닫기</string>
+
+    <string name="heading_metro">지하철</string>
+    <string name="heading_tram">트램</string>
+    <string name="heading_funicular">강삭철도</string>
+    <string name="heading_monorail">모노레일</string>
+    <string name="heading_cable_tram">케이블카</string>
 </resources>

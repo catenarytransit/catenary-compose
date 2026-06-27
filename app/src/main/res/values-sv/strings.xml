@@ -129,4 +129,10 @@
     <string name="single_trip_info_screen_connections">Anslutningar</string>
     <string name="layers_toggle_button_content_description">Växla lager</string>
     <string name="layers_close_button_content_description">Stäng lager</string>
+
+    <string name="heading_metro">Tunnelbana</string>
+    <string name="heading_tram">Spårvagn</string>
+    <string name="heading_funicular">Bergbana</string>
+    <string name="heading_monorail">Monorail</string>
+    <string name="heading_cable_tram">Linbana</string>
 </resources>

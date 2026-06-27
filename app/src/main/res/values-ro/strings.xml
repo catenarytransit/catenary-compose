@@ -130,4 +130,10 @@
     <string name="single_trip_info_screen_connections">Legături</string>
     <string name="layers_toggle_button_content_description">Comută straturile</string>
     <string name="layers_close_button_content_description">Închide straturile</string>
+
+    <string name="heading_metro">Metrou</string>
+    <string name="heading_tram">Tramvai</string>
+    <string name="heading_funicular">Funicular</string>
+    <string name="heading_monorail">Monorai</string>
+    <string name="heading_cable_tram">Telecabină</string>
 </resources>

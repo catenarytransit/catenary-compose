@@ -145,4 +145,10 @@
     <string name="more_departures">More departures</string>
     <string name="layers_toggle_button_content_description">Toggle layers</string>
     <string name="layers_close_button_content_description">Close layers</string>
+
+    <string name="heading_metro">Metro</string>
+    <string name="heading_tram">Tram</string>
+    <string name="heading_funicular">Funicular</string>
+    <string name="heading_monorail">Monorail</string>
+    <string name="heading_cable_tram">Cable Tram</string>
 </resources>
