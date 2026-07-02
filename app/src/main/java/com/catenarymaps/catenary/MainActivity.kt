@@ -381,6 +381,41 @@ object LayersPerCategory {
                 const val PointingShell = "metro-pointingshell"
         }
 
+        object TrajectoryBus {
+                const val Livedots = "traj-bus-livedots"
+                const val Labeldots = "traj-bus-labeldots"
+                const val Pointing = "traj-bus-pointing"
+                const val PointingShell = "traj-bus-pointingshell"
+        }
+
+        object TrajectoryOther {
+                const val Livedots = "traj-other-livedots"
+                const val Labeldots = "traj-other-labeldots"
+                const val Pointing = "traj-other-pointing"
+                const val PointingShell = "traj-other-pointingshell"
+        }
+
+        object TrajectoryIntercityRail {
+                const val Livedots = "traj-intercityrail-livedots"
+                const val Labeldots = "traj-intercityrail-labeldots"
+                const val Pointing = "traj-intercityrail-pointing"
+                const val PointingShell = "traj-intercityrail-pointingshell"
+        }
+
+        object TrajectoryTram {
+                const val Livedots = "traj-tram-livedots"
+                const val Labeldots = "traj-tram-labeldots"
+                const val Pointing = "traj-tram-pointing"
+                const val PointingShell = "traj-tram-pointingshell"
+        }
+
+        object TrajectoryMetro {
+                const val Livedots = "traj-metro-livedots"
+                const val Labeldots = "traj-metro-labeldots"
+                const val Pointing = "traj-metro-pointing"
+                const val PointingShell = "traj-metro-pointingshell"
+        }
+
         object Tram {
                 const val Shapes = "tram-shapes"
                 const val LabelShapes = "tram-labelshapes"
@@ -1499,8 +1534,12 @@ class MainActivity : ComponentActivity() {
                                                                 scope = rtScope,
                                                                 zoom = currentZoom,
                                                                 settings = currentSettings,
-                                                                visibleChateaus =
-                                                                        currentVisibleChateaus,
+                                                                camera = camera
+                                                        )
+                                                        TrajectoryManager.fetchTrajectories(
+                                                                scope = rtScope,
+                                                                zoom = currentZoom,
+                                                                settings = currentSettings,
                                                                 camera = camera
                                                         )
 
@@ -2206,7 +2245,12 @@ class MainActivity : ComponentActivity() {
                                                                 scope = rtScope,
                                                                 zoom = pos.zoom,
                                                                 settings = layerSettings.value,
-                                                                visibleChateaus = visibleChateaus,
+                                                                camera = camera
+                                                        )
+                                                        TrajectoryManager.fetchTrajectories(
+                                                                scope = rtScope,
+                                                                zoom = pos.zoom,
+                                                                settings = layerSettings.value,
                                                                 camera = camera
                                                         )
                                                         queryVisibleChateaus(
@@ -2426,10 +2470,14 @@ class MainActivity : ComponentActivity() {
                                                                                                 settings =
                                                                                                         layerSettings
                                                                                                                 .value,
-                                                                                                visibleChateaus =
-                                                                                                        visibleChateaus,
                                                                                                 camera =
                                                                                                         camera
+                                                                                        )
+                                                                                        TrajectoryManager.fetchTrajectories(
+                                                                                                scope = rtScope,
+                                                                                                zoom = pos.zoom,
+                                                                                                settings = layerSettings.value,
+                                                                                                camera = camera
                                                                                         )
                                                                                         lastFetchedAt =
                                                                                                 now
@@ -2538,6 +2586,30 @@ class MainActivity : ComponentActivity() {
                                                                         )
                                                                 )
                                                         }
+
+                                                val trajBusDotsSrc: MutableState<GeoJsonSource> = remember {
+                                                        mutableStateOf(GeoJsonSource("trajectory_buses", GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())), GeoJsonOptions()))
+                                                }
+                                                val trajMetroDotsSrc: MutableState<GeoJsonSource> = remember {
+                                                        mutableStateOf(GeoJsonSource("trajectory_localrail", GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())), GeoJsonOptions()))
+                                                }
+                                                val trajRailDotsSrc: MutableState<GeoJsonSource> = remember {
+                                                        mutableStateOf(GeoJsonSource("trajectory_intercityrail", GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())), GeoJsonOptions()))
+                                                }
+                                                val trajOtherDotsSrc: MutableState<GeoJsonSource> = remember {
+                                                        mutableStateOf(GeoJsonSource("trajectory_other", GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())), GeoJsonOptions()))
+                                                }
+
+                                                LaunchedEffect(Unit) {
+                                                        TrajectoryManager.startTrajectoryManager(
+                                                                scope = this,
+                                                                busDotsSrc = trajBusDotsSrc,
+                                                                metroDotsSrc = trajMetroDotsSrc,
+                                                                railDotsSrc = trajRailDotsSrc,
+                                                                otherDotsSrc = trajOtherDotsSrc,
+                                                                isDark = isDark
+                                                        )
+                                                }
 
                                                 val transitShapeSource:
                                                         MutableState<GeoJsonSource> =
@@ -2720,20 +2792,6 @@ class MainActivity : ComponentActivity() {
                                                         }
                                                 }
 
-                                                // Source + layers
-                                                val chateausSource =
-                                                        rememberGeoJsonSource(
-                                                                data =
-                                                                        GeoJsonData.Uri(
-                                                                                "https://birch.catenarymaps.org/getchateaus"
-                                                                        )
-                                                        )
-
-                                                FillLayer(
-                                                        id = "chateaus_calc",
-                                                        source = chateausSource,
-                                                        opacity = const(0.0f)
-                                                )
 
                                                 AddShapes(
                                                         layerSettings = layerSettings.value,
@@ -3382,6 +3440,58 @@ class MainActivity : ComponentActivity() {
                                                         usUnits = usUnits,
                                                         isDark = isDark,
                                                         layerIdPrefix = LayersPerCategory.Other,
+                                                        railInFrame = railinframe
+                                                )
+
+                                                LiveDotLayers(
+                                                        category = "bus",
+                                                        source = trajBusDotsSrc.value,
+                                                        settings = (layerSettings.value["bus"] as LayerCategorySettings).labelrealtimedots,
+                                                        isVisible = (layerSettings.value["bus"] as LayerCategorySettings).visiblerealtimedots,
+                                                        baseFilter = all(applyFilterToLiveDots.value),
+                                                        bearingFilter = all(applyFilterToLiveDots.value, get("has_bearing").cast<BooleanValue>().eq(const(true))),
+                                                        usUnits = usUnits,
+                                                        isDark = isDark,
+                                                        layerIdPrefix = LayersPerCategory.TrajectoryBus,
+                                                        railInFrame = railinframe
+                                                )
+
+                                                LiveDotLayers(
+                                                        category = "localrail",
+                                                        source = trajMetroDotsSrc.value,
+                                                        settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
+                                                        isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
+                                                        baseFilter = all(applyFilterToLiveDots.value),
+                                                        bearingFilter = all(applyFilterToLiveDots.value, get("has_bearing").cast<BooleanValue>().eq(const(true))),
+                                                        usUnits = usUnits,
+                                                        isDark = isDark,
+                                                        layerIdPrefix = LayersPerCategory.TrajectoryMetro,
+                                                        railInFrame = railinframe
+                                                )
+
+                                                LiveDotLayers(
+                                                        category = "intercityrail",
+                                                        source = trajRailDotsSrc.value,
+                                                        settings = (layerSettings.value["intercityrail"] as LayerCategorySettings).labelrealtimedots,
+                                                        isVisible = (layerSettings.value["intercityrail"] as LayerCategorySettings).visiblerealtimedots,
+                                                        baseFilter = all(applyFilterToLiveDots.value),
+                                                        bearingFilter = all(applyFilterToLiveDots.value, get("has_bearing").cast<BooleanValue>().eq(const(true))),
+                                                        usUnits = usUnits,
+                                                        isDark = isDark,
+                                                        layerIdPrefix = LayersPerCategory.TrajectoryIntercityRail,
+                                                        railInFrame = railinframe
+                                                )
+
+                                                LiveDotLayers(
+                                                        category = "other",
+                                                        source = trajOtherDotsSrc.value,
+                                                        settings = (layerSettings.value["other"] as LayerCategorySettings).labelrealtimedots,
+                                                        isVisible = (layerSettings.value["other"] as LayerCategorySettings).visiblerealtimedots,
+                                                        baseFilter = all(applyFilterToLiveDots.value),
+                                                        bearingFilter = all(applyFilterToLiveDots.value, get("has_bearing").cast<BooleanValue>().eq(const(true))),
+                                                        usUnits = usUnits,
+                                                        isDark = isDark,
+                                                        layerIdPrefix = LayersPerCategory.TrajectoryOther,
                                                         railInFrame = railinframe
                                                 )
 

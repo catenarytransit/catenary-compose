@@ -1093,7 +1093,7 @@ private fun StationGroupCard(
 
                                         StationScreenTrainRowCompact(
                                                 event = event,
-                                                routeInfo = stopR       outeInfo,
+                                                routeInfo = stopRouteInfo,
                                                 agencies = null,
                                                 currentTime = realtimeNowSec,
                                                 zoneId =

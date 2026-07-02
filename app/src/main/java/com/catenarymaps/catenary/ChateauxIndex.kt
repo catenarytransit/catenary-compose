@@ -80,25 +80,4 @@ suspend fun buildChateauxIndexFromJson(
     val chateaux = parseChateaux(json)
     return chateauxToRTree(chateaux, maxEntries)
 }
-
-// Network + build
-@OptIn(ExperimentalSerializationApi::class)
-suspend fun fetchAndBuildChateauxIndex(
-    client: HttpClient,
-    maxEntries: Int = 8
-): Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? = withContext(Dispatchers.IO) {
-    return@withContext try {
-        val jsonString: String = client
-            .get("https://birch.catenarymaps.org/getchateaus")
-            .body()
-
-        val t0 = System.currentTimeMillis()
-        val result = buildChateauxIndexFromJson(jsonString, maxEntries) // (rtree, features)
-        val t1 = System.currentTimeMillis()
-        Log.d("ChateauxIndex", "Built chateaux index in ${t1 - t0} ms")
-        result
-    } catch (e: Exception) {
-        Log.e("ChateauxIndex", "Failed to build index", e)
-        null
-    }
-}
+

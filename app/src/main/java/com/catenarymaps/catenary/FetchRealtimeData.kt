@@ -131,7 +131,6 @@ fun sendMapUpdate(
         scope: CoroutineScope,
         zoom: Double,
         settings: AllLayerSettings,
-        visibleChateaus: List<String>,
         camera: CameraState,
 ) {
     scope.launch {
@@ -152,7 +151,7 @@ fun sendMapUpdate(
             categoriesToRequest.add("other")
         }
 
-        if (categoriesToRequest.isEmpty() || visibleChateaus.isEmpty()) {
+        if (categoriesToRequest.isEmpty()) {
             return@launch
         }
 
@@ -160,7 +159,6 @@ fun sendMapUpdate(
 
         SpruceWebSocket.updateMap(
                 categories = categoriesToRequest,
-                chateaus = visibleChateaus,
                 boundsInput = boundsInput
         )
     }

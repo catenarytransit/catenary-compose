@@ -24,8 +24,7 @@ private const val TAG = "SpruceWebSocket"
 
 @Serializable
 data class MapViewportUpdate(
-        @EncodeDefault val type: String = "update_map",
-        val chateaus: List<String>,
+        @EncodeDefault val type: String = "subscribe_map_v2",
         val categories: List<String>,
         val bounds_input: BoundsInput
 )
@@ -53,13 +52,32 @@ data class UnsubscribeTrip(
 )
 
 @Serializable
+data class SubscribeTrajectories(
+        @EncodeDefault val type: String = "subscribe_trajectories",
+        val bbox: List<Double>,
+        val zoom: Int,
+        val modes: List<String>,
+        val client_reference: String = "trajectories_layer"
+)
+
+@Serializable
+data class UnsubscribeTrajectories(
+        @EncodeDefault val type: String = "unsubscribe_trajectories"
+)
+
+@Serializable
 data class SpruceCommonMessage(
         val type: String,
         val data: JsonElement? = null, // For initial_trip and update_trip
         val chateaus: Map<String, EachChateauResponseV2>? =
                 null, // For map_update (top level in legacy/TS sometimes?)
         val map_update: BulkRealtimeResponseV2? = null, // In case it's wrapped
-        val message: String? = null // For error
+        val message: String? = null, // For error
+        val content: JsonElement? = null, // For buffer (trajectories)
+        val timestamp: Long? = null,
+        val chateau: String? = null,
+        val total_chunks: Int? = null,
+        val chunk_index: Int? = null
 )
 
 object SpruceWebSocket {
@@ -84,9 +102,13 @@ object SpruceWebSocket {
     private val _spruceError = MutableStateFlow<String?>(null)
     val spruceError: StateFlow<String?> = _spruceError.asStateFlow()
 
+    private val _spruceTrajectoryData = MutableStateFlow<SpruceCommonMessage?>(null)
+    val spruceTrajectoryData: StateFlow<SpruceCommonMessage?> = _spruceTrajectoryData.asStateFlow()
+
     private var activeMapParams: MapViewportUpdate? = null
     // Keep track of active trip subscription if we implement trip stuff later
     private var activeTripParams: SubscribeTrip? = null
+    private var activeTrajectoryParams: SubscribeTrajectories? = null
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -122,6 +144,11 @@ object SpruceWebSocket {
                                     Log.d(TAG, "Resending active trip params")
                                     sendTripSubscription(it)
                                 }
+
+                                activeTrajectoryParams?.let {
+                                    Log.d(TAG, "Resending active trajectory params")
+                                    sendTrajectorySubscription(it)
+                                }
                             }
 
                             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -130,6 +157,7 @@ object SpruceWebSocket {
                                     when (msg.type) {
                                         "initial_trip" -> _spruceTripData.value = msg.data
                                         "update_trip" -> _spruceUpdateData.value = msg.data
+                                        "buffer" -> _spruceTrajectoryData.value = msg
                                         "map_update" -> {
                                             // Handle various potential payload locations
                                             if (msg.map_update != null) {
@@ -180,16 +208,35 @@ object SpruceWebSocket {
                 )
     }
 
-    fun updateMap(categories: List<String>, chateaus: List<String>, boundsInput: BoundsInput) {
+    fun updateMap(categories: List<String>, boundsInput: BoundsInput) {
         ensureConnection()
         val params =
                 MapViewportUpdate(
-                        chateaus = chateaus,
                         categories = categories,
                         bounds_input = boundsInput
                 )
         activeMapParams = params
         sendMapUpdate(params)
+    }
+
+    fun subscribeTrajectories(bbox: List<Double>, zoom: Int, modes: List<String>) {
+        ensureConnection()
+        val params = SubscribeTrajectories(bbox = bbox, zoom = zoom, modes = modes)
+        activeTrajectoryParams = params
+        sendTrajectorySubscription(params)
+    }
+
+    fun unsubscribeTrajectories() {
+        activeTrajectoryParams = null
+        if (_spruceStatus.value == "connected") {
+            try {
+                val msg = UnsubscribeTrajectories()
+                val text = json.encodeToString(msg)
+                webSocket?.send(text)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error sending unsubscribe trajectories", e)
+            }
+        }
     }
 
     fun subscribeTrip(
@@ -254,6 +301,17 @@ object SpruceWebSocket {
                 webSocket?.send(text)
             } catch (e: Exception) {
                 Log.e(TAG, "Error sending trip subscription", e)
+            }
+        }
+    }
+
+    private fun sendTrajectorySubscription(params: SubscribeTrajectories) {
+        if (_spruceStatus.value == "connected") {
+            try {
+                val text = json.encodeToString(params)
+                webSocket?.send(text)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error sending trajectory subscription", e)
             }
         }
     }

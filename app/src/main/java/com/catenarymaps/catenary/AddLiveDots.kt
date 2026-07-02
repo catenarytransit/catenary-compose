@@ -128,11 +128,25 @@ fun LiveDotLayers(
             LayersPerCategory.Bus.PointingShell
         )
 
+        is LayersPerCategory.TrajectoryBus -> listOf(
+            LayersPerCategory.TrajectoryBus.Livedots,
+            LayersPerCategory.TrajectoryBus.Labeldots,
+            LayersPerCategory.TrajectoryBus.Pointing,
+            LayersPerCategory.TrajectoryBus.PointingShell
+        )
+
         is LayersPerCategory.Metro -> listOf(
             LayersPerCategory.Metro.Livedots,
             LayersPerCategory.Metro.Labeldots,
             LayersPerCategory.Metro.Pointing,
             LayersPerCategory.Metro.PointingShell
+        )
+
+        is LayersPerCategory.TrajectoryMetro -> listOf(
+            LayersPerCategory.TrajectoryMetro.Livedots,
+            LayersPerCategory.TrajectoryMetro.Labeldots,
+            LayersPerCategory.TrajectoryMetro.Pointing,
+            LayersPerCategory.TrajectoryMetro.PointingShell
         )
 
         is LayersPerCategory.Tram -> listOf(
@@ -142,6 +156,13 @@ fun LiveDotLayers(
             LayersPerCategory.Tram.PointingShell
         )
 
+        is LayersPerCategory.TrajectoryTram -> listOf(
+            LayersPerCategory.TrajectoryTram.Livedots,
+            LayersPerCategory.TrajectoryTram.Labeldots,
+            LayersPerCategory.TrajectoryTram.Pointing,
+            LayersPerCategory.TrajectoryTram.PointingShell
+        )
+
         is LayersPerCategory.IntercityRail -> listOf(
             LayersPerCategory.IntercityRail.Livedots,
             LayersPerCategory.IntercityRail.Labeldots,
@@ -149,11 +170,25 @@ fun LiveDotLayers(
             LayersPerCategory.IntercityRail.PointingShell
         )
 
+        is LayersPerCategory.TrajectoryIntercityRail -> listOf(
+            LayersPerCategory.TrajectoryIntercityRail.Livedots,
+            LayersPerCategory.TrajectoryIntercityRail.Labeldots,
+            LayersPerCategory.TrajectoryIntercityRail.Pointing,
+            LayersPerCategory.TrajectoryIntercityRail.PointingShell
+        )
+
         is LayersPerCategory.Other -> listOf(
             LayersPerCategory.Other.Livedots,
             LayersPerCategory.Other.Labeldots,
             LayersPerCategory.Other.Pointing,
             LayersPerCategory.Other.PointingShell
+        )
+
+        is LayersPerCategory.TrajectoryOther -> listOf(
+            LayersPerCategory.TrajectoryOther.Livedots,
+            LayersPerCategory.TrajectoryOther.Labeldots,
+            LayersPerCategory.TrajectoryOther.Pointing,
+            LayersPerCategory.TrajectoryOther.PointingShell
         )
 
         else -> return // Should not happen
