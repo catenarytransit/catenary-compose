@@ -1876,14 +1876,24 @@ class MainActivity : ComponentActivity() {
                                                 setOf(
                                                         LayersPerCategory.Bus.Livedots,
                                                         LayersPerCategory.Bus.Labeldots,
+                                                        LayersPerCategory.TrajectoryBus.Livedots,
+                                                        LayersPerCategory.TrajectoryBus.Labeldots,
                                                         LayersPerCategory.Other.Livedots,
                                                         LayersPerCategory.Other.Labeldots,
+                                                        LayersPerCategory.TrajectoryOther.Livedots,
+                                                        LayersPerCategory.TrajectoryOther.Labeldots,
                                                         LayersPerCategory.IntercityRail.Livedots,
                                                         LayersPerCategory.IntercityRail.Labeldots,
+                                                        LayersPerCategory.TrajectoryIntercityRail.Livedots,
+                                                        LayersPerCategory.TrajectoryIntercityRail.Labeldots,
                                                         LayersPerCategory.Metro.Livedots,
                                                         LayersPerCategory.Metro.Labeldots,
+                                                        LayersPerCategory.TrajectoryMetro.Livedots,
+                                                        LayersPerCategory.TrajectoryMetro.Labeldots,
                                                         LayersPerCategory.Tram.Livedots,
                                                         LayersPerCategory.Tram.Labeldots,
+                                                        LayersPerCategory.TrajectoryTram.Livedots,
+                                                        LayersPerCategory.TrajectoryTram.Labeldots,
                                                         "major-livedots-context-dot",
                                                         "major-livedots-context-label",
                                                 )
@@ -3376,15 +3386,28 @@ class MainActivity : ComponentActivity() {
                                                 )
 
                                                 LiveDotLayers(
-                                                        category = "localrail",
+                                                        category = "metro",
                                                         source = trajMetroDotsSrc.value,
                                                         settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
                                                         isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
-                                                        baseFilter = all(applyFilterToLiveDots.value),
-                                                        bearingFilter = all(applyFilterToLiveDots.value, get("has_bearing").cast<BooleanValue>().eq(const(true))),
+                                                        baseFilter = all(applyFilterToLiveDots.value, any(rtEq(1), rtEq(12))),
+                                                        bearingFilter = all(applyFilterToLiveDots.value, any(rtEq(1), rtEq(12)), get("has_bearing").cast<BooleanValue>().eq(const(true))),
                                                         usUnits = usUnits,
                                                         isDark = isDark,
                                                         layerIdPrefix = LayersPerCategory.TrajectoryMetro,
+                                                        railInFrame = railinframe
+                                                )
+
+                                                LiveDotLayers(
+                                                        category = "tram",
+                                                        source = trajMetroDotsSrc.value,
+                                                        settings = (layerSettings.value["localrail"] as LayerCategorySettings).labelrealtimedots,
+                                                        isVisible = (layerSettings.value["localrail"] as LayerCategorySettings).visiblerealtimedots,
+                                                        baseFilter = all(applyFilterToLiveDots.value, any(rtEq(0), rtEq(5))),
+                                                        bearingFilter = all(applyFilterToLiveDots.value, any(rtEq(0), rtEq(5)), get("has_bearing").cast<BooleanValue>().eq(const(true))),
+                                                        usUnits = usUnits,
+                                                        isDark = isDark,
+                                                        layerIdPrefix = LayersPerCategory.TrajectoryTram,
                                                         railInFrame = railinframe
                                                 )
 
