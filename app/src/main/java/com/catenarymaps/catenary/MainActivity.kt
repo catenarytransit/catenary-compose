@@ -591,52 +591,8 @@ private suspend fun fetchRailCountInBox(bounds: BoundingBox): RailCountResponse?
 private fun queryVisibleChateaus(
         scope: CoroutineScope,
         camera: CameraState,
-        mapSize: IntSize,
-        rtree: RTree<Int>?,
-        features: List<Feature<Geometry?, ChateauProps>>
+        mapSize: IntSize
 ) {
-        scope.launch(kotlinx.coroutines.Dispatchers.Main) {
-                val projection = camera.projection ?: return@launch
-                if (mapSize.width == 0 || mapSize.height == 0) return@launch
-
-                val density = Resources.getSystem().displayMetrics.density
-                val rect =
-                        DpRect(
-                                left = 0.dp,
-                                top = 0.dp,
-                                right = (mapSize.width / density).dp,
-                                bottom = (mapSize.height / density).dp
-                        )
-
-                val startTime = SystemClock.uptimeMillis()
-                // val featureschateauquery = projection.queryRenderedFeatures(
-                //   rect = rect, layerIds = setOf("chateaus_calc")
-                // )
-
-                val queryTime = SystemClock.uptimeMillis() - startTime
-
-                var rtreeQueryTime = 0L
-                val featuresFromRtree =
-                        if (rtree != null) {
-                                val boundingBox = projection.queryVisibleBoundingBox()
-                                val startTimeRtree: Long
-                                val result =
-                                        withContext(Dispatchers.Default) {
-                                                startTimeRtree = SystemClock.uptimeMillis()
-                                                lookupChateaux(rtree, features, boundingBox)
-                                        }
-                                rtreeQueryTime = SystemClock.uptimeMillis() - startTimeRtree
-                                result
-                        } else {
-                                emptyList()
-                        }
-
-                val rtreeNames = featuresFromRtree.map { it.properties.chateau }.distinct().sorted()
-
-                visibleChateaus = rtreeNames
-
-                Log.d(TAG, "Visible chateaus query ${rtreeNames.joinToString(limit = 100)}")
-        }
 }
 
 @Serializable
@@ -993,8 +949,6 @@ class MainActivity : ComponentActivity() {
         private val http by lazy { HttpClient(CIO) }
 
         // Current, in-memory data
-        private var features: List<Feature<Geometry?, ChateauProps>> = emptyList()
-        private var rtree: RTree<Int>? = null
 
         @OptIn(ExperimentalFoundationApi::class)
         private val ktorHttpClient =
@@ -1002,18 +956,7 @@ class MainActivity : ComponentActivity() {
                         install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
                 }
 
-        private fun refreshChateauxIndex() {
-                lifecycleScope.launch {
-                        val fresh = recomputePreferNetworkOrCached()
-                        if (fresh != null) {
-                                val (freshTree, freshFeatures, rawGeojson) = fresh
-                                rtree = freshTree
-                                features = freshFeatures
-                                Log.d("Chateaux", "Recomputed index: ${features.size} features")
-                                saveToCache(freshTree, rawGeojson)
-                        }
-                }
-        }
+        private fun refreshChateauxIndex() {}
 
         override fun onRestart() {
                 super.onRestart()
@@ -1026,22 +969,7 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge()
                 SpruceWebSocket.init()
 
-                lifecycleScope.launch {
-                        // 1) Try warm start from cache.
-                        val cached = loadFromCache()
-                        if (cached != null) {
-                                val (cachedTree, cachedFeatures) = cached
-                                rtree = cachedTree
-                                features = cachedFeatures
-                                Log.d("Chateaux", "Loaded cache: ${features.size} features")
-                                // TODO: update any UI that benefits from a warm start here
-                        } else {
-                                Log.d("Chateaux", "No cache found")
-                        }
 
-                        // 2) Recompute anyway.
-                        refreshChateauxIndex()
-                }
 
                 val action: String? = intent?.action
                 val initial_uri: Uri? = intent?.data
@@ -1290,9 +1218,6 @@ class MainActivity : ComponentActivity() {
                         val searchViewModel: SearchViewModel = viewModel()
 
                         // State to hold the chateaux R-tree index
-                        var chateauxIndex:
-                                Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? =
-                                null
 
                         val json = Json { ignoreUnknownKeys = true }
                         val stackSaver =
@@ -2224,9 +2149,7 @@ class MainActivity : ComponentActivity() {
                                                         queryVisibleChateaus(
                                                                 scope,
                                                                 camera,
-                                                                mapSize,
-                                                                rtree,
-                                                                features
+                                                                mapSize
                                                         )
                                                         val pos = camera.position
 
@@ -2256,9 +2179,7 @@ class MainActivity : ComponentActivity() {
                                                         queryVisibleChateaus(
                                                                 scope,
                                                                 camera,
-                                                                mapSize,
-                                                                rtree,
-                                                                features
+                                                                mapSize
                                                         )
                                                         queryAreAnyRailFeaturesVisible(
                                                                 camera,
@@ -2415,9 +2336,7 @@ class MainActivity : ComponentActivity() {
                                                                                 queryVisibleChateaus(
                                                                                         scope,
                                                                                         camera,
-                                                                                        mapSize,
-                                                                                        rtree,
-                                                                                        features
+                                                                                        mapSize
                                                                                 )
 
                                                                                 if (railinframe) {
@@ -5561,84 +5480,6 @@ class MainActivity : ComponentActivity() {
                         }
                 }
         }
-
-        // --- recompute strategy: try network; if that fails but we have cached GeoJSON, recompute
-        // from
-        // that ---
-
-        private suspend fun recomputePreferNetworkOrCached():
-                Triple<RTree<Int>, List<Feature<Geometry?, ChateauProps>>, String>? {
-                // try network
-                fetchAndBuildFromNetwork()?.let {
-                        return it
-                }
-
-                // fallback: if cached raw geojson exists, recompute rtree from it
-                val cachedGeo = readTextFile(geojsonCacheName)
-                if (cachedGeo != null) {
-                        val fc = parseChateaux(cachedGeo)
-                        val (tree, list) = buildRTreeIds(fc, maxEntries)
-                        return Triple(tree, list, cachedGeo)
-                }
-                return null
-        }
-
-        // --- cache I/O ---
-
-        private suspend fun saveToCache(tree: RTree<Int>, rawGeojson: String) =
-                withContext(Dispatchers.IO) {
-                        // Save RTree<Int> as JSON
-                        val rtreeJson = json.encodeToStringRTree(tree)
-                        writeTextFile(rtreeCacheName, rtreeJson)
-                        writeTextFile(geojsonCacheName, rawGeojson)
-                        Log.d("Chateaux", "Cache saved (${rtreeCacheName}, ${geojsonCacheName})")
-                }
-
-        private suspend fun loadFromCache():
-                Pair<RTree<Int>, List<Feature<Geometry?, ChateauProps>>>? =
-                withContext(Dispatchers.IO) {
-                        val rtreeJson = readTextFile(rtreeCacheName) ?: return@withContext null
-                        val rawGeo = readTextFile(geojsonCacheName) ?: return@withContext null
-
-                        // Rebuild features from raw GeoJSON (keeps cache format simple + stable)
-                        val fc: FeatureCollection<Geometry?, ChateauProps> = parseChateaux(rawGeo)
-
-                        // Decode RTree<Int>
-                        val tree: RTree<Int> =
-                                try {
-                                        json.decodeFromStringRTree<Int>(rtreeJson)
-                                } catch (e: Exception) {
-                                        Log.w(
-                                                "Chateaux",
-                                                "Failed to decode cached RTree; will be recomputed",
-                                                e
-                                        )
-                                        // If RTree decoding fails, rebuild it from the cached
-                                        // GeoJSON so we
-                                        // still warm-start.
-                                        val (rebuilt, _) = buildRTreeIds(fc, maxEntries)
-                                        rebuilt
-                                }
-
-                        val list = fc.features as List<Feature<Geometry?, ChateauProps>>
-                        return@withContext tree to list
-                }
-
-        // --- network build (fresh) ---
-
-        private suspend fun fetchAndBuildFromNetwork():
-                Triple<RTree<Int>, List<Feature<Geometry?, ChateauProps>>, String>? =
-                withContext(Dispatchers.IO) {
-                        try {
-                                val raw = http.get(chateauxUrl).body<String>()
-                                val fc = parseChateaux(raw)
-                                val (tree, list) = buildRTreeIds(fc, maxEntries)
-                                Triple(tree, list, raw)
-                        } catch (e: Exception) {
-                                Log.w("Chateaux", "Network fetch/build failed", e)
-                                null
-                        }
-                }
 
         // --- tiny file helpers ---
 

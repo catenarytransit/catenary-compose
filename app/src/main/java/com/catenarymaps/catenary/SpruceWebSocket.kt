@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -19,6 +20,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import java.util.concurrent.Executors
 
 private const val TAG = "SpruceWebSocket"
 
@@ -57,7 +59,8 @@ data class SubscribeTrajectories(
         val bbox: List<Double>,
         val zoom: Int,
         val modes: List<String>,
-        val client_reference: String = "trajectories_layer"
+        //val precision: Int? = null,
+        @EncodeDefault val client_reference: String = "trajectories_layer"
 )
 
 @Serializable
@@ -73,7 +76,7 @@ data class SpruceCommonMessage(
                 null, // For map_update (top level in legacy/TS sometimes?)
         val map_update: BulkRealtimeResponseV2? = null, // In case it's wrapped
         val message: String? = null, // For error
-        val content: JsonElement? = null, // For buffer (trajectories)
+        val content: List<TrajectoryWrapper>? = null, // For buffer (trajectories)
         val timestamp: Long? = null,
         val chateau: String? = null,
         val total_chunks: Int? = null,
@@ -81,10 +84,14 @@ data class SpruceCommonMessage(
 )
 
 object SpruceWebSocket {
-    private val client = OkHttpClient.Builder().readTimeout(0, TimeUnit.MILLISECONDS).build()
+    private val client = OkHttpClient.Builder()
+        .readTimeout(0, TimeUnit.MILLISECONDS)
+        .pingInterval(15, TimeUnit.SECONDS)
+        .build()
 
     private var webSocket: WebSocket? = null
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val scope = CoroutineScope(dispatcher)
 
     // State Flows
     private val _spruceStatus = MutableStateFlow("disconnected")
@@ -152,30 +159,35 @@ object SpruceWebSocket {
                             }
 
                             override fun onMessage(webSocket: WebSocket, text: String) {
-                                try {
-                                    val msg = json.decodeFromString<SpruceCommonMessage>(text)
-                                    when (msg.type) {
-                                        "initial_trip" -> _spruceTripData.value = msg.data
-                                        "update_trip" -> _spruceUpdateData.value = msg.data
-                                        "buffer" -> _spruceTrajectoryData.value = msg
-                                        "map_update" -> {
-                                            // Handle various potential payload locations
-                                            if (msg.map_update != null) {
-                                                _spruceMapData.value = msg.map_update
-                                            } else if (msg.chateaus != null) {
-                                                _spruceMapData.value =
-                                                        BulkRealtimeResponseV2(
-                                                                chateaus = msg.chateaus
-                                                        )
+                                scope.launch {
+                                    try {
+                                        val msg = json.decodeFromString<SpruceCommonMessage>(text)
+                                        when (msg.type) {
+                                            "initial_trip" -> _spruceTripData.value = msg.data
+                                            "update_trip" -> _spruceUpdateData.value = msg.data
+                                            "buffer" -> {
+                                                Log.d(TAG, "Spruce WS Trajectory buffer received, text size: ${text.length}")
+                                                _spruceTrajectoryData.value = msg
+                                            }
+                                            "map_update" -> {
+                                                // Handle various potential payload locations
+                                                if (msg.map_update != null) {
+                                                    _spruceMapData.value = msg.map_update
+                                                } else if (msg.chateaus != null) {
+                                                    _spruceMapData.value =
+                                                            BulkRealtimeResponseV2(
+                                                                    chateaus = msg.chateaus
+                                                            )
+                                                }
+                                            }
+                                            "error" -> {
+                                                _spruceError.value = msg.message
+                                                Log.e(TAG, "Spruce WS Error: ${msg.message}")
                                             }
                                         }
-                                        "error" -> {
-                                            _spruceError.value = msg.message
-                                            Log.e(TAG, "Spruce WS Error: ${msg.message}")
-                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Error parsing Spruce WS message", e)
                                     }
-                                } catch (e: Exception) {
-                                    Log.e(TAG, "Error parsing Spruce WS message", e)
                                 }
                             }
 

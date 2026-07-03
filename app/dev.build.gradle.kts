@@ -25,8 +25,8 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 279
-        versionName = "2.0.177"
+        versionCode = 278
+        versionName = "2.0.176"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -83,8 +83,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.android.sdk.v1201)
-    implementation(libs.maplibre.compose)
+    implementation(libs.maplibre.android.opengl)
+    implementation(libs.maplibre.compose.get().toString()) {
+        exclude(group = "org.maplibre.gl", module = "android-sdk")
+    }
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.okhttp)

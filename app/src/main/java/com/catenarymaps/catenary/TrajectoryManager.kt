@@ -6,11 +6,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.GeoJsonSource
@@ -18,10 +23,7 @@ import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
+import java.time.Instant
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -38,7 +40,7 @@ data class TrajectoryStop(
 
 @Serializable
 data class TrajectorySegment(
-    val coordinates: List<List<Double>>? = null
+    val coordinates: Array<DoubleArray>? = null
 )
 
 @Serializable
@@ -68,7 +70,9 @@ data class TrajectoryWrapper(
 
 data class ActiveTrajectory(
     val content: List<TrajectoryWrapper>,
-    val timestamp: Long
+    val timestamp: Long,
+    val parsedTimes: Map<String, Pair<Long, Long>> = emptyMap(),
+    val precomputedProperties: Map<String, JsonObject> = emptyMap()
 )
 
 object TrajectoryManager {
@@ -82,9 +86,6 @@ object TrajectoryManager {
     private val trajectoryTimestamps = mutableMapOf<String, Long>()
 
     private val json = Json { ignoreUnknownKeys = true }
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-    }
 
     private fun calculateBearing(lon1: Double, lat1: Double, lon2: Double, lat2: Double): Double {
         val dLon = Math.toRadians(lon2 - lon1)
@@ -100,11 +101,11 @@ object TrajectoryManager {
 
     data class InterpolationResult(val coords: List<Double>, val bearing: Double)
 
-    private fun interpolatePositionAndBearing(coordinates: List<List<Double>>, progress: Double): InterpolationResult? {
+    private fun interpolatePositionAndBearing(coordinates: List<DoubleArray>, progress: Double): InterpolationResult? {
         if (coordinates.isEmpty()) return null
-        if (coordinates.size == 1) return InterpolationResult(coordinates[0], 0.0)
+        if (coordinates.size == 1) return InterpolationResult(listOf(coordinates[0][0], coordinates[0][1]), 0.0)
 
-        data class SegmentInfo(val length: Double, val start: List<Double>, val end: List<Double>)
+        data class SegmentInfo(val length: Double, val start: DoubleArray, val end: DoubleArray)
 
         val segments = mutableListOf<SegmentInfo>()
         var totalLength = 0.0
@@ -120,7 +121,7 @@ object TrajectoryManager {
         }
 
         if (totalLength == 0.0) {
-            return InterpolationResult(coordinates[0], 0.0)
+            return InterpolationResult(listOf(coordinates[0][0], coordinates[0][1]), 0.0)
         }
 
         val targetLength = progress * totalLength
@@ -139,7 +140,7 @@ object TrajectoryManager {
 
         val lastSegment = segments.last()
         val bearing = calculateBearing(lastSegment.start[0], lastSegment.start[1], lastSegment.end[0], lastSegment.end[1])
-        return InterpolationResult(coordinates.last(), bearing)
+        return InterpolationResult(listOf(coordinates.last()[0], coordinates.last()[1]), bearing)
     }
 
     fun fetchTrajectories(
@@ -213,10 +214,10 @@ object TrajectoryManager {
         stopTrajectoryManager()
 
         wsJob = scope.launch(Dispatchers.IO) {
-            SpruceWebSocket.spruceTrajectoryData.collectLatest { msg ->
+            SpruceWebSocket.spruceTrajectoryData.collect { msg ->
                 if (msg?.type == "buffer" && msg.content != null) {
                     try {
-                        val wrappers: List<TrajectoryWrapper> = json.decodeFromJsonElement(msg.content)
+                        val wrappers: List<TrajectoryWrapper> = msg.content
                         val chateau = msg.chateau ?: "unknown"
                         val timestamp = msg.timestamp ?: 0L
 
@@ -231,9 +232,73 @@ object TrajectoryManager {
                         }
 
                         if (msg.total_chunks == 0 || msg.chunk_index == (msg.total_chunks ?: 1) - 1) {
+                            val parsedTimes = mutableMapOf<String, Pair<Long, Long>>()
+                            val precomputedProperties = mutableMapOf<String, JsonObject>()
+                            for (wrapper in (trajectoryAccumulators[chateau] ?: emptyList())) {
+                                val traj = wrapper.content ?: continue
+                                val uniqueId = traj.unique_trip_id ?: traj.trip_id ?: continue
+                                if (!traj.stops.isNullOrEmpty()) {
+                                    val depStr = traj.stops.first().departure
+                                    val arrStr = traj.stops.last().arrival
+                                    val dep = try { if (depStr != null) Instant.parse(depStr).toEpochMilli() else 0L } catch(e:Exception) { 0L }
+                                    val arr = try { if (arrStr != null) Instant.parse(arrStr).toEpochMilli() else 0L } catch(e:Exception) { 0L }
+                                    parsedTimes[uniqueId] = Pair(dep, arr)
+                                }
+                                
+                                val displayName = traj.route_short_name ?: traj.display_name ?: ""
+                                val rawColor = traj.color ?: "#aaaaaa"
+                                val (contrastdarkmode, contrastdarkmodebearing) = processColor(rawColor, true)
+                                val (contrastlightmode, _) = processColor(rawColor, false)
+
+                                var routeType = 3
+                                if (traj.route_type != null) {
+                                    routeType = traj.route_type
+                                } else {
+                                    routeType = when (traj.mode) {
+                                        "tram", "cable_car", "funicular" -> 0
+                                        "subway", "metro" -> 1
+                                        "rail" -> 2
+                                        "bus", "trolleybus" -> 3
+                                        "ferry" -> 4
+                                        else -> 3
+                                    }
+                                }
+
+                                val props = JsonObject(buildMap<String, JsonElement> {
+                                    put("vehicleIdLabel", JsonPrimitive(""))
+                                    put("speed", JsonPrimitive(""))
+                                    put("color", JsonPrimitive(rawColor))
+                                    put("chateau", JsonPrimitive(traj.chateau_id ?: ""))
+                                    put("route_type", JsonPrimitive(routeType))
+                                    put("tripIdLabel", JsonPrimitive(traj.trip_short_name ?: displayName))
+                                    put("has_bearing", JsonPrimitive(true))
+                                    put("maptag", JsonPrimitive(displayName))
+                                    put("trip_short_name", JsonPrimitive(traj.trip_short_name ?: displayName))
+                                    put("route_short_name", JsonPrimitive(traj.route_short_name ?: displayName))
+                                    put("route_long_name", JsonPrimitive(traj.route_long_name ?: ""))
+                                    put("contrastdarkmode", JsonPrimitive(contrastdarkmode))
+                                    put("contrastdarkmodebearing", JsonPrimitive(contrastdarkmodebearing))
+                                    put("contrastlightmode", JsonPrimitive(contrastlightmode))
+                                    put("routeId", JsonPrimitive(traj.route_id ?: ""))
+                                    put("headsign", JsonPrimitive(traj.stops?.lastOrNull()?.name ?: ""))
+                                    put("text_color", JsonPrimitive(traj.text_color ?: "#ffffff"))
+                                    put("trip_id", JsonPrimitive(traj.trip_id ?: ""))
+                                    put("start_time", JsonPrimitive(traj.start_time ?: ""))
+                                    put("start_date", JsonPrimitive(traj.start_date ?: ""))
+                                    put("crowd_symbol", JsonPrimitive(""))
+                                    put("occupancy_status", JsonPrimitive(""))
+                                    put("delay_label", JsonPrimitive(""))
+                                    put("delay", JsonPrimitive(0))
+                                    put("stop_route_type", JsonPrimitive(routeType))
+                                })
+                                precomputedProperties[uniqueId] = props
+                            }
+                            
                             activeTrajectoriesData[chateau] = ActiveTrajectory(
                                 content = trajectoryAccumulators[chateau] ?: emptyList(),
-                                timestamp = trajectoryTimestamps[chateau] ?: 0L
+                                timestamp = trajectoryTimestamps[chateau] ?: 0L,
+                                parsedTimes = parsedTimes,
+                                precomputedProperties = precomputedProperties
                             )
                         }
                     } catch (e: Exception) {
@@ -249,21 +314,21 @@ object TrajectoryManager {
 
                 val now = System.currentTimeMillis()
 
-                val busesFeatures = mutableListOf<Feature<Point, Map<String, Any>>>()
-                val localrailFeatures = mutableListOf<Feature<Point, Map<String, Any>>>()
-                val intercityrailFeatures = mutableListOf<Feature<Point, Map<String, Any>>>()
-                val otherFeatures = mutableListOf<Feature<Point, Map<String, Any>>>()
+                val busesFeatures = mutableListOf<Feature<Point, JsonObject>>()
+                val localrailFeatures = mutableListOf<Feature<Point, JsonObject>>()
+                val intercityrailFeatures = mutableListOf<Feature<Point, JsonObject>>()
+                val otherFeatures = mutableListOf<Feature<Point, JsonObject>>()
 
                 for ((_, activeData) in activeTrajectoriesData) {
                     for (wrapper in activeData.content) {
                         val traj = wrapper.content ?: continue
                         if (traj.stops.isNullOrEmpty() || traj.segments.isNullOrEmpty()) continue
 
-                        val departureStr = traj.stops.first().departure ?: continue
-                        val arrivalStr = traj.stops.last().arrival ?: continue
-
-                        val departure = try { dateFormat.parse(departureStr)?.time ?: 0L } catch(e:Exception) { 0L }
-                        val arrival = try { dateFormat.parse(arrivalStr)?.time ?: 0L } catch(e:Exception) { 0L }
+                        val uniqueTripId = traj.unique_trip_id ?: traj.trip_id ?: ""
+                        
+                        val times = activeData.parsedTimes[uniqueTripId]
+                        val departure = times?.first ?: 0L
+                        val arrival = times?.second ?: 0L
 
                         if (departure == 0L || arrival == 0L) continue
 
@@ -271,7 +336,7 @@ object TrajectoryManager {
                             continue
                         }
 
-                        val coordinates = mutableListOf<List<Double>>()
+                        val coordinates = mutableListOf<DoubleArray>()
                         for (segment in traj.segments) {
                             if (segment.coordinates != null) {
                                 coordinates.addAll(segment.coordinates)
@@ -285,56 +350,15 @@ object TrajectoryManager {
 
                         val coords = interpolationResult.coords
                         val bearing = interpolationResult.bearing
-                        val tripId = traj.trip_id ?: ""
-                        val uniqueTripId = traj.unique_trip_id ?: tripId
-                        val displayName = traj.route_short_name ?: traj.display_name ?: ""
-                        val rawColor = traj.color ?: "#aaaaaa"
-                        val (contrastdarkmode, contrastdarkmodebearing) = processColor(rawColor, true)
-                        val (contrastlightmode, _) = processColor(rawColor, false)
-
-                        var routeType = 3
-                        if (traj.route_type != null) {
-                            routeType = traj.route_type
-                        } else {
-                            routeType = when (traj.mode) {
-                                "tram", "cable_car", "funicular" -> 0
-                                "subway", "metro" -> 1
-                                "rail" -> 2
-                                "bus", "trolleybus" -> 3
-                                "ferry" -> 4
-                                else -> 3
-                            }
-                        }
-
-                        val properties = mapOf<String, Any>(
-                            "vehicleIdLabel" to "",
-                            "speed" to "",
-                            "color" to rawColor,
-                            "chateau" to (traj.chateau_id ?: ""),
-                            "route_type" to routeType,
-                            "tripIdLabel" to (traj.trip_short_name ?: displayName),
-                            "bearing" to bearing.toFloat(),
-                            "has_bearing" to true,
-                            "maptag" to displayName,
-                            "trip_short_name" to (traj.trip_short_name ?: displayName),
-                            "route_short_name" to (traj.route_short_name ?: displayName),
-                            "route_long_name" to (traj.route_long_name ?: ""),
-                            "contrastdarkmode" to contrastdarkmode,
-                            "contrastdarkmodebearing" to contrastdarkmodebearing,
-                            "contrastlightmode" to contrastlightmode,
-                            "routeId" to (traj.route_id ?: ""),
-                            "headsign" to (traj.stops.last().name ?: ""),
-                            "timestamp" to now,
-                            "text_color" to (traj.text_color ?: "#ffffff"),
-                            "trip_id" to tripId,
-                            "start_time" to (traj.start_time ?: departureStr),
-                            "start_date" to (traj.start_date ?: ""),
-                            "crowd_symbol" to "",
-                            "occupancy_status" to "",
-                            "delay_label" to "",
-                            "delay" to 0,
-                            "stop_route_type" to routeType
-                        )
+                        
+                        val baseProps = activeData.precomputedProperties[uniqueTripId] ?: continue
+                        val properties = JsonObject(buildMap<String, JsonElement> {
+                            putAll(baseProps)
+                            put("bearing", JsonPrimitive(bearing.toFloat()))
+                            put("timestamp", JsonPrimitive(now))
+                        })
+                        
+                        val routeType = baseProps["route_type"]?.jsonPrimitive?.intOrNull ?: 3
 
                         val feature = Feature(
                             id = kotlinx.serialization.json.JsonPrimitive("trajectory_$uniqueTripId"),
@@ -351,7 +375,7 @@ object TrajectoryManager {
                     }
                 }
 
-                launch(Dispatchers.Main) {
+                kotlinx.coroutines.withContext(Dispatchers.Main) {
                     busDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(busesFeatures)))
                     metroDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(localrailFeatures)))
                     railDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(intercityrailFeatures)))
