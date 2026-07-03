@@ -17,9 +17,14 @@ import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.image
 import org.maplibre.compose.expressions.dsl.step
 import org.maplibre.compose.expressions.dsl.zoom
+import org.maplibre.compose.expressions.dsl.all
+import org.maplibre.compose.expressions.dsl.eq
+import org.maplibre.compose.expressions.dsl.neq
 import org.maplibre.compose.expressions.value.BooleanValue
 import org.maplibre.compose.expressions.value.ColorValue
+import org.maplibre.compose.expressions.value.EquatableValue
 import org.maplibre.compose.expressions.value.FloatValue
+import org.maplibre.compose.expressions.value.NumberValue
 import org.maplibre.compose.expressions.value.IconRotationAlignment
 import org.maplibre.compose.expressions.value.SymbolAnchor
 import org.maplibre.compose.expressions.value.TextJustify
@@ -201,6 +206,17 @@ fun LiveDotLayers(
 
     val styles = getLiveDotStyle(category, settings, railInFrame, isDark)
 
+    val actualBaseFilter = if (category == "other") {
+        all(baseFilter, get("route_type").cast<NumberValue<EquatableValue>>().neq(const(6)))
+    } else {
+        baseFilter
+    }
+    val actualBearingFilter = if (category == "other") {
+        all(bearingFilter, get("route_type").cast<NumberValue<EquatableValue>>().neq(const(6)))
+    } else {
+        bearingFilter
+    }
+
     // --- End of Category-Specific Sizing ---
 
 
@@ -214,12 +230,19 @@ fun LiveDotLayers(
         strokeWidth = styles.dotStrokeWidth,
         opacity = styles.dotOpacity,
         strokeOpacity = styles.dotStrokeOpacity,
-        filter = baseFilter,
+        filter = actualBaseFilter,
         visible = isVisible,
         minZoom = styles.minLayerDotsZoom
     )
 
+    val isTrajectory = layerIdPrefix is LayersPerCategory.TrajectoryBus ||
+        layerIdPrefix is LayersPerCategory.TrajectoryMetro ||
+        layerIdPrefix is LayersPerCategory.TrajectoryTram ||
+        layerIdPrefix is LayersPerCategory.TrajectoryIntercityRail ||
+        layerIdPrefix is LayersPerCategory.TrajectoryOther
+
     // Bearing Pointer Shell (Outline)
+    if (!isTrajectory) {
     SymbolLayer(
         id = idPointingShell,
         source = source,
@@ -232,7 +255,7 @@ fun LiveDotLayers(
         iconIgnorePlacement = const(true),
         iconOffset = styles.bearingIconOffset,
         iconOpacity = styles.bearingShellOpacity,
-        filter = bearingFilter,
+        filter = actualBearingFilter,
         visible = isVisible,
         minZoom = styles.minBearingZoom
     )
@@ -253,10 +276,11 @@ fun LiveDotLayers(
         iconAllowOverlap = const(true),
         iconIgnorePlacement = const(true),
         iconOffset = styles.bearingIconOffset,
-        filter = bearingFilter,
+        filter = actualBearingFilter,
         visible = isVisible,
         minZoom = styles.minBearingZoom
     )
+    }
 
     // Label
     SymbolLayer(
@@ -277,12 +301,96 @@ fun LiveDotLayers(
             styles.labelIgnorePlacementZoom to const(true)
         ),
         textOpacity = styles.labelTextOpacity,
-        filter = baseFilter,
+        filter = actualBaseFilter,
         visible = isVisible,
         textAnchor = const(SymbolAnchor.Left),
         textJustify = const(TextJustify.Left),
         minZoom = styles.minLabelDotsZoom
     )
+
+    if (category == "other") {
+        val tramStyles = getLiveDotStyle("tram", settings, railInFrame, isDark)
+        val aerialBaseFilter = all(baseFilter, get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)))
+        val aerialBearingFilter = all(bearingFilter, get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)))
+
+        CircleLayer(
+            id = "${idDots}_aerial",
+            source = source,
+            color = get("color").cast<ColorValue>(),
+            radius = tramStyles.dotRadius,
+            strokeColor = if (isDark) const(Color(0xFF2E394B)) else const(Color.White),
+            strokeWidth = tramStyles.dotStrokeWidth,
+            opacity = tramStyles.dotOpacity,
+            strokeOpacity = tramStyles.dotStrokeOpacity,
+            filter = aerialBaseFilter,
+            visible = isVisible,
+            minZoom = tramStyles.minLayerDotsZoom
+        )
+
+        if (!isTrajectory) {
+            SymbolLayer(
+                id = "${idPointingShell}_aerial",
+                source = source,
+                iconImage = image(painterResource(R.drawable.pointing_shell)),
+                iconColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
+                iconSize = tramStyles.bearingIconSize,
+                iconRotate = get("bearing").cast<FloatValue>(),
+                iconRotationAlignment = const(IconRotationAlignment.Map),
+                iconAllowOverlap = const(true),
+                iconIgnorePlacement = const(true),
+                iconOffset = tramStyles.bearingIconOffset,
+                iconOpacity = tramStyles.bearingShellOpacity,
+                filter = aerialBearingFilter,
+                visible = isVisible,
+                minZoom = tramStyles.minBearingZoom
+            )
+
+            SymbolLayer(
+                id = "${idPointing}_aerial",
+                source = source,
+                iconImage = image(
+                    painterResource(R.drawable.pointing50percent),
+                    drawAsSdf = true
+                ),
+                iconOpacity = tramStyles.bearingFilledOpacity,
+                iconColor = bearingColor,
+                iconSize = tramStyles.bearingIconSize,
+                iconRotate = get("bearing").cast<FloatValue>(),
+                iconRotationAlignment = const(IconRotationAlignment.Map),
+                iconAllowOverlap = const(true),
+                iconIgnorePlacement = const(true),
+                iconOffset = tramStyles.bearingIconOffset,
+                filter = aerialBearingFilter,
+                visible = isVisible,
+                minZoom = tramStyles.minBearingZoom
+            )
+        }
+
+        SymbolLayer(
+            id = "${idLabels}_aerial",
+            source = source,
+            textField = interpretLabelsToExpression(settings, usUnits),
+            textFont = tramStyles.labelTextFont,
+            textSize = tramStyles.labelTextSize,
+            textColor = vehicleColor,
+            textHaloColor = if (isDark) const(Color(0xFF1E293B)) else const(Color(0xFFEDEDED)),
+            textHaloWidth = tramStyles.labelHaloWidth,
+            textHaloBlur = const(1.0.dp),
+            textRadialOffset = tramStyles.labelRadialOffset,
+            textAllowOverlap = const(false),
+            textIgnorePlacement = step(
+                zoom(),
+                const(false),
+                tramStyles.labelIgnorePlacementZoom to const(true)
+            ),
+            textOpacity = tramStyles.labelTextOpacity,
+            filter = aerialBaseFilter,
+            visible = isVisible,
+            textAnchor = const(SymbolAnchor.Left),
+            textJustify = const(TextJustify.Left),
+            minZoom = tramStyles.minLabelDotsZoom
+        )
+    }
 }
 
 @Composable

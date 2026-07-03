@@ -271,7 +271,7 @@ object TrajectoryManager {
                                     put("chateau", JsonPrimitive(traj.chateau_id ?: ""))
                                     put("route_type", JsonPrimitive(routeType))
                                     put("tripIdLabel", JsonPrimitive(traj.trip_short_name ?: displayName))
-                                    put("has_bearing", JsonPrimitive(true))
+                                    // put("has_bearing", JsonPrimitive(true))
                                     put("maptag", JsonPrimitive(displayName))
                                     put("trip_short_name", JsonPrimitive(traj.trip_short_name ?: displayName))
                                     put("route_short_name", JsonPrimitive(traj.route_short_name ?: displayName))
@@ -310,7 +310,7 @@ object TrajectoryManager {
 
         interpolationJob = scope.launch(Dispatchers.Default) {
             while (true) {
-                delay(500)
+                delay(100)
 
                 val now = System.currentTimeMillis()
 
@@ -354,7 +354,7 @@ object TrajectoryManager {
                         val baseProps = activeData.precomputedProperties[uniqueTripId] ?: continue
                         val properties = JsonObject(buildMap<String, JsonElement> {
                             putAll(baseProps)
-                            put("bearing", JsonPrimitive(bearing.toFloat()))
+                            // put("bearing", JsonPrimitive(bearing.toFloat()))
                             put("timestamp", JsonPrimitive(now))
                         })
                         

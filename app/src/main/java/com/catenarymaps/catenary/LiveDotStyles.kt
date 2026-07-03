@@ -247,7 +247,7 @@ fun getLiveDotStyle(
                             )
             labelHaloWidth = if (isDark) const(2.0.dp) else const(1.0.dp)
             minLayerDotsZoom = 9F
-            minLabelDotsZoom = 11F
+            minLabelDotsZoom = 13F
             minBearingZoom = 11.5F
         }
         "metro" -> {
@@ -255,16 +255,16 @@ fun getLiveDotStyle(
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            6.0 to const(3.0.dp),
-                        8.0 to const(2.8.dp),
-                        10.0 to const(3.5.dp),
-                        11.0 to const(5.0.dp),
-                        14.0 to const(7.0.dp),
-                        16.0 to const(11.0.dp)
+                            6.0 to const(2.5.dp),
+                        8.0 to const(2.3.dp),
+                        10.0 to const(3.0.dp),
+                        11.0 to const(4.5.dp),
+                        14.0 to const(6.5.dp),
+                        16.0 to const(10.5.dp)
                     )
             dotStrokeWidth =
                     interpolate(linear(), zoom(), 8.0 to const(0.8.dp), 10.0 to const(1.2.dp))
-            dotOpacity = interpolate(linear(), zoom(), 7.0 to const(0.5f), 9.0 to const(0.7f))
+            dotOpacity = interpolate(linear(), zoom(), 7.0 to const(0.8f), 9.0 to const(1.0f))
             dotStrokeOpacity = const(1.0f)
             bearingIconSize =
                     interpolate(
@@ -319,10 +319,10 @@ fun getLiveDotStyle(
                     interpolate(
                             linear(),
                             zoom(),
-                            2.0 to const(0.0f),
-                        2.5 to const(0.6f),
-                        9.0 to const(0.9f),
-                            10.0 to const(1.0f)
+                            4.0 to const(0.0f),
+                        4.5 to const(0.6f),
+                        11.0 to const(0.9f),
+                            12.0 to const(1.0f)
                     )
         }
         "tram" -> {
@@ -330,13 +330,13 @@ fun getLiveDotStyle(
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            6.0 to const(1.8.dp),
-                            8.0 to const(2.3.dp),
-                            10.0 to const(4.0.dp),
-                            11.0 to const(4.5.dp),
-                            13.0 to const(6.0.dp),
-                        15.0 to const(5.0.dp),
-                            16.0 to const(10.0.dp)
+                            6.0 to const(1.5.dp),
+                            8.0 to const(2.0.dp),
+                            10.0 to const(3.5.dp),
+                            11.0 to const(4.0.dp),
+                            13.0 to const(5.5.dp),
+                        15.0 to const(4.5.dp),
+                            16.0 to const(9.5.dp)
                     )
             dotStrokeWidth =
                     interpolate(
@@ -346,7 +346,7 @@ fun getLiveDotStyle(
                             9.0 to const(0.6.dp),
                             10.0 to const(1.0.dp)
                     )
-            dotOpacity = interpolate(linear(), zoom(), 7.0 to const(0.5f), 9.0 to const(0.7f))
+            dotOpacity = interpolate(linear(), zoom(), 7.0 to const(0.8f), 9.0 to const(1.0f))
             dotStrokeOpacity = const(1.0f)
             bearingIconSize =
                     interpolate(
@@ -412,10 +412,10 @@ fun getLiveDotStyle(
                     interpolate(
                             linear(),
                             zoom(),
-                            2.0 to const(0.0f),
-                        6.0 to const(0.8f),
-                        9.0 to const(0.9f),
-                        11.0 to const(1.0f)
+                            4.0 to const(0.0f),
+                        8.0 to const(0.8f),
+                        11.0 to const(0.9f),
+                        13.0 to const(1.0f)
                     )
         }
         "intercityrail" -> {
@@ -423,12 +423,12 @@ fun getLiveDotStyle(
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            1.0 to const(1.0.dp),
-                            3.0 to const(2.5.dp),
-                            6.0 to const(2.8.dp),
-                            8.0 to const(4.0.dp),
-                            11.0 to const(6.0.dp),
-                            16.0 to const(10.0.dp)
+                            1.0 to const(0.8.dp),
+                            3.0 to const(2.0.dp),
+                            6.0 to const(2.3.dp),
+                            8.0 to const(3.5.dp),
+                            11.0 to const(5.5.dp),
+                            16.0 to const(9.5.dp)
                     )
             dotStrokeWidth =
                     interpolate(
@@ -442,9 +442,9 @@ fun getLiveDotStyle(
                     interpolate(
                             linear(),
                             zoom(),
-                            4.0 to const(0.4f),
-                            7.0 to const(0.6f),
-                            11.0 to const(0.7f)
+                            4.0 to const(0.8f),
+                            7.0 to const(0.9f),
+                            11.0 to const(1.0f)
                     )
             dotStrokeOpacity = const(1.0f)
             bearingIconSize =
