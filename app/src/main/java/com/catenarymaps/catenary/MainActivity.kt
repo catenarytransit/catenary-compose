@@ -1151,7 +1151,6 @@ class MainActivity : ComponentActivity() {
 
                         // Prune the 'realtimeVehicleLocations' map (which is keyed by Category
                         // first)
-                        val currentLocationsV2 = realtimeVehicleLocationsStoreV2.value
                         // Early exit if no pruning is needed at all.
                         if (currentLocationsV2.values.all { chateauMap ->
                                         chateauMap.keys.size == visibleSet.size &&
