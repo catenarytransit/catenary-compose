@@ -1082,9 +1082,43 @@ class MainActivity : ComponentActivity() {
                         }
                 }
 
-                fun pruneStaleChateauData() {
-                        // Get a snapshot of the currently visible chateaus
-                        val visibleSet = visibleChateaus.toSet()
+                fun pruneStaleChateauData(bounds: BoundingBox) {
+                        // Get a snapshot of the currently visible chateaus by checking vehicle bounds
+                        val visibleSet = mutableSetOf<String>()
+                        val latMargin = 0.05
+                        val lonMargin = 0.05
+                        val minLat = bounds.south - latMargin
+                        val maxLat = bounds.north + latMargin
+                        val minLon = bounds.west - lonMargin
+                        val maxLon = bounds.east + lonMargin
+
+                        val currentLocationsV2 = realtimeVehicleLocationsStoreV2.value
+                        currentLocationsV2.forEach { (_, chateauMap) ->
+                                chateauMap.forEach { (chateauId, xMap) ->
+                                        if (!visibleSet.contains(chateauId)) {
+                                                var isVisible = false
+                                                xMap.values.forEach { yMap ->
+                                                        if (!isVisible) {
+                                                                yMap.values.forEach { vehicleMap ->
+                                                                        if (!isVisible) {
+                                                                                vehicleMap.values.forEach { vehicle ->
+                                                                                        vehicle.position?.let { pos ->
+                                                                                                if (pos.latitude in minLat..maxLat && pos.longitude in minLon..maxLon) {
+                                                                                                        isVisible = true
+                                                                                                }
+                                                                                        }
+                                                                                }
+                                                                        }
+                                                                }
+                                                        }
+                                                }
+                                                if (isVisible) {
+                                                        visibleSet.add(chateauId)
+                                                }
+                                        }
+                                }
+                        }
+                        
                         Log.d(TAG, "Pruning data. Keeping ${visibleSet.size} chateaus.")
 
                         // Prune maps keyed by ChateauID
@@ -1506,7 +1540,10 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(Unit) {
                                 while (true) {
                                         delay(2_000L) // 2 second prune interval
-                                        pruneStaleChateauData()
+                                        val bounds = camera.projection?.queryVisibleBoundingBox()
+                                        if (bounds != null) {
+                                                pruneStaleChateauData(bounds)
+                                        }
                                 }
                         }
 
