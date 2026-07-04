@@ -22,6 +22,7 @@
     <string name="early">조착</string>
     <string name="late">지연</string>
     <string name="ontime">정시</string>
+    <string name="earlier">이전</string>
     <string name="previous_departures">이전 출발</string>
     <string name="no_departures_found">출발 정보 없음</string>
     <string name="load_more">더 보기</string>
@@ -136,4 +137,5 @@
     <string name="heading_funicular">강삭철도</string>
     <string name="heading_monorail">모노레일</string>
     <string name="heading_cable_tram">케이블카</string>
+    <string name="label_interpolated_trajectories">보간된 궤적 라벨 표시</string>
 </resources>

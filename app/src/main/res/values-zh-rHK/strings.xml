@@ -22,6 +22,7 @@
     <string name="early">早</string>
     <string name="late">晚</string>
     <string name="ontime">準時</string>
+    <string name="earlier">更早</string>
     <string name="previous_departures">先前的出發</string>
     <string name="no_departures_found">找不到出發</string>
     <string name="load_more">載入更多</string>
@@ -136,4 +137,5 @@
     <string name="heading_funicular">纜車</string>
     <string name="heading_monorail">單軌</string>
     <string name="heading_cable_tram">纜索鐵路</string>
+    <string name="label_interpolated_trajectories">標註插值軌跡</string>
 </resources>

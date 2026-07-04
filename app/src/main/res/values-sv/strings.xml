@@ -21,6 +21,7 @@
     <string name="early">Tidig</string>
     <string name="late">Sen</string>
     <string name="ontime">I tid</string>
+    <string name="earlier">Tidigare</string>
     <string name="previous_departures">Föregående avgångar</string>
     <string name="no_departures_found">Inga avgångar hittades</string>
     <string name="load_more">Ladda mer</string>
@@ -135,4 +136,5 @@
     <string name="heading_funicular">Bergbana</string>
     <string name="heading_monorail">Monorail</string>
     <string name="heading_cable_tram">Linbana</string>
+    <string name="label_interpolated_trajectories">Märk interpolerade trajektorier</string>
 </resources>

@@ -21,6 +21,7 @@
     <string name="early">Раньше</string>
     <string name="late">Позже</string>
     <string name="ontime">Вовремя</string>
+    <string name="earlier">Раньше</string>
     <string name="previous_departures">Предыдущие отправления</string>
     <string name="no_departures_found">Отправлений не найдено</string>
     <string name="load_more">Загрузить еще</string>
@@ -137,4 +138,5 @@
     <string name="heading_funicular">Фуникулёр</string>
     <string name="heading_monorail">Монорельс</string>
     <string name="heading_cable_tram">Канатный трамвай</string>
+    <string name="label_interpolated_trajectories">Обозначать интерполированные траектории</string>
 </resources>

@@ -21,6 +21,7 @@
     <string name="early">Zu früh</string>
     <string name="late">Verspätet</string>
     <string name="ontime">Pünktlich</string>
+    <string name="earlier">Früher</string>
     <string name="previous_departures">Vorherige Abfahrten</string>
     <string name="no_departures_found">Keine Abfahrten gefunden</string>
     <string name="load_more">Mehr laden</string>
@@ -132,4 +133,5 @@
     <string name="heading_funicular">Standseilbahn</string>
     <string name="heading_monorail">Einschienenbahn</string>
     <string name="heading_cable_tram">Kabelstraßenbahn</string>
+    <string name="label_interpolated_trajectories">Interpolierte Trajektorien beschriften</string>
 </resources>

@@ -21,6 +21,7 @@
     <string name="early">Dříve</string>
     <string name="late">Zpoždění</string>
     <string name="ontime">Načas</string>
+    <string name="earlier">Dříve</string>
     <string name="previous_departures">Předchozí odjezdy</string>
     <string name="no_departures_found">Nebyly nalezeny žádné odjezdy</string>
     <string name="load_more">Načíst více</string>
@@ -137,4 +138,5 @@
     <string name="heading_funicular">Lanová dráha</string>
     <string name="heading_monorail">Jednokolejka</string>
     <string name="heading_cable_tram">Lanovka</string>
+    <string name="label_interpolated_trajectories">Označit interpolované trajektorie</string>
 </resources>

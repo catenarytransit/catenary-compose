@@ -21,6 +21,7 @@
     <string name="early">Aikaisin</string>
     <string name="late">Myöhässä</string>
     <string name="ontime">Ajallaan</string>
+    <string name="earlier">Aiemmin</string>
     <string name="previous_departures">Aiemmat lähdöt</string>
     <string name="no_departures_found">Lähtöjä ei löytynyt</string>
     <string name="load_more">Lataa lisää</string>
@@ -135,4 +136,5 @@
     <string name="heading_funicular">Funikulaari</string>
     <string name="heading_monorail">Monorail</string>
     <string name="heading_cable_tram">Köysirata</string>
+    <string name="label_interpolated_trajectories">Merkitse interpoloidut reitit</string>
 </resources>

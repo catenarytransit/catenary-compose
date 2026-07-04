@@ -21,6 +21,7 @@
     <string name="early">In anticipo</string>
     <string name="late">In ritardo</string>
     <string name="ontime">In orario</string>
+    <string name="earlier">Prima</string>
     <string name="previous_departures">Partenze precedenti</string>
     <string name="no_departures_found">Nessuna partenza trovata</string>
     <string name="load_more">Carica altro</string>
@@ -135,4 +136,5 @@
     <string name="heading_funicular">Funicolare</string>
     <string name="heading_monorail">Monorotaia</string>
     <string name="heading_cable_tram">Tram a trazione funicolare</string>
+    <string name="label_interpolated_trajectories">Etichetta traiettorie interpolate</string>
 </resources>

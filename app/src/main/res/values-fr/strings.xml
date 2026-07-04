@@ -22,6 +22,7 @@
     <string name="early">En avance</string>
     <string name="late">En retard</string>
     <string name="ontime">à l\'heure</string>
+    <string name="earlier">Plus tôt</string>
     <string name="previous_departures">Départs précédents</string>
     <string name="load_more">Charger plus</string>
     <string name="arrival">Arrivée</string>
@@ -134,4 +135,5 @@
     <string name="heading_funicular">Funiculaire</string>
     <string name="heading_monorail">Monorail</string>
     <string name="heading_cable_tram">Tramway à câble</string>
+    <string name="label_interpolated_trajectories">Étiqueter les trajectoires interpolées</string>
 </resources>

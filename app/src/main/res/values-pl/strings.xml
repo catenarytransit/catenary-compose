@@ -21,6 +21,7 @@
     <string name="early">Za wcześnie</string>
     <string name="late">Opóźniony</string>
     <string name="ontime">Na czas</string>
+    <string name="earlier">Wcześniej</string>
     <string name="previous_departures">Poprzednie odjazdy</string>
     <string name="no_departures_found">Nie znaleziono odjazdów</string>
     <string name="load_more">Załaduj więcej</string>
@@ -137,4 +138,5 @@
     <string name="heading_funicular">Kolej linowo-terenowa</string>
     <string name="heading_monorail">Kolej jednoszynowa</string>
     <string name="heading_cable_tram">Kolej linowa</string>
+    <string name="label_interpolated_trajectories">Etykiety interpolowanych trajektorii</string>
 </resources>

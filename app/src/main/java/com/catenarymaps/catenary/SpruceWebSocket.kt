@@ -166,14 +166,16 @@ object SpruceWebSocket {
                                             "initial_trip" -> _spruceTripData.value = msg.data
                                             "update_trip" -> _spruceUpdateData.value = msg.data
                                             "buffer" -> {
-                                                Log.d(TAG, "Spruce WS Trajectory buffer received, text size: ${text.length}")
+                                                //Log.d(TAG, "Spruce WS Trajectory buffer received, text size: ${text.length}")
                                                 _spruceTrajectoryData.value = msg
                                             }
                                             "map_update" -> {
                                                 // Handle various potential payload locations
                                                 if (msg.map_update != null) {
+                                                    Log.d(TAG, "Spruce WS Map update received via map_update field, chateaus count: ${msg.map_update.chateaus.size}")
                                                     _spruceMapData.value = msg.map_update
                                                 } else if (msg.chateaus != null) {
+                                                    Log.d(TAG, "Spruce WS Map update received via chateaus field, chateaus count: ${msg.chateaus.size}")
                                                     _spruceMapData.value =
                                                             BulkRealtimeResponseV2(
                                                                     chateaus = msg.chateaus

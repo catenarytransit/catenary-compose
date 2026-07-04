@@ -205,10 +205,10 @@ object TrajectoryManager {
 
     fun startTrajectoryManager(
         scope: CoroutineScope,
-        busDotsSrc: MutableState<GeoJsonSource>,
-        metroDotsSrc: MutableState<GeoJsonSource>,
-        railDotsSrc: MutableState<GeoJsonSource>,
-        otherDotsSrc: MutableState<GeoJsonSource>,
+        trajBusDotsSrc: MutableState<GeoJsonSource>,
+        trajMetroDotsSrc: MutableState<GeoJsonSource>,
+        trajRailDotsSrc: MutableState<GeoJsonSource>,
+        trajOtherDotsSrc: MutableState<GeoJsonSource>,
         isDark: Boolean
     ) {
         stopTrajectoryManager()
@@ -376,10 +376,10 @@ object TrajectoryManager {
                 }
 
                 kotlinx.coroutines.withContext(Dispatchers.Main) {
-                    busDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(busesFeatures)))
-                    metroDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(localrailFeatures)))
-                    railDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(intercityrailFeatures)))
-                    otherDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(otherFeatures)))
+                    trajBusDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(busesFeatures)))
+                    trajMetroDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(localrailFeatures)))
+                    trajRailDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(intercityrailFeatures)))
+                    trajOtherDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(otherFeatures)))
                 }
             }
         }

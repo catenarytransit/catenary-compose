@@ -21,6 +21,7 @@
     <string name="early">Korán</string>
     <string name="late">Későn</string>
     <string name="ontime">Időben</string>
+    <string name="earlier">Korábban</string>
     <string name="previous_departures">Előző indulások</string>
     <string name="no_departures_found">Nincsenek indulások</string>
     <string name="load_more">Több betöltése</string>
@@ -135,4 +136,5 @@
     <string name="heading_funicular">Sikló</string>
     <string name="heading_monorail">Egysínű vasút</string>
     <string name="heading_cable_tram">Felvonó</string>
+    <string name="label_interpolated_trajectories">Interpolált pályák feliratozása</string>
 </resources>

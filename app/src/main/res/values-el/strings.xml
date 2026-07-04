@@ -21,6 +21,7 @@
     <string name="early">Νωρίς</string>
     <string name="late">Αργά</string>
     <string name="ontime"> στην ώρα του</string>
+    <string name="earlier">Νωρίτερα</string>
     <string name="previous_departures">Προηγούμενες αναχωρήσεις</string>
     <string name="no_departures_found">Δεν βρέθηκαν αναχωρήσεις</string>
     <string name="load_more">Φόρτωση περισσότερων</string>
@@ -135,4 +136,5 @@
     <string name="heading_funicular">Τελεφερίκ</string>
     <string name="heading_monorail">Μονοράιλ</string>
     <string name="heading_cable_tram">Τελεφερίκ</string>
+    <string name="label_interpolated_trajectories">Ετικέτες παρεμβαλλόμενων τροχιών</string>
 </resources>

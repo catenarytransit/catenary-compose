@@ -22,6 +22,7 @@
     <string name="early">早い</string>
     <string name="late">遅い</string>
     <string name="ontime">時間通り</string>
+    <string name="earlier">以前</string>
     <string name="previous_departures">以前の出発</string>
     <string name="no_departures_found">出発が見つかりません</string>
     <string name="load_more">もっと読み込む</string>
@@ -136,4 +137,5 @@
     <string name="heading_funicular">ケーブルカー</string>
     <string name="heading_monorail">モノレール</string>
     <string name="heading_cable_tram">ケーブルカー</string>
+    <string name="label_interpolated_trajectories">補間された軌道をラベル表示</string>
 </resources>
