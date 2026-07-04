@@ -577,11 +577,32 @@ fun SingleTripInfoScreen(
                         verticalArrangement = Arrangement.Top
                 ) {
                         if (isLoading) {
-                                LinearProgressIndicator(
-                                        modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(top = 8.dp)
-                                )
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                        // Header with Navigation Controls
+                                        Row(
+                                                modifier =
+                                                        Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(bottom = 16.dp),
+                                                horizontalArrangement = Arrangement.Start,
+                                                verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                                NavigationControls(
+                                                        onBack = onBack,
+                                                        onHome = onHome,
+                                                        onPageInfo = {
+                                                                showFloatingControls =
+                                                                        !showFloatingControls
+                                                        },
+                                                        isPageInfoPulse = false
+                                                )
+                                        }
+                                        LinearProgressIndicator(
+                                                modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(top = 8.dp)
+                                        )
+                                }
                         } else if (error != null) {
                                 Column(modifier = Modifier.fillMaxSize()) {
                                         // Header with Navigation Controls

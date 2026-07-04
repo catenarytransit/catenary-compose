@@ -5224,8 +5224,8 @@ class MainActivity : ComponentActivity() {
         private fun org.maplibre.spatialk.geojson.Feature<*, JsonObject?>.getString(
                 key: String
         ): String? {
-                // Check for null primitive or string "null"
-                return this.properties?.get(key)?.jsonPrimitive?.content?.takeIf { it != "null" }
+                // Check for null primitive, string "null", or blank string
+                return this.properties?.get(key)?.jsonPrimitive?.content?.takeIf { it != "null" && it.isNotBlank() }
         }
 
         // Helper to get int property from spatialk.geojson.Feature

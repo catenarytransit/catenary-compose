@@ -282,9 +282,9 @@ object TrajectoryManager {
                                     put("routeId", JsonPrimitive(traj.route_id ?: ""))
                                     put("headsign", JsonPrimitive(traj.stops?.lastOrNull()?.name ?: ""))
                                     put("text_color", JsonPrimitive(traj.text_color ?: "#ffffff"))
-                                    put("trip_id", JsonPrimitive(traj.trip_id ?: ""))
-                                    put("start_time", JsonPrimitive(traj.start_time ?: ""))
-                                    put("start_date", JsonPrimitive(traj.start_date ?: ""))
+                                    traj.trip_id?.takeIf { it.isNotBlank() }?.let { put("trip_id", JsonPrimitive(it)) }
+                                    traj.start_time?.takeIf { it.isNotBlank() }?.let { put("start_time", JsonPrimitive(it)) }
+                                    traj.start_date?.takeIf { it.isNotBlank() }?.let { put("start_date", JsonPrimitive(it)) }
                                     put("crowd_symbol", JsonPrimitive(""))
                                     put("occupancy_status", JsonPrimitive(""))
                                     put("delay_label", JsonPrimitive(""))
