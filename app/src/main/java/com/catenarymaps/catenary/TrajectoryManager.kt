@@ -81,9 +81,9 @@ object TrajectoryManager {
     private var interpolationJob: Job? = null
     private var wsJob: Job? = null
 
-    private val activeTrajectoriesData = mutableMapOf<String, ActiveTrajectory>()
-    private val trajectoryAccumulators = mutableMapOf<String, MutableList<TrajectoryWrapper>>()
-    private val trajectoryTimestamps = mutableMapOf<String, Long>()
+    private val activeTrajectoriesData = java.util.concurrent.ConcurrentHashMap<String, ActiveTrajectory>()
+    private val trajectoryAccumulators = java.util.concurrent.ConcurrentHashMap<String, MutableList<TrajectoryWrapper>>()
+    private val trajectoryTimestamps = java.util.concurrent.ConcurrentHashMap<String, Long>()
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -295,7 +295,7 @@ object TrajectoryManager {
                             }
                             
                             activeTrajectoriesData[chateau] = ActiveTrajectory(
-                                content = trajectoryAccumulators[chateau] ?: emptyList(),
+                                content = trajectoryAccumulators[chateau]?.toList() ?: emptyList(),
                                 timestamp = trajectoryTimestamps[chateau] ?: 0L,
                                 parsedTimes = parsedTimes,
                                 precomputedProperties = precomputedProperties
