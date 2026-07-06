@@ -969,6 +969,7 @@ class MainActivity : ComponentActivity() {
                 super.onCreate(savedInstanceState)
                 enableEdgeToEdge()
                 SpruceWebSocket.init()
+                RamondaWebSocket.init()
 
 
 

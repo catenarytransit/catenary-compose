@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -31,27 +32,7 @@ data class MapViewportUpdate(
         val bounds_input: BoundsInput
 )
 
-@Serializable
-data class SubscribeTrip(
-        @EncodeDefault val type: String = "subscribe_trip",
-        val chateau: String,
-        val trip_id: String,
-        val route_id: String? = null,
-        val start_date: String? = null,
-        val start_time: String? = null
-)
 
-// ...
-
-@Serializable
-data class UnsubscribeTrip(
-        @EncodeDefault val type: String = "unsubscribe_trip",
-        val chateau: String,
-        val trip_id: String? = null,
-        val route_id: String? = null,
-        val start_date: String? = null,
-        val start_time: String? = null
-)
 
 @Serializable
 data class SubscribeTrajectories(
@@ -100,11 +81,7 @@ object SpruceWebSocket {
     private val _spruceMapData = MutableStateFlow<BulkRealtimeResponseV2?>(null)
     val spruceMapData: StateFlow<BulkRealtimeResponseV2?> = _spruceMapData.asStateFlow()
 
-    private val _spruceTripData = MutableStateFlow<JsonElement?>(null)
-    val spruceTripData: StateFlow<JsonElement?> = _spruceTripData.asStateFlow()
 
-    private val _spruceUpdateData = MutableStateFlow<JsonElement?>(null)
-    val spruceUpdateData: StateFlow<JsonElement?> = _spruceUpdateData.asStateFlow()
 
     private val _spruceError = MutableStateFlow<String?>(null)
     val spruceError: StateFlow<String?> = _spruceError.asStateFlow()
@@ -114,8 +91,10 @@ object SpruceWebSocket {
 
     private var activeMapParams: MapViewportUpdate? = null
     // Keep track of active trip subscription if we implement trip stuff later
-    private var activeTripParams: SubscribeTrip? = null
+
     private var activeTrajectoryParams: SubscribeTrajectories? = null
+
+    private var pingJob: Job? = null
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -140,6 +119,7 @@ object SpruceWebSocket {
                             override fun onOpen(webSocket: WebSocket, response: Response) {
                                 Log.d(TAG, "Spruce WS Connected")
                                 _spruceStatus.value = "connected"
+                                startPingLoop(webSocket)
 
                                 // Resend active map subscription
                                 activeMapParams?.let {
@@ -147,10 +127,7 @@ object SpruceWebSocket {
                                     sendMapUpdate(it)
                                 }
 
-                                activeTripParams?.let {
-                                    Log.d(TAG, "Resending active trip params")
-                                    sendTripSubscription(it)
-                                }
+
 
                                 activeTrajectoryParams?.let {
                                     Log.d(TAG, "Resending active trajectory params")
@@ -163,8 +140,7 @@ object SpruceWebSocket {
                                     try {
                                         val msg = json.decodeFromString<SpruceCommonMessage>(text)
                                         when (msg.type) {
-                                            "initial_trip" -> _spruceTripData.value = msg.data
-                                            "update_trip" -> _spruceUpdateData.value = msg.data
+
                                             "buffer" -> {
                                                 //Log.d(TAG, "Spruce WS Trajectory buffer received, text size: ${text.length}")
                                                 _spruceTrajectoryData.value = msg
@@ -181,6 +157,9 @@ object SpruceWebSocket {
                                                                     chateaus = msg.chateaus
                                                             )
                                                 }
+                                            }
+                                            "pong" -> {
+                                                 Log.d(TAG, "Spruce WS received pong")
                                             }
                                             "error" -> {
                                                 _spruceError.value = msg.message
@@ -201,6 +180,8 @@ object SpruceWebSocket {
                                 Log.d(TAG, "Spruce WS Closing: $code / $reason")
                                 _spruceStatus.value = "disconnected"
                                 this@SpruceWebSocket.webSocket = null
+                                pingJob?.cancel()
+                                pingJob = null
                             }
 
                             override fun onFailure(
@@ -211,6 +192,8 @@ object SpruceWebSocket {
                                 Log.e(TAG, "Spruce WS Failure", t)
                                 _spruceStatus.value = "error"
                                 this@SpruceWebSocket.webSocket = null
+                                pingJob?.cancel()
+                                pingJob = null
 
                                 // Retry connection after delay
                                 scope.launch {
@@ -253,49 +236,7 @@ object SpruceWebSocket {
         }
     }
 
-    fun subscribeTrip(
-        chateau: String,
-        tripId: String,
-        routeId: String? = null,
-        startDate: String? = null,
-        startTime: String? = null
-    ) {
-        ensureConnection()
-        val params =
-            SubscribeTrip(
-                chateau = chateau,
-                trip_id = tripId,
-                route_id = routeId,
-                start_date = startDate,
-                start_time = startTime
-            )
-        activeTripParams = params
-        sendTripSubscription(params)
-    }
 
-    fun unsubscribeTrip(chateau: String) {
-        // Clear active subscription so it doesn't resend on reconnect
-        val paramsToSend = activeTripParams
-        activeTripParams = null
-
-        if (_spruceStatus.value == "connected") {
-            try {
-                // Ideally we send the same params we subscribed with, if available
-                val msg =
-                    UnsubscribeTrip(
-                        chateau = chateau,
-                        trip_id = paramsToSend?.trip_id,
-                        route_id = paramsToSend?.route_id,
-                        start_date = paramsToSend?.start_date,
-                        start_time = paramsToSend?.start_time
-                    )
-                val text = json.encodeToString(msg)
-                webSocket?.send(text)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error sending unsubscribe trip", e)
-            }
-        }
-    }
 
     private fun sendMapUpdate(params: MapViewportUpdate) {
         if (_spruceStatus.value == "connected") {
@@ -308,16 +249,7 @@ object SpruceWebSocket {
         }
     }
 
-    private fun sendTripSubscription(params: SubscribeTrip) {
-        if (_spruceStatus.value == "connected") {
-            try {
-                val text = json.encodeToString(params)
-                webSocket?.send(text)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error sending trip subscription", e)
-            }
-        }
-    }
+
 
     private fun sendTrajectorySubscription(params: SubscribeTrajectories) {
         if (_spruceStatus.value == "connected") {
@@ -326,6 +258,20 @@ object SpruceWebSocket {
                 webSocket?.send(text)
             } catch (e: Exception) {
                 Log.e(TAG, "Error sending trajectory subscription", e)
+            }
+        }
+    }
+
+    private fun startPingLoop(ws: WebSocket) {
+        pingJob?.cancel()
+        pingJob = scope.launch {
+            while (_spruceStatus.value == "connected") {
+                delay(10000)
+                try {
+                    ws.send("{\"type\":\"ping\"}")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error sending ping", e)
+                }
             }
         }
     }

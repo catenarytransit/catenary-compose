@@ -74,7 +74,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
     private val json = Json { ignoreUnknownKeys = true }
 
     init {
-        SpruceWebSocket.subscribeTrip(
+        RamondaWebSocket.subscribeTrip(
             chateau = tripSelected.chateau_id ?: "",
             tripId = tripSelected.trip_id ?: "",
             startDate = tripSelected.start_date,
@@ -86,7 +86,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     private fun observeWebSocketData() {
         viewModelScope.launch {
-            SpruceWebSocket.spruceTripData.collect { element ->
+            RamondaWebSocket.ramondaTripData.collect { element ->
                 if (element != null) {
                     try {
                         val data =
@@ -107,7 +107,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
         }
 
         viewModelScope.launch {
-            SpruceWebSocket.spruceUpdateData.collect { element ->
+            RamondaWebSocket.ramondaUpdateData.collect { element ->
                 if (element != null) {
                     try {
                         val data =
@@ -202,7 +202,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     override fun onCleared() {
         super.onCleared()
-        tripSelected.chateau_id?.let { SpruceWebSocket.unsubscribeTrip(it) }
+        tripSelected.chateau_id?.let { RamondaWebSocket.unsubscribeTrip(it) }
     }
 
     // --- Logic ported from Svelte ---
