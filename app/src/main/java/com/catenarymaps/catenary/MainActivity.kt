@@ -4863,7 +4863,7 @@ class MainActivity : ComponentActivity() {
                                                                                                 )
                                                                                 )
                                                                                 Text(
-                                                                                        "Vehicle Labels",
+                                                                                        stringResource(R.string.vehicle_labels),
                                                                                         style =
                                                                                                 MaterialTheme
                                                                                                         .typography

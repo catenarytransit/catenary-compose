@@ -138,4 +138,5 @@
     <string name="heading_monorail">单轨</string>
     <string name="heading_cable_tram">有轨电车</string>
     <string name="label_interpolated_trajectories">标注插值轨迹</string>
+    <string name="vehicle_labels">车辆标签</string>
 </resources>

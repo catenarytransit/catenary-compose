@@ -139,4 +139,5 @@
     <string name="heading_monorail">Монорейка</string>
     <string name="heading_cable_tram">Канатна дорога</string>
     <string name="label_interpolated_trajectories">Позначати інтерпольовані траєкторії</string>
+    <string name="vehicle_labels">Мітки транспорту</string>
 </resources>

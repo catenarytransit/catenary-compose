@@ -137,4 +137,5 @@
     <string name="heading_monorail">Monorotaia</string>
     <string name="heading_cable_tram">Tram a trazione funicolare</string>
     <string name="label_interpolated_trajectories">Etichetta traiettorie interpolate</string>
+    <string name="vehicle_labels">Etichette dei veicoli</string>
 </resources>

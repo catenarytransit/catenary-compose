@@ -136,4 +136,5 @@
     <string name="heading_monorail">Monorail</string>
     <string name="heading_cable_tram">Tramway à câble</string>
     <string name="label_interpolated_trajectories">Étiqueter les trajectoires interpolées</string>
+    <string name="vehicle_labels">Étiquettes des véhicules</string>
 </resources>

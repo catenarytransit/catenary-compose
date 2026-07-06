@@ -137,4 +137,5 @@
     <string name="heading_monorail">Монорелса</string>
     <string name="heading_cable_tram">Въжена линия</string>
     <string name="label_interpolated_trajectories">Етикетиране на интерполирани траектории</string>
+    <string name="vehicle_labels">Етикети за превозни средства</string>
 </resources>

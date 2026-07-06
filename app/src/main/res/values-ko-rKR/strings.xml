@@ -138,4 +138,5 @@
     <string name="heading_monorail">모노레일</string>
     <string name="heading_cable_tram">케이블카</string>
     <string name="label_interpolated_trajectories">보간된 궤적 라벨 표시</string>
+    <string name="vehicle_labels">차량 라벨</string>
 </resources>

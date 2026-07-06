@@ -139,4 +139,5 @@
     <string name="heading_monorail">Монорельс</string>
     <string name="heading_cable_tram">Канатный трамвай</string>
     <string name="label_interpolated_trajectories">Обозначать интерполированные траектории</string>
+    <string name="vehicle_labels">Метки транспорта</string>
 </resources>

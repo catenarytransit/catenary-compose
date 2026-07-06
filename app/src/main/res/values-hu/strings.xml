@@ -137,4 +137,5 @@
     <string name="heading_monorail">Egysínű vasút</string>
     <string name="heading_cable_tram">Felvonó</string>
     <string name="label_interpolated_trajectories">Interpolált pályák feliratozása</string>
+    <string name="vehicle_labels">Járműcímkék</string>
 </resources>

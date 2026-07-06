@@ -137,4 +137,5 @@
     <string name="heading_monorail">Monorail</string>
     <string name="heading_cable_tram">Svævebane</string>
     <string name="label_interpolated_trajectories">Mærk interpolerede trajektorier</string>
+    <string name="vehicle_labels">Køretøjsetiketter</string>
 </resources>

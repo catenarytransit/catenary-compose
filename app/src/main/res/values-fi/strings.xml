@@ -137,4 +137,5 @@
     <string name="heading_monorail">Monorail</string>
     <string name="heading_cable_tram">Köysirata</string>
     <string name="label_interpolated_trajectories">Merkitse interpoloidut reitit</string>
+    <string name="vehicle_labels">Ajoneuvojen tunnisteet</string>
 </resources>

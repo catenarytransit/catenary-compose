@@ -134,4 +134,5 @@
     <string name="heading_monorail">Einschienenbahn</string>
     <string name="heading_cable_tram">Kabelstraßenbahn</string>
     <string name="label_interpolated_trajectories">Interpolierte Trajektorien beschriften</string>
+    <string name="vehicle_labels">Fahrzeugbeschriftungen</string>
 </resources>

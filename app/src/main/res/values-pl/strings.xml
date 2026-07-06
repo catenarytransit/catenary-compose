@@ -139,4 +139,5 @@
     <string name="heading_monorail">Kolej jednoszynowa</string>
     <string name="heading_cable_tram">Kolej linowa</string>
     <string name="label_interpolated_trajectories">Etykiety interpolowanych trajektorii</string>
+    <string name="vehicle_labels">Etykiety pojazdów</string>
 </resources>

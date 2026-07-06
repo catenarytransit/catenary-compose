@@ -139,4 +139,5 @@
     <string name="heading_monorail">Jednokoľajová dráha</string>
     <string name="heading_cable_tram">Lanovka</string>
     <string name="label_interpolated_trajectories">Označiť interpolované trajektórie</string>
+    <string name="vehicle_labels">Štítky vozidiel</string>
 </resources>
