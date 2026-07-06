@@ -25,6 +25,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import java.lang.Math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.floor
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+val realtimeDataMutex = Mutex()
 
 @Serializable
 data class AgencyFilterRequest(val agency_filter: List<String>?, val chateau: String)
@@ -43,7 +47,7 @@ fun fetchRoutesOfChateauByAgency(
 
             val requestBody =
                 AgencyFilterRequest(agency_filter = if (agencyIdList.isEmpty()) null else if (routeCacheAgenciesKnownForThisChateau != null) agencyIdList.filter {
-                    !routeCacheAgenciesKnownForThisChateau!!.contains(
+                    !routeCacheAgenciesKnownForThisChateau.contains(
                         it
                     )
                 } else agencyIdList, chateau = chateauId)
@@ -54,32 +58,31 @@ fun fetchRoutesOfChateauByAgency(
                 }.body()
             println("Fetched ${newRoutes.size} routes for chateau $chateauId")
 
-            val currentCache = routeCache.value.toMutableMap()
-            val chateauCache = currentCache.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
-            newRoutes.forEach { route ->
-                val routeId = route.route_id
-                chateauCache[routeId] = route
-                // println("saving route $routeId in chateau cache $chateauId")
-            }
-            currentCache[chateauId] = chateauCache
-            routeCache.value = currentCache
+            realtimeDataMutex.withLock {
+                val currentCache = routeCache.value.toMutableMap()
+                val chateauCache = currentCache.getOrPut(chateauId) { emptyMap() }.toMutableMap()
+                newRoutes.forEach { route ->
+                    val routeId = route.route_id
+                    chateauCache[routeId] = route
+                }
+                currentCache[chateauId] = chateauCache.toMap()
+                routeCache.value = currentCache.toMap()
 
-            val currentAgenciesKnown = routeCacheAgenciesKnown.value.toMutableMap()
+                val currentAgenciesKnown = routeCacheAgenciesKnown.value.toMutableMap()
+                val chateauAgenciesKnown =
+                    currentAgenciesKnown.getOrPut(chateauId) { emptyList() }.toMutableList()
 
-            val chateauAgenciesKnown =
-                currentAgenciesKnown.getOrPut(chateauId) { mutableListOf() }.toMutableList()
-
-            newRoutes.forEach { route ->
-                val agencyId = route.agency_id
-                if (!chateauAgenciesKnown.contains(agencyId)) {
-                    if (agencyId != null) {
-                        chateauAgenciesKnown.add(agencyId)
+                newRoutes.forEach { route ->
+                    val agencyId = route.agency_id
+                    if (!chateauAgenciesKnown.contains(agencyId)) {
+                        if (agencyId != null) {
+                            chateauAgenciesKnown.add(agencyId)
+                        }
                     }
                 }
-
+                currentAgenciesKnown[chateauId] = chateauAgenciesKnown.toList()
+                routeCacheAgenciesKnown.value = currentAgenciesKnown.toMap()
             }
-            currentAgenciesKnown[chateauId] = chateauAgenciesKnown
-            routeCacheAgenciesKnown.value = currentAgenciesKnown
 
         } catch (e: Exception) {
             // Log error
@@ -97,151 +100,153 @@ suspend fun processRealtimeDataV2(
     realtimeVehicleRouteCache: MutableState<Map<String, Map<String, RouteCacheEntry>>>,
     routeCacheAgenciesKnown: MutableState<Map<String, List<String>>>,
     ktorClient: HttpClient
-) {
-    val newLocations = realtimeVehicleLocationsStoreV2.value.toMutableMap()
-    val newLastUpdated = realtimeVehicleLocationsLastUpdated.value.toMutableMap()
-    val newPrevBounds = previousTileBoundariesStore.value.toMutableMap()
+) = withContext(Dispatchers.Default) {
+    realtimeDataMutex.withLock {
+        val newLocations = realtimeVehicleLocationsStoreV2.value.toMutableMap()
+        val newLastUpdated = realtimeVehicleLocationsLastUpdated.value.toMutableMap()
+        val newPrevBounds = previousTileBoundariesStore.value.toMutableMap()
 
-    response.chateaus.forEach { (chateauId, chateauData) ->
-        chateauData.categories?.let { categories ->
-            val categoryMap = mapOf(
-                "bus" to categories.bus,
-                "metro" to categories.metro,
-                "rail" to categories.rail,
-                "other" to categories.other
-            )
-
-
-            var shouldFetchRoutes = false
-            val agency_ids_to_fetch = mutableListOf<String>()
-
-            categoryMap.forEach { (categoryName, categoryData) ->
-                if (categoryData != null) {
-                    val zLevel = categoryData.z_level
-                    val boundsForLevel = when (zLevel) {
-                        5 -> bounds.level5
-                        7 -> bounds.level7
-                        8 -> bounds.level8
-                        12 -> bounds.level12
-                        else -> null
-                    }
-
-                    if (boundsForLevel != null) {
-                        val chateauPrevBounds =
-                            newPrevBounds.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
-                        chateauPrevBounds[categoryName] = TileBounds(
-                            boundsForLevel.min_x,
-                            boundsForLevel.max_x,
-                            boundsForLevel.min_y,
-                            boundsForLevel.max_y
-                        )
-                        newPrevBounds[chateauId] = chateauPrevBounds
-                    }
+        response.chateaus.forEach { (chateauId, chateauData) ->
+            chateauData.categories?.let { categories ->
+                val categoryMap = mapOf(
+                    "bus" to categories.bus,
+                    "metro" to categories.metro,
+                    "rail" to categories.rail,
+                    "other" to categories.other
+                )
 
 
-                    if (categoryData.vehicle_positions != null) {
+                var shouldFetchRoutes = false
+                val agency_ids_to_fetch = mutableListOf<String>()
 
-                        //iter through all vehicles
-                        categoryData.vehicle_positions.forEach { (x, yMap) ->
-                            yMap.forEach { (y, vehicleMap) ->
-                                vehicleMap.forEach { (_, vehicleData) ->
+                categoryMap.forEach { (categoryName, categoryData) ->
+                    if (categoryData != null) {
+                        val zLevel = categoryData.z_level
+                        val boundsForLevel = when (zLevel) {
+                            5 -> bounds.level5
+                            7 -> bounds.level7
+                            8 -> bounds.level8
+                            12 -> bounds.level12
+                            else -> null
+                        }
 
-                                    val routeId = vehicleData.trip?.route_id
-                                    if (routeId != null) {
-                                        //check realtimeVehicleLocationsStoreV2
-                                        if (realtimeVehicleRouteCache.value.containsKey(
-                                                chateauId
-                                            )
-                                        ) {
-                                            if (realtimeVehicleRouteCache.value[chateauId]!!.containsKey(
-                                                    routeId
+                        if (boundsForLevel != null) {
+                            val chateauPrevBounds =
+                                newPrevBounds.getOrPut(chateauId) { emptyMap() }.toMutableMap()
+                            chateauPrevBounds[categoryName] = TileBounds(
+                                boundsForLevel.min_x,
+                                boundsForLevel.max_x,
+                                boundsForLevel.min_y,
+                                boundsForLevel.max_y
+                            )
+                            newPrevBounds[chateauId] = chateauPrevBounds.toMap()
+                        }
+
+
+                        if (categoryData.vehicle_positions != null) {
+
+                            //iter through all vehicles
+                            categoryData.vehicle_positions.forEach { (x, yMap) ->
+                                yMap.forEach { (y, vehicleMap) ->
+                                    vehicleMap.forEach { (_, vehicleData) ->
+
+                                        val routeId = vehicleData.trip?.route_id
+                                        if (routeId != null) {
+                                            //check realtimeVehicleLocationsStoreV2
+                                            if (realtimeVehicleRouteCache.value.containsKey(
+                                                    chateauId
                                                 )
                                             ) {
+                                                if (realtimeVehicleRouteCache.value[chateauId]!!.containsKey(
+                                                        routeId
+                                                    )
+                                                ) {
 
+                                                } else {
+                                                    shouldFetchRoutes = true
+
+                                                }
                                             } else {
+                                                //println("Instructing chateau ${chateauId} to fetch routes because no route index exists yet")
                                                 shouldFetchRoutes = true
 
                                             }
-                                        } else {
-                                            //println("Instructing chateau ${chateauId} to fetch routes because no route index exists yet")
-                                            shouldFetchRoutes = true
-
                                         }
-                                    }
 
+                                    }
                                 }
                             }
-                        }
 
 
-                        val categoryLocations =
-                            newLocations.getOrPut(categoryName) { mutableMapOf() }.toMutableMap()
-                        if (categoryData.replaces_all) {
-                            val chateauLocations =
-                                categoryLocations.getOrPut(chateauId) { mutableMapOf() }
-                                    .toMutableMap()
-                            // The structure is Map<String, Map<String, ...>> but should be Map<Int, Map<Int, ...>>
-                            // Assuming kotlinx.serialization handles the string-to-int key conversion.
-                            val vehiclePositionsIntKeys =
-                                categoryData.vehicle_positions.mapKeys { it.key.toInt() }
-                                    .mapValues { entry -> entry.value.mapKeys { it.key.toInt() } }
+                            val categoryLocations =
+                                newLocations.getOrPut(categoryName) { emptyMap() }.toMutableMap()
+                            if (categoryData.replaces_all) {
+                                val chateauLocations =
+                                    categoryLocations.getOrPut(chateauId) { emptyMap() }
+                                        .toMutableMap()
+                                // The structure is Map<String, Map<String, ...>> but should be Map<Int, Map<Int, ...>>
+                                // Assuming kotlinx.serialization handles the string-to-int key conversion.
+                                val vehiclePositionsIntKeys =
+                                    categoryData.vehicle_positions.mapKeys { it.key.toInt() }
+                                        .mapValues { entry -> entry.value.mapKeys { it.key.toInt() } }
 
 
 
-                            chateauLocations.clear()
-                            chateauLocations.putAll(vehiclePositionsIntKeys)
-                            categoryLocations[chateauId] = chateauLocations
-                        } else {
-                            val chateauLocations =
-                                categoryLocations.getOrPut(chateauId) { mutableMapOf() }
-                                    .toMutableMap()
-                            categoryData.vehicle_positions.forEach { (x, yMap) ->
-                                val xInt = x.toInt()
-                                val yMapIntKeys = yMap.mapKeys { it.key.toInt() }
-                                val xLocations = chateauLocations.getOrPut(xInt) { mutableMapOf() }
-                                    .toMutableMap()
-                                xLocations.putAll(yMapIntKeys)
-                                chateauLocations[xInt] = xLocations
-                            }
-                            categoryLocations[chateauId] = chateauLocations
-                        }
-
-                        if (shouldFetchRoutes) {
-                            if (categoryData.list_of_agency_ids != null) {
-                                agency_ids_to_fetch.addAll(categoryData.list_of_agency_ids!!.toList())
+                                chateauLocations.clear()
+                                chateauLocations.putAll(vehiclePositionsIntKeys)
+                                categoryLocations[chateauId] = chateauLocations.toMap()
+                            } else {
+                                val chateauLocations =
+                                    categoryLocations.getOrPut(chateauId) { emptyMap() }
+                                        .toMutableMap()
+                                categoryData.vehicle_positions.forEach { (x, yMap) ->
+                                    val xInt = x.toInt()
+                                    val yMapIntKeys = yMap.mapKeys { it.key.toInt() }
+                                    val xLocations = chateauLocations.getOrPut(xInt) { emptyMap() }
+                                        .toMutableMap()
+                                    xLocations.putAll(yMapIntKeys)
+                                    chateauLocations[xInt] = xLocations.toMap()
+                                }
+                                categoryLocations[chateauId] = chateauLocations.toMap()
                             }
 
+                            if (shouldFetchRoutes) {
+                                if (categoryData.list_of_agency_ids != null) {
+                                    agency_ids_to_fetch.addAll(categoryData.list_of_agency_ids.toList())
+                                }
+
+                            }
+                            newLocations[categoryName] = categoryLocations.toMap()
                         }
-                        newLocations[categoryName] = categoryLocations
+
+                        val chateauLastUpdated =
+                            newLastUpdated.getOrPut(chateauId) { emptyMap() }.toMutableMap()
+                        chateauLastUpdated[categoryName] = categoryData.last_updated_time_ms
+                        newLastUpdated[chateauId] = chateauLastUpdated.toMap()
+
+
                     }
-
-                    val chateauLastUpdated =
-                        newLastUpdated.getOrPut(chateauId) { mutableMapOf() }.toMutableMap()
-                    chateauLastUpdated[categoryName] = categoryData.last_updated_time_ms
-                    newLastUpdated[chateauId] = chateauLastUpdated
 
 
                 }
 
+                if (shouldFetchRoutes) {
+                    fetchRoutesOfChateauByAgency(
+                        chateauId,
+                        agency_ids_to_fetch,
+                        realtimeVehicleRouteCache,
+                        routeCacheAgenciesKnown,
+                        ktorClient
+                    )
 
-            }
-
-            if (shouldFetchRoutes) {
-                fetchRoutesOfChateauByAgency(
-                    chateauId,
-                    agency_ids_to_fetch,
-                    realtimeVehicleRouteCache,
-                    routeCacheAgenciesKnown,
-                    ktorClient
-                )
-
+                }
             }
         }
-    }
 
-    realtimeVehicleLocationsStoreV2.value = newLocations
-    previousTileBoundariesStore.value = newPrevBounds
-    realtimeVehicleLocationsLastUpdated.value = newLastUpdated
+        realtimeVehicleLocationsStoreV2.value = newLocations.toMap()
+        previousTileBoundariesStore.value = newPrevBounds.toMap()
+        realtimeVehicleLocationsLastUpdated.value = newLastUpdated.toMap()
+    }
 }
 
 

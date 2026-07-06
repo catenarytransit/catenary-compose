@@ -206,32 +206,38 @@ object SpruceWebSocket {
     }
 
     fun updateMap(categories: List<String>, boundsInput: BoundsInput) {
-        ensureConnection()
-        val params =
-                MapViewportUpdate(
-                        categories = categories,
-                        bounds_input = boundsInput
-                )
-        activeMapParams = params
-        sendMapUpdate(params)
+        scope.launch {
+            ensureConnection()
+            val params =
+                    MapViewportUpdate(
+                            categories = categories,
+                            bounds_input = boundsInput
+                    )
+            activeMapParams = params
+            sendMapUpdate(params)
+        }
     }
 
     fun subscribeTrajectories(bbox: List<Double>, zoom: Int, modes: List<String>) {
-        ensureConnection()
-        val params = SubscribeTrajectories(bbox = bbox, zoom = zoom, modes = modes)
-        activeTrajectoryParams = params
-        sendTrajectorySubscription(params)
+        scope.launch {
+            ensureConnection()
+            val params = SubscribeTrajectories(bbox = bbox, zoom = zoom, modes = modes)
+            activeTrajectoryParams = params
+            sendTrajectorySubscription(params)
+        }
     }
 
     fun unsubscribeTrajectories() {
-        activeTrajectoryParams = null
-        if (_spruceStatus.value == "connected") {
-            try {
-                val msg = UnsubscribeTrajectories()
-                val text = json.encodeToString(msg)
-                webSocket?.send(text)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error sending unsubscribe trajectories", e)
+        scope.launch {
+            activeTrajectoryParams = null
+            if (_spruceStatus.value == "connected") {
+                try {
+                    val msg = UnsubscribeTrajectories()
+                    val text = json.encodeToString(msg)
+                    webSocket?.send(text)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error sending unsubscribe trajectories", e)
+                }
             }
         }
     }

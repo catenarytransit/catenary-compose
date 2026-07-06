@@ -139,6 +139,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -1083,108 +1084,110 @@ class MainActivity : ComponentActivity() {
                         }
                 }
 
-                fun pruneStaleChateauData(bounds: BoundingBox) {
-                        // Get a snapshot of the currently visible chateaus by checking vehicle bounds
-                        val visibleSet = mutableSetOf<String>()
-                        val latMargin = 0.05
-                        val lonMargin = 0.05
-                        val minLat = bounds.south - latMargin
-                        val maxLat = bounds.north + latMargin
-                        val minLon = bounds.west - lonMargin
-                        val maxLon = bounds.east + lonMargin
+                suspend fun pruneStaleChateauData(bounds: BoundingBox) = withContext(Dispatchers.Default) {
+                        realtimeDataMutex.withLock {
+                                // Get a snapshot of the currently visible chateaus by checking vehicle bounds
+                                val visibleSet = mutableSetOf<String>()
+                                val latMargin = 0.05
+                                val lonMargin = 0.05
+                                val minLat = bounds.south - latMargin
+                                val maxLat = bounds.north + latMargin
+                                val minLon = bounds.west - lonMargin
+                                val maxLon = bounds.east + lonMargin
 
-                        val currentLocationsV2 = realtimeVehicleLocationsStoreV2.value
-                        currentLocationsV2.forEach { (_, chateauMap) ->
-                                chateauMap.forEach { (chateauId, xMap) ->
-                                        if (!visibleSet.contains(chateauId)) {
-                                                var isVisible = false
-                                                xMap.values.forEach { yMap ->
-                                                        if (!isVisible) {
-                                                                yMap.values.forEach { vehicleMap ->
-                                                                        if (!isVisible) {
-                                                                                vehicleMap.values.forEach { vehicle ->
-                                                                                        vehicle.position?.let { pos ->
-                                                                                                if (pos.latitude in minLat..maxLat && pos.longitude in minLon..maxLon) {
-                                                                                                        isVisible = true
+                                val currentLocationsV2 = realtimeVehicleLocationsStoreV2.value
+                                currentLocationsV2.forEach { (_, chateauMap) ->
+                                        chateauMap.forEach { (chateauId, xMap) ->
+                                                if (!visibleSet.contains(chateauId)) {
+                                                        var isVisible = false
+                                                        xMap.values.forEach { yMap ->
+                                                                if (!isVisible) {
+                                                                        yMap.values.forEach { vehicleMap ->
+                                                                                if (!isVisible) {
+                                                                                        vehicleMap.values.forEach { vehicle ->
+                                                                                                vehicle.position?.let { pos ->
+                                                                                                        if (pos.latitude in minLat..maxLat && pos.longitude in minLon..maxLon) {
+                                                                                                                isVisible = true
+                                                                                                        }
                                                                                                 }
                                                                                         }
                                                                                 }
                                                                         }
                                                                 }
                                                         }
-                                                }
-                                                if (isVisible) {
-                                                        visibleSet.add(chateauId)
+                                                        if (isVisible) {
+                                                                visibleSet.add(chateauId)
+                                                        }
                                                 }
                                         }
                                 }
-                        }
-                        
-                        Log.d(TAG, "Pruning data. Keeping ${visibleSet.size} chateaus.")
+                                
+                                Log.d(TAG, "Pruning data. Keeping ${visibleSet.size} chateaus.")
 
-                        // Prune maps keyed by ChateauID
-                        val currentCache = realtimeVehicleRouteCache.value
-                        val currentCacheKeys = currentCache.keys
-                        if (currentCacheKeys.size != visibleSet.size ||
-                                        !currentCacheKeys.containsAll(visibleSet)
-                        ) {
-                                realtimeVehicleRouteCache.value =
-                                        currentCache.filterKeys { it in visibleSet }
-                        }
-
-                        val currentLastUpdated = realtimeVehicleLocationsLastUpdated.value
-                        val currentLastUpdatedKeys = currentLastUpdated.keys
-                        if (currentLastUpdatedKeys.size != visibleSet.size ||
-                                        !currentLastUpdatedKeys.containsAll(visibleSet)
-                        ) {
-                                realtimeVehicleLocationsLastUpdated.value =
-                                        currentLastUpdated.filterKeys { it in visibleSet }
-                        }
-
-                        val currentAgenciesKnown = routeCacheAgenciesKnown.value
-                        val currentAgenciesKnownKeys = currentAgenciesKnown.keys
-                        if (currentAgenciesKnownKeys.size != visibleSet.size ||
-                                        !currentAgenciesKnownKeys.containsAll(visibleSet)
-                        ) {
-                                routeCacheAgenciesKnown.value =
-                                        currentAgenciesKnown.filterKeys { it in visibleSet }
-                        }
-
-                        // Prune the 'realtimeVehicleLocations' map (which is keyed by Category
-                        // first)
-                        // Early exit if no pruning is needed at all.
-                        if (currentLocationsV2.values.all { chateauMap ->
-                                        chateauMap.keys.size == visibleSet.size &&
-                                                chateauMap.keys.containsAll(visibleSet)
+                                // Prune maps keyed by ChateauID
+                                val currentCache = realtimeVehicleRouteCache.value
+                                val currentCacheKeys = currentCache.keys
+                                if (currentCacheKeys.size != visibleSet.size ||
+                                                !currentCacheKeys.containsAll(visibleSet)
+                                ) {
+                                        realtimeVehicleRouteCache.value =
+                                                currentCache.filterKeys { it in visibleSet }.toMap()
                                 }
-                        ) {
-                                // All categories already have the correct set of chateaus, nothing
-                                // to do.
-                        } else {
 
-                                var locationsV2Modified = false
-                                val newLocationsV2 = currentLocationsV2.toMutableMap()
+                                val currentLastUpdated = realtimeVehicleLocationsLastUpdated.value
+                                val currentLastUpdatedKeys = currentLastUpdated.keys
+                                if (currentLastUpdatedKeys.size != visibleSet.size ||
+                                                !currentLastUpdatedKeys.containsAll(visibleSet)
+                                ) {
+                                        realtimeVehicleLocationsLastUpdated.value =
+                                                currentLastUpdated.filterKeys { it in visibleSet }.toMap()
+                                }
 
-                                currentLocationsV2.forEach { (category, chateauMap) ->
-                                        if (chateauMap.keys.any { it !in visibleSet }) {
-                                                newLocationsV2[category] =
-                                                        chateauMap.filterKeys { it in visibleSet }
-                                                locationsV2Modified = true
+                                val currentAgenciesKnown = routeCacheAgenciesKnown.value
+                                val currentAgenciesKnownKeys = currentAgenciesKnown.keys
+                                if (currentAgenciesKnownKeys.size != visibleSet.size ||
+                                                !currentAgenciesKnownKeys.containsAll(visibleSet)
+                                ) {
+                                        routeCacheAgenciesKnown.value =
+                                                currentAgenciesKnown.filterKeys { it in visibleSet }.toMap()
+                                }
+
+                                // Prune the 'realtimeVehicleLocations' map (which is keyed by Category
+                                // first)
+                                // Early exit if no pruning is needed at all.
+                                if (currentLocationsV2.values.all { chateauMap ->
+                                                chateauMap.keys.size == visibleSet.size &&
+                                                        chateauMap.keys.containsAll(visibleSet)
+                                        }
+                                ) {
+                                        // All categories already have the correct set of chateaus, nothing
+                                        // to do.
+                                } else {
+
+                                        var locationsV2Modified = false
+                                        val newLocationsV2 = currentLocationsV2.toMutableMap()
+
+                                        currentLocationsV2.forEach { (category, chateauMap) ->
+                                                if (chateauMap.keys.any { it !in visibleSet }) {
+                                                        newLocationsV2[category] =
+                                                                chateauMap.filterKeys { it in visibleSet }.toMap()
+                                                        locationsV2Modified = true
+                                                }
+                                        }
+
+                                        if (locationsV2Modified) {
+                                                realtimeVehicleLocationsStoreV2.value = newLocationsV2.toMap()
                                         }
                                 }
 
-                                if (locationsV2Modified) {
-                                        realtimeVehicleLocationsStoreV2.value = newLocationsV2
+                                val currentTileBoundaries = previousTileBoundariesStore.value
+                                val currentTileBoundariesKeys = currentTileBoundaries.keys
+                                if (currentTileBoundariesKeys.size != visibleSet.size ||
+                                                !currentTileBoundariesKeys.containsAll(visibleSet)
+                                ) {
+                                        previousTileBoundariesStore.value =
+                                                currentTileBoundaries.filterKeys { it in visibleSet }.toMap()
                                 }
-                        }
-
-                        val currentTileBoundaries = previousTileBoundariesStore.value
-                        val currentTileBoundariesKeys = currentTileBoundaries.keys
-                        if (currentTileBoundariesKeys.size != visibleSet.size ||
-                                        !currentTileBoundariesKeys.containsAll(visibleSet)
-                        ) {
-                                previousTileBoundariesStore.value =
-                                        currentTileBoundaries.filterKeys { it in visibleSet }
                         }
                 }
 
