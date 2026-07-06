@@ -309,6 +309,7 @@ object TrajectoryManager {
         }
 
         interpolationJob = scope.launch(Dispatchers.Default) {
+            var hadFeaturesPreviously = false
             while (true) {
                 delay(100)
 
@@ -374,6 +375,14 @@ object TrajectoryManager {
                         }
                     }
                 }
+
+                val hasFeaturesNow = busesFeatures.isNotEmpty() || localrailFeatures.isNotEmpty() || intercityrailFeatures.isNotEmpty() || otherFeatures.isNotEmpty()
+
+                if (!hasFeaturesNow && !hadFeaturesPreviously) {
+                    continue
+                }
+
+                hadFeaturesPreviously = hasFeaturesNow
 
                 kotlinx.coroutines.withContext(Dispatchers.Main) {
                     trajBusDotsSrc.value.setData(GeoJsonData.Features(FeatureCollection(busesFeatures)))
