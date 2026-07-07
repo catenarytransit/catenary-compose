@@ -1996,10 +1996,10 @@ class MainActivity : ComponentActivity() {
                                         MaplibreMap(
                                                 modifier =
                                                         Modifier
-                                                                .fillMaxSize()
-                                                                .onSizeChanged { newSize ->
-                                                                        mapSize = newSize
-                                                                },
+                                                            .fillMaxSize()
+                                                            .onSizeChanged { newSize ->
+                                                                mapSize = newSize
+                                                            },
                                                 baseStyle = BaseStyle.Uri(styleUri),
                                                 cameraState = camera,
                                                 onMapClick = { latlng, screenPos ->
@@ -2577,7 +2577,8 @@ class MainActivity : ComponentActivity() {
                                                                 trajMetroDotsSrc = trajMetroDotsSrc,
                                                                 trajRailDotsSrc = trajRailDotsSrc,
                                                                 trajOtherDotsSrc = trajOtherDotsSrc,
-                                                                isDark = isDark
+                                                            isDark = isDark,
+                                                            camera = camera
                                                         )
                                                 }
 
@@ -3246,26 +3247,26 @@ class MainActivity : ComponentActivity() {
                                         // Main Draggable Bottom Sheet
                                         val sheetModifier =
                                                 Modifier
-                                                        .fillMaxWidth(contentWidthFraction)
-                                                        .align(Alignment.BottomStart)
+                                                    .fillMaxWidth(contentWidthFraction)
+                                                    .align(Alignment.BottomStart)
 
                                         Surface(
                                                 modifier =
                                                         sheetModifier
-                                                                .offset {
-                                                                        IntOffset(
-                                                                                x = 0,
-                                                                                y =
-                                                                                        draggableState
-                                                                                                .requireOffset()
-                                                                                                .roundToInt()
-                                                                        )
-                                                                }
-                                                                .anchoredDraggable(
-                                                                        state = draggableState,
-                                                                        orientation =
-                                                                                Orientation.Vertical
-                                                                ),
+                                                            .offset {
+                                                                IntOffset(
+                                                                    x = 0,
+                                                                    y =
+                                                                        draggableState
+                                                                            .requireOffset()
+                                                                            .roundToInt()
+                                                                )
+                                                            }
+                                                            .anchoredDraggable(
+                                                                state = draggableState,
+                                                                orientation =
+                                                                    Orientation.Vertical
+                                                            ),
                                                 shape =
                                                         RoundedCornerShape(
                                                                 topStart = 20.dp,
@@ -3276,37 +3277,37 @@ class MainActivity : ComponentActivity() {
                                                 Column(
                                                         modifier =
                                                                 Modifier
-                                                                        .fillMaxWidth()
-                                                                        .fillMaxHeight()
-                                                                        .padding( // This padding
-                                                                                // ensures content
-                                                                                // doesn't
-                                                                                // get clipped at
-                                                                                // the bottom
-                                                                                bottom =
+                                                                    .fillMaxWidth()
+                                                                    .fillMaxHeight()
+                                                                    .padding( // This padding
+                                                                        // ensures content
+                                                                        // doesn't
+                                                                        // get clipped at
+                                                                        // the bottom
+                                                                        bottom =
+                                                                            with(
+                                                                                LocalDensity
+                                                                                    .current
+                                                                            ) {
+                                                                                ((draggableState
+                                                                                    .requireOffset()))
+                                                                                    .toDp()
+                                                                                    .coerceAtLeast(
+                                                                                        0.dp
+                                                                                    )
+                                                                                    .coerceAtMost(
                                                                                         with(
-                                                                                                LocalDensity
-                                                                                                        .current
+                                                                                            LocalDensity
+                                                                                                .current
                                                                                         ) {
-                                                                                                ((draggableState
-                                                                                                        .requireOffset()))
-                                                                                                        .toDp()
-                                                                                                        .coerceAtLeast(
-                                                                                                                0.dp
-                                                                                                        )
-                                                                                                        .coerceAtMost(
-                                                                                                                with(
-                                                                                                                        LocalDensity
-                                                                                                                                .current
-                                                                                                                ) {
-                                                                                                                        maxHeight
-                                                                                                                                .times(
-                                                                                                                                        0.9f
-                                                                                                                                )
-                                                                                                                }
-                                                                                                        )
+                                                                                            maxHeight
+                                                                                                .times(
+                                                                                                    0.9f
+                                                                                                )
                                                                                         }
-                                                                        ),
+                                                                                    )
+                                                                            }
+                                                                    ),
                                                         horizontalAlignment =
                                                                 Alignment.CenterHorizontally
                                                 ) {

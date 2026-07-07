@@ -209,7 +209,8 @@ object TrajectoryManager {
         trajMetroDotsSrc: MutableState<GeoJsonSource>,
         trajRailDotsSrc: MutableState<GeoJsonSource>,
         trajOtherDotsSrc: MutableState<GeoJsonSource>,
-        isDark: Boolean
+        isDark: Boolean,
+        camera: CameraState
     ) {
         stopTrajectoryManager()
 
@@ -311,7 +312,16 @@ object TrajectoryManager {
         interpolationJob = scope.launch(Dispatchers.Default) {
             var hadFeaturesPreviously = false
             while (true) {
-                delay(100)
+                val zoom = camera.position.zoom
+                val isMoving = camera.isMoving
+
+                val delayTime = when {
+                    zoom < 7 -> 2000L
+                    isMoving -> 1000L
+                    zoom > 12 -> 200L
+                    else -> 300L
+                }
+                delay(delayTime)
 
                 val now = System.currentTimeMillis()
 

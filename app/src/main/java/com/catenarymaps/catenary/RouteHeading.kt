@@ -110,6 +110,19 @@ fun RouteHeading(
                 val isLondonOverground = shortName?.startsWith("LO-") == true
                 val isElizabethLine = shortName == "XR-ELIZABETH"
 
+                val isDbFernverkehr = chateauId == "deutschland" &&
+                        (agencyName == "DB Fernverkehr AG" || agencyName == "DB Fernverkehr (Codesharing)")
+
+                val tripShortNameNoZeros = tripShortName?.replace(Regex("^0+"), "")
+                val dbDisplayName = if (isDbFernverkehr) {
+                    tripShortNameNoZeros?.let {
+                        com.catenarymaps.catenary.utils.DbFernverkehrUtils.getDisplayName(
+                            LocalContext.current,
+                            it
+                        )
+                    } ?: tripShortName
+                } else null
+
                 // Determine if we have a graphical icon (Ratp or MTA)
                 // This logic mirrors your original nesting but separates layout from logic
                 var iconComposable: (@Composable () -> Unit)? = null
@@ -192,7 +205,7 @@ fun RouteHeading(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                } else if (!shortName.isNullOrBlank() &&
+                } else if (!isDbFernverkehr && !shortName.isNullOrBlank() &&
                     (!isNationalRail || isLondonOverground || isElizabethLine) &&
                     chateauId != "metrolinktrains"
                 ) {
@@ -229,11 +242,15 @@ fun RouteHeading(
 
                         // Part A: Short Name (Only if no icon was displayed)
                         if (iconComposable == null &&
-                            !shortName.isNullOrBlank() &&
+                            (!shortName.isNullOrBlank() || isDbFernverkehr) &&
                                         (!isNationalRail || isLondonOverground || isElizabethLine)
                         ) {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                append(shortName.replace(" Line", ""))
+                                if (isDbFernverkehr && dbDisplayName != null) {
+                                    append(dbDisplayName)
+                                } else {
+                                    append(shortName?.replace(" Line", "") ?: "")
+                                }
                             }
                             append(" ") // Spacer
                         }
@@ -254,7 +271,7 @@ fun RouteHeading(
                         }
 
                         // Part C: Trip Short Name
-                        if (tripShortName != null) {
+                        if (tripShortName != null && !isDbFernverkehr) {
                             // Ensure visual separation if we have previous text
                             if (length > 0) append(" ")
 
@@ -285,6 +302,10 @@ fun RouteHeading(
 
                 if (!agencyName.isNullOrBlank()) {
                     Text(text = agencyName ?: "", style = MaterialTheme.typography.titleMedium)
+                }
+
+                if (isDbFernverkehr && !shortName.isNullOrBlank()) {
+                    Text(text = "Linie $shortName", style = MaterialTheme.typography.titleMedium)
                 }
 
                 if (!description.isNullOrBlank()) {

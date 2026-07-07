@@ -124,7 +124,7 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
             textHaloColor = colorBusLine,
             textHaloWidth = const(2.dp),
             textHaloBlur = const(0.dp),
-            minZoom = if (railinframe) 13f else 11f,
+            minZoom = if (railinframe) 13.5f else 11f,
             visible = bus.labelshapes
     )
 
@@ -295,8 +295,8 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
                             type = linear(),
                             input = zoom(),
                             3 to const(0.25.dp),
-                            5 to const(0.5.dp),
-                            7 to const(0.9.dp),
+                            5 to const(0.4.dp),
+                            7 to const(0.8.dp),
                             9 to const(2.0.dp),
                             11 to const(2.5.dp),
                     ),
@@ -363,7 +363,8 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            6 to const(0.5.dp),
+                            5 to const(0.3.dp),
+                            6 to const(0.4.dp),
                             7 to const(1.0.dp),
                             9 to const(2.0.dp),
                     ),

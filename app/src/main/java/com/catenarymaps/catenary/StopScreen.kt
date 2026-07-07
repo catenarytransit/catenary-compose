@@ -39,6 +39,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -399,8 +400,31 @@ fun StopScreen(
         }
     }
 
-    fun getTrainCategory(primaryChateau: String, shortName: String?, routeType: Int): String {
-        val sn = (shortName ?: "").uppercase().trim()
+    fun getTrainCategory(
+        primaryChateau: String,
+        shortName: String?,
+        routeType: Int,
+        event: StopEvent? = null,
+        routeDef: StopRoute? = null,
+        context: android.content.Context? = null
+    ): String {
+        var sn = (shortName ?: "").uppercase().trim()
+
+        if (primaryChateau == "deutschland" && event != null && routeDef != null && context != null) {
+            val agencyId = routeDef.agency_id
+            val isDbFernverkehr = event.chateau == "deutschland" && agencyId != null &&
+                    listOf("12681", "13557", "10918").contains(agencyId.toString())
+            if (isDbFernverkehr) {
+                val tripShortNameNoZeros = event.trip_short_name?.replace(Regex("^0+"), "")
+                val dbDisplayName = tripShortNameNoZeros?.let {
+                    com.catenarymaps.catenary.utils.DbFernverkehrUtils.getDisplayName(context, it)
+                } ?: event.trip_short_name
+                if (dbDisplayName != null) {
+                    sn = dbDisplayName.uppercase().trim()
+                }
+            }
+        }
+
         return when (primaryChateau) {
             "île~de~france~mobilités" -> {
                 when {
@@ -510,6 +534,8 @@ fun StopScreen(
         }
     }
 
+    val context = LocalContext.current
+
     val datesToEventsFiltered by remember {
         derivedStateOf {
             val tz =
@@ -552,7 +578,14 @@ fun StopScreen(
                             val routeDef = dataMeta?.routes?.get(event.chateau)?.get(event.route_id)
                             val rType = routeDef?.route_type ?: event.route_type ?: 3
                             val sName = routeDef?.short_name
-                            val cat = getTrainCategory(primaryChateauId ?: "", sName, rType)
+                            val cat = getTrainCategory(
+                                primaryChateauId ?: "",
+                                sName,
+                                rType,
+                                event,
+                                routeDef,
+                                context
+                            )
                             if (enabledCategories[cat] == false) {
                                 return@filter false
                             }
