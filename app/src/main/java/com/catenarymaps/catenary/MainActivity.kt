@@ -2577,7 +2577,6 @@ class MainActivity : ComponentActivity() {
                                                                 trajMetroDotsSrc = trajMetroDotsSrc,
                                                                 trajRailDotsSrc = trajRailDotsSrc,
                                                                 trajOtherDotsSrc = trajOtherDotsSrc,
-                                                            isDark = isDark,
                                                             camera = camera
                                                         )
                                                 }

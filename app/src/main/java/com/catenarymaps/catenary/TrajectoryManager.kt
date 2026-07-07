@@ -209,7 +209,6 @@ object TrajectoryManager {
         trajMetroDotsSrc: MutableState<GeoJsonSource>,
         trajRailDotsSrc: MutableState<GeoJsonSource>,
         trajOtherDotsSrc: MutableState<GeoJsonSource>,
-        isDark: Boolean,
         camera: CameraState
     ) {
         stopTrajectoryManager()
@@ -313,7 +312,7 @@ object TrajectoryManager {
             var hadFeaturesPreviously = false
             while (true) {
                 val zoom = camera.position.zoom
-                val isMoving = camera.isMoving
+                val isMoving = camera.isCameraMoving
 
                 val delayTime = when {
                     zoom < 7 -> 2000L

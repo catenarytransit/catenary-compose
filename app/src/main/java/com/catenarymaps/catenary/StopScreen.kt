@@ -405,7 +405,7 @@ fun StopScreen(
         shortName: String?,
         routeType: Int,
         event: StopEvent? = null,
-        routeDef: StopRoute? = null,
+        routeDef: StopRouteInfo? = null,
         context: android.content.Context? = null
     ): String {
         var sn = (shortName ?: "").uppercase().trim()
