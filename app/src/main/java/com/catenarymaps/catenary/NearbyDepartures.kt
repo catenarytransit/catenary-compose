@@ -1016,11 +1016,6 @@ private fun StationGroupCard(
                                 group.departures
                                         .asSequence()
                                         .filter { !it.lastStop }
-                                        .filter { dep ->
-                                                val t = dep.effectiveDepartureSec()
-                                                        ?: return@filter false
-                                                t in (selectedTimeSec - 600)..(selectedTimeSec + 64800)
-                                        }
                                         .sortedBy { it.effectiveDepartureSec() ?: Long.MAX_VALUE }
                                         .take(10)
                                         .toList()
@@ -1531,10 +1526,7 @@ private fun RouteGroupCard(
                 // Headsigns (No flattening needed for V3)
                 route.headsigns.entries.sortedBy { it.key }.forEach { (headsign, trips) ->
                         val visibleTrips =
-                                trips.filter { t ->
-                                        val dep = t.departureRealtime ?: t.departureSchedule ?: 0L
-                                        dep in (selectedTimeSec - 600)..(selectedTimeSec + 64800)
-                                }
+                                trips
 
                         if (visibleTrips.isEmpty()) return@forEach
 

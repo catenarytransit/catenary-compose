@@ -56,6 +56,7 @@ object RamondaWebSocket {
     private val client = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .pingInterval(15, TimeUnit.SECONDS)
+        .minWebSocketMessageToCompress(0)
         .build()
 
     private var webSocket: WebSocket? = null
