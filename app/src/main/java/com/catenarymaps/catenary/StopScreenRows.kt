@@ -40,7 +40,7 @@ import java.util.Locale
 
 private fun getRouteShape(chateau: String, shortName: String?): androidx.compose.ui.graphics.Shape {
         val isSBahn =
-                (chateau == "dbregioag" || chateau == "deutschland") &&
+                (chateau == "vbb" || chateau == "deutschland") &&
                         shortName?.matches(Regex("^S\\d+")) == true
         return if (isSBahn) RoundedCornerShape(30.dp) else RoundedCornerShape(2.dp)
 }

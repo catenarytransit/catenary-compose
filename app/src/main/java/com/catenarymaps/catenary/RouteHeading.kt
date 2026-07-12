@@ -209,7 +209,7 @@ fun RouteHeading(
                     (!isNationalRail || isLondonOverground || isElizabethLine) &&
                     chateauId != "metrolinktrains"
                 ) {
-                    val isSBahn = (chateauId == "dbregioag" || chateauId == "deutschland") &&
+                    val isSBahn = (chateauId == "vbb" || chateauId == "deutschland") &&
                             shortName.matches(Regex("^S\\d+"))
                     val badgeShape = if (isSBahn) CircleShape else RoundedCornerShape(4.dp)
                     iconComposable = {
