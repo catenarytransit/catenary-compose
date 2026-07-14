@@ -330,7 +330,14 @@ fun StationScreenTrainRow(
                                 // ROW 1: Headsign + Trip Name (Merged)
                                 // ---------------------------------------------------------
                                 val headsignText = buildAnnotatedString {
+                                        if (!event.final_station_name.isNullOrBlank()) {
+                                                withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                                                        append(event.final_station_name)
+                                                }
+                                        }
+
                                         withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                                                if (length > 0) append(" ")
                                                 append(event.headsign ?: "")
                                         }
 
@@ -1212,7 +1219,14 @@ fun StationScreenTrainRowCompact(
                         // ROW 1: Headsign + Trip Name (Merged)
                         // ---------------------------------------------------------
                         val headsignText = buildAnnotatedString {
+                                if (!event.final_station_name.isNullOrBlank()) {
+                                        withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                                        append(event.final_station_name ?: "")
+                                }
+                                }
+
                                 withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                                        if (length > 0) append(" ")
                                         append(event.headsign ?: "")
                                 }
 

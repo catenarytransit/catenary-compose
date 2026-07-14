@@ -151,7 +151,18 @@ data class RouteRealtimeResponse(
         val trip_updates: List<AspenisedTripUpdate> = emptyList()
 )
 
-@Serializable data class ItineraryPattern(val itinerary_pattern_id: String)
+@Serializable
+data class ItineraryPattern(
+        val itinerary_pattern_id: String,
+        val trip_short_name: String? = null
+)
+
+fun getResolvedStopName(stopId: String, info: RouteInfoResponse): String {
+    val stopDetails = info.stops[stopId] ?: return ""
+    val parentId = stopDetails.parentStation
+    val stopRefToUse = if (parentId != null) info.stops[parentId] ?: stopDetails else stopDetails
+    return stopRefToUse.name
+}
 
 @Composable
 fun RouteScreen(
@@ -649,6 +660,36 @@ fun RouteScreen(
 
                     val vehicleCount = vehiclesByDirectionParent[parentId]?.size ?: 0
 
+                    val firstStopRow = refPattern.rows.firstOrNull()
+                    val lastStopRow = refPattern.rows.lastOrNull()
+                    val firstStationName = firstStopRow?.let { getResolvedStopName(it.stopId, info) } ?: ""
+                    val lastStationName = lastStopRow?.let { getResolvedStopName(it.stopId, info) } ?: ""
+                    val isSame = lastStationName.trim().equals(headsign.trim(), ignoreCase = true)
+
+                    val tripShortName = run {
+                        val activeVehicle = vehiclesByDirectionParent[parentId]?.firstOrNull { vp ->
+                            !vp.trip?.trip_short_name.isNullOrBlank()
+                        }
+                        if (activeVehicle != null) return@run activeVehicle.trip?.trip_short_name
+
+                        val compressedTrip = rt?.trips_to_trips_compressed?.values?.firstOrNull { ip ->
+                            val dirId = rt.itinerary_to_direction_id[ip.itinerary_pattern_id]
+                            val parent = directionIdToParentId[dirId]
+                            parent == parentId && !ip.trip_short_name.isNullOrBlank()
+                        }
+                        compressedTrip?.trip_short_name
+                    }
+
+                    val textToShow = if (isSame) {
+                        "$firstStationName → $lastStationName"
+                    } else {
+                        if (!tripShortName.isNullOrBlank()) {
+                            "$tripShortName $firstStationName → $lastStationName"
+                        } else {
+                            "$firstStationName → $lastStationName"
+                        }
+                    }
+
                     Card(
                             modifier =
                                 Modifier
@@ -670,7 +711,7 @@ fun RouteScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                        text = headsign,
+                                        text = textToShow,
                                         fontWeight = FontWeight.Medium,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis

@@ -99,7 +99,8 @@ private data class DepartureItemV3(
         val cancelled: Boolean,
         val delayed: Boolean,
         @SerialName("chateau_id") val chateauId: String,
-        @SerialName("last_stop") val lastStop: Boolean
+        @SerialName("last_stop") val lastStop: Boolean,
+        @SerialName("final_station_name") val finalStationName: String? = null,
 )
 
 private fun DepartureItemV3.effectiveRealtimeDepartureSec(): Long? =
@@ -1053,7 +1054,8 @@ private fun StationGroupCard(
                                                         trip_deleted = false,
                                                         route_type = routeInfo?.routeType,
                                                         timezone = group.timezone,
-                                                        distance_m = group.distanceM
+                                                        distance_m = group.distanceM,
+                                                        final_station_name = dep.finalStationName
                                                 )
 
                                         // We need StopRouteInfo? for the row. RouteInfoExport vs
