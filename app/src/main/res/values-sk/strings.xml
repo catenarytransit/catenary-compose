@@ -140,4 +140,21 @@
     <string name="heading_cable_tram">Lanovka</string>
     <string name="label_interpolated_trajectories">Označiť interpolované trajektórie</string>
     <string name="vehicle_labels">Štítky vozidiel</string>
+    <string name="service_alerts_header">Dopravné obmedzenia</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Zastávka zrušená</string>
+    <string name="last_stop">Konečná zastávka</string>
+    <string name="settings_show_countdowns_under_1h">Zobraziť odpočty vlakov</string>
+    <string name="settings_show_countdowns_under_1h_description">Zobrazovať odpočty len do 1 hodiny od aktuálneho času</string>
+    <string name="settings_show_local_transit_countdowns">Zobraziť odpočty pre miestnu dopravu</string>
+    <string name="settings_show_local_transit_countdowns_description">Zobrazovať odpočítavanie pre odchody metra, električiek a autobusov pod 1 hodinu</string>
+    <string name="block">Blok</string>
+    <string name="platform_abbrev">Nást.</string>
+    <string name="occupancy_percentage">Percento obsadenosti</string>
+    <string name="route_category_rail">Vlak</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Električka</string>
+    <string name="route_category_bus">Autobus</string>
+    <string name="route_category_other">Iné</string>
 </resources>

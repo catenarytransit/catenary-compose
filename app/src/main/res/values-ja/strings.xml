@@ -139,4 +139,21 @@
     <string name="heading_cable_tram">ケーブルカー</string>
     <string name="label_interpolated_trajectories">補間された軌道をラベル表示</string>
     <string name="vehicle_labels">車両ラベル</string>
+    <string name="service_alerts_header">運行情報</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">トランジリアン</string>
+    <string name="stop_cancelled">停車取りやめ</string>
+    <string name="last_stop">終点</string>
+    <string name="settings_show_countdowns_under_1h">電車のカウントダウンを表示</string>
+    <string name="settings_show_countdowns_under_1h_description">現在時刻から1時間以内のカウントダウンのみを表示する</string>
+    <string name="settings_show_local_transit_countdowns">地域交通 of カウントダウンを表示</string>
+    <string name="settings_show_local_transit_countdowns_description">1時間未満の地下鉄、路面電車、バスの発車カウントダウンタイマーを表示する</string>
+    <string name="block">運用ブロック</string>
+    <string name="platform_abbrev">のりば</string>
+    <string name="occupancy_percentage">混雑率</string>
+    <string name="route_category_rail">鉄道</string>
+    <string name="route_category_metro">地下鉄</string>
+    <string name="route_category_tram">路面電車</string>
+    <string name="route_category_bus">バス</string>
+    <string name="route_category_other">その他</string>
 </resources>

@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Köysirata</string>
     <string name="label_interpolated_trajectories">Merkitse interpoloidut reitit</string>
     <string name="vehicle_labels">Ajoneuvojen tunnisteet</string>
+    <string name="service_alerts_header">Liikennetiedotteet</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Pysäkki peruttu</string>
+    <string name="last_stop">Päätepysäkki</string>
+    <string name="settings_show_countdowns_under_1h">Näytä junien lähtöajat</string>
+    <string name="settings_show_countdowns_under_1h_description">Näytä lähtöajat vain 1 tunnin sisällä nykyisestä ajasta</string>
+    <string name="settings_show_local_transit_countdowns">Näytä paikallisliikenteen lähtöajat</string>
+    <string name="settings_show_local_transit_countdowns_description">Näytä metron, raitiovaunun ja bussin lähtöaikalaskurit alle 1h lähdöille</string>
+    <string name="block">Lohko</string>
+    <string name="platform_abbrev">Lait.</string>
+    <string name="occupancy_percentage">Täyttöaste prosentteina</string>
+    <string name="route_category_rail">Juna</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Raitiovaunu</string>
+    <string name="route_category_bus">Bussi</string>
+    <string name="route_category_other">Muu</string>
 </resources>

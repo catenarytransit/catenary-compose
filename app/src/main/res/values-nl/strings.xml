@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Kabeltram</string>
     <string name="label_interpolated_trajectories">Geïnterpoleerde trajecten labelen</string>
     <string name="vehicle_labels">Voertuiglabels</string>
+    <string name="service_alerts_header">Dienstmededelingen</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Halte vervallen</string>
+    <string name="last_stop">Eindhalte</string>
+    <string name="settings_show_countdowns_under_1h">Aftellende treinen weergeven</string>
+    <string name="settings_show_countdowns_under_1h_description">Toon alleen aftellers binnen 1 uur van de huidige tijd</string>
+    <string name="settings_show_local_transit_countdowns">Afteller voor lokaal vervoer tonen</string>
+    <string name="settings_show_local_transit_countdowns_description">Afteltimers weergeven voor metro-, tram- en busvertrekken onder 1 uur</string>
+    <string name="block">Blok</string>
+    <string name="platform_abbrev">Per.</string>
+    <string name="occupancy_percentage">Bezettingspercentage</string>
+    <string name="route_category_rail">Trein</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Tram</string>
+    <string name="route_category_bus">Bus</string>
+    <string name="route_category_other">Overig</string>
 </resources>

@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Въжена линия</string>
     <string name="label_interpolated_trajectories">Етикетиране на интерполирани траектории</string>
     <string name="vehicle_labels">Етикети за превозни средства</string>
+    <string name="service_alerts_header">Предупреждения за услуги</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Спирката е отменена</string>
+    <string name="last_stop">Последна спирка</string>
+    <string name="settings_show_countdowns_under_1h">Показване на обратно броене за влакове</string>
+    <string name="settings_show_countdowns_under_1h_description">Показване на обратно броене само в рамките на 1 час от текущото време</string>
+    <string name="settings_show_local_transit_countdowns">Обратно броене за местен транспорт</string>
+    <string name="settings_show_local_transit_countdowns_description">Показване на таймери за обратно броене за заминавания на метро, трамвай и автобус под 1 час</string>
+    <string name="block">Блок</string>
+    <string name="platform_abbrev">Пл.</string>
+    <string name="occupancy_percentage">Процент на заетост</string>
+    <string name="route_category_rail">Железопътен транспорт</string>
+    <string name="route_category_metro">Метро</string>
+    <string name="route_category_tram">Трамвай</string>
+    <string name="route_category_bus">Автобус</string>
+    <string name="route_category_other">Други</string>
 </resources>

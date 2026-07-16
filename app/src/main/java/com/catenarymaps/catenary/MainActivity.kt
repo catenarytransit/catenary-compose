@@ -226,6 +226,8 @@ private const val K_USE_US_UNITS = "use_us_units"
 
 const val K_SHOW_ORIGINAL_TIMETABLE = "show_original_timetable"
 const val K_SHOW_COUNTDOWN = "show_countdown"
+const val K_SHOW_COUNTDOWNS_UNDER_1H = "show_countdowns_under_1h"
+const val K_SHOW_LOCAL_TRANSIT_COUNTDOWNS = "show_local_transit_countdowns"
 const val K_SHOW_FLOATING_CONTROLS = "show_floating_controls"
 
 private fun SharedPreferences.putDouble(key: String, value: Double) =
@@ -1448,6 +1450,12 @@ class MainActivity : ComponentActivity() {
                         var showSeconds by remember {
                                 mutableStateOf(prefs.getBoolean(K_SHOW_SECONDS, false))
                         }
+                        var showCountdownsUnder1h by remember {
+                                mutableStateOf(prefs.getBoolean(K_SHOW_COUNTDOWNS_UNDER_1H, false))
+                        }
+                        var showLocalTransitCountdowns by remember {
+                                mutableStateOf(prefs.getBoolean(K_SHOW_LOCAL_TRANSIT_COUNTDOWNS, true))
+                        }
 
                         LaunchedEffect(showZombieBuses) {
                                 prefs.edit()
@@ -1461,6 +1469,14 @@ class MainActivity : ComponentActivity() {
 
                         LaunchedEffect(showSeconds) {
                                 prefs.edit().putBoolean(K_SHOW_SECONDS, showSeconds).apply()
+                        }
+
+                        LaunchedEffect(showCountdownsUnder1h) {
+                                prefs.edit().putBoolean(K_SHOW_COUNTDOWNS_UNDER_1H, showCountdownsUnder1h).apply()
+                        }
+
+                        LaunchedEffect(showLocalTransitCountdowns) {
+                                prefs.edit().putBoolean(K_SHOW_LOCAL_TRANSIT_COUNTDOWNS, showLocalTransitCountdowns).apply()
                         }
                         val isDark = isSystemInDarkTheme()
 
@@ -3583,6 +3599,18 @@ class MainActivity : ComponentActivity() {
                                                                                                         usUnits =
                                                                                                                 it
                                                                                                 },
+                                                                                                showCountdownsUnder1h =
+                                                                                                        showCountdownsUnder1h,
+                                                                                                onShowCountdownsUnder1hChange = {
+                                                                                                        showCountdownsUnder1h =
+                                                                                                                it
+                                                                                                },
+                                                                                                showLocalTransitCountdowns =
+                                                                                                        showLocalTransitCountdowns,
+                                                                                                onShowLocalTransitCountdownsChange = {
+                                                                                                        showLocalTransitCountdowns =
+                                                                                                                it
+                                                                                                },
                                                                                                 onBack =
                                                                                                         onBack,
                                                                                                 onHome =
@@ -3717,6 +3745,10 @@ class MainActivity : ComponentActivity() {
                                                                                                                 geoLock,
                                                                                                         showSeconds =
                                                                                                                 showSeconds,
+                                                                                                        showCountdownsUnder1h =
+                                                                                                                showCountdownsUnder1h,
+                                                                                                        showLocalTransitCountdowns =
+                                                                                                                showLocalTransitCountdowns,
                                                                                                         onBack =
                                                                                                                 onBack,
                                                                                                         onHome =
@@ -3783,6 +3815,10 @@ class MainActivity : ComponentActivity() {
                                                                                                                 geoLock,
                                                                                                         showSeconds =
                                                                                                                 showSeconds,
+                                                                                                        showCountdownsUnder1h =
+                                                                                                                showCountdownsUnder1h,
+                                                                                                        showLocalTransitCountdowns =
+                                                                                                                showLocalTransitCountdowns,
                                                                                                         onBack =
                                                                                                                 onBack,
                                                                                                         onHome =

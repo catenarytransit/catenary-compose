@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Taubane</string>
     <string name="label_interpolated_trajectories">Merk interpolerte trajektorier</string>
     <string name="vehicle_labels">Kjøretøyetiketter</string>
+    <string name="service_alerts_header">Driftsmeldinger</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Stoppested innstilt</string>
+    <string name="last_stop">Endestasjon</string>
+    <string name="settings_show_countdowns_under_1h">Vis tog-nedtellinger</string>
+    <string name="settings_show_countdowns_under_1h_description">Vis bare nedtellinger innen 1 time fra gjeldende tid</string>
+    <string name="settings_show_local_transit_countdowns">Vis nedtelling for lokaltransport</string>
+    <string name="settings_show_local_transit_countdowns_description">Vis nedtellingstakere for t-bane-, trikke- og bussavganger under 1 time</string>
+    <string name="block">Blokk</string>
+    <string name="platform_abbrev">Spor</string>
+    <string name="occupancy_percentage">Beleggsprosent</string>
+    <string name="route_category_rail">Tog</string>
+    <string name="route_category_metro">T-bane</string>
+    <string name="route_category_tram">Trikk</string>
+    <string name="route_category_bus">Buss</string>
+    <string name="route_category_other">Annet</string>
 </resources>

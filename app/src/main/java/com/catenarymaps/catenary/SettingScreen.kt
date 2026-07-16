@@ -34,6 +34,10 @@ fun SettingsScreen(
     onShowSecondsChange: (Boolean) -> Unit,
     usUnits: Boolean,
     onUsUnitsChange: (Boolean) -> Unit,
+    showCountdownsUnder1h: Boolean,
+    onShowCountdownsUnder1hChange: (Boolean) -> Unit,
+    showLocalTransitCountdowns: Boolean,
+    onShowLocalTransitCountdownsChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onHome: () -> Unit
 ) {
@@ -96,6 +100,52 @@ fun SettingsScreen(
                 )
             }
             Switch(checked = showSeconds, onCheckedChange = onShowSecondsChange)
+        }
+
+        // Show Train Countdowns under <1 h
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onShowCountdownsUnder1hChange(!showCountdownsUnder1h) }
+                    .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(id = R.string.settings_show_countdowns_under_1h),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(id = R.string.settings_show_countdowns_under_1h_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(checked = showCountdownsUnder1h, onCheckedChange = onShowCountdownsUnder1hChange)
+        }
+
+        // Show countdown for local transit
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onShowLocalTransitCountdownsChange(!showLocalTransitCountdowns) }
+                    .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(id = R.string.settings_show_local_transit_countdowns),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(id = R.string.settings_show_local_transit_countdowns_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(checked = showLocalTransitCountdowns, onCheckedChange = onShowLocalTransitCountdownsChange)
         }
 
         // Units (miles/ft vs metric)

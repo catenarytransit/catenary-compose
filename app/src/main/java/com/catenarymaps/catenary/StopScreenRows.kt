@@ -57,6 +57,7 @@ fun StationScreenTrainRow(
         useSymbolSign: Boolean = true,
         eurostyle: Boolean = false,
         swiss: Boolean = false,
+        showCountdownsUnder1h: Boolean = false,
         modifier: Modifier = Modifier
 ) {
         val rtTime =
@@ -189,7 +190,8 @@ fun StationScreenTrainRow(
                         modifier = Modifier
                             .width(70.dp)
                             .padding(horizontal = 4.dp),
-                        horizontalAlignment = Alignment.Start
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy((-2).dp)
                 ) {
                         if (event.trip_cancelled == true) {
                                 Text(
@@ -230,15 +232,10 @@ fun StationScreenTrainRow(
                                                         showSeconds = effectiveShowSeconds,
                                                         style =
                                                                 MaterialTheme.typography
-                                                                        .labelSmall, // xs
+                                                                        .bodyMedium,
                                                         color =
                                                                 MaterialTheme.colorScheme
                                                                         .onSurfaceVariant
-                                                )
-                                                DelayDiff(
-                                                        diff = rtTime - schedTime,
-                                                        show_seconds = effectiveShowSeconds,
-                                                        use_symbol_sign = useSymbolSign
                                                 )
                                                 FormattedTimeText(
                                                         timezone = zoneId.id,
@@ -260,6 +257,11 @@ fun StationScreenTrainRow(
                                                                 else
                                                                         MaterialTheme.colorScheme
                                                                                 .primary
+                                                )
+                                                DelayDiff(
+                                                        diff = rtTime - schedTime,
+                                                        show_seconds = effectiveShowSeconds,
+                                                        use_symbol_sign = useSymbolSign
                                                 )
                                         } else {
                                                 // On Time
@@ -302,14 +304,17 @@ fun StationScreenTrainRow(
                                 // Countdown
                                 val target = rtTime ?: schedTime
                                 if (target != null) {
-                                        SelfUpdatingDiffTimer(
-                                                targetTimeSeconds = target,
-                                                showBrackets = false,
-                                                showSeconds = effectiveShowSeconds,
-                                                showDays = false,
-                                                numSize = 12.sp,
-                                                showPlus = false
-                                        )
+                                        val diff = target - currentTime
+                                        if (showCountdownsUnder1h && kotlin.math.abs(diff) < 3600) {
+                                                SelfUpdatingDiffTimer(
+                                                        targetTimeSeconds = target,
+                                                        showBrackets = false,
+                                                        showSeconds = effectiveShowSeconds,
+                                                        showDays = false,
+                                                        numSize = 12.sp,
+                                                        showPlus = false
+                                                )
+                                        }
                                 }
                         }
                 }
@@ -922,6 +927,7 @@ fun StationScreenTrainRowCompact(
         showTimeDiff: Boolean = true,
         eurostyle: Boolean = false,
         swiss: Boolean = false,
+        showCountdownsUnder1h: Boolean = false,
         modifier: Modifier = Modifier,
         onTripClick: (StopEvent) -> Unit = {}
 ) {
@@ -1055,7 +1061,8 @@ fun StationScreenTrainRowCompact(
                         modifier = Modifier
                                 .width(70.dp)
                                 .padding(horizontal = 4.dp),
-                        horizontalAlignment = Alignment.Start
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy((-2).dp)
                 ) {
                         if (event.trip_cancelled == true) {
                                 Text(
@@ -1108,17 +1115,11 @@ fun StationScreenTrainRowCompact(
                                                 showSeconds = effectiveShowSeconds,
                                                 style =
                                                         MaterialTheme.typography.labelSmall.copy(
-                                                                fontSize = 10.sp
+                                                                fontSize = 11.sp
                                                         ),
                                                 color =
                                                         MaterialTheme.colorScheme.onSurfaceVariant
                                                                 .copy(alpha = 0.7f)
-                                        )
-                                        // Delay
-                                        DelayDiff(
-                                                diff = rtTime - schedTime,
-                                                show_seconds = effectiveShowSeconds,
-                                                use_symbol_sign = useSymbolSign
                                         )
                                         // Realtime
                                         FormattedTimeText(
@@ -1135,6 +1136,12 @@ fun StationScreenTrainRowCompact(
                                                                 MaterialTheme.colorScheme.primary
                                                                         .copy(alpha = 0.7f)
                                                         else MaterialTheme.colorScheme.primary
+                                        )
+                                        // Delay
+                                        DelayDiff(
+                                                diff = rtTime - schedTime,
+                                                show_seconds = effectiveShowSeconds,
+                                                use_symbol_sign = useSymbolSign
                                         )
                                 } else {
                                         // On Time OR No Realtime Data
@@ -1191,11 +1198,11 @@ fun StationScreenTrainRowCompact(
                         }
                         // TimeDiff (Countdown)
                         val diff = (rtTime ?: schedTime ?: 0) - currentTime
-                        if (showTimeDiff && diff < 3600 && (rtTime ?: schedTime) != null) {
+                        if (showTimeDiff && showCountdownsUnder1h && kotlin.math.abs(diff) < 3600 && (rtTime ?: schedTime) != null) {
                                 SelfUpdatingDiffTimer(
                                         targetTimeSeconds = rtTime ?: schedTime ?: 0,
                                         showBrackets = false,
-                                        showSeconds = effectiveShowSeconds && diff < 3600,
+                                        showSeconds = effectiveShowSeconds && kotlin.math.abs(diff) < 3600,
                                         showDays = false,
                                         numSize = 10.sp,
                                         showPlus = false
@@ -1403,6 +1410,7 @@ fun StopScreenRowV2(
         vertical: Boolean = false,
         eurostyle: Boolean = false,
         swiss: Boolean = false,
+        showLocalTransitCountdowns: Boolean = true,
         modifier: Modifier = Modifier,
         onTripClick: (StopEvent) -> Unit = {}
 ) {
@@ -1652,7 +1660,7 @@ fun StopScreenRowV2(
                                 Column(
                                         modifier = Modifier.padding(horizontal = 2.dp),
                                         horizontalAlignment = Alignment.Start,
-                                        verticalArrangement = Arrangement.Center
+                                        verticalArrangement = Arrangement.spacedBy((-2).dp)
                                 ) {
                                         if (event.trip_cancelled == true) {
                                                 Text(
@@ -1715,18 +1723,12 @@ fun StopScreenRowV2(
                                                                 style =
                                                                         MaterialTheme.typography
                                                                                 .labelSmall.copy(
-                                                                                fontSize = 13.sp
+                                                                                fontSize = 14.sp
                                                                         ),
                                                                 color =
                                                                         MaterialTheme.colorScheme
                                                                                 .onSurfaceVariant
                                                                                 .copy(alpha = 0.7f)
-                                                        )
-                                                        // Delay
-                                                        DelayDiff(
-                                                                diff = rtTime - schedTime,
-                                                                show_seconds = effectiveShowSeconds,
-                                                                use_symbol_sign = useSymbolSign
                                                         )
                                                         // Realtime
                                                         FormattedTimeText(
@@ -1754,6 +1756,12 @@ fun StopScreenRowV2(
                                                                                 MaterialTheme
                                                                                         .colorScheme
                                                                                         .primary
+                                                        )
+                                                        // Delay
+                                                        DelayDiff(
+                                                                diff = rtTime - schedTime,
+                                                                show_seconds = effectiveShowSeconds,
+                                                                use_symbol_sign = useSymbolSign
                                                         )
                                                 } else {
                                                         // On Time OR No Realtime Data
@@ -1824,7 +1832,7 @@ fun StopScreenRowV2(
                                         }
                                         // TimeDiff (Countdown)
                                         val diff = (rtTime ?: schedTime ?: 0) - currentTime
-                                        if (diff < 3600 && (rtTime ?: schedTime) != null) {
+                                        if (showLocalTransitCountdowns && diff < 3600 && (rtTime ?: schedTime) != null) {
                                                 SelfUpdatingDiffTimer(
                                                         targetTimeSeconds = rtTime
                                                                         ?: schedTime ?: 0,

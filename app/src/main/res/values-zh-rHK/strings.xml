@@ -139,4 +139,21 @@
     <string name="heading_cable_tram">纜索鐵路</string>
     <string name="label_interpolated_trajectories">標註插值軌跡</string>
     <string name="vehicle_labels">車輛標籤</string>
+    <string name="service_alerts_header">服務警報</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">停站已取消</string>
+    <string name="last_stop">終點站</string>
+    <string name="settings_show_countdowns_under_1h">顯示列車倒數</string>
+    <string name="settings_show_countdowns_under_1h_description">僅顯示目前時間 1 小時以內的倒數</string>
+    <string name="settings_show_local_transit_countdowns">顯示本地交通倒數</string>
+    <string name="settings_show_local_transit_countdowns_description">顯示地鐵、路面電車和巴士 1 小時以內的出發倒數</string>
+    <string name="block">運行車次</string>
+    <string name="platform_abbrev">月台</string>
+    <string name="occupancy_percentage">載客率</string>
+    <string name="route_category_rail">鐵路</string>
+    <string name="route_category_metro">地鐵</string>
+    <string name="route_category_tram">路面電車</string>
+    <string name="route_category_bus">巴士</string>
+    <string name="route_category_other">其他</string>
 </resources>

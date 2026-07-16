@@ -139,4 +139,21 @@
     <string name="heading_cable_tram">Telecabină</string>
     <string name="label_interpolated_trajectories">Etichetează traiectoriile interpolate</string>
     <string name="vehicle_labels">Etichete vehicule</string>
+    <string name="service_alerts_header">Alerte de serviciu</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Stație anulată</string>
+    <string name="last_stop">Capăt de linie</string>
+    <string name="settings_show_countdowns_under_1h">Afișează numărătoarea inversă pentru trenuri</string>
+    <string name="settings_show_countdowns_under_1h_description">Afișează numărătoarea inversă doar în decurs de 1 oră de la ora curentă</string>
+    <string name="settings_show_local_transit_countdowns">Afișează numărătoarea inversă pentru transportul local</string>
+    <string name="settings_show_local_transit_countdowns_description">Afișează cronometre de numărătoare inversă pentru plecările de metrou, tramvai și autobuz sub 1h</string>
+    <string name="block">Bloc</string>
+    <string name="platform_abbrev">Per.</string>
+    <string name="occupancy_percentage">Procent de ocupare</string>
+    <string name="route_category_rail">Tren</string>
+    <string name="route_category_metro">Metrou</string>
+    <string name="route_category_tram">Tramvai</string>
+    <string name="route_category_bus">Autobuz</string>
+    <string name="route_category_other">Altul</string>
 </resources>

@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Felvonó</string>
     <string name="label_interpolated_trajectories">Interpolált pályák feliratozása</string>
     <string name="vehicle_labels">Járműcímkék</string>
+    <string name="service_alerts_header">Forgalmi információk</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Megállóhely kihagyva</string>
+    <string name="last_stop">Végállomás</string>
+    <string name="settings_show_countdowns_under_1h">Vonat visszaszámlálás mutatása</string>
+    <string name="settings_show_countdowns_under_1h_description">Csak a következő 1 órán belüli visszaszámlálások mutatása</string>
+    <string name="settings_show_local_transit_countdowns">Helyi járatok visszaszámlálásának mutatása</string>
+    <string name="settings_show_local_transit_countdowns_description">Metró, villamos és busz 1 órán belüli indulási visszaszámlálásainak mutatása</string>
+    <string name="block">Blokk</string>
+    <string name="platform_abbrev">Vk.</string>
+    <string name="occupancy_percentage">Kihasználtság százalékban</string>
+    <string name="route_category_rail">Vasút</string>
+    <string name="route_category_metro">Metró</string>
+    <string name="route_category_tram">Villamos</string>
+    <string name="route_category_bus">Busz</string>
+    <string name="route_category_other">Egyéb</string>
 </resources>

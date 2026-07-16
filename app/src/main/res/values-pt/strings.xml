@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Bonde de cabo</string>
     <string name="label_interpolated_trajectories">Rotular trajetórias interpoladas</string>
     <string name="vehicle_labels">Etiquetas de veículos</string>
+    <string name="service_alerts_header">Alertas de serviço</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Paragem cancelada</string>
+    <string name="last_stop">Última paragem</string>
+    <string name="settings_show_countdowns_under_1h">Mostrar contagens decrescentes de comboios</string>
+    <string name="settings_show_countdowns_under_1h_description">Apenas mostrar contagens decrescentes dentro de 1 hora a partir da hora atual</string>
+    <string name="settings_show_local_transit_countdowns">Mostrar contagem decrescente para transporte local</string>
+    <string name="settings_show_local_transit_countdowns_description">Exibir temporizadores de contagem decrescente para partidas de metro, elétrico e autocarro inferiores a 1 hora</string>
+    <string name="block">Bloqueio</string>
+    <string name="platform_abbrev">Plat.</string>
+    <string name="occupancy_percentage">Percentagem de ocupação</string>
+    <string name="route_category_rail">Comboio</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Elétrico</string>
+    <string name="route_category_bus">Autocarro</string>
+    <string name="route_category_other">Outro</string>
 </resources>

@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Linbana</string>
     <string name="label_interpolated_trajectories">Märk interpolerade trajektorier</string>
     <string name="vehicle_labels">Fordonsetiketter</string>
+    <string name="service_alerts_header">Trafikmeddelanden</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Hållplats inställd</string>
+    <string name="last_stop">Ändstation</string>
+    <string name="settings_show_countdowns_under_1h">Visa nedräkning för tåg</string>
+    <string name="settings_show_countdowns_under_1h_description">Visa endast nedräkning inom 1 timme från aktuell tid</string>
+    <string name="settings_show_local_transit_countdowns">Visa nedräkning för lokal kollektivtrafik</string>
+    <string name="settings_show_local_transit_countdowns_description">Visa nedräkningstimer för avgångar med tunnelbana, spårvagn och buss under 1 timme</string>
+    <string name="block">Block</string>
+    <string name="platform_abbrev">Spår</string>
+    <string name="occupancy_percentage">Beläggningsprocent</string>
+    <string name="route_category_rail">Tåg</string>
+    <string name="route_category_metro">Tunnelbana</string>
+    <string name="route_category_tram">Spårvagn</string>
+    <string name="route_category_bus">Buss</string>
+    <string name="route_category_other">Annat</string>
 </resources>

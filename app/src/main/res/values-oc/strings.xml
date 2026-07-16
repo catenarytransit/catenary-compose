@@ -137,4 +137,17 @@
     <string name="heading_cable_tram">Tramvai a cable</string>
     <string name="label_interpolated_trajectories">Etiquetar las trajectòrias interpoladas</string>
     <string name="vehicle_labels">Etiquetas dels veïculs</string>
+    <string name="service_alerts_header">Alertas de servici</string>
+    <string name="stop_cancelled">Arrèst anullat</string>
+    <string name="last_stop">Terminus</string>
+    <string name="settings_show_countdowns_under_1h">Afichar los comptes a rebors dels trens</string>
+    <string name="settings_show_countdowns_under_1h_description">Afichar unicament los comptes a rebors a mens d\'una ora de l\'ora actuala</string>
+    <string name="settings_show_local_transit_countdowns">Comptes a rebors dels transpòrts locals</string>
+    <string name="settings_show_local_transit_countdowns_description">Afichar los comptes a rebors per las partidas de mètro, tram e autobús a mens d\'una ora</string>
+    <string name="platform_abbrev">Cai</string>
+    <string name="route_category_rail">Tren</string>
+    <string name="route_category_metro">Mètro</string>
+    <string name="route_category_tram">Tramvia</string>
+    <string name="route_category_bus">Autobús</string>
+    <string name="route_category_other">Autre</string>
 </resources>

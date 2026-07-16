@@ -140,4 +140,21 @@
     <string name="heading_cable_tram">Канатна дорога</string>
     <string name="label_interpolated_trajectories">Позначати інтерпольовані траєкторії</string>
     <string name="vehicle_labels">Мітки транспорту</string>
+    <string name="service_alerts_header">Сповіщення служби</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Скасовано зупинку</string>
+    <string name="last_stop">Кінцева зупинка</string>
+    <string name="settings_show_countdowns_under_1h">Показувати відлік часу для поїздів</string>
+    <string name="settings_show_countdowns_under_1h_description">Показувати зворотний відлік лише в межах 1 години від поточного часу</string>
+    <string name="settings_show_local_transit_countdowns">Показувати відлік для місцевого транспорту</string>
+    <string name="settings_show_local_transit_countdowns_description">Відображати таймери зворотного відліку для відправлень метро, трамваїв та автобусів менш ніж за 1 годину</string>
+    <string name="block">Вихід</string>
+    <string name="platform_abbrev">Платф.</string>
+    <string name="occupancy_percentage">Відсоток завантаженості</string>
+    <string name="route_category_rail">Поїзд</string>
+    <string name="route_category_metro">Метро</string>
+    <string name="route_category_tram">Трамвай</string>
+    <string name="route_category_bus">Автобус</string>
+    <string name="route_category_other">Інше</string>
 </resources>

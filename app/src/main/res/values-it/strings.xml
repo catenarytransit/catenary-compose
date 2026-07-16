@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Tram a trazione funicolare</string>
     <string name="label_interpolated_trajectories">Etichetta traiettorie interpolate</string>
     <string name="vehicle_labels">Etichette dei veicoli</string>
+    <string name="service_alerts_header">Avvisi sul servizio</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Fermata cancellata</string>
+    <string name="last_stop">Capolinea</string>
+    <string name="settings_show_countdowns_under_1h">Mostra conto alla rovescia treni</string>
+    <string name="settings_show_countdowns_under_1h_description">Mostra il conto alla rovescia solo entro 1 ora dall\'ora corrente</string>
+    <string name="settings_show_local_transit_countdowns">Mostra conto alla rovescia trasporti locali</string>
+    <string name="settings_show_local_transit_countdowns_description">Visualizza il conto alla rovescia per partenze di metro, tram e bus inferiori a 1 ora</string>
+    <string name="block">Blocco</string>
+    <string name="platform_abbrev">Bin.</string>
+    <string name="occupancy_percentage">Percentuale di occupazione</string>
+    <string name="route_category_rail">Treno</string>
+    <string name="route_category_metro">Metropolitana</string>
+    <string name="route_category_tram">Tram</string>
+    <string name="route_category_bus">Autobus</string>
+    <string name="route_category_other">Altro</string>
 </resources>

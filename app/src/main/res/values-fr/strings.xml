@@ -137,4 +137,17 @@
     <string name="heading_cable_tram">Tramway à câble</string>
     <string name="label_interpolated_trajectories">Étiqueter les trajectoires interpolées</string>
     <string name="vehicle_labels">Étiquettes des véhicules</string>
+    <string name="service_alerts_header">Alertes de service</string>
+    <string name="stop_cancelled">Arrêt annulé</string>
+    <string name="last_stop">Terminus</string>
+    <string name="settings_show_countdowns_under_1h">Afficher les comptes à rebours des trains</string>
+    <string name="settings_show_countdowns_under_1h_description">Afficher uniquement les comptes à rebours à moins d\'une heure de l\'heure actuelle</string>
+    <string name="settings_show_local_transit_countdowns">Comptes à rebours des transports locaux</string>
+    <string name="settings_show_local_transit_countdowns_description">Afficher les comptes à rebours pour les départs de métro, tram et bus à moins d\'une heure</string>
+    <string name="platform_abbrev">Quai</string>
+    <string name="route_category_rail">Train</string>
+    <string name="route_category_metro">Métro</string>
+    <string name="route_category_tram">Tramway</string>
+    <string name="route_category_bus">Bus</string>
+    <string name="route_category_other">Autre</string>
 </resources>

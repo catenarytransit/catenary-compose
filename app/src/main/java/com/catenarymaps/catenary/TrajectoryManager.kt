@@ -246,6 +246,7 @@ object TrajectoryManager {
                                 }
                                 
                                 val displayName = traj.route_short_name ?: traj.display_name ?: ""
+
                                 val rawColor = traj.color ?: "#aaaaaa"
                                 val (contrastdarkmode, contrastdarkmodebearing) = processColor(rawColor, true)
                                 val (contrastlightmode, _) = processColor(rawColor, false)

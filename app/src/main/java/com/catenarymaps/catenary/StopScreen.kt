@@ -229,6 +229,8 @@ fun StopScreen(
         onSetStopsToHide: (Set<String>) -> Unit,
         geoLock: GeoLockController,
         showSeconds: Boolean,
+        showCountdownsUnder1h: Boolean,
+        showLocalTransitCountdowns: Boolean,
         onBack: () -> Unit,
         onHome: () -> Unit
 ) {
@@ -1267,6 +1269,42 @@ fun StopScreen(
                 )
             }
 
+            if (activeTab == "rail" && trainCategories.containsKey(primaryChateauId)) {
+                androidx.compose.foundation.lazy.LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val cats = trainCategories[primaryChateauId] ?: emptyList()
+                    items(cats) { cat ->
+                        val active = enabledCategories[cat] == true
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = if (active) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
+                                    shape = RoundedCornerShape(50)
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                    shape = RoundedCornerShape(50)
+                                )
+                                .clickable {
+                                    enabledCategories[cat] = !active
+                                }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = cat,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+
             LazyColumn(state = lazyListState, modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)) {
@@ -1399,43 +1437,7 @@ fun StopScreen(
                     }
                 }
 
-                if (activeTab == "rail" && trainCategories.containsKey(primaryChateauId)) {
-                    item(key = "train_category_filters") {
-                        androidx.compose.foundation.lazy.LazyRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            val cats = trainCategories[primaryChateauId] ?: emptyList()
-                            items(cats) { cat ->
-                                val active = enabledCategories[cat] == true
-                                Box(
-                                    modifier = Modifier
-                                        .background(
-                                            color = if (active) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
-                                            shape = RoundedCornerShape(50)
-                                        )
-                                        .border(
-                                            width = 1.dp,
-                                            color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                                            shape = RoundedCornerShape(50)
-                                        )
-                                        .clickable {
-                                            enabledCategories[cat] = !active
-                                        }
-                                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                                ) {
-                                    Text(
-                                        text = cat,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+
 
                 item(key = LIST_KEY_EARLIER_BUTTON) {
                     TextButton(
@@ -1544,6 +1546,7 @@ fun StopScreen(
                                     showSeconds = showSeconds,
                                     eurostyle = isEurostyle,
                                     swiss = isSwiss,
+                                    showLocalTransitCountdowns = showLocalTransitCountdowns,
                                         onTripClick = {
                                             onTripClick(
                                                     CatenaryStackEnum.SingleTrip(

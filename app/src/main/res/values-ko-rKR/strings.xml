@@ -139,4 +139,21 @@
     <string name="heading_cable_tram">케이블카</string>
     <string name="label_interpolated_trajectories">보간된 궤적 라벨 표시</string>
     <string name="vehicle_labels">차량 라벨</string>
+    <string name="service_alerts_header">서비스 알림</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">트랑시리앵</string>
+    <string name="stop_cancelled">정류장 취소됨</string>
+    <string name="last_stop">종점</string>
+    <string name="settings_show_countdowns_under_1h">열차 남은 시간 표시</string>
+    <string name="settings_show_countdowns_under_1h_description">현재 시간으로부터 1시간 이내의 남은 시간만 표시</string>
+    <string name="settings_show_local_transit_countdowns">지역 대중교통 남은 시간 표시</string>
+    <string name="settings_show_local_transit_countdowns_description">1시간 미만의 지하철, 트램, 버스 출발 카운트다운 타이머 표시</string>
+    <string name="block">블록</string>
+    <string name="platform_abbrev">승강장</string>
+    <string name="occupancy_percentage">혼잡도 백분율</string>
+    <string name="route_category_rail">철도</string>
+    <string name="route_category_metro">지하철</string>
+    <string name="route_category_tram">트램</string>
+    <string name="route_category_bus">버스</string>
+    <string name="route_category_other">기타</string>
 </resources>

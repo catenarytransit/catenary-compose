@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Svævebane</string>
     <string name="label_interpolated_trajectories">Mærk interpolerede trajektorier</string>
     <string name="vehicle_labels">Køretøjsetiketter</string>
+    <string name="service_alerts_header">Driftsmeddelelser</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Stoppested aflyst</string>
+    <string name="last_stop">Sidste stop</string>
+    <string name="settings_show_countdowns_under_1h">Vis tog-nedtællinger</string>
+    <string name="settings_show_countdowns_under_1h_description">Vis kun nedtællinger inden for 1 time fra den aktuelle tid</string>
+    <string name="settings_show_local_transit_countdowns">Vis nedtælling for lokal transport</string>
+    <string name="settings_show_local_transit_countdowns_description">Vis nedtællingstimer for metro-, sporvogns- og busafgange under 1 time</string>
+    <string name="block">Blok</string>
+    <string name="platform_abbrev">Perr.</string>
+    <string name="occupancy_percentage">Belægningsprocent</string>
+    <string name="route_category_rail">Tog</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Sporvogn</string>
+    <string name="route_category_bus">Bus</string>
+    <string name="route_category_other">Andet</string>
 </resources>

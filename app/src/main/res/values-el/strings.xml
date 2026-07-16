@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Τελεφερίκ</string>
     <string name="label_interpolated_trajectories">Ετικέτες παρεμβαλλόμενων τροχιών</string>
     <string name="vehicle_labels">Ετικέτες οχημάτων</string>
+    <string name="service_alerts_header">Ειδοποιήσεις λειτουργίας</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Η στάση ακυρώθηκε</string>
+    <string name="last_stop">Τελευταία στάση</string>
+    <string name="settings_show_countdowns_under_1h">Εμφάνιση αντίστροφης μέτρησης τρένων</string>
+    <string name="settings_show_countdowns_under_1h_description">Εμφάνιση αντίστροφης μέτρησης μόνο εντός 1 ώρας από την τρέχουσα ώρα</string>
+    <string name="settings_show_local_transit_countdowns">Αντίστροφη μέτρηση για τοπικά μέσα</string>
+    <string name="settings_show_local_transit_countdowns_description">Εμφάνιση αντίστροφης μέτρησης για αναχωρήσεις μεтρό, τραμ και λεωφορείων κάτω από 1 ώρα</string>
+    <string name="block">Μπλοк</string>
+    <string name="platform_abbrev">Αποβ.</string>
+    <string name="occupancy_percentage">Ποσοστό πληρότητας</string>
+    <string name="route_category_rail">Σιδηρόδρομος</string>
+    <string name="route_category_metro">Μετρό</string>
+    <string name="route_category_tram">Τραμ</string>
+    <string name="route_category_bus">Λεωφορείο</string>
+    <string name="route_category_other">Άλλο</string>
 </resources>

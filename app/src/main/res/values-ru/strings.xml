@@ -140,4 +140,21 @@
     <string name="heading_cable_tram">Канатный трамвай</string>
     <string name="label_interpolated_trajectories">Обозначать интерполированные траектории</string>
     <string name="vehicle_labels">Метки транспорта</string>
+    <string name="service_alerts_header">Оповещения службы</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Остановка отменена</string>
+    <string name="last_stop">Конечная остановка</string>
+    <string name="settings_show_countdowns_under_1h">Показывать отсчет времени для поездов</string>
+    <string name="settings_show_countdowns_under_1h_description">Показывать обратный отсчет только в пределах 1 часа от текущего времени</string>
+    <string name="settings_show_local_transit_countdowns">Показывать отсчет для местного транспорта</string>
+    <string name="settings_show_local_transit_countdowns_description">Отображать таймеры обратного отсчета для отправлений метро, трамваев и автобусов менее чем за 1 час</string>
+    <string name="block">Выход</string>
+    <string name="platform_abbrev">Платф.</string>
+    <string name="occupancy_percentage">Процент занятости</string>
+    <string name="route_category_rail">Поезд</string>
+    <string name="route_category_metro">Метро</string>
+    <string name="route_category_tram">Трамвай</string>
+    <string name="route_category_bus">Автобус</string>
+    <string name="route_category_other">Другое</string>
 </resources>

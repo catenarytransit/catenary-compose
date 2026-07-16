@@ -140,4 +140,21 @@
     <string name="heading_cable_tram">Kolej linowa</string>
     <string name="label_interpolated_trajectories">Etykiety interpolowanych trajektorii</string>
     <string name="vehicle_labels">Etykiety pojazdów</string>
+    <string name="service_alerts_header">Komunikaty o utrudnieniach</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Przystanek odwołany</string>
+    <string name="last_stop">Przystanek końcowy</string>
+    <string name="settings_show_countdowns_under_1h">Pokaż odliczanie pociągów</string>
+    <string name="settings_show_countdowns_under_1h_description">Pokazuj odliczanie tylko w ciągu 1 godziny od aktualnego czasu</string>
+    <string name="settings_show_local_transit_countdowns">Pokaż odliczanie komunikacji lokalnej</string>
+    <string name="settings_show_local_transit_countdowns_description">Wyświetlaj liczniki odliczania dla odjazdów metra, tramwajów i autobusów poniżej 1 godziny</string>
+    <string name="block">Obieg</string>
+    <string name="platform_abbrev">Per.</string>
+    <string name="occupancy_percentage">Procent zapełnienia</string>
+    <string name="route_category_rail">Kolej</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Tramwaj</string>
+    <string name="route_category_bus">Autobus</string>
+    <string name="route_category_other">Inne</string>
 </resources>

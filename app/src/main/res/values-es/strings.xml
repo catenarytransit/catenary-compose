@@ -138,4 +138,21 @@
     <string name="heading_cable_tram">Tranvía de cable</string>
     <string name="label_interpolated_trajectories">Etiquetar trayectorias interpoladas</string>
     <string name="vehicle_labels">Etiquetas de vehículos</string>
+    <string name="service_alerts_header">Alertas de servicio</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Parada cancelada</string>
+    <string name="last_stop">Última parada</string>
+    <string name="settings_show_countdowns_under_1h">Ver cuentas atrás de trenes</string>
+    <string name="settings_show_countdowns_under_1h_description">Solo mostrar cuentas atrás dentro de 1 hora de la hora actual</string>
+    <string name="settings_show_local_transit_countdowns">Ver cuentas atrás de tránsito local</string>
+    <string name="settings_show_local_transit_countdowns_description">Mostrar temporizadores de cuenta atrás para salidas de metro, tranvía y autobús de menos de 1h</string>
+    <string name="block">Bloque</string>
+    <string name="platform_abbrev">Andén</string>
+    <string name="occupancy_percentage">Porcentaje de ocupación</string>
+    <string name="route_category_rail">Tren</string>
+    <string name="route_category_metro">Metro</string>
+    <string name="route_category_tram">Tranvía</string>
+    <string name="route_category_bus">Autobús</string>
+    <string name="route_category_other">Otro</string>
 </resources>

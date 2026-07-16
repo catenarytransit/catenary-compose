@@ -135,4 +135,24 @@
     <string name="heading_cable_tram">Kabelstraßenbahn</string>
     <string name="label_interpolated_trajectories">Interpolierte Trajektorien beschriften</string>
     <string name="vehicle_labels">Fahrzeugbeschriftungen</string>
+    <string name="service_alerts_header">Betriebsmeldungen</string>
+    <string name="heading_rer">RER</string>
+    <string name="heading_transilien">Transilien</string>
+    <string name="stop_cancelled">Haltestelle entfällt</string>
+    <string name="last_stop">Letzte Haltestelle</string>
+    <string name="settings_show_countdowns_under_1h">Zug-Countdowns anzeigen</string>
+    <string name="settings_show_countdowns_under_1h_description">Countdowns nur innerhalb von 1 Stunde vor der aktuellen Zeit anzeigen</string>
+    <string name="settings_show_local_transit_countdowns">Countdown für Nahverkehr anzeigen</string>
+    <string name="settings_show_local_transit_countdowns_description">Countdown-Timer für Abfahrten von U-Bahn, Tram und Bus unter 1 Std. anzeigen</string>
+    <string name="block">Block</string>
+    <string name="platform_abbrev">Gleis</string>
+    <string name="occupancy_percentage">Auslastung in Prozent</string>
+    <string name="route_category_rail">Bahn</string>
+    <string name="route_category_metro">U-Bahn</string>
+    <string name="route_category_tram">Straßenbahn</string>
+    <string name="route_category_bus">Bus</string>
+    <string name="route_category_other">Sonstige</string>
+    <string name="settings_use_imperial_units">Meilen/Fuß statt des metrischen Systems verwenden</string>
+    <string name="layers_toggle_button_content_description">Ebenen umschalten</string>
+    <string name="layers_close_button_content_description">Ebenen schließen</string>
 </resources>
