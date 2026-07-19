@@ -2,6 +2,7 @@ package com.catenarymaps.catenary
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -74,6 +75,36 @@ fun Alert.isTripSpecific(): Boolean {
     return entities.all { it.trip?.trip_id != null }
 }
 
+private fun alertLanguageCode(language: String): String =
+    language.removeSuffix("-html").replace('_', '-')
+
+private fun defaultAlertLanguage(languages: List<String>, locale: Locale): String {
+    val localeTag = locale.toLanguageTag().replace('_', '-')
+
+    return languages.firstOrNull {
+        alertLanguageCode(it).equals(localeTag, ignoreCase = true)
+    } ?: languages.firstOrNull {
+        alertLanguageCode(it).substringBefore('-')
+            .equals(locale.language, ignoreCase = true)
+    } ?: languages.first()
+}
+
+private fun alertLanguageLabel(language: String): String =
+    alertLanguageCode(language).ifBlank { "und" }
+
+private fun AlertText.translationForLanguage(language: String): AlertTranslation? {
+    return translation.firstOrNull { (it.language ?: "") == language }
+        ?: translation.firstOrNull {
+            alertLanguageCode(it.language ?: "")
+                .equals(alertLanguageCode(language), ignoreCase = true)
+        }
+}
+
+private fun Alert.hasTranslationForLanguage(language: String): Boolean =
+    header_text?.translationForLanguage(language) != null ||
+            description_text?.translationForLanguage(language) != null ||
+            url?.translationForLanguage(language) != null
+
 @Composable
 fun AlertsBox(
     alerts: Map<String, Alert>,
@@ -94,7 +125,9 @@ fun AlertsBox(
                 alert.header_text?.translation?.map { it.language ?: "" } ?: emptyList()
             val descLangs =
                 alert.description_text?.translation?.map { it.language ?: "" } ?: emptyList()
-            headerLangs + descLangs
+            val urlLangs =
+                alert.url?.translation?.map { it.language ?: "" } ?: emptyList()
+            headerLangs + descLangs + urlLangs
         }.distinct()
 
         if (allLanguages.isEmpty()) {
@@ -107,68 +140,114 @@ fun AlertsBox(
         allLanguages.filter { it !in basesToHide }
     }
 
-    Column(
-        modifier = Modifier
-            .border(1.dp, alertColor, RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 2.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = "Service Alert",
-                modifier = Modifier.size(20.dp),
-                tint = alertColor
-            )
-            val alertText = getAlertsTitle(alerts.size)
-            Text(
-                text = alertText,
-                color = alertColor,
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { onExpandedChange() }) {
-                Icon(
-                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (expanded) "Collapse" else "Expand"
+    val defaultLanguage = remember(languageListToUse, locale) {
+        defaultAlertLanguage(languageListToUse, locale)
+    }
+    var selectedLanguages by remember(languageListToUse, defaultLanguage) {
+        mutableStateOf(setOf(defaultLanguage))
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        AnimatedVisibility(visible = expanded) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    languageListToUse.forEach { language ->
+                        val selected = language in selectedLanguages
+                        FilterChip(
+                            selected = selected,
+                            onClick = {
+                                selectedLanguages = if (selected) {
+                                    if (selectedLanguages.size > 1) {
+                                        selectedLanguages - language
+                                    } else {
+                                        selectedLanguages
+                                    }
+                                } else {
+                                    selectedLanguages + language
+                                }
+                            },
+                            label = { Text(alertLanguageLabel(language)) }
+                        )
+                    }
+                }
+                HorizontalDivider(
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant
                 )
             }
         }
 
-        AnimatedVisibility(visible = expanded) {
-            val configuration = LocalConfiguration.current
-            val maxAlertHeight =
-                remember(configuration) { (configuration.screenHeightDp * 0.8f).dp }
-
-            val scrollState = rememberScrollState()
-            val scrollableModifier = if (isScrollable) {
-                Modifier
-                    .heightIn(max = maxAlertHeight)
-                    .verticalScroll(scrollState)
-            } else {
-                Modifier
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, alertColor, RoundedCornerShape(8.dp))
+                .padding(horizontal = 8.dp, vertical = 2.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = "Service Alert",
+                    modifier = Modifier.size(20.dp),
+                    tint = alertColor
+                )
+                val alertText = getAlertsTitle(alerts.size)
+                Text(
+                    text = alertText,
+                    color = alertColor,
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = { onExpandedChange() }) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (expanded) "Collapse" else "Expand"
+                    )
+                }
             }
-            Column(modifier = scrollableModifier) {
-                Spacer(modifier = Modifier.height(4.dp))
-                alerts.values.forEachIndexed { index, alert ->
-                    if (index > 0) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = alertColor.copy(alpha = 0.5f)
+
+            AnimatedVisibility(visible = expanded) {
+                val configuration = LocalConfiguration.current
+                val maxAlertHeight =
+                    remember(configuration) { (configuration.screenHeightDp * 0.8f).dp }
+
+                val scrollState = rememberScrollState()
+                val scrollableModifier = if (isScrollable) {
+                    Modifier
+                        .heightIn(max = maxAlertHeight)
+                        .verticalScroll(scrollState)
+                } else {
+                    Modifier
+                }
+                Column(modifier = scrollableModifier) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    alerts.values.forEachIndexed { index, alert ->
+                        if (index > 0) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                color = alertColor.copy(alpha = 0.5f)
+                            )
+                        }
+                        AlertItem(
+                            alert = alert,
+                            languageListToUse = languageListToUse,
+                            selectedLanguages = selectedLanguages,
+                            locale = locale,
+                            default_tz = default_tz,
+                            alertColor = alertColor,
+                            chateau = chateau
                         )
                     }
-                    AlertItem(
-                        alert = alert,
-                        languageListToUse = languageListToUse,
-                        locale = locale,
-                        default_tz = default_tz,
-                        alertColor = alertColor,
-                        chateau = chateau
-                    )
                 }
             }
         }
@@ -179,11 +258,16 @@ fun AlertsBox(
 private fun AlertItem(
     alert: Alert,
     languageListToUse: List<String>,
+    selectedLanguages: Set<String>,
     locale: Locale,
     default_tz: String?,
     alertColor: Color,
     chateau: String?
 ) {
+    val languagesForAlert = languageListToUse.filter { language ->
+        language in selectedLanguages && alert.hasTranslationForLanguage(language)
+    }
+
     Column(modifier = Modifier.padding(top = 2.dp)) {
         Row {
             Text(
@@ -206,17 +290,23 @@ private fun AlertItem(
             )
         }
 
-        alert.url?.let { AlertUrl(it) }
+        languagesForAlert.forEachIndexed { index, language ->
+            if (index > 0) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = alertColor.copy(alpha = 0.35f)
+                )
+            }
 
-        languageListToUse.forEach { lang ->
-            alert.header_text?.translation?.find { (it.language ?: "") == lang }?.let {
+            alert.url?.let { AlertUrl(it, language) }
+            alert.header_text?.translationForLanguage(language)?.let {
                 FormattedText(
                     text = it.text,
                     style = MaterialTheme.typography.bodySmall,
                     chateau = chateau
                 )
             }
-            alert.description_text?.translation?.find { (it.language ?: "") == lang }?.let {
+            alert.description_text?.translationForLanguage(language)?.let {
                 FormattedText(
                     text = it.text,
                     style = MaterialTheme.typography.bodySmall,
@@ -236,27 +326,27 @@ private fun AlertItem(
 }
 
 @Composable
-private fun AlertUrl(url: AlertText) {
+private fun AlertUrl(url: AlertText, language: String) {
     val uriHandler = LocalUriHandler.current
-    url.translation.forEach { urlTranslation ->
-        Row {
-            val languageStr = urlTranslation.language ?: "Link"
-            Text(
-                text = "${languageStr}: ",
-                style = MaterialTheme.typography.bodySmall
-            )
-            val linkColor = if (isSystemInDarkTheme()) Color(0xff2b7fff) else Color.Blue
-            BasicText(
-                text = AnnotatedString(
-                    urlTranslation.text,
-                    spanStyle = SpanStyle(color = linkColor)
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.pointerInput(urlTranslation.text) {
-                    detectTapGestures { uriHandler.openUri(urlTranslation.text) }
-                }
-            )
-        }
+    val urlTranslation = url.translationForLanguage(language) ?: return
+
+    Row {
+        val languageStr = urlTranslation.language ?: "Link"
+        Text(
+            text = "${languageStr}: ",
+            style = MaterialTheme.typography.bodySmall
+        )
+        val linkColor = if (isSystemInDarkTheme()) Color(0xff2b7fff) else Color.Blue
+        BasicText(
+            text = AnnotatedString(
+                urlTranslation.text,
+                spanStyle = SpanStyle(color = linkColor)
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.pointerInput(urlTranslation.text) {
+                detectTapGestures { uriHandler.openUri(urlTranslation.text) }
+            }
+        )
     }
 }
 
