@@ -1,5 +1,6 @@
 package com.catenarymaps.catenary
 
+import android.text.Html
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.animation.AnimatedVisibility
@@ -36,6 +37,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Warning
@@ -54,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -73,6 +76,7 @@ import java.time.DateTimeException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -125,6 +129,41 @@ private fun contextStopTimePrefix(stopTime: StopTimeCleaned, tripTimezone: Strin
 
 private fun contextStopMapLabel(stopName: String, labelPrefix: String?): String {
         return if (labelPrefix.isNullOrBlank()) stopName else "$labelPrefix $stopName"
+}
+
+private fun Alert.isCurrentAt(nowEpochSeconds: Long): Boolean {
+        if (active_period.isEmpty()) return true
+
+        return active_period.any { period ->
+                (period.start == null || period.start <= nowEpochSeconds) &&
+                        (period.end == null || nowEpochSeconds < period.end)
+        }
+}
+
+private fun Alert.localizedHeader(locale: Locale): String? {
+        val translations = header_text?.translation.orEmpty()
+        if (translations.isEmpty()) return null
+
+        fun normalizedLanguage(language: String?): String =
+                language.orEmpty().substringBefore("-html").lowercase(Locale.ROOT)
+
+        val localeTag = locale.toLanguageTag().lowercase(Locale.ROOT)
+        val localeLanguage = locale.language.lowercase(Locale.ROOT)
+        val translation =
+                translations.firstOrNull {
+                        normalizedLanguage(it.language) == localeTag
+                }
+                        ?: translations.firstOrNull {
+                                normalizedLanguage(it.language) == localeLanguage
+                        }
+                        ?: translations.firstOrNull { it.language.isNullOrBlank() }
+                        ?: translations.first()
+
+        return Html.fromHtml(translation.text, Html.FROM_HTML_MODE_LEGACY)
+                .toString()
+                .replace(Regex("\\s+"), " ")
+                .trim()
+                .takeIf { it.isNotEmpty() }
 }
 
 @Composable
@@ -216,6 +255,28 @@ fun SingleTripInfoScreen(
         }
         val pulseIcon = remember { mutableStateOf(false) }
         var alertsExpanded by remember { mutableStateOf(false) }
+        val alertLocale = LocalConfiguration.current.locales[0]
+        var alertClockEpochSeconds by remember { mutableStateOf(Instant.now().epochSecond) }
+
+        LaunchedEffect(Unit) {
+                while (true) {
+                        delay(30_000L)
+                        alertClockEpochSeconds = Instant.now().epochSecond
+                }
+        }
+
+        val currentAlerts: Map<String, Alert> =
+                remember(tripData?.alert_id_to_alert, alertClockEpochSeconds) {
+                        tripData?.alert_id_to_alert
+                                ?.filterValues { alert ->
+                                        alert.isCurrentAt(alertClockEpochSeconds)
+                                }
+                                .orEmpty()
+                }
+        val currentAlertHeader =
+                remember(currentAlerts, alertLocale) {
+                        currentAlerts.values.firstOrNull()?.localizedHeader(alertLocale)
+                }
 
         // Pulse Logic
         LaunchedEffect(showFloatingControls) {
@@ -725,7 +786,7 @@ fun SingleTripInfoScreen(
                                         )
                                 }
 
-                                // Vehicle + Block + Alerts Pill Row
+                                // Vehicle + Block Row
                                 CompositionLocalProvider(
                                         LocalMinimumInteractiveComponentEnforcement provides false
                                 ) {
@@ -803,63 +864,87 @@ fun SingleTripInfoScreen(
                                                         }
                                                         Spacer(modifier = Modifier.width(8.dp))
                                                 }
-                                                // Alerts Pill
-                                                if (data.alert_id_to_alert.isNotEmpty()) {
-                                                        androidx.compose.material3.Surface(
-                                                                onClick = {
-                                                                        alertsExpanded =
-                                                                                !alertsExpanded
-                                                                },
-                                                                shape =
-                                                                        RoundedCornerShape(
-                                                                                percent = 50
+                                        }
+
+                                        if (currentAlerts.isNotEmpty()) {
+                                                Row(
+                                                        modifier =
+                                                                Modifier
+                                                                        .fillMaxWidth()
+                                                                        .clickable {
+                                                                                alertsExpanded =
+                                                                                        !alertsExpanded
+                                                                        }
+                                                                        .background(
+                                                                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                                                        )
+                                                                        .padding(
+                                                                                top = 2.dp,
+                                                                                bottom = 2.dp
                                                                         ),
+                                                        verticalAlignment = Alignment.CenterVertically,
+
+                                                        ) {
+
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        androidx.compose.material3.Surface(
+                                                                shape = RoundedCornerShape(percent = 50),
                                                                 color = Color(0xFFF99C24)
                                                         ) {
+
                                                                 Row(
-                                                                        verticalAlignment =
-                                                                                Alignment
-                                                                                        .CenterVertically,
+                                                                        verticalAlignment = Alignment.CenterVertically,
                                                                         modifier =
                                                                                 Modifier.padding(
-                                                                                        horizontal =
-                                                                                                8.dp,
-                                                                                        vertical =
-                                                                                                2.dp
+                                                                                        horizontal = 4.dp,
+                                                                                        vertical = 2.dp
                                                                                 )
                                                                 ) {
-                                                                        Icon(
-                                                                                imageVector =
-                                                                                        Icons.Default
-                                                                                                .Warning,
-                                                                                contentDescription =
-                                                                                        "Alerts",
-                                                                                tint = Color.White,
-                                                                                modifier =
-                                                                                        Modifier.size(
-                                                                                                12.dp
-                                                                                        )
+                                                                        Text(
+                                                                                text = "!",
+                                                                                color = Color.White,
+                                                                                fontWeight = FontWeight.Bold,
+                                                                                style =
+                                                                                        MaterialTheme.typography
+                                                                                                .labelSmall,
                                                                         )
                                                                         Spacer(
-                                                                                modifier =
-                                                                                        Modifier.width(
-                                                                                                4.dp
-                                                                                        )
+                                                                                modifier = Modifier.width(
+                                                                                        2.dp
+                                                                                )
                                                                         )
                                                                         Text(
-                                                                                text =
-                                                                                        "${data.alert_id_to_alert.size}",
+                                                                                text = "${data.alert_id_to_alert.size}",
                                                                                 style =
-                                                                                        MaterialTheme
-                                                                                                .typography
+                                                                                        MaterialTheme.typography
                                                                                                 .labelSmall,
                                                                                 color = Color.White,
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .Bold
+                                                                                fontWeight = FontWeight.Bold
                                                                         )
                                                                 }
                                                         }
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(
+                                                                text =
+                                                                        currentAlertHeader
+                                                                                ?: stringResource(
+                                                                                        R.string.service_alerts_header
+                                                                                ),
+                                                                style =
+                                                                        MaterialTheme.typography.labelMedium,
+                                                                color =
+                                                                        MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis,
+                                                                modifier = Modifier.weight(1f)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Icon(
+                                                                imageVector = androidx.compose.material.icons.Icons.Filled.ChevronRight,
+                                                                contentDescription = "Expand",
+                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+
                                                 }
                                         }
                                 }
