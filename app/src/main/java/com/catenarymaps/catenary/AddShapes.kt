@@ -78,8 +78,9 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            7 to if (railInFrame) const(0.04f) else const(0.09f),
-                            8 to if (railInFrame) const(0.04f) else const(0.15f),
+                            7 to if (railInFrame) const(0.03f) else const(0.09f),
+                            8 to if (railInFrame) const(0.03f) else const(0.15f),
+                            9 to if (railInFrame) const(0.03f) else const(0.15f),
                             11 to if (railInFrame) const(0.15f) else const(0.30f),
                             14 to if (railInFrame) const(0.2f) else const(0.30f),
                             16 to if (railInFrame) const(0.3f) else const(0.30f),

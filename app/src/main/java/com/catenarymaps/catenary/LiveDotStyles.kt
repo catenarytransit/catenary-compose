@@ -324,6 +324,9 @@ fun getLiveDotStyle(
                         11.0 to const(0.9f),
                             12.0 to const(1.0f)
                     )
+            minLayerDotsZoom = 6F
+            minLabelDotsZoom = 8F
+            minBearingZoom = 8F
         }
         "tram" -> {
             dotRadius =
@@ -417,6 +420,9 @@ fun getLiveDotStyle(
                         11.0 to const(0.9f),
                         13.0 to const(1.0f)
                     )
+            minBearingZoom = 8F
+            minLayerDotsZoom = 6.5F
+            minLabelDotsZoom = 8F
         }
         "intercityrail" -> {
             dotRadius =
