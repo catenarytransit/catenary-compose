@@ -315,11 +315,77 @@ private fun AlertItem(
             }
         }
 
-        alert.active_period.forEach {
+        AlertActivePeriods(
+            activePeriods = alert.active_period,
+            locale = locale,
+            defaultTz = default_tz
+        )
+    }
+}
+
+@Composable
+private fun AlertActivePeriods(
+    activePeriods: List<AlertActivePeriod>,
+    locale: Locale,
+    defaultTz: String?
+) {
+    if (activePeriods.isEmpty()) return
+
+    val scheduleLocale = remember(locale) {
+        if (locale.language.equals("en", ignoreCase = true)) Locale.CANADA else locale
+    }
+    val schedule = remember(activePeriods, scheduleLocale, defaultTz) {
+        condenseActivePeriods(
+            periods = activePeriods,
+            locale = scheduleLocale,
+            defaultTz = defaultTz
+        )
+    }
+
+    if (!schedule.isCondensed) {
+        schedule.fallbackPeriods.forEach { activePeriod ->
             AlertActivePeriodRow(
-                activePeriod = it,
+                activePeriod = activePeriod,
                 locale = locale,
-                default_tz = default_tz
+                default_tz = defaultTz
+            )
+        }
+        return
+    }
+
+    Column(
+        modifier = Modifier.padding(top = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = schedule.baseRule,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold
+        )
+
+        if (schedule.weekdayRules.isNotBlank()) {
+            Text(
+                text = schedule.weekdayRules,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        if (schedule.exceptions.isNotBlank()) {
+            val separatorIndex = schedule.exceptions.indexOf(": ")
+            val exceptionText = if (separatorIndex < 0) {
+                AnnotatedString(schedule.exceptions)
+            } else {
+                buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(schedule.exceptions.substring(0, separatorIndex + 1))
+                    }
+                    append(schedule.exceptions.substring(separatorIndex + 1))
+                }
+            }
+            Text(
+                text = exceptionText,
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
