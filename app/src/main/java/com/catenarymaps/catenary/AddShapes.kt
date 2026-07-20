@@ -294,14 +294,14 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            3 to const(0.25.dp),
-                            5 to const(0.4.dp),
+                            3 to const(0.1.dp),
+                            5 to const(0.2.dp),
                             7 to const(0.8.dp),
                             9 to const(2.0.dp),
                             11 to const(2.5.dp),
                     ),
             opacity = line_opacity_intercity,
-            minZoom = 2f,
+            minZoom = 3f,
             visible = intercitySettings.shapes,
             filter =
                     all(

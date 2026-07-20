@@ -266,7 +266,7 @@ object TrajectoryManager {
                                 }
 
                                 val props = JsonObject(buildMap<String, JsonElement> {
-                                    put("vehicleIdLabel", JsonPrimitive(traj.trip_id ?: ""))
+                                    //sput("vehicleIdLabel", JsonPrimitive(traj.trip_id ?: ""))
                                     put("speed", JsonPrimitive(""))
                                     put("color", JsonPrimitive(rawColor))
                                     put("chateau", JsonPrimitive(traj.chateau_id ?: ""))
