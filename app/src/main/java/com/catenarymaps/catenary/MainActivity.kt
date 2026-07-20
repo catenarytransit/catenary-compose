@@ -1832,6 +1832,14 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
+                                                                                 val sheetIsCollapsed by remember {
+                                                 derivedStateOf {
+                                                         draggableState.currentValue ==
+                                                                SheetSnapPoint.Collapsed
+                                                 }
+                                        }
+ 
+
                                         // State for layers panel visibility
                                         var showLayersPanel by remember { mutableStateOf(false) }
 
@@ -3551,6 +3559,8 @@ class MainActivity : ComponentActivity() {
                                                                                                         },
                                                                                                         applyFilterToLiveDots =
                                                                                                                 applyFilterToLiveDots,
+                                                                                                                 isBottomDrawerCollapsed =
+                                                                                                                 sheetIsCollapsed,
                                                                                                         onBack =
                                                                                                                 onBack,
                                                                                                         onHome =

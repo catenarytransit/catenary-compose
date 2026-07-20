@@ -499,6 +499,7 @@ fun getLiveDotStyle(
                             13.0 to const(0.95f),
                             15.0 to const(0.99f)
                     )
+            minBearingZoom = 5.0F
         }
         "other" -> {
             dotRadius =

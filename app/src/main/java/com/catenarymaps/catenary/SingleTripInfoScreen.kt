@@ -184,6 +184,7 @@ fun SingleTripInfoScreen(
         onSetStopsToHide: (Set<String>) -> Unit,
         // state to control the filter
         applyFilterToLiveDots: MutableState<Expression<BooleanValue>>,
+        isBottomDrawerCollapsed: Boolean,
         onBack: () -> Unit,
         onHome: () -> Unit
 ) {
@@ -1209,7 +1210,7 @@ fun SingleTripInfoScreen(
 
                 // Floating Controls - Scroll To Current
                 androidx.compose.animation.AnimatedVisibility(
-                        visible = showScrollToCurrentButton,
+                        visible = showScrollToCurrentButton && !isBottomDrawerCollapsed,
                         modifier =
                                 Modifier
                                         .align(Alignment.BottomEnd)
