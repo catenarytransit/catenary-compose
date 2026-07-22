@@ -3,6 +3,7 @@ package com.catenarymaps.catenary
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,6 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -182,6 +185,7 @@ fun RouteScreen(
     var routeInfo by remember { mutableStateOf<RouteInfoResponse?>(null) }
     var routeRealtime by remember { mutableStateOf<RouteRealtimeResponse?>(null) }
     var activeParentId by remember { mutableStateOf<String?>(null) }
+    var showConnections by remember(screenData) { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val loadedShapes = remember { mutableStateMapOf<String, String>() }
     val scope =
@@ -823,15 +827,36 @@ fun RouteScreen(
 
         if (!activeStops.isNullOrEmpty()) {
             item {
-                Text(
-                        text = stringResource(R.string.stops),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(bottom = 0.dp)
-                )
+                Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                            text = stringResource(R.string.stops),
+                            style = MaterialTheme.typography.titleLarge
+                    )
+                    if (stopConnections.isNotEmpty()) {
+                        OutlinedButton(
+                                onClick = { showConnections = !showConnections },
+                                shape = RoundedCornerShape(percent = 50),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                    text = if (showConnections) "Hide connections" else "Show connections",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Normal
+                            )
+                        }
+                    }
+                }
             }
             itemsIndexed(activeStops) { index, stopTime ->
                 val stopDetails = info.stops[stopTime.stopId]
                 if (stopDetails != null) {
+                    val headerHeight = 24.dp
                     Row(
                             modifier =
                                 Modifier
@@ -848,30 +873,29 @@ fun RouteScreen(
                             verticalAlignment = Alignment.Top
                     ) {
                         RouteStopProgressIndicator(
-                                color = parseColor(info.color),
                                 isFirst = index == 0,
                                 isLast = index == activeStops.lastIndex,
-                            modifier = Modifier
-                                .width(12.dp)
-                                .fillMaxHeight()
+                                dotOffset = headerHeight / 2,
+                                modifier = Modifier
+                                    .width(16.dp)
+                                    .fillMaxHeight()
                         )
                         Spacer(Modifier.width(8.dp))
-                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                            Row() {
-                                Text(stopDetails.name, fontWeight = FontWeight.Medium)
-
-                                Spacer(Modifier.width(4.dp))
-                                stopDetails.code?.let {
-                                    Text(
-                                            "$it",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.alignByBaseline()
-                                    )
-                                }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .defaultMinSize(minHeight = headerHeight),
+                                    verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                        text = stopDetails.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Normal,
+                                        modifier = Modifier.weight(1f)
+                                )
                             }
 
-                            // --- NEW: transfers
                             val parentId = stopDetails.parentStation
                             val connectionKey =
                                     when {
@@ -882,8 +906,9 @@ fun RouteScreen(
                                         else -> null
                                     }
 
-                            if (connectionKey != null) {
+                            if (showConnections && connectionKey != null) {
                                 val connections = stopConnections[connectionKey].orEmpty()
+                                Spacer(modifier = Modifier.height(4.dp))
                                 SelectionRouteBadges(
                                     routeIds = connections.map { it.routeId },
                                     resolveRouteInfo = { routeId ->
@@ -904,9 +929,7 @@ fun RouteScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier
-                                .height(1.dp)
-                                .fillMaxWidth())
+                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
                 }
@@ -917,47 +940,68 @@ fun RouteScreen(
 
 @Composable
 fun RouteStopProgressIndicator(
-        color: Color,
         isFirst: Boolean,
         isLast: Boolean,
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
+        dotOffset: androidx.compose.ui.unit.Dp? = null
 ) {
+    val isDark = isSystemInDarkTheme()
+    val neutralColor = if (isDark) Color(0xFFDDDDDD) else Color(0xFF333333)
+    val endpointColor = if (isDark) Color.White else Color.Black
+
     Canvas(modifier = modifier.fillMaxHeight()) {
         val canvasWidth = size.width
         val canvasHeight = size.height
-        val hCenter = canvasHeight / 2
         val wCenter = canvasWidth / 2
+        val hCenter = dotOffset?.toPx() ?: canvasHeight / 2
+        val lineWidth = 2.dp.toPx()
 
-        val boxWidth = canvasWidth / 2
-
-        val circleColor = Color.White
-        val strokeColor = color
-
-        // Top box
         if (!isFirst) {
             drawRect(
-                    color = color,
-                    topLeft = Offset(wCenter - boxWidth / 2, 0f),
-                    size = androidx.compose.ui.geometry.Size(boxWidth, hCenter)
+                    color = neutralColor,
+                    topLeft = Offset(wCenter - lineWidth / 2, 0f),
+                    size = androidx.compose.ui.geometry.Size(lineWidth, hCenter)
             )
         }
 
-        // Bottom box
         if (!isLast) {
             drawRect(
-                    color = color,
-                    topLeft = Offset(wCenter - boxWidth / 2, hCenter),
-                    size = androidx.compose.ui.geometry.Size(boxWidth, canvasHeight - hCenter)
+                    color = neutralColor,
+                    topLeft = Offset(wCenter - lineWidth / 2, hCenter),
+                    size = androidx.compose.ui.geometry.Size(lineWidth, canvasHeight - hCenter)
             )
         }
 
-        // Center circle
-        drawCircle(color = circleColor, radius = canvasWidth / 2, center = center)
-        drawCircle(
-                color = strokeColor,
-                radius = canvasWidth / 2,
-                center = center,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = canvasWidth / 4)
-        )
+        val dotRadius = 4.dp.toPx()
+        val dotCenter = Offset(wCenter, hCenter)
+
+        if (isFirst || isLast) {
+            drawCircle(color = endpointColor, radius = dotRadius, center = dotCenter)
+        } else if (isDark) {
+            val borderStroke = 1.dp.toPx()
+            val ringStroke = 2.dp.toPx()
+
+            drawCircle(
+                    color = Color.Black,
+                    radius = dotRadius + (borderStroke / 2) + (ringStroke / 2),
+                    center = dotCenter,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = borderStroke)
+            )
+            drawCircle(color = Color.Black, radius = dotRadius, center = dotCenter)
+            drawCircle(
+                    color = neutralColor,
+                    radius = dotRadius,
+                    center = dotCenter,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = ringStroke)
+            )
+        } else {
+            drawCircle(color = Color.White, radius = dotRadius, center = dotCenter)
+            drawCircle(
+                    color = neutralColor,
+                    radius = dotRadius,
+                    center = dotCenter,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+            )
+        }
     }
 }
