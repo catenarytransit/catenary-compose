@@ -191,7 +191,7 @@ fun StationScreenTrainRow(
                             .width(70.dp)
                             .padding(horizontal = 4.dp),
                         horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.spacedBy((-2).dp)
+                    verticalArrangement = Arrangement.spacedBy((0).dp)
                 ) {
                         if (event.trip_cancelled == true) {
                                 Text(
@@ -832,7 +832,8 @@ fun StopScreenRow(
                                                         DelayDiff(
                                                                 diff = rtTime - schedTime,
                                                                 show_seconds = showSeconds,
-                                                                use_symbol_sign = useSymbolSign
+                                                            use_symbol_sign = useSymbolSign,
+                                                            hide_min_units = !showSeconds
                                                         )
                                                         Spacer(Modifier.width(4.dp))
 
@@ -1063,7 +1064,7 @@ fun StationScreenTrainRowCompact(
                             .width(70.dp)
                             .padding(horizontal = 4.dp),
                         horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.spacedBy((-2).dp)
+                    verticalArrangement = Arrangement.spacedBy((0).dp)
                 ) {
                         if (event.trip_cancelled == true) {
                                 Text(
@@ -1142,7 +1143,8 @@ fun StationScreenTrainRowCompact(
                                         DelayDiff(
                                                 diff = rtTime - schedTime,
                                                 show_seconds = effectiveShowSeconds,
-                                                use_symbol_sign = useSymbolSign
+                                            use_symbol_sign = useSymbolSign,
+                                            hide_min_units = !showSeconds
                                         )
                                 } else {
                                         // On Time OR No Realtime Data
@@ -1446,10 +1448,10 @@ fun StopScreenRowV2(
         Column(
                 modifier =
                         modifier
-                                .fillMaxWidth()
-                                .clickable { onTripClick(event) }
-                                .defaultMinSize(minHeight = 48.dp)
-                                .padding(vertical = 4.dp),
+                            .fillMaxWidth()
+                            .clickable { onTripClick(event) }
+                            .defaultMinSize(minHeight = 48.dp)
+                            .padding(vertical = 4.dp),
                 verticalArrangement = Arrangement.Center
         ) {
                 Row(
@@ -1462,8 +1464,8 @@ fun StopScreenRowV2(
                                         androidx.compose.foundation.layout.Box(
                                                 modifier =
                                                         Modifier
-                                                                .width(if (swiss) 50.dp else 40.dp)
-                                                                .padding(horizontal = 2.dp),
+                                                            .width(if (swiss) 50.dp else 40.dp)
+                                                            .padding(horizontal = 2.dp),
                                                 contentAlignment =
                                                         if (swiss) Alignment.CenterStart
                                                         else Alignment.Center
@@ -1509,13 +1511,13 @@ fun StopScreenRowV2(
                                                                                         ?.short_name,
                                                                         modifier =
                                                                                 Modifier
-                                                                                        .height(
-                                                                                                20.dp
-                                                                                        )
-                                                                                        .padding(
-                                                                                                end =
-                                                                                                        4.dp
-                                                                                        )
+                                                                                    .height(
+                                                                                        20.dp
+                                                                                    )
+                                                                                    .padding(
+                                                                                        end =
+                                                                                            4.dp
+                                                                                    )
                                                                 )
                                                         }
                                                 } else if (isMta) {
@@ -1581,26 +1583,26 @@ fun StopScreenRowV2(
                                                                                         ),
                                                                         modifier =
                                                                                 Modifier
-                                                                                        .clip(
-                                                                                                getRouteShape(
-                                                                                                        event.chateau,
-                                                                                                        routeInfo
-                                                                                                                ?.short_name
-                                                                                                )
+                                                                                    .clip(
+                                                                                        getRouteShape(
+                                                                                            event.chateau,
+                                                                                            routeInfo
+                                                                                                ?.short_name
                                                                                         )
-                                                                                        .background(
-                                                                                                parseColor(
-                                                                                                        routeInfo
-                                                                                                                .color,
-                                                                                                        Color.Gray
-                                                                                                )
+                                                                                    )
+                                                                                    .background(
+                                                                                        parseColor(
+                                                                                            routeInfo
+                                                                                                .color,
+                                                                                            Color.Gray
                                                                                         )
-                                                                                        .padding(
-                                                                                                horizontal =
-                                                                                                        4.dp,
-                                                                                                vertical =
-                                                                                                        1.dp
-                                                                                        )
+                                                                                    )
+                                                                                    .padding(
+                                                                                        horizontal =
+                                                                                            4.dp,
+                                                                                        vertical =
+                                                                                            1.dp
+                                                                                    )
                                                                 )
                                                         } else if (routeInfo?.long_name != null) {
                                                                 Text(
@@ -1762,7 +1764,8 @@ fun StopScreenRowV2(
                                                         DelayDiff(
                                                                 diff = rtTime - schedTime,
                                                                 show_seconds = effectiveShowSeconds,
-                                                                use_symbol_sign = useSymbolSign
+                                                            use_symbol_sign = useSymbolSign,
+                                                            hide_min_units = !showSeconds
                                                         )
                                                 } else {
                                                         // On Time OR No Realtime Data
