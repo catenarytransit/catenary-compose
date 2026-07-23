@@ -24,6 +24,7 @@ fun DelayDiff(
     show_seconds: Boolean = false,
     fontSizeOfPolarity: TextUnit = 12.sp,
     use_symbol_sign: Boolean = false,
+    hide_min_units: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val isDark = isSystemInDarkTheme()
@@ -133,12 +134,14 @@ fun DelayDiff(
                     color = textColor,
                     modifier = Modifier.alignByBaseline()
                 )
-                Text(
-                    text = locale_min_marking(show_seconds),
-                    fontSize = 10.sp,
-                    color = textColor,
-                    modifier = Modifier.alignByBaseline()
-                )
+                if (!hide_min_units) {
+                    Text(
+                        text = locale_min_marking(show_seconds),
+                        fontSize = 10.sp,
+                        color = textColor,
+                        modifier = Modifier.alignByBaseline()
+                    )
+                }
             }
             if (show_seconds && abs(diff) > 0) {
                 Text(

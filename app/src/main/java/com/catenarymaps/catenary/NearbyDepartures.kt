@@ -1735,7 +1735,8 @@ private fun TripPill(
                                         DelayDiff(
                                                 diff = diff,
                                                 fontSizeOfPolarity = 12.sp,
-                                                use_symbol_sign = true
+                                                use_symbol_sign = true,
+                                                hide_min_units = true,
                                         )
                                 }
                         }

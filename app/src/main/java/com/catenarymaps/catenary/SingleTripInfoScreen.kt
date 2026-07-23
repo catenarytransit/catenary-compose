@@ -1614,7 +1614,8 @@ fun StopListItem(
                                                                         show_seconds = showSeconds,
                                                                         fontSizeOfPolarity = 10.sp,
                                                                         use_symbol_sign = true,
-                                                                        modifier = Modifier
+                                                                        modifier = Modifier,
+                                                                        hide_min_units = !showSeconds,
                                                                 )
                                                         }
                                                         if (showCountdown) {
@@ -1738,7 +1739,8 @@ fun StopListItem(
                                                                         modifier =
                                                                                 Modifier.offset(
                                                                                         y = (-6).dp
-                                                                                )
+                                                                                ),
+                                                                        hide_min_units = !showSeconds,
                                                                 )
                                                         }
                                                         if (showCountdown) {
@@ -1878,7 +1880,8 @@ fun StopListItem(
                                                                                         Modifier.offset(
                                                                                                 y =
                                                                                                         (-4).dp
-                                                                                        )
+                                                                                        ),
+                                                                                hide_min_units = !showSeconds,
                                                                         )
                                                                 }
                                                                 if (showCountdown) {

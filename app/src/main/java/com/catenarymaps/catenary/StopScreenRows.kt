@@ -261,7 +261,8 @@ fun StationScreenTrainRow(
                                                 DelayDiff(
                                                         diff = rtTime - schedTime,
                                                         show_seconds = effectiveShowSeconds,
-                                                        use_symbol_sign = useSymbolSign
+                                                    use_symbol_sign = useSymbolSign,
+                                                    hide_min_units = !effectiveShowSeconds
                                                 )
                                         } else {
                                                 // On Time
@@ -754,26 +755,26 @@ fun StopScreenRow(
                                                                         ),
                                                                 modifier =
                                                                         Modifier
-                                                                                .clip(
-                                                                                        getRouteShape(
-                                                                                                event.chateau,
-                                                                                                routeInfo
-                                                                                                        ?.short_name
-                                                                                        )
+                                                                            .clip(
+                                                                                getRouteShape(
+                                                                                    event.chateau,
+                                                                                    routeInfo
+                                                                                        ?.short_name
                                                                                 )
-                                                                                .background(
-                                                                                        parseColor(
-                                                                                                routeInfo
-                                                                                                        .color,
-                                                                                                Color.Gray
-                                                                                        )
+                                                                            )
+                                                                            .background(
+                                                                                parseColor(
+                                                                                    routeInfo
+                                                                                        .color,
+                                                                                    Color.Gray
                                                                                 )
-                                                                                .padding(
-                                                                                        horizontal =
-                                                                                                4.dp,
-                                                                                        vertical =
-                                                                                                1.dp
-                                                                                )
+                                                                            )
+                                                                            .padding(
+                                                                                horizontal =
+                                                                                    4.dp,
+                                                                                vertical =
+                                                                                    1.dp
+                                                                            )
                                                         )
                                                         Spacer(Modifier.width(4.dp))
                                                 }
@@ -947,9 +948,9 @@ fun StationScreenTrainRowCompact(
         Row(
                 modifier =
                         modifier
-                                .fillMaxWidth()
-                                .clickable { onTripClick(event) }
-                                .padding(vertical = 2.dp),
+                            .fillMaxWidth()
+                            .clickable { onTripClick(event) }
+                            .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 // Determine order
@@ -963,8 +964,8 @@ fun StationScreenTrainRowCompact(
                                 androidx.compose.foundation.layout.Box(
                                         modifier =
                                                 Modifier
-                                                        .width(if (swiss) 50.dp else 40.dp)
-                                                        .padding(horizontal = 2.dp),
+                                                    .width(if (swiss) 50.dp else 40.dp)
+                                                    .padding(horizontal = 2.dp),
                                         contentAlignment =
                                                 if (swiss) Alignment.CenterStart
                                                 else Alignment.Center
@@ -1059,8 +1060,8 @@ fun StationScreenTrainRowCompact(
                 // Left (or Middle if Swiss): Time (Vertical Stack)
                 Column(
                         modifier = Modifier
-                                .width(70.dp)
-                                .padding(horizontal = 4.dp),
+                            .width(70.dp)
+                            .padding(horizontal = 4.dp),
                         horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.spacedBy((-2).dp)
                 ) {
@@ -1218,8 +1219,8 @@ fun StationScreenTrainRowCompact(
                 Column(
                         modifier =
                                 Modifier
-                                        .weight(1f)
-                                        .padding(start = if (swiss) 4.dp else 0.dp, end = 4.dp),
+                                    .weight(1f)
+                                    .padding(start = if (swiss) 4.dp else 0.dp, end = 4.dp),
                         verticalArrangement = Arrangement.Center
                 ) {
                         // ---------------------------------------------------------
@@ -1292,8 +1293,8 @@ fun StationScreenTrainRowCompact(
                                                         contentDescription = agencyName,
                                                         modifier =
                                                                 Modifier
-                                                                        .size(12.dp)
-                                                                        .padding(end = 2.dp),
+                                                                    .size(12.dp)
+                                                                    .padding(end = 2.dp),
                                                         colorFilter = null
                                                 )
                                         }
@@ -1351,24 +1352,24 @@ fun StationScreenTrainRowCompact(
                                                                                 ),
                                                                 modifier =
                                                                         Modifier
-                                                                                .clip(
-                                                                                        getRouteShape(
-                                                                                                event.chateau,
-                                                                                                routeInfo
-                                                                                                        ?.short_name
-                                                                                        )
+                                                                            .clip(
+                                                                                getRouteShape(
+                                                                                    event.chateau,
+                                                                                    routeInfo
+                                                                                        ?.short_name
                                                                                 )
-                                                                                .background(
-                                                                                        parseColor(
-                                                                                                routeInfo
-                                                                                                        ?.color,
-                                                                                                Color.Gray
-                                                                                        )
+                                                                            )
+                                                                            .background(
+                                                                                parseColor(
+                                                                                    routeInfo
+                                                                                        ?.color,
+                                                                                    Color.Gray
                                                                                 )
-                                                                                .padding(
-                                                                                        horizontal = 4.dp,
-                                                                                        vertical = 0.5.dp
-                                                                                )
+                                                                            )
+                                                                            .padding(
+                                                                                horizontal = 4.dp,
+                                                                                vertical = 0.5.dp
+                                                                            )
                                                         )
                                                 }
                                         }
@@ -1660,7 +1661,7 @@ fun StopScreenRowV2(
                                 Column(
                                         modifier = Modifier.padding(horizontal = 2.dp),
                                         horizontalAlignment = Alignment.Start,
-                                        verticalArrangement = Arrangement.spacedBy((-2).dp)
+                                    verticalArrangement = Arrangement.spacedBy((0).dp)
                                 ) {
                                         if (event.trip_cancelled == true) {
                                                 Text(
