@@ -482,11 +482,9 @@ fun StationScreenTrainRow(
                                                         .replace("Platform", "")
                                                         .trim(),
                                         style =
-                                                MaterialTheme.typography.labelMedium.copy(
-                                                        fontWeight = FontWeight.Bold
-                                                ),
+                                                MaterialTheme.typography.bodyMedium,
                                         modifier =
-                                                Modifier
+                                                Modifier.padding(horizontal = 4.dp)
                                 )
                         }
                 }
