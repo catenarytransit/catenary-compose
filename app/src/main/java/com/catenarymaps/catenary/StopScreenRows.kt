@@ -1384,10 +1384,8 @@ fun StationScreenTrainRowCompact(
                                                         .replace("Platform", "")
                                                         .trim(),
                                         style =
-                                            MaterialTheme.typography.bodyMedium
-                                                    modifier =
-                                                    Modifier
-                                                    . padding (
+                                            MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(
                                                     horizontal = 4.dp,
                                 )
                                 )
@@ -1972,7 +1970,7 @@ fun StopScreenRowV2(
                                                                         .replace("Platform", "")
                                                                         .trim(),
                                                         style =
-                                                            MaterialTheme.typography.bodyMedium
+                                                            MaterialTheme.typography.bodyMedium,
                                                         modifier =
                                                                 Modifier
                                                                         .padding(
