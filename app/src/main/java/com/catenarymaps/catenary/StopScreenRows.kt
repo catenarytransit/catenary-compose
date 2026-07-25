@@ -1384,10 +1384,12 @@ fun StationScreenTrainRowCompact(
                                                         .replace("Platform", "")
                                                         .trim(),
                                         style =
-                                                MaterialTheme.typography.bodyMedium.copy(
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 10.sp
-                                                ),
+                                            MaterialTheme.typography.bodyMedium
+                                                    modifier =
+                                                    Modifier
+                                                    . padding (
+                                                    horizontal = 4.dp,
+                                )
                                 )
                         }
                 }
@@ -1624,26 +1626,26 @@ fun StopScreenRowV2(
                                                                                         ),
                                                                         modifier =
                                                                                 Modifier
-                                                                                        .clip(
-                                                                                                getRouteShape(
-                                                                                                        event.chateau,
-                                                                                                        routeInfo
-                                                                                                                ?.short_name
-                                                                                                )
+                                                                                    .clip(
+                                                                                        getRouteShape(
+                                                                                            event.chateau,
+                                                                                            routeInfo
+                                                                                                ?.short_name
                                                                                         )
-                                                                                        .background(
-                                                                                                parseColor(
-                                                                                                        routeInfo
-                                                                                                                .color,
-                                                                                                        Color.Gray
-                                                                                                )
+                                                                                    )
+                                                                                    .background(
+                                                                                        parseColor(
+                                                                                            routeInfo
+                                                                                                .color,
+                                                                                            Color.Gray
                                                                                         )
-                                                                                        .padding(
-                                                                                                horizontal =
-                                                                                                        4.dp,
-                                                                                                vertical =
-                                                                                                        1.dp
-                                                                                        )
+                                                                                    )
+                                                                                    .padding(
+                                                                                        horizontal =
+                                                                                            4.dp,
+                                                                                        vertical =
+                                                                                            1.dp
+                                                                                    )
                                                                 )
                                                         }
                                                 }
@@ -1849,8 +1851,8 @@ fun StopScreenRowV2(
                         val headsignColumn: @Composable () -> Unit = {
                                 Column(
                                         modifier = Modifier
-                                                .weight(1f)
-                                                .padding(horizontal = 4.dp),
+                                            .weight(1f)
+                                            .padding(horizontal = 4.dp),
                                         verticalArrangement = Arrangement.Center
                                 ) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1873,27 +1875,27 @@ fun StopScreenRowV2(
                                                                         ),
                                                                 modifier =
                                                                         Modifier
-                                                                                .padding(end = 4.dp)
-                                                                                .clip(
-                                                                                        getRouteShape(
-                                                                                                event.chateau,
-                                                                                                routeInfo
-                                                                                                        ?.short_name
-                                                                                        )
+                                                                            .padding(end = 4.dp)
+                                                                            .clip(
+                                                                                getRouteShape(
+                                                                                    event.chateau,
+                                                                                    routeInfo
+                                                                                        ?.short_name
                                                                                 )
-                                                                                .background(
-                                                                                        parseColor(
-                                                                                                routeInfo
-                                                                                                        ?.color,
-                                                                                                Color.Gray
-                                                                                        )
+                                                                            )
+                                                                            .background(
+                                                                                parseColor(
+                                                                                    routeInfo
+                                                                                        ?.color,
+                                                                                    Color.Gray
                                                                                 )
-                                                                                .padding(
-                                                                                        horizontal =
-                                                                                                4.dp,
-                                                                                        vertical =
-                                                                                                1.dp
-                                                                                )
+                                                                            )
+                                                                            .padding(
+                                                                                horizontal =
+                                                                                    4.dp,
+                                                                                vertical =
+                                                                                    1.dp
+                                                                            )
                                                         )
                                                 }
                                                 Text(
@@ -1970,26 +1972,11 @@ fun StopScreenRowV2(
                                                                         .replace("Platform", "")
                                                                         .trim(),
                                                         style =
-                                                                MaterialTheme.typography.labelSmall
-                                                                        .copy(
-                                                                                fontWeight =
-                                                                                        FontWeight
-                                                                                                .Bold,
-                                                                                fontSize = 10.sp
-                                                                        ),
+                                                            MaterialTheme.typography.bodyMedium
                                                         modifier =
                                                                 Modifier
-                                                                        .background(
-                                                                                MaterialTheme
-                                                                                        .colorScheme
-                                                                                        .surfaceVariant,
-                                                                                RoundedCornerShape(
-                                                                                        4.dp
-                                                                                )
-                                                                        )
                                                                         .padding(
                                                                                 horizontal = 4.dp,
-                                                                                vertical = 2.dp
                                                                         )
                                                 )
                                         }
@@ -2037,9 +2024,9 @@ fun RouteBubble(
                         val textColorVal = parseColor(textColor, Color.White)
                         Box(
                                 modifier = modifier
-                                        .clip(getRouteShape(chateau, shortName ?: longName))
-                                        .background(bgColor)
-                                        .padding(horizontal = 4.dp, vertical = 1.dp),
+                                    .clip(getRouteShape(chateau, shortName ?: longName))
+                                    .background(bgColor)
+                                    .padding(horizontal = 4.dp, vertical = 1.dp),
                                 contentAlignment = Alignment.Center
                         ) {
                                 SbbLogo(
@@ -2057,9 +2044,9 @@ fun RouteBubble(
                                         fontWeight = FontWeight.Bold
                                 ),
                                 modifier = modifier
-                                        .clip(getRouteShape(chateau, shortName ?: longName))
-                                        .background(parseColor(color, Color.Gray))
-                                        .padding(horizontal = 4.dp, vertical = 1.dp)
+                                    .clip(getRouteShape(chateau, shortName ?: longName))
+                                    .background(parseColor(color, Color.Gray))
+                                    .padding(horizontal = 4.dp, vertical = 1.dp)
                         )
                 }
         }
