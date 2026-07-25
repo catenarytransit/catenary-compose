@@ -487,12 +487,6 @@ fun StationScreenTrainRow(
                                                 ),
                                         modifier =
                                                 Modifier
-                                                    .background(
-                                                        MaterialTheme.colorScheme
-                                                            .surfaceVariant,
-                                                        RoundedCornerShape(4.dp)
-                                                    )
-                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                         }
                 }
@@ -1390,7 +1384,7 @@ fun StationScreenTrainRowCompact(
                                                         .replace("Platform", "")
                                                         .trim(),
                                         style =
-                                                MaterialTheme.typography.labelMedium.copy(
+                                                MaterialTheme.typography.bodyMedium.copy(
                                                         fontWeight = FontWeight.Bold,
                                                         fontSize = 10.sp
                                                 ),
