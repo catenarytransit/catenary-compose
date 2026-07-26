@@ -1045,7 +1045,7 @@ fun SingleTripInfoScreen(
                                         }
                                 }
 
-                                if (data.consist != null) {
+                                if (data.consist != null || data.sbb_formation != null) {
                                         Row(
                                                 modifier = Modifier
                                                         .fillMaxWidth()
@@ -1086,9 +1086,12 @@ fun SingleTripInfoScreen(
                                         }
                                 }
 
-                                if (coachSequenceScreenShown && data.consist != null) {
+                                if (coachSequenceScreenShown &&
+                                                (data.consist != null || data.sbb_formation != null)
+                                ) {
                                         CoachSequencePage(
-                                                coachSequence = data.consist
+                                                coachSequence = data.consist,
+                                                sbbFormation = data.sbb_formation
                                         )
                                 }
 
