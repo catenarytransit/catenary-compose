@@ -75,7 +75,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     init {
         RamondaWebSocket.subscribeTrip(
-            chateau = tripSelected.chateau_id ?: "",
+            chateau = tripSelected.chateau_id,
             tripId = tripSelected.trip_id ?: "",
             startDate = tripSelected.start_date,
             startTime = tripSelected.start_time
@@ -170,7 +170,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
             if (vehicleId.isNullOrBlank()) return@launch
 
             try {
-                val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id ?: "", "UTF-8")
+                val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id, "UTF-8")
                 val url =
                         "https://birch.catenarymaps.org/get_vehicle_information_from_label/${encodedChateauId}/$vehicleId"
                 val response = ktorClient.get(url).body<VehicleRealtimeDataResponse>()
@@ -202,7 +202,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     override fun onCleared() {
         super.onCleared()
-        tripSelected.chateau_id?.let { RamondaWebSocket.unsubscribeTrip(it) }
+        RamondaWebSocket.unsubscribeTrip(tripSelected.chateau_id)
     }
 
     // --- Logic ported from Svelte ---
@@ -274,7 +274,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                 if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
                                 arrivalTimeToUse != null
                 ) {
-                    if (stoptime.raw.scheduled_departure_time_unix_seconds < arrivalTimeToUse!!) {
+                    if (stoptime.raw.scheduled_departure_time_unix_seconds < arrivalTimeToUse) {
                         departureTimeToUse = arrivalTimeToUse
                     }
                 }
@@ -282,7 +282,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                 if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
                                 arrivalTimeToUse != null
                 ) {
-                    if (stoptime.raw.scheduled_departure_time_unix_seconds < arrivalTimeToUse!!) {
+                    if (stoptime.raw.scheduled_departure_time_unix_seconds < arrivalTimeToUse) {
                         departureTimeToUse = arrivalTimeToUse
                     }
                 }

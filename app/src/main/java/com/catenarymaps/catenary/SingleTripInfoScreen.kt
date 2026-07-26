@@ -46,7 +46,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -789,7 +789,7 @@ fun SingleTripInfoScreen(
 
                                 // Vehicle + Block Row
                                 CompositionLocalProvider(
-                                        LocalMinimumInteractiveComponentEnforcement provides false
+                                        LocalMinimumInteractiveComponentSize provides 0.dp
                                 ) {
                                         Row(
                                                 modifier = Modifier
@@ -2436,15 +2436,24 @@ fun SbbTimeBlock(
         // If RT == Scheduled or only Scheduled:
         //   Show Scheduled (bold)
 
-        val hasDelay = (rt != null && scheduled != null && rt != scheduled)
-        val diff = if (hasDelay) rt!! - scheduled!! else 0L
+        val delayedTimes =
+                if (rt != null && scheduled != null && rt != scheduled) {
+                        rt to scheduled
+                } else {
+                        null
+                }
+        val hasDelay = delayedTimes != null
+        val diff =
+                delayedTimes?.let { (realtime, scheduledTime) ->
+                        realtime - scheduledTime
+                } ?: 0L
 
         Column(horizontalAlignment = Alignment.End) {
-                if (hasDelay && scheduled != null) {
+                delayedTimes?.let { (_, scheduledTime) ->
                         // Scheduled Time (Small)
                         FormattedTimeText(
                                 timezone = tz,
-                                timeSeconds = scheduled,
+                                timeSeconds = scheduledTime,
                                 showSeconds = false,
                                 color =
                                         if (isInactive) Color.Gray

@@ -142,6 +142,7 @@ data class VehicleRealtimeVehicleInfo(
 data class VehicleRealtimeTripInfo(
         val trip_id: String? = null,
         val trip_headsign: String? = null,
+        val trip_short_name: String? = null,
         val route_id: String? = null,
         val direction_id: Int? = null,
         val start_time: String? = null,

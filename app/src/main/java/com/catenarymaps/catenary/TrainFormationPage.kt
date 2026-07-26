@@ -76,8 +76,8 @@ fun CoachSequencePage(
     modifier: Modifier = Modifier
 ) {
     when {
-        !sbbFormation?.formations.isNullOrEmpty() ->
-            SbbFormationPage(data = sbbFormation!!, modifier = modifier)
+        sbbFormation != null && !sbbFormation.formations.isNullOrEmpty() ->
+            SbbFormationPage(data = sbbFormation, modifier = modifier)
         coachSequence != null ->
             UnifiedFormationPage(coachSequence = coachSequence, modifier = modifier)
         else ->
@@ -558,8 +558,8 @@ private fun getSbbStations(data: SbbFormationData): List<SbbStationOption> {
 
     data.formationsAtScheduledStops.forEachIndexed { index, entry ->
         val scheduledStop = entry.scheduledStop ?: return@forEachIndexed
-        val stopPoint = scheduledStop.stopPoint
-        if (stopPoint?.name.isNullOrBlank()) return@forEachIndexed
+        val stopPoint = scheduledStop.stopPoint ?: return@forEachIndexed
+        val stopName = stopPoint.name?.takeIf { it.isNotBlank() } ?: return@forEachIndexed
 
         val hasVehicleData = data.formations.any { formation ->
             formation.formationVehicles.any { vehicle ->
@@ -570,11 +570,11 @@ private fun getSbbStations(data: SbbFormationData): List<SbbStationOption> {
         }
         if (!hasVehicleData) return@forEachIndexed
 
-        val key = makeSbbStationKey(stopPoint!!, scheduledStop.stopTime, index)
+        val key = makeSbbStationKey(stopPoint, scheduledStop.stopTime, index)
         if (!seen.add(key)) return@forEachIndexed
         stations += SbbStationOption(
             key = key,
-            name = stopPoint.name!!,
+            name = stopName,
             uic = stopPoint.uic,
             track = scheduledStop.track,
             stopTime = scheduledStop.stopTime,
@@ -591,13 +591,13 @@ private fun getSbbStations(data: SbbFormationData): List<SbbStationOption> {
         .firstOrNull { it.formationVehicleAtScheduledStops.isNotEmpty() }
 
     fallbackVehicle?.formationVehicleAtScheduledStops?.forEachIndexed { index, entry ->
-        val stopPoint = entry.stopPoint
-        if (stopPoint?.name.isNullOrBlank()) return@forEachIndexed
-        val key = makeSbbStationKey(stopPoint!!, entry.stopTime, index)
+        val stopPoint = entry.stopPoint ?: return@forEachIndexed
+        val stopName = stopPoint.name?.takeIf { it.isNotBlank() } ?: return@forEachIndexed
+        val key = makeSbbStationKey(stopPoint, entry.stopTime, index)
         if (!seen.add(key)) return@forEachIndexed
         stations += SbbStationOption(
             key = key,
-            name = stopPoint.name!!,
+            name = stopName,
             uic = stopPoint.uic,
             track = entry.track,
             stopTime = entry.stopTime,
@@ -790,6 +790,7 @@ private fun getSbbVehicleAmenityKeys(
     val properties = vehicle.vehicleProperties
     val accessibility = properties?.accessibilityProperties
     val pictos = properties?.pictoProperties
+    val trolleyStatus = properties?.trolleyStatus
 
     if (accessibility?.disabledCompartment == true ||
         (accessibility?.numberWheelchairSpaces ?: 0) > 0 ||
@@ -807,7 +808,7 @@ private fun getSbbVehicleAmenityKeys(
         vehicle.vehicleIdentifier?.typeCodeName.orEmpty().contains("fam", ignoreCase = true)
     ) keys += "family_zone"
     if (pictos?.strollerPicto == true) keys += "stroller"
-    if ((!properties?.trolleyStatus.isNullOrBlank() && properties?.trolleyStatus != "Normal") ||
+    if ((!trolleyStatus.isNullOrBlank() && trolleyStatus != "Normal") ||
         (properties?.numberRestaurantSpace ?: 0) > 0 ||
         accessibility?.wheelchairAccessibleRestaurant == true
     ) keys += "restaurant"
