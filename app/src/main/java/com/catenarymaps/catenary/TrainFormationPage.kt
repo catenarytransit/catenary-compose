@@ -76,7 +76,12 @@ fun CoachSequencePage(
     modifier: Modifier = Modifier
 ) {
     when {
-        sbbFormation != null && !sbbFormation.formations.isNullOrEmpty() ->
+        sbbFormation != null && (
+            sbbFormation.formations.isNotEmpty() ||
+                sbbFormation.formationsAtScheduledStops.any {
+                    !it.formationShort?.formationShortString.isNullOrBlank()
+                }
+        ) ->
             SbbFormationPage(data = sbbFormation, modifier = modifier)
         coachSequence != null ->
             UnifiedFormationPage(coachSequence = coachSequence, modifier = modifier)
@@ -102,6 +107,20 @@ private data class SbbVehicleView(
     val startDp: Float,
     val endDp: Float,
     val gapAfterDp: Float
+)
+
+private data class SbbFormationShortVehicle(
+    val vehicleType: String,
+    val ordinalNumber: Int?,
+    val services: Set<String>,
+    val sector: String?,
+    val belongsToTrain: Boolean,
+    val closed: Boolean,
+    val groupsStartHere: Boolean,
+    val reservedForGroups: Boolean,
+    val openButNotServed: Boolean,
+    val noAccessToPreviousVehicle: Boolean,
+    val noAccessToNextVehicle: Boolean
 )
 
 private data class SbbSectorSegment(
@@ -415,6 +434,17 @@ private fun SbbVehicle(
     val identifier = vehicle.vehicleIdentifier
     val iconTint = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
 
+    // F is an imaginary coach used to position the train against platform sectors.
+    // X is a parked coach which affects sector allocation but is not part of this train.
+    if (isSbbPlatformSpacer(vehicle)) {
+        Spacer(
+            modifier = Modifier
+                .width(view.widthDp.dp)
+                .height(if (showVehicleNumber) 118.dp else 102.dp)
+        )
+        return
+    }
+
     Column(
         modifier = Modifier.width(view.widthDp.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -561,14 +591,17 @@ private fun getSbbStations(data: SbbFormationData): List<SbbStationOption> {
         val stopPoint = scheduledStop.stopPoint ?: return@forEachIndexed
         val stopName = stopPoint.name?.takeIf { it.isNotBlank() } ?: return@forEachIndexed
 
-        val hasVehicleData = data.formations.any { formation ->
+        val hasFullVehicleData = data.formations.any { formation ->
             formation.formationVehicles.any { vehicle ->
                 vehicle.formationVehicleAtScheduledStops.any { vehicleStop ->
                     stopPointMatches(vehicleStop.stopPoint, stopPoint)
                 }
             }
         }
-        if (!hasVehicleData) return@forEachIndexed
+        val hasStopBasedData = !entry.formationShort
+            ?.formationShortString
+            .isNullOrBlank()
+        if (!hasFullVehicleData && !hasStopBasedData) return@forEachIndexed
 
         val key = makeSbbStationKey(stopPoint, scheduledStop.stopTime, index)
         if (!seen.add(key)) return@forEachIndexed
@@ -644,6 +677,9 @@ private fun selectSbbFormation(
     stations: List<SbbStationOption>
 ): SbbFormation? {
     if (station == null) return null
+    val stopBasedFormation = buildStopBasedSbbFormation(station)
+    if (data.formations.isEmpty()) return stopBasedFormation
+
     val selectedIndex = stations.indexOfFirst { it.key == station.key }
     var bestFormation: SbbFormation? = null
     var bestScore = Int.MIN_VALUE
@@ -668,7 +704,7 @@ private fun selectSbbFormation(
         }
     }
 
-    return bestFormation ?: data.formations.firstOrNull()
+    return bestFormation ?: stopBasedFormation ?: data.formations.firstOrNull()
 }
 
 private fun buildSbbVehicleViews(
@@ -684,8 +720,13 @@ private fun buildSbbVehicleViews(
         val width = ((vehicle.vehicleProperties?.length ?: 24.0) * 3.0)
             .coerceIn(58.0, 94.0)
             .toFloat()
-        val hasNext = index < vehicles.lastIndex
-        val gap = if (!hasNext) {
+        val nextVehicle = vehicles.getOrNull(index + 1)
+        val currentIsSpacer = isSbbPlatformSpacer(vehicle)
+        val nextIsSpacer = nextVehicle?.let(::isSbbPlatformSpacer) == true
+        val gap = if (nextVehicle == null) {
+            0f
+        } else if (currentIsSpacer || nextIsSpacer) {
+            // Platform-position placeholders are contiguous units, not coupled vehicles.
             0f
         } else if (stationData[index + 1]?.accessToPreviousVehicle == false) {
             SBB_NO_PASSAGE_GAP_DP
@@ -736,6 +777,203 @@ private fun buildSbbSectorSegments(
     }
 }
 
+private fun Char.isSbbFormationShortStatus(): Boolean =
+    this == '-' || this == '>' || this == '=' || this == '%'
+
+private fun Char.isSbbFormationShortDelimiter(): Boolean =
+    this == ':' || this == '#' || this == ',' || this == '@' ||
+        this == '[' || this == ']' || this == '(' || this == ')'
+
+/**
+ * Parses the CUS formationShortString used by the stop-based SBB endpoint.
+ *
+ * The parser is deliberately forgiving: unknown vehicle and service codes are retained,
+ * while malformed fragments are skipped so one bad fragment does not hide the formation.
+ */
+private fun parseSbbFormationShort(value: String?): List<SbbFormationShortVehicle> {
+    val source = value?.trim().orEmpty()
+    if (source.isEmpty()) return emptyList()
+
+    val hasTrainGroupMarkers = '[' in source || ']' in source
+    var belongsToTrain = !hasTrainGroupMarkers
+    var currentSector: String? = null
+    var index = 0
+    val vehicles = mutableListOf<SbbFormationShortVehicle>()
+
+    while (index < source.length) {
+        while (index < source.length && (source[index].isWhitespace() || source[index] == ',')) {
+            index++
+        }
+        if (index >= source.length) break
+
+        when (source[index]) {
+            '@' -> {
+                index++
+                val sectorStart = index
+                while (index < source.length && source[index].isLetter()) index++
+                currentSector = source.substring(sectorStart, index)
+                    .trim()
+                    .takeIf { it.isNotEmpty() }
+                continue
+            }
+            '[' -> {
+                belongsToTrain = true
+                index++
+                continue
+            }
+            ']' -> {
+                belongsToTrain = false
+                index++
+                continue
+            }
+        }
+
+        val statuses = linkedSetOf<Char>()
+        while (index < source.length && source[index].isSbbFormationShortStatus()) {
+            statuses += source[index]
+            index++
+        }
+
+        val noAccessToPrevious = source.getOrNull(index) == '('
+        if (noAccessToPrevious) index++
+
+        val typeStart = index
+        while (index < source.length &&
+            !source[index].isWhitespace() &&
+            !source[index].isSbbFormationShortDelimiter()
+        ) {
+            index++
+        }
+        val vehicleType = source.substring(typeStart, index).trim()
+        if (vehicleType.isEmpty()) {
+            index++
+            continue
+        }
+
+        var ordinalNumber: Int? = null
+        if (source.getOrNull(index) == ':') {
+            index++
+            val numberStart = index
+            while (index < source.length && source[index].isDigit()) index++
+            ordinalNumber = source.substring(numberStart, index).toIntOrNull()
+        }
+
+        val services = linkedSetOf<String>()
+        if (source.getOrNull(index) == '#') {
+            index++
+            val servicesStart = index
+            while (index < source.length && source[index] != ',' && source[index] != '@' &&
+                source[index] != '[' && source[index] != ']' &&
+                source[index] != '(' && source[index] != ')'
+            ) {
+                index++
+            }
+            source.substring(servicesStart, index)
+                .split(';')
+                .map { it.trim().uppercase() }
+                .filterTo(services) { it.isNotEmpty() }
+        }
+
+        val noAccessToNext = source.getOrNull(index) == ')'
+        if (noAccessToNext) index++
+
+        vehicles += SbbFormationShortVehicle(
+            vehicleType = vehicleType.uppercase(),
+            ordinalNumber = ordinalNumber,
+            services = services,
+            sector = currentSector,
+            belongsToTrain = belongsToTrain,
+            closed = '-' in statuses,
+            groupsStartHere = '>' in statuses,
+            reservedForGroups = '=' in statuses,
+            openButNotServed = '%' in statuses,
+            noAccessToPreviousVehicle = noAccessToPrevious,
+            noAccessToNextVehicle = noAccessToNext
+        )
+    }
+
+    return vehicles
+}
+
+private fun buildStopBasedSbbFormation(station: SbbStationOption?): SbbFormation? {
+    if (station == null) return null
+    val parsedVehicles = parseSbbFormationShort(station.formationShortString)
+    val layoutVehicles = parsedVehicles.filter { parsed ->
+        parsed.vehicleType == "F" || parsed.vehicleType == "X" || parsed.belongsToTrain
+    }
+    val hasRealTrainVehicle = layoutVehicles.any {
+        it.belongsToTrain && it.vehicleType != "F" && it.vehicleType != "X"
+    }
+    if (!hasRealTrainVehicle) return null
+
+    val stopPoint = stationAsStopPoint(station)
+    var realVehiclePosition = 0
+    val vehicles = layoutVehicles.mapIndexed { index, parsed ->
+        val isSpacer = parsed.vehicleType == "F" || parsed.vehicleType == "X"
+        val previous = layoutVehicles.getOrNull(index - 1)
+        if (!isSpacer) realVehiclePosition++
+
+        SbbFormationVehicle(
+            formationVehicleAtScheduledStops = listOf(
+                SbbFormationVehicleAtScheduledStop(
+                    accessToPreviousVehicle = !parsed.noAccessToPreviousVehicle &&
+                        previous?.noAccessToNextVehicle != true,
+                    sectors = parsed.sector,
+                    stopPoint = stopPoint,
+                    stopTime = station.stopTime,
+                    track = station.track
+                )
+            ),
+            number = parsed.ordinalNumber,
+            position = if (isSpacer) null else realVehiclePosition,
+            vehicleIdentifier = SbbVehicleIdentifier(typeCodeName = parsed.vehicleType),
+            vehicleProperties = if (isSpacer) null else buildSbbShortVehicleProperties(parsed)
+        )
+    }
+
+    return SbbFormation(
+        formationVehicles = vehicles,
+        metaInformation = SbbFormationMetaInformation(numberVehicles = realVehiclePosition)
+    )
+}
+
+private fun buildSbbShortVehicleProperties(
+    vehicle: SbbFormationShortVehicle
+): SbbVehicleProperties {
+    val type = vehicle.vehicleType
+    val services = vehicle.services
+    val hasWheelchairSpace = "BHP" in services
+    val hasBikeSpace = "VH" in services || "VR" in services
+    val hasFirstClass = type == "1" || type == "12" || type == "W1"
+    val hasSecondClass = type == "2" || type == "12" || type == "W2"
+    val isRestaurant = type == "WR" || type == "W1" || type == "W2"
+    val isSleepingVehicle = type == "CC" || type == "WL"
+
+    return SbbVehicleProperties(
+        accessibilityProperties = if (hasWheelchairSpace) {
+            SbbAccessibilityProperties(numberWheelchairSpaces = 1)
+        } else {
+            null
+        },
+        bikePlatform = hasBikeSpace,
+        closed = vehicle.closed,
+        lowFloorTrolley = "NF" in services,
+        number1class = if (hasFirstClass) 1 else 0,
+        number2class = if (hasSecondClass) 1 else 0,
+        numberBeds = if (isSleepingVehicle) 1 else 0,
+        numberBikeHooks = if (hasBikeSpace) 1 else 0,
+        numberRestaurantSpace = if (isRestaurant) 1 else 0,
+        pictoProperties = SbbPictoProperties(
+            bikePicto = hasBikeSpace,
+            businessZonePicto = "BZ" in services,
+            familyZonePicto = type == "FA" || "FZ" in services,
+            strollerPicto = "KW" in services,
+            wheelchairPicto = hasWheelchairSpace
+        ),
+        trolleyStatus = if (vehicle.openButNotServed) "Not served" else null
+    )
+}
+
 private fun getSbbVehicleClass(vehicle: SbbFormationVehicle): String {
     val first = vehicle.vehicleProperties?.number1class ?: 0
     val second = vehicle.vehicleProperties?.number2class ?: 0
@@ -757,6 +995,11 @@ private fun getSbbVehicleLabel(vehicle: SbbFormationVehicle, fallbackIndex: Int)
 private fun getSbbVehicleTypeCode(vehicle: SbbFormationVehicle): String =
     vehicle.vehicleIdentifier?.typeCode?.toString()
         ?: vehicle.vehicleIdentifier?.typeCodeName?.trim().orEmpty()
+
+private fun isSbbPlatformSpacer(vehicle: SbbFormationVehicle): Boolean {
+    val typeCode = getSbbVehicleTypeCode(vehicle)
+    return typeCode.equals("F", ignoreCase = true) || typeCode.equals("X", ignoreCase = true)
+}
 
 private fun getSbbFormationShortAmenityKeys(
     station: SbbStationOption?,
