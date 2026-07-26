@@ -181,7 +181,8 @@ fun locale_hour_marking(): String {
 fun locale_min_marking(show_seconds: Boolean): String {
     val l = Locale.getDefault().language
     return when {
-        l == "zh" || l == "ko" || l == "ja" -> "分"
+        l == "ko" -> "분"
+        l == "zh"|| l == "ja" -> "分"
         show_seconds -> "m"
         else -> "min"
     }
@@ -190,7 +191,8 @@ fun locale_min_marking(show_seconds: Boolean): String {
 fun locale_s_marking(): String {
     val l = Locale.getDefault().language
     return when {
-        l == "zh" || l == "ko" || l == "ja" -> "秒"
+        l == "ko" -> "초"
+        l == "zh" || l == "ja" -> "秒"
         else -> "s"
     }
 }
