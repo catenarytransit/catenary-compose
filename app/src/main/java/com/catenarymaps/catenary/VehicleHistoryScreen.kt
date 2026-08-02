@@ -67,6 +67,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import com.catenarymaps.catenary.hourglass_arrow_up
+import com.catenarymaps.catenary.hourglass_arrow_down
 
 private const val VEHICLE_HISTORY_ENDPOINT =
         "https://birch.catenarymaps.org/vehicle_history_lookup"
@@ -293,7 +295,9 @@ fun VehicleHistoryScreen(
                 }
 
         Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp),
                 verticalArrangement = Arrangement.Top
         ) {
                 Row(
@@ -309,19 +313,19 @@ fun VehicleHistoryScreen(
                                 color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                                 Icon(
-                                        imageVector =
-                                                if (sortDescending) {
-                                                        Icons.Filled.KeyboardArrowDown
-                                                } else {
-                                                        Icons.Filled.KeyboardArrowUp
-                                                },
-                                        contentDescription =
-                                                if (sortDescending) {
-                                                        "Show oldest first"
-                                                } else {
-                                                        "Show newest first"
-                                                },
-                                        modifier = Modifier.padding(8.dp).size(24.dp)
+                                        imageVector = if (sortDescending) {
+                                                hourglass_arrow_down
+                                        } else {
+                                                hourglass_arrow_up
+                                        },
+                                        contentDescription = if (sortDescending) {
+                                                "Show oldest first"
+                                        } else {
+                                                "Show newest first"
+                                        },
+                                        modifier = Modifier
+                                                .padding(8.dp)
+                                                .size(24.dp)
                                 )
                         }
                 }
@@ -362,7 +366,9 @@ fun VehicleHistoryScreen(
                 when {
                         isLoading -> {
                                 Box(
-                                        modifier = Modifier.fillMaxWidth().weight(1f),
+                                        modifier = Modifier
+                                                .fillMaxWidth()
+                                                .weight(1f),
                                         contentAlignment = Alignment.Center
                                 ) {
                                         CircularProgressIndicator()
@@ -383,7 +389,9 @@ fun VehicleHistoryScreen(
                         }
                         historyData == null || historyData?.trip_history.isNullOrEmpty() -> {
                                 Box(
-                                        modifier = Modifier.fillMaxWidth().weight(1f),
+                                        modifier = Modifier
+                                                .fillMaxWidth()
+                                                .weight(1f),
                                         contentAlignment = Alignment.Center
                                 ) {
                                         Text(
@@ -501,7 +509,9 @@ fun VehicleHistoryScreen(
 @Composable
 private fun VehicleHistoryColumnHeadings() {
         Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+                modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 Text(
@@ -548,7 +558,8 @@ private fun VehicleHistoryTripRow(
         Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                         modifier =
-                                Modifier.fillMaxWidth()
+                                Modifier
+                                        .fillMaxWidth()
                                         .padding(horizontal = 4.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -607,7 +618,9 @@ private fun VehicleHistoryTripRow(
                                 textDecoration = TextDecoration.Underline,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f).clickable(onClick = onTripClick)
+                                modifier = Modifier
+                                        .weight(1f)
+                                        .clickable(onClick = onTripClick)
                         )
 
                         if (row.block_id != null) {
@@ -620,7 +633,8 @@ private fun VehicleHistoryTripRow(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                         modifier =
-                                                Modifier.width(72.dp)
+                                                Modifier
+                                                        .width(72.dp)
                                                         .clickable(onClick = onBlockClick)
                                 )
                         } else {
