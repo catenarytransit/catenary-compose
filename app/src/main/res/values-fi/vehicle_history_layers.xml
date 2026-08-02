@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Ajoneuvohistoria</string>
+    <string name="vehicle_history_sort_oldest_first">Näytä vanhimmat ensin</string>
+    <string name="vehicle_history_sort_newest_first">Näytä uusimmat ensin</string>
+    <string name="vehicle_history_no_history">Historiaa ei ole saatavilla.</string>
+    <string name="vehicle_history_time">Aika</string>
+    <string name="layer_shapes">Reittiviivat</string>
+    <string name="layer_shape_labels">Reittiviivojen tunnisteet</string>
+    <string name="layer_stops">Pysäkit</string>
+    <string name="layer_stop_labels">Pysäkkien tunnisteet</string>
+    <string name="layer_vehicles">Ajoneuvot</string>
+</resources>

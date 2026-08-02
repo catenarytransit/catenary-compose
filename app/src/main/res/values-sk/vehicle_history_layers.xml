@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">História vozidla</string>
+    <string name="vehicle_history_sort_oldest_first">Zobraziť najstaršie ako prvé</string>
+    <string name="vehicle_history_sort_newest_first">Zobraziť najnovšie ako prvé</string>
+    <string name="vehicle_history_no_history">História nie je k dispozícii.</string>
+    <string name="vehicle_history_time">Čas</string>
+    <string name="layer_shapes">Trasy</string>
+    <string name="layer_shape_labels">Popisy trás</string>
+    <string name="layer_stops">Zastávky</string>
+    <string name="layer_stop_labels">Popisy zastávok</string>
+    <string name="layer_vehicles">Vozidlá</string>
+</resources>

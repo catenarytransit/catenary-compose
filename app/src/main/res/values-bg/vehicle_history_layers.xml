@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">История на превозното средство</string>
+    <string name="vehicle_history_sort_oldest_first">Показване първо на най-старите</string>
+    <string name="vehicle_history_sort_newest_first">Показване първо на най-новите</string>
+    <string name="vehicle_history_no_history">Няма налична история.</string>
+    <string name="vehicle_history_time">Час</string>
+    <string name="layer_shapes">Трасета</string>
+    <string name="layer_shape_labels">Етикети на трасетата</string>
+    <string name="layer_stops">Спирки</string>
+    <string name="layer_stop_labels">Етикети на спирките</string>
+    <string name="layer_vehicles">Превозни средства</string>
+</resources>

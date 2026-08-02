@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Voertuiggeschiedenis</string>
+    <string name="vehicle_history_sort_oldest_first">Oudste eerst tonen</string>
+    <string name="vehicle_history_sort_newest_first">Nieuwste eerst tonen</string>
+    <string name="vehicle_history_no_history">Geen geschiedenis beschikbaar.</string>
+    <string name="vehicle_history_time">Tijd</string>
+    <string name="layer_shapes">Trajecten</string>
+    <string name="layer_shape_labels">Trajectlabels</string>
+    <string name="layer_stops">Haltes</string>
+    <string name="layer_stop_labels">Haltelabels</string>
+    <string name="layer_vehicles">Voertuigen</string>
+</resources>

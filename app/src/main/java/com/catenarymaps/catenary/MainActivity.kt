@@ -4688,7 +4688,9 @@ class MainActivity : ComponentActivity() {
                                                                                 ) {
                                                                                         LayerToggleButton(
                                                                                                 name =
-                                                                                                        "Shapes",
+                                                                                                        stringResource(
+                                                                                                                R.string.layer_shapes
+                                                                                                        ),
                                                                                                 padding =
                                                                                                         0.dp,
                                                                                                 icon = {
@@ -4700,7 +4702,9 @@ class MainActivity : ComponentActivity() {
                                                                                                                                                 .routesicon
                                                                                                                         ),
                                                                                                                 contentDescription =
-                                                                                                                        "Shape",
+                                                                                                                        stringResource(
+                                                                                                                                R.string.layer_shapes
+                                                                                                                        ),
                                                                                                                 modifier =
                                                                                                                         Modifier.height(
                                                                                                                                 48.dp
@@ -4738,7 +4742,9 @@ class MainActivity : ComponentActivity() {
                                                                                         )
                                                                                         LayerToggleButton(
                                                                                                 name =
-                                                                                                        "Shape Labels",
+                                                                                                        stringResource(
+                                                                                                                R.string.layer_shape_labels
+                                                                                                        ),
                                                                                                 padding =
                                                                                                         0.dp,
                                                                                                 icon = {
@@ -4750,7 +4756,9 @@ class MainActivity : ComponentActivity() {
                                                                                                                                                 .labelsicon
                                                                                                                         ),
                                                                                                                 contentDescription =
-                                                                                                                        "Shape Label",
+                                                                                                                        stringResource(
+                                                                                                                                R.string.layer_shape_labels
+                                                                                                                        ),
                                                                                                                 modifier =
                                                                                                                         Modifier.height(
                                                                                                                                 48.dp
@@ -4788,7 +4796,9 @@ class MainActivity : ComponentActivity() {
                                                                                         )
                                                                                         LayerToggleButton(
                                                                                                 name =
-                                                                                                        "Stops",
+                                                                                                        stringResource(
+                                                                                                                R.string.layer_stops
+                                                                                                        ),
                                                                                                 padding =
                                                                                                         0.dp,
                                                                                                 icon = {
@@ -4800,7 +4810,9 @@ class MainActivity : ComponentActivity() {
                                                                                                                                                 .stopsicon
                                                                                                                         ),
                                                                                                                 contentDescription =
-                                                                                                                        "Stops",
+                                                                                                                        stringResource(
+                                                                                                                                R.string.layer_stops
+                                                                                                                        ),
                                                                                                                 modifier =
                                                                                                                         Modifier.height(
                                                                                                                                 48.dp
@@ -4836,7 +4848,9 @@ class MainActivity : ComponentActivity() {
                                                                                         )
                                                                                         LayerToggleButton(
                                                                                                 name =
-                                                                                                        "Stop Labels",
+                                                                                                        stringResource(
+                                                                                                                R.string.layer_stop_labels
+                                                                                                        ),
                                                                                                 padding =
                                                                                                         0.dp,
                                                                                                 icon = {
@@ -4853,7 +4867,9 @@ class MainActivity : ComponentActivity() {
                                                                                                                                                         .light_stop_name
                                                                                                                         ),
                                                                                                                 contentDescription =
-                                                                                                                        "Stops Label",
+                                                                                                                        stringResource(
+                                                                                                                                R.string.layer_stop_labels
+                                                                                                                        ),
                                                                                                                 modifier =
                                                                                                                         Modifier.height(
                                                                                                                                 48.dp
@@ -4890,7 +4906,9 @@ class MainActivity : ComponentActivity() {
 
                                                                                         LayerToggleButton(
                                                                                                 name =
-                                                                                                        "Vehicles",
+                                                                                                        stringResource(
+                                                                                                                R.string.layer_vehicles
+                                                                                                        ),
                                                                                                 padding =
                                                                                                         0.dp,
                                                                                                 icon = {
@@ -4902,7 +4920,9 @@ class MainActivity : ComponentActivity() {
                                                                                                                                                 .vehiclesicon
                                                                                                                         ),
                                                                                                                 contentDescription =
-                                                                                                                        "Stops Label",
+                                                                                                                        stringResource(
+                                                                                                                                R.string.layer_vehicles
+                                                                                                                        ),
                                                                                                                 modifier =
                                                                                                                         Modifier.height(
                                                                                                                                 48.dp

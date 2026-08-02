@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Køretøjshistorik</string>
+    <string name="vehicle_history_sort_oldest_first">Vis ældste først</string>
+    <string name="vehicle_history_sort_newest_first">Vis nyeste først</string>
+    <string name="vehicle_history_no_history">Ingen historik tilgængelig.</string>
+    <string name="vehicle_history_time">Tid</string>
+    <string name="layer_shapes">Ruteforløb</string>
+    <string name="layer_shape_labels">Etiketter for ruteforløb</string>
+    <string name="layer_stops">Stoppesteder</string>
+    <string name="layer_stop_labels">Stoppestedsetiketter</string>
+    <string name="layer_vehicles">Køretøjer</string>
+</resources>

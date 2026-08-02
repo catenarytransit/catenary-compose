@@ -318,11 +318,16 @@ fun VehicleHistoryScreen(
                                         } else {
                                                 hourglass_arrow_up
                                         },
-                                        contentDescription = if (sortDescending) {
-                                                "Show oldest first"
-                                        } else {
-                                                "Show newest first"
-                                        },
+                                        contentDescription =
+                                                if (sortDescending) {
+                                                        stringResource(
+                                                                R.string.vehicle_history_sort_oldest_first
+                                                        )
+                                                } else {
+                                                        stringResource(
+                                                                R.string.vehicle_history_sort_newest_first
+                                                        )
+                                                },
                                         modifier = Modifier
                                                 .padding(8.dp)
                                                 .size(24.dp)
@@ -332,7 +337,7 @@ fun VehicleHistoryScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                        text = "Vehicle history",
+                        text = stringResource(R.string.vehicle_history_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                 )
@@ -395,7 +400,7 @@ fun VehicleHistoryScreen(
                                         contentAlignment = Alignment.Center
                                 ) {
                                         Text(
-                                                text = "No history available.",
+                                                text = stringResource(R.string.vehicle_history_no_history),
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                 }
@@ -515,7 +520,7 @@ private fun VehicleHistoryColumnHeadings() {
                 verticalAlignment = Alignment.CenterVertically
         ) {
                 Text(
-                        text = "Time",
+                        text = stringResource(R.string.vehicle_history_time),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.SemiBold,

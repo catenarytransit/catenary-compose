@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Járműelőzmények</string>
+    <string name="vehicle_history_sort_oldest_first">Legrégebbiek elöl</string>
+    <string name="vehicle_history_sort_newest_first">Legújabbak elöl</string>
+    <string name="vehicle_history_no_history">Nem érhetők el előzmények.</string>
+    <string name="vehicle_history_time">Idő</string>
+    <string name="layer_shapes">Nyomvonalak</string>
+    <string name="layer_shape_labels">Nyomvonalcímkék</string>
+    <string name="layer_stops">Megállók</string>
+    <string name="layer_stop_labels">Megállócímkék</string>
+    <string name="layer_vehicles">Járművek</string>
+</resources>

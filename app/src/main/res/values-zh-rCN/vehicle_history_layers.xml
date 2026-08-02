@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">车辆历史</string>
+    <string name="vehicle_history_sort_oldest_first">最早记录优先</string>
+    <string name="vehicle_history_sort_newest_first">最新记录优先</string>
+    <string name="vehicle_history_no_history">暂无历史记录。</string>
+    <string name="vehicle_history_time">时间</string>
+    <string name="layer_shapes">线路形状</string>
+    <string name="layer_shape_labels">线路形状标签</string>
+    <string name="layer_stops">站点</string>
+    <string name="layer_stop_labels">站点标签</string>
+    <string name="layer_vehicles">车辆</string>
+</resources>

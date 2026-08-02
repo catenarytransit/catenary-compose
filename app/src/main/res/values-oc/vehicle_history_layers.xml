@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Istoric del veïcul</string>
+    <string name="vehicle_history_sort_oldest_first">Afichar los mai ancians d’en primièr</string>
+    <string name="vehicle_history_sort_newest_first">Afichar los mai recents d’en primièr</string>
+    <string name="vehicle_history_no_history">Cap d’istoric pas disponible.</string>
+    <string name="vehicle_history_time">Ora</string>
+    <string name="layer_shapes">Traçats</string>
+    <string name="layer_shape_labels">Etiquetas dels traçats</string>
+    <string name="layer_stops">Arrèsts</string>
+    <string name="layer_stop_labels">Etiquetas dels arrèsts</string>
+    <string name="layer_vehicles">Veïculs</string>
+</resources>

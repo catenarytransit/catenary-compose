@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Ιστορικό οχήματος</string>
+    <string name="vehicle_history_sort_oldest_first">Εμφάνιση παλαιότερων πρώτα</string>
+    <string name="vehicle_history_sort_newest_first">Εμφάνιση νεότερων πρώτα</string>
+    <string name="vehicle_history_no_history">Δεν υπάρχει διαθέσιμο ιστορικό.</string>
+    <string name="vehicle_history_time">Ώρα</string>
+    <string name="layer_shapes">Χαράξεις</string>
+    <string name="layer_shape_labels">Ετικέτες χαράξεων</string>
+    <string name="layer_stops">Στάσεις</string>
+    <string name="layer_stop_labels">Ετικέτες στάσεων</string>
+    <string name="layer_vehicles">Οχήματα</string>
+</resources>

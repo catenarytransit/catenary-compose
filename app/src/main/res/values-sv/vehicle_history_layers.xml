@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Fordonshistorik</string>
+    <string name="vehicle_history_sort_oldest_first">Visa äldsta först</string>
+    <string name="vehicle_history_sort_newest_first">Visa nyaste först</string>
+    <string name="vehicle_history_no_history">Ingen historik tillgänglig.</string>
+    <string name="vehicle_history_time">Tid</string>
+    <string name="layer_shapes">Linjesträckningar</string>
+    <string name="layer_shape_labels">Etiketter för linjesträckningar</string>
+    <string name="layer_stops">Hållplatser</string>
+    <string name="layer_stop_labels">Hållplatsetiketter</string>
+    <string name="layer_vehicles">Fordon</string>
+</resources>

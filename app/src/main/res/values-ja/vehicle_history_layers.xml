@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">車両履歴</string>
+    <string name="vehicle_history_sort_oldest_first">古い順に表示</string>
+    <string name="vehicle_history_sort_newest_first">新しい順に表示</string>
+    <string name="vehicle_history_no_history">履歴はありません。</string>
+    <string name="vehicle_history_time">時刻</string>
+    <string name="layer_shapes">路線形状</string>
+    <string name="layer_shape_labels">路線形状ラベル</string>
+    <string name="layer_stops">停留所</string>
+    <string name="layer_stop_labels">停留所ラベル</string>
+    <string name="layer_vehicles">車両</string>
+</resources>

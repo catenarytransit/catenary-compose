@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Fahrzeughistorie</string>
+    <string name="vehicle_history_sort_oldest_first">Älteste zuerst anzeigen</string>
+    <string name="vehicle_history_sort_newest_first">Neueste zuerst anzeigen</string>
+    <string name="vehicle_history_no_history">Kein Verlauf verfügbar.</string>
+    <string name="vehicle_history_time">Zeit</string>
+    <string name="layer_shapes">Linienverläufe</string>
+    <string name="layer_shape_labels">Beschriftungen der Linienverläufe</string>
+    <string name="layer_stops">Haltestellen</string>
+    <string name="layer_stop_labels">Haltestellenbeschriftungen</string>
+    <string name="layer_vehicles">Fahrzeuge</string>
+</resources>

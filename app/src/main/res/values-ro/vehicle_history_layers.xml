@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Istoricul vehiculului</string>
+    <string name="vehicle_history_sort_oldest_first">Afișează mai întâi cele mai vechi</string>
+    <string name="vehicle_history_sort_newest_first">Afișează mai întâi cele mai noi</string>
+    <string name="vehicle_history_no_history">Nu există istoric disponibil.</string>
+    <string name="vehicle_history_time">Ora</string>
+    <string name="layer_shapes">Trasee</string>
+    <string name="layer_shape_labels">Etichete pentru trasee</string>
+    <string name="layer_stops">Stații</string>
+    <string name="layer_stop_labels">Etichete pentru stații</string>
+    <string name="layer_vehicles">Vehicule</string>
+</resources>

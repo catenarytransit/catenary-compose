@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Vehicle History</string>
+    <string name="vehicle_history_sort_oldest_first">Show oldest first</string>
+    <string name="vehicle_history_sort_newest_first">Show newest first</string>
+    <string name="vehicle_history_no_history">No history available.</string>
+    <string name="vehicle_history_time">Time</string>
+    <string name="layer_shapes">Shapes</string>
+    <string name="layer_shape_labels">Shape labels</string>
+    <string name="layer_stops">Stops</string>
+    <string name="layer_stop_labels">Stop labels</string>
+    <string name="layer_vehicles">Vehicles</string>
+</resources>

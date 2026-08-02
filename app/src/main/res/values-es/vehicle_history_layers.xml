@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Historial del vehículo</string>
+    <string name="vehicle_history_sort_oldest_first">Mostrar primero los más antiguos</string>
+    <string name="vehicle_history_sort_newest_first">Mostrar primero los más recientes</string>
+    <string name="vehicle_history_no_history">No hay historial disponible.</string>
+    <string name="vehicle_history_time">Hora</string>
+    <string name="layer_shapes">Trazados</string>
+    <string name="layer_shape_labels">Etiquetas de trazados</string>
+    <string name="layer_stops">Paradas</string>
+    <string name="layer_stop_labels">Etiquetas de paradas</string>
+    <string name="layer_vehicles">Vehículos</string>
+</resources>

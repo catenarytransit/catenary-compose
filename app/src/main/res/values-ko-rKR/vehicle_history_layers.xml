@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">차량 운행 이력</string>
+    <string name="vehicle_history_sort_oldest_first">오래된 기록부터 표시</string>
+    <string name="vehicle_history_sort_newest_first">최신 기록부터 표시</string>
+    <string name="vehicle_history_no_history">이용 가능한 이력이 없습니다.</string>
+    <string name="vehicle_history_time">시간</string>
+    <string name="layer_shapes">노선 형상</string>
+    <string name="layer_shape_labels">노선 형상 라벨</string>
+    <string name="layer_stops">정류장</string>
+    <string name="layer_stop_labels">정류장 라벨</string>
+    <string name="layer_vehicles">차량</string>
+</resources>

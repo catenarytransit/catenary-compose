@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">車輛歷史</string>
+    <string name="vehicle_history_sort_oldest_first">優先顯示最早記錄</string>
+    <string name="vehicle_history_sort_newest_first">優先顯示最新記錄</string>
+    <string name="vehicle_history_no_history">沒有可用的歷史記錄。</string>
+    <string name="vehicle_history_time">時間</string>
+    <string name="layer_shapes">路線形狀</string>
+    <string name="layer_shape_labels">路線形狀標籤</string>
+    <string name="layer_stops">停靠站</string>
+    <string name="layer_stop_labels">停靠站標籤</string>
+    <string name="layer_vehicles">車輛</string>
+</resources>

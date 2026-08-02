@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">История транспортного средства</string>
+    <string name="vehicle_history_sort_oldest_first">Сначала самые старые</string>
+    <string name="vehicle_history_sort_newest_first">Сначала самые новые</string>
+    <string name="vehicle_history_no_history">История недоступна.</string>
+    <string name="vehicle_history_time">Время</string>
+    <string name="layer_shapes">Трассы</string>
+    <string name="layer_shape_labels">Подписи трасс</string>
+    <string name="layer_stops">Остановки</string>
+    <string name="layer_stop_labels">Подписи остановок</string>
+    <string name="layer_vehicles">Транспортные средства</string>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Kjøretøyhistorikk</string>
+    <string name="vehicle_history_sort_oldest_first">Vis eldste først</string>
+    <string name="vehicle_history_sort_newest_first">Vis nyeste først</string>
+    <string name="vehicle_history_no_history">Ingen historikk tilgjengelig.</string>
+    <string name="vehicle_history_time">Tid</string>
+    <string name="layer_shapes">Traséer</string>
+    <string name="layer_shape_labels">Traséetiketter</string>
+    <string name="layer_stops">Holdeplasser</string>
+    <string name="layer_stop_labels">Holdeplassetiketter</string>
+    <string name="layer_vehicles">Kjøretøy</string>
+</resources>

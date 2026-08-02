@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vehicle_history_title">Cronologia del veicolo</string>
+    <string name="vehicle_history_sort_oldest_first">Mostra prima i meno recenti</string>
+    <string name="vehicle_history_sort_newest_first">Mostra prima i più recenti</string>
+    <string name="vehicle_history_no_history">Nessuna cronologia disponibile.</string>
+    <string name="vehicle_history_time">Ora</string>
+    <string name="layer_shapes">Tracciati</string>
+    <string name="layer_shape_labels">Etichette dei tracciati</string>
+    <string name="layer_stops">Fermate</string>
+    <string name="layer_stop_labels">Etichette delle fermate</string>
+    <string name="layer_vehicles">Veicoli</string>
+</resources>
