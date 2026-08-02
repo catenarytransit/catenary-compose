@@ -3520,6 +3520,19 @@ class MainActivity : ComponentActivity() {
                                                                                                                 catenaryStack =
                                                                                                                         newStack
                                                                                                         },
+                                                                                                        onVehicleHistoryClick = {
+                                                                                                                historyStack
+                                                                                                                ->
+                                                                                                                val newStack =
+                                                                                                                        ArrayDeque(
+                                                                                                                                catenaryStack
+                                                                                                                        )
+                                                                                                                newStack.addLast(
+                                                                                                                        historyStack
+                                                                                                                )
+                                                                                                                catenaryStack =
+                                                                                                                        newStack
+                                                                                                        },
                                                                                                         onRouteClick = {
                                                                                                                 routeStack
                                                                                                                 ->
@@ -3852,6 +3865,44 @@ class MainActivity : ComponentActivity() {
                                                                                                 onStackChange = {
                                                                                                         catenaryStack =
                                                                                                                 it
+                                                                                                },
+                                                                                                onBack =
+                                                                                                        onBack,
+                                                                                                onHome =
+                                                                                                        onHome
+                                                                                        )
+                                                                                }
+                                                                                is CatenaryStackEnum.VehicleHistoryStack -> {
+                                                                                        VehicleHistoryScreen(
+                                                                                                screenData =
+                                                                                                        currentScreen,
+                                                                                                showSeconds =
+                                                                                                        showSeconds,
+                                                                                                onTripClick = {
+                                                                                                        tripStack
+                                                                                                        ->
+                                                                                                        val newStack =
+                                                                                                                ArrayDeque(
+                                                                                                                        catenaryStack
+                                                                                                                )
+                                                                                                        newStack.addLast(
+                                                                                                                tripStack
+                                                                                                        )
+                                                                                                        catenaryStack =
+                                                                                                                newStack
+                                                                                                },
+                                                                                                onBlockClick = {
+                                                                                                        blockStack
+                                                                                                        ->
+                                                                                                        val newStack =
+                                                                                                                ArrayDeque(
+                                                                                                                        catenaryStack
+                                                                                                                )
+                                                                                                        newStack.addLast(
+                                                                                                                blockStack
+                                                                                                        )
+                                                                                                        catenaryStack =
+                                                                                                                newStack
                                                                                                 },
                                                                                                 onBack =
                                                                                                         onBack,

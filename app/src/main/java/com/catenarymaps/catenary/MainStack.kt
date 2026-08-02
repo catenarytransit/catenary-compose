@@ -48,6 +48,13 @@ sealed interface CatenaryStackEnum {
             CatenaryStackEnum
 
     @Serializable
+    data class VehicleHistoryStack(
+            val chateau_id: String,
+            val vehicle_id: String,
+            val route_id: String?
+    ) : CatenaryStackEnum
+
+    @Serializable
     data class OsmItemStack(val osm_id: String, val osm_class: String, val osm_type: String?) :
             CatenaryStackEnum
 

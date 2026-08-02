@@ -172,6 +172,7 @@ fun SingleTripInfoScreen(
         tripSelected: CatenaryStackEnum.SingleTrip,
         onStopClick: (CatenaryStackEnum.StopStack) -> Unit,
         onBlockClick: (CatenaryStackEnum.BlockStack) -> Unit,
+        onVehicleHistoryClick: (CatenaryStackEnum.VehicleHistoryStack) -> Unit,
         onRouteClick: (CatenaryStackEnum.RouteStack) -> Unit,
         usUnits: Boolean,
         showSeconds: Boolean,
@@ -798,19 +799,55 @@ fun SingleTripInfoScreen(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 // horizontalArrangement = Arrangement.SpaceBetween
                                                 ) {
-                                                if (data.vehicle?.label != null ||
-                                                                data.vehicle?.id != null
-                                                ) {
-                                                        Text(
-                                                                text =
-                                                                        "${stringResource(id = R.string.vehicle)}: ${data.vehicle.label ?: data.vehicle.id}",
-                                                                style =
-                                                                        MaterialTheme.typography
-                                                                                .labelSmall,
+                                                val vehicleLabel =
+                                                        data.vehicle?.label ?: data.vehicle?.id
+                                                if (!vehicleLabel.isNullOrBlank()) {
+                                                        androidx.compose.material3.Surface(
+                                                                onClick = {
+                                                                        onVehicleHistoryClick(
+                                                                                CatenaryStackEnum
+                                                                                        .VehicleHistoryStack(
+                                                                                                chateau_id =
+                                                                                                        tripSelected
+                                                                                                                .chateau_id,
+                                                                                                vehicle_id =
+                                                                                                        vehicleLabel,
+                                                                                                route_id =
+                                                                                                        data.route_id
+                                                                                                                ?: tripSelected
+                                                                                                                        .route_id
+                                                                                        )
+                                                                        )
+                                                                },
+                                                                shape =
+                                                                        RoundedCornerShape(
+                                                                                percent = 50
+                                                                        ),
                                                                 color =
                                                                         MaterialTheme.colorScheme
-                                                                                .onSurfaceVariant
-                                                        )
+                                                                                .primaryContainer
+                                                        ) {
+                                                                Text(
+                                                                        text =
+                                                                                "${stringResource(id = R.string.vehicle)} $vehicleLabel",
+                                                                        style =
+                                                                                MaterialTheme
+                                                                                        .typography
+                                                                                        .labelSmall,
+                                                                        color =
+                                                                                MaterialTheme
+                                                                                        .colorScheme
+                                                                                        .onPrimaryContainer,
+                                                                        modifier =
+                                                                                Modifier.padding(
+                                                                                        horizontal =
+                                                                                                8.dp,
+                                                                                        vertical =
+                                                                                                2.dp
+                                                                                ),
+                                                                        fontWeight = FontWeight.Bold
+                                                                )
+                                                        }
 
                                                         Spacer(modifier = Modifier.width(8.dp))
                                                 }
