@@ -3228,6 +3228,10 @@ class MainActivity : ComponentActivity() {
                                                                                         )
                                                                 )
 
+                                                        UserLocationCompassGlow(
+                                                                source = userLocationSource
+                                                        )
+
                                                         CircleLayer(
                                                                 id = "user-location-dot",
                                                                 source = userLocationSource,
