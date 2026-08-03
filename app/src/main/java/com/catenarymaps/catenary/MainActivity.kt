@@ -3982,7 +3982,7 @@ class MainActivity : ComponentActivity() {
                                                                         start = 16.dp,
                                                                         end = 16.dp
                                                                 )
-                                                                .zIndex(3f),
+                                                                .zIndex(5f),
                                                 enter =
                                                         slideInVertically(
                                                                 initialOffsetY = { -it / 2 }
