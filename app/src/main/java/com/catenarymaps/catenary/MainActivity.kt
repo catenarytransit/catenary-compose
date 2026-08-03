@@ -223,6 +223,8 @@ private const val K_GA_CONSENT = "ga_consent"
 private const val K_SHOW_ZOMBIE_BUSES = "show_zombie_buses"
 private const val K_SHOW_SECONDS = "show_seconds"
 private const val K_USE_US_UNITS = "use_us_units"
+private const val K_SERVER_SUPPORT_DISMISSED_UNTIL = "server_support_dismissed_until"
+private const val SERVER_SUPPORT_DISMISS_DURATION_MS = 24L * 60L * 60L * 1000L
 
 const val K_SHOW_ORIGINAL_TIMETABLE = "show_original_timetable"
 const val K_SHOW_COUNTDOWN = "show_countdown"
@@ -1418,6 +1420,14 @@ class MainActivity : ComponentActivity() {
 
                         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                         val saved = prefs.readSavedCamera()
+                        var showServerSupportCard by rememberSaveable {
+                                mutableStateOf(
+                                        prefs.getLong(
+                                                K_SERVER_SUPPORT_DISMISSED_UNTIL,
+                                                0L
+                                        ) <= System.currentTimeMillis()
+                                )
+                        }
 
                         // Camera
                         // If there's a saved camera, start there. Otherwise, start somewhere
@@ -4059,6 +4069,36 @@ class MainActivity : ComponentActivity() {
                                                                                 }
                                                                                 focusManager
                                                                                         .clearFocus()
+                                                                        }
+                                                                )
+                                                        }
+
+                                                        if (showServerSupportCard &&
+                                                                        catenaryStack.isEmpty() &&
+                                                                        !isSearchFocused
+                                                        ) {
+                                                                Spacer(
+                                                                        modifier =
+                                                                                Modifier.height(8.dp)
+                                                                )
+                                                                DonationSupportCard(
+                                                                        titleRes =
+                                                                                R.string
+                                                                                        .server_support_title,
+                                                                        messageRes =
+                                                                                R.string
+                                                                                        .server_support_message,
+                                                                        dismissible = true,
+                                                                        onDismiss = {
+                                                                                showServerSupportCard =
+                                                                                        false
+                                                                                prefs.edit()
+                                                                                        .putLong(
+                                                                                                K_SERVER_SUPPORT_DISMISSED_UNTIL,
+                                                                                                System.currentTimeMillis() +
+                                                                                                        SERVER_SUPPORT_DISMISS_DURATION_MS
+                                                                                        )
+                                                                                        .apply()
                                                                         }
                                                                 )
                                                         }

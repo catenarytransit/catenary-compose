@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_support_title">Ajudatz-nos a manténer Catenary Maps en servici</string>
+    <string name="server_support_message">Lo nòstre servidor vielhissent arriba a sas limits. Vòstre sosten nos ajuda a lo remplaçar e a apondre la poténcia de calcul necessària per lançar la planificacion dels trajèctes e la navigacion.</string>
+    <string name="vehicle_history_support_title">Ajudatz-nos a conservar un istoric d’autobús mai detalhat</string>
+    <string name="vehicle_history_support_message">Sostenètz de donadas detalhadas suls retards e las performàncias, e lor conservacion mai longa.</string>
+    <string name="support_donate">Far un don</string>
+    <string name="support_dismiss_content_description">Tampar lo messatge de collecta</string>
+</resources>

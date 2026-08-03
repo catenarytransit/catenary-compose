@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_support_title">Ayuda a mantener Catenary Maps en funcionamiento</string>
+    <string name="server_support_message">Nuestro servidor está envejeciendo y llegando a su límite. Tu apoyo nos ayuda a reemplazarlo y a añadir la capacidad necesaria para ofrecer planificación de viajes y navegación.</string>
+    <string name="vehicle_history_support_title">Ayúdanos a guardar un historial de autobuses más detallado</string>
+    <string name="vehicle_history_support_message">Apoya el registro detallado de retrasos y rendimiento, y su conservación durante más tiempo.</string>
+    <string name="support_donate">Donar</string>
+    <string name="support_dismiss_content_description">Cerrar mensaje de donación</string>
+</resources>

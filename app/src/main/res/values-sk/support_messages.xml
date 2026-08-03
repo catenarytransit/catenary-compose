@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_support_title">Pomôžte udržať Catenary Maps v prevádzke</string>
+    <string name="server_support_message">Náš starnúci server naráža na svoje limity. Vaša podpora nám pomôže nahradiť ho a pridať výpočtový výkon potrebný na plánovanie ciest a navigáciu.</string>
+    <string name="vehicle_history_support_title">Pomôžte nám ukladať podrobnejšiu históriu autobusov</string>
+    <string name="vehicle_history_support_message">Podporte podrobné záznamy o meškaní a výkone a ich dlhšie uchovávanie.</string>
+    <string name="support_donate">Darovať</string>
+    <string name="support_dismiss_content_description">Zavrieť výzvu na podporu</string>
+</resources>

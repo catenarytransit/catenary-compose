@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_support_title">Segíts működésben tartani a Catenary Mapset</string>
+    <string name="server_support_message">Öregedő szerverünk eléri a kapacitása határát. Támogatásoddal lecserélhetjük, és biztosíthatjuk az útvonaltervezéshez és navigációhoz szükséges számítási teljesítményt.</string>
+    <string name="vehicle_history_support_title">Segíts részletesebb buszelőzményeket tárolni</string>
+    <string name="vehicle_history_support_message">Támogasd a részletes késési és teljesítményadatok hosszabb idejű megőrzését.</string>
+    <string name="support_donate">Adományozás</string>
+    <string name="support_dismiss_content_description">Adománygyűjtő üzenet bezárása</string>
+</resources>

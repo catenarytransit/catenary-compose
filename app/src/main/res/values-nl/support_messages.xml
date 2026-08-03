@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_support_title">Help Catenary Maps in de lucht te houden</string>
+    <string name="server_support_message">Onze verouderde server bereikt zijn grenzen. Met jouw steun kunnen we hem vervangen en de rekenkracht toevoegen die nodig is voor reisplanning en navigatie.</string>
+    <string name="vehicle_history_support_title">Help ons uitgebreidere busgeschiedenis op te slaan</string>
+    <string name="vehicle_history_support_message">Steun gedetailleerde gegevens over vertragingen en prestaties en bewaar ze langer.</string>
+    <string name="support_donate">Doneren</string>
+    <string name="support_dismiss_content_description">Fondsenwervingsbericht sluiten</string>
+</resources>

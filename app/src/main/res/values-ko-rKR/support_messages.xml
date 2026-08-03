@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_support_title">Catenary Maps 운영을 도와주세요</string>
+    <string name="server_support_message">현재 서버가 노후화되어 한계에 가까워지고 있습니다. 후원금은 서버를 교체하고 경로 계획과 내비게이션 출시에 필요한 연산 자원을 확충하는 데 사용됩니다.</string>
+    <string name="vehicle_history_support_title">더 자세한 버스 운행 기록 저장을 도와주세요</string>
+    <string name="vehicle_history_support_message">지연 및 운행 성능을 자세히 기록하고 더 오래 보관할 수 있도록 후원해 주세요.</string>
+    <string name="support_donate">후원하기</string>
+    <string name="support_dismiss_content_description">후원 안내 닫기</string>
+</resources>

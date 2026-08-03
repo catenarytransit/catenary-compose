@@ -366,6 +366,12 @@ fun VehicleHistoryScreen(
                         chateau = screenData.chateau_id,
                         routeId = screenData.route_id
                 )
+                DonationSupportCard(
+                        titleRes = R.string.vehicle_history_support_title,
+                        messageRes = R.string.vehicle_history_support_message,
+                        dismissible = false,
+                        modifier = Modifier.padding(top = 12.dp)
+                )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 when {

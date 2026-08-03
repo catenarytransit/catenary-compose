@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_support_title">Βοηθήστε να παραμείνει το Catenary Maps σε λειτουργία</string>
+    <string name="server_support_message">Ο παλιός μας διακομιστής φτάνει στα όριά του. Η υποστήριξή σας μάς βοηθά να τον αντικαταστήσουμε και να προσθέσουμε την υπολογιστική ισχύ που χρειάζεται για σχεδιασμό διαδρομών και πλοήγηση.</string>
+    <string name="vehicle_history_support_title">Βοηθήστε μας να αποθηκεύουμε πιο αναλυτικό ιστορικό λεωφορείων</string>
+    <string name="vehicle_history_support_message">Υποστηρίξτε λεπτομερή δεδομένα καθυστερήσεων και απόδοσης και τη διατήρησή τους για περισσότερο χρόνο.</string>
+    <string name="support_donate">Δωρεά</string>
+    <string name="support_dismiss_content_description">Κλείσιμο μηνύματος συγκέντρωσης χρημάτων</string>
+</resources>

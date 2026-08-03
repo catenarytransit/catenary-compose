@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_support_title">帮助 Catenary Maps 持续运行</string>
+    <string name="server_support_message">我们现有的服务器逐渐老化，已接近容量上限。您的支持将帮助我们更换服务器，并增加发布行程规划和导航功能所需的计算资源。</string>
+    <string name="vehicle_history_support_title">帮助我们保存更详细的公交车历史记录</string>
+    <string name="vehicle_history_support_message">支持记录详细的延误和运营表现，并延长数据保存时间。</string>
+    <string name="support_donate">捐助</string>
+    <string name="support_dismiss_content_description">关闭募捐提示</string>
+</resources>
