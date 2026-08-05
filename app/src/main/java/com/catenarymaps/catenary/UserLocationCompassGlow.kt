@@ -46,8 +46,8 @@ fun UserLocationCompassGlow(source: GeoJsonSource) {
             interpolate(
                 type = linear(),
                 input = zoom(),
-                12 to const(2f),
-                15 to const(3f)
+                12 to const(1.5f),
+                15 to const(2f)
             ),
         iconRotate = const(heading),
         iconRotationAlignment = const(IconRotationAlignment.Map),

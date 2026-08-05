@@ -125,7 +125,7 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
             textHaloColor = colorBusLine,
             textHaloWidth = const(2.dp),
             textHaloBlur = const(0.dp),
-            minZoom = if (railinframe) 13.5f else 11f,
+            minZoom = 14f,
             visible = bus.labelshapes
     )
 
@@ -215,7 +215,7 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
             textHaloColor = colorLine,
             textHaloWidth = const(2.dp),
             textHaloBlur = const(1.dp),
-            minZoom = 3f,
+            minZoom = 7f,
             visible = otherSettings.labelshapes,
             // filter: (route_type in 4,6,7) && !(schweiz && stop_to_stop_generated)
             filter =
@@ -255,20 +255,20 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
                             input = zoom(),
                             6 to const(0.5.dp),
                             7 to const(1.0.dp),
-                            10 to const(1.5.dp),
-                            14 to const(3.0.dp),
+                            10 to const(1.dp),
+                            14 to const(2.0.dp),
                     ),
             opacity =
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            6 to const(0.8f),
-                            7 to const(0.9f)
+                            6 to const(0.6f),
+                            7 to const(0.7f)
                     ),
-            minZoom = 3f,
+            minZoom = 3.5f,
             visible = otherSettings.shapes,
             filter = all(get("route_type").cast<NumberValue<EquatableValue>>().eq(const(4))),
-            dasharray = const(listOf(1f, 2f))
+            dasharray = const(listOf(2f, 3f))
     )
 
     /* =========================
@@ -341,7 +341,7 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
             textHaloColor = colorLine,
             textHaloWidth = const(1.dp),
             textHaloBlur = const(1.dp),
-            minZoom = 5.5f,
+            minZoom = 6.5f,
             visible = intercitySettings.labelshapes,
             filter =
                     all(
@@ -495,7 +495,7 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
             textHaloColor = colorLine,
             textHaloWidth = const(1.dp),
             textHaloBlur = const(1.dp),
-            minZoom = 6f,
+            minZoom = 7.5f,
             visible = localRailSettings.labelshapes,
             filter = tram_filter
     )
