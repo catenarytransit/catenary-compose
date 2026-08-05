@@ -70,9 +70,9 @@ fun AddShapes(layerSettings: AllLayerSettings, railInFrame: Boolean = false) {
                             type = linear(),
                             input = zoom(),
                             9 to if (railInFrame) const(0.3.dp) else const(0.4.dp),
-                            10 to if (railInFrame) const(0.45.dp) else const(0.6.dp),
-                            12 to const(0.9.dp),
-                            14 to const(1.6.dp),
+                            10 to if (railInFrame) const(0.4.dp) else const(0.6.dp),
+                            12 to const(0.8.dp),
+                            14 to const(1.4.dp),
                             16 to const(2.0.dp)
                     ),
             opacity =
