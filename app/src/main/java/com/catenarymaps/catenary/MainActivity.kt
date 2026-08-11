@@ -703,11 +703,6 @@ class MainActivity : ComponentActivity() {
 
         // private var tracker: Tracker? = null
 
-        override fun onConfigurationChanged(newConfig: Configuration) {
-                super.onConfigurationChanged(newConfig)
-                // No-op on purpose.
-        }
-
         private val layerSettings = mutableStateOf(AllLayerSettings())
 
         private fun queryAreAnyRailFeaturesVisible(
