@@ -223,6 +223,7 @@ private const val K_GA_CONSENT = "ga_consent"
 private const val K_SHOW_ZOMBIE_BUSES = "show_zombie_buses"
 private const val K_SHOW_SECONDS = "show_seconds"
 private const val K_USE_US_UNITS = "use_us_units"
+private const val K_SHOW_TRIP_STOP_DISTANCES = "show_trip_stop_distances"
 private const val K_SERVER_SUPPORT_DISMISSED_UNTIL = "server_support_dismissed_until"
 private const val SERVER_SUPPORT_DISMISS_DURATION_MS = 24L * 60L * 60L * 1000L
 
@@ -1461,6 +1462,9 @@ class MainActivity : ComponentActivity() {
                         var showLocalTransitCountdowns by remember {
                                 mutableStateOf(prefs.getBoolean(K_SHOW_LOCAL_TRANSIT_COUNTDOWNS, true))
                         }
+                        var showTripStopDistances by remember {
+                                mutableStateOf(prefs.getBoolean(K_SHOW_TRIP_STOP_DISTANCES, false))
+                        }
 
                         LaunchedEffect(showZombieBuses) {
                                 prefs.edit()
@@ -1482,6 +1486,10 @@ class MainActivity : ComponentActivity() {
 
                         LaunchedEffect(showLocalTransitCountdowns) {
                                 prefs.edit().putBoolean(K_SHOW_LOCAL_TRANSIT_COUNTDOWNS, showLocalTransitCountdowns).apply()
+                        }
+
+                        LaunchedEffect(showTripStopDistances) {
+                                prefs.edit().putBoolean(K_SHOW_TRIP_STOP_DISTANCES, showTripStopDistances).apply()
                         }
                         val isDark = isSystemInDarkTheme()
 
@@ -3559,6 +3567,10 @@ class MainActivity : ComponentActivity() {
                                                                                                                 usUnits,
                                                                                                         showSeconds =
                                                                                                                 showSeconds,
+                                                                                                        currentLocation =
+                                                                                                                currentLocation,
+                                                                                                        showDistanceToNearbyStops =
+                                                                                                                showTripStopDistances,
                                                                                                         // --- Pass the .value of the sources ---
                                                                                                         transitShapeSource =
                                                                                                                 transitShapeSourceRef
@@ -3641,6 +3653,12 @@ class MainActivity : ComponentActivity() {
                                                                                                         showLocalTransitCountdowns,
                                                                                                 onShowLocalTransitCountdownsChange = {
                                                                                                         showLocalTransitCountdowns =
+                                                                                                                it
+                                                                                                },
+                                                                                                showDistanceToNearbyStops =
+                                                                                                        showTripStopDistances,
+                                                                                                onShowDistanceToNearbyStopsChange = {
+                                                                                                        showTripStopDistances =
                                                                                                                 it
                                                                                                 },
                                                                                                 onBack =

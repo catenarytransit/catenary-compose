@@ -60,9 +60,12 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -131,6 +134,262 @@ private fun contextStopMapLabel(stopName: String, labelPrefix: String?): String 
         return if (labelPrefix.isNullOrBlank()) stopName else "$labelPrefix $stopName"
 }
 
+private const val EARTH_RADIUS_METERS = 6_371_000.0
+private const val USER_AT_STOP_RADIUS_METERS = 5.0
+private const val MAX_NEARBY_STOP_DISTANCE_METERS = 1_000.0
+
+private data class ShapeProjection(
+        val distanceToShapeMeters: Double,
+        val distanceAlongShapeMeters: Double
+)
+
+private data class UserTripMarker(
+        val atStopIndex: Int? = null,
+        val segmentIndex: Int? = null,
+        val segmentProgress: Float? = null
+)
+
+private fun tripShapeProximityThresholdMeters(routeType: Int?): Double? {
+        return when (routeType) {
+                0, 3 -> 100.0 // Tram / bus
+                1 -> 200.0 // Metro / subway
+                2 -> 100.0 // Intercity rail
+                else -> null
+        }
+}
+
+private fun tripDistanceMeters(
+        latitudeA: Double,
+        longitudeA: Double,
+        latitudeB: Double,
+        longitudeB: Double
+): Double {
+        val lat1 = Math.toRadians(latitudeA)
+        val lat2 = Math.toRadians(latitudeB)
+        val deltaLat = Math.toRadians(latitudeB - latitudeA)
+        val deltaLon = Math.toRadians(longitudeB - longitudeA)
+        val a =
+                Math.sin(deltaLat / 2.0) * Math.sin(deltaLat / 2.0) +
+                        Math.cos(lat1) *
+                                Math.cos(lat2) *
+                                Math.sin(deltaLon / 2.0) *
+                                Math.sin(deltaLon / 2.0)
+        return 2.0 * EARTH_RADIUS_METERS * Math.asin(Math.min(1.0, Math.sqrt(a)))
+}
+
+private fun projectedFractionOnSegment(
+        latitude: Double,
+        longitude: Double,
+        start: Position,
+        end: Position
+): Double {
+        // Equirectangular projection is accurate enough for short transit shape segments.
+        val meanLatitudeRadians =
+                Math.toRadians((latitude + start.latitude + end.latitude) / 3.0)
+        val startX =
+                Math.toRadians(start.longitude - longitude) *
+                        EARTH_RADIUS_METERS *
+                        Math.cos(meanLatitudeRadians)
+        val startY = Math.toRadians(start.latitude - latitude) * EARTH_RADIUS_METERS
+        val endX =
+                Math.toRadians(end.longitude - longitude) *
+                        EARTH_RADIUS_METERS *
+                        Math.cos(meanLatitudeRadians)
+        val endY = Math.toRadians(end.latitude - latitude) * EARTH_RADIUS_METERS
+
+        val segmentX = endX - startX
+        val segmentY = endY - startY
+        val denominator = segmentX * segmentX + segmentY * segmentY
+        if (denominator <= 0.0) return 0.0
+
+        return (-(startX * segmentX + startY * segmentY) / denominator).coerceIn(0.0, 1.0)
+}
+
+private fun projectPointOntoTripShape(
+        latitude: Double,
+        longitude: Double,
+        shape: List<Position>,
+        minAlongMeters: Double = 0.0
+): ShapeProjection? {
+        if (shape.size < 2) return null
+
+        var cumulativeMeters = 0.0
+        var bestProjection: ShapeProjection? = null
+
+        for (segmentIndex in 0 until shape.lastIndex) {
+                val start = shape[segmentIndex]
+                val end = shape[segmentIndex + 1]
+                val segmentLengthMeters =
+                        tripDistanceMeters(
+                                start.latitude,
+                                start.longitude,
+                                end.latitude,
+                                end.longitude
+                        )
+                val segmentEndMeters = cumulativeMeters + segmentLengthMeters
+
+                if (segmentLengthMeters <= 0.0) {
+                        continue
+                }
+                if (segmentEndMeters < minAlongMeters) {
+                        cumulativeMeters = segmentEndMeters
+                        continue
+                }
+
+                val minimumFraction =
+                        ((minAlongMeters - cumulativeMeters) / segmentLengthMeters)
+                                .coerceIn(0.0, 1.0)
+                val fraction =
+                        projectedFractionOnSegment(latitude, longitude, start, end)
+                                .coerceAtLeast(minimumFraction)
+                val projectedLatitude = start.latitude + (end.latitude - start.latitude) * fraction
+                val projectedLongitude =
+                        start.longitude + (end.longitude - start.longitude) * fraction
+                val distanceToShape =
+                        tripDistanceMeters(
+                                latitude,
+                                longitude,
+                                projectedLatitude,
+                                projectedLongitude
+                        )
+                val projection =
+                        ShapeProjection(
+                                distanceToShapeMeters = distanceToShape,
+                                distanceAlongShapeMeters =
+                                        cumulativeMeters + segmentLengthMeters * fraction
+                        )
+
+                if (bestProjection == null ||
+                                projection.distanceToShapeMeters <
+                                        bestProjection.distanceToShapeMeters
+                ) {
+                        bestProjection = projection
+                }
+
+                cumulativeMeters = segmentEndMeters
+        }
+
+        return bestProjection
+}
+
+private fun userTripMarker(
+        latitude: Double,
+        longitude: Double,
+        routeType: Int?,
+        stopTimes: List<StopTimeCleaned>,
+        shape: List<Position>
+): UserTripMarker? {
+        val proximityThreshold = tripShapeProximityThresholdMeters(routeType) ?: return null
+        if (stopTimes.isEmpty() || shape.size < 2) return null
+
+        val userProjection =
+                projectPointOntoTripShape(latitude, longitude, shape) ?: return null
+        if (userProjection.distanceToShapeMeters > proximityThreshold) return null
+
+        val nearestStop =
+                stopTimes.withIndex().minByOrNull { (_, stopTime) ->
+                        tripDistanceMeters(
+                                latitude,
+                                longitude,
+                                stopTime.raw.latitude,
+                                stopTime.raw.longitude
+                        )
+                }
+        if (nearestStop != null) {
+                val stopDistance =
+                        tripDistanceMeters(
+                                latitude,
+                                longitude,
+                                nearestStop.value.raw.latitude,
+                                nearestStop.value.raw.longitude
+                        )
+                if (stopDistance <= USER_AT_STOP_RADIUS_METERS) {
+                        return UserTripMarker(atStopIndex = nearestStop.index)
+                }
+        }
+
+        // Project stops in trip order so loops/crossings do not move later stops backwards
+        // on the encoded shape.
+        val stopMeasures = mutableListOf<Double>()
+        var minimumAlongMeters = 0.0
+        for (stopTime in stopTimes) {
+                val projection =
+                        projectPointOntoTripShape(
+                                stopTime.raw.latitude,
+                                stopTime.raw.longitude,
+                                shape,
+                                minAlongMeters = minimumAlongMeters
+                        ) ?: return null
+                stopMeasures.add(projection.distanceAlongShapeMeters)
+                minimumAlongMeters = projection.distanceAlongShapeMeters
+        }
+
+        for (index in 0 until stopMeasures.lastIndex) {
+                val start = stopMeasures[index]
+                val end = stopMeasures[index + 1]
+                if (end <= start) continue
+                if (userProjection.distanceAlongShapeMeters in start..end) {
+                        val progress =
+                                ((userProjection.distanceAlongShapeMeters - start) / (end - start))
+                                        .coerceIn(0.0, 1.0)
+                        return UserTripMarker(
+                                segmentIndex = index,
+                                segmentProgress = progress.toFloat()
+                        )
+                }
+        }
+
+        return null
+}
+
+private fun formatTripStopDistance(distanceMeters: Double, usUnits: Boolean): String {
+        return if (usUnits) {
+                "${Math.round(distanceMeters * 3.280839895)} ft"
+        } else if (distanceMeters >= 1_000.0) {
+                "1.0 km"
+        } else {
+                "${Math.round(distanceMeters)} m"
+        }
+}
+
+@Composable
+private fun UserLocationTripIndicator(
+        userLocationAtStop: Boolean,
+        userLocationDotProgress: Float?,
+        dotOffset: androidx.compose.ui.unit.Dp?,
+        modifier: Modifier = Modifier
+) {
+        if (!userLocationAtStop && userLocationDotProgress == null) return
+
+        Canvas(modifier = modifier) {
+                val wCenter = size.width / 2f
+                val hCenter = dotOffset?.toPx() ?: size.height / 2f
+                val markerCenter =
+                        if (userLocationAtStop) {
+                                Offset(wCenter, hCenter)
+                        } else {
+                                Offset(
+                                        wCenter,
+                                        hCenter +
+                                                userLocationDotProgress!!
+                                                        .coerceIn(0f, 1f) * size.height
+                                )
+                        }
+                val userDotRadius = 5.dp.toPx()
+                drawCircle(
+                        color = Color(0xFF2196F3).copy(alpha = 0.5f),
+                        radius = userDotRadius,
+                        center = markerCenter
+                )
+                drawCircle(
+                        color = Color.White,
+                        radius = userDotRadius,
+                        center = markerCenter,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
+                )
+        }
+}
+
 private fun Alert.isCurrentAt(nowEpochSeconds: Long): Boolean {
         if (active_period.isEmpty()) return true
 
@@ -176,6 +435,8 @@ fun SingleTripInfoScreen(
         onRouteClick: (CatenaryStackEnum.RouteStack) -> Unit,
         usUnits: Boolean,
         showSeconds: Boolean,
+        currentLocation: Pair<Double, Double>?,
+        showDistanceToNearbyStops: Boolean,
         // --- Map sources passed from MainActivity ---
         transitShapeSource: MutableState<GeoJsonSource>,
         transitShapeDetourSource: MutableState<GeoJsonSource>,
@@ -247,6 +508,56 @@ fun SingleTripInfoScreen(
         val movingDotSegmentIdx by viewModel.movingDotSegmentIdx.collectAsState()
         val movingDotProgress by viewModel.movingDotProgress.collectAsState()
         val currentAtStopIdx by viewModel.currentAtStopIdx.collectAsState()
+
+        val tripRouteType = tripData?.route_type ?: tripSelected.route_type
+
+        val tripShapeForLocation =
+                remember(tripData?.shape_polyline) {
+                        tripData?.shape_polyline
+                                ?.let { encoded ->
+                                        runCatching {
+                                                        decodePolyutil(encoded).map { latLng ->
+                                                                Position(latLng.longitude, latLng.latitude)
+                                                        }
+                                                }
+                                                .getOrDefault(emptyList())
+                                }
+                                .orEmpty()
+                }
+
+        val userLocationMarker =
+                remember(currentLocation, stopTimes, tripRouteType, tripShapeForLocation) {
+                        if (currentLocation == null) {
+                                null
+                        } else {
+                                userTripMarker(
+                                        latitude = currentLocation.first,
+                                        longitude = currentLocation.second,
+                                        routeType = tripRouteType,
+                                        stopTimes = stopTimes,
+                                        shape = tripShapeForLocation
+                                )
+                        }
+                }
+
+        val nearbyStopDistances =
+                remember(currentLocation, stopTimes, showDistanceToNearbyStops) {
+                        if (!showDistanceToNearbyStops || currentLocation == null) {
+                                List<Double?>(stopTimes.size) { null }
+                        } else {
+                                stopTimes.map { stopTime ->
+                                        tripDistanceMeters(
+                                                        currentLocation.first,
+                                                        currentLocation.second,
+                                                        stopTime.raw.latitude,
+                                                        stopTime.raw.longitude
+                                                )
+                                                .takeIf {
+                                                        it <= MAX_NEARBY_STOP_DISTANCE_METERS
+                                                }
+                                }
+                        }
+                }
 
         var showFloatingControls by remember {
                 mutableStateOf(prefs.getBoolean(K_SHOW_FLOATING_CONTROLS, true))
@@ -1223,6 +1534,17 @@ fun SingleTripInfoScreen(
                                                                 if (i == movingDotSegmentIdx)
                                                                         movingDotProgress
                                                                 else null,
+                                                        userLocationAtStop =
+                                                                userLocationMarker?.atStopIndex == i,
+                                                        userLocationDotProgress =
+                                                                if (userLocationMarker?.segmentIndex == i)
+                                                                        userLocationMarker
+                                                                                .segmentProgress
+                                                                else null,
+                                                        stopDistanceMeters =
+                                                                nearbyStopDistances.getOrNull(i),
+                                                        usUnits = usUnits,
+                                                        compactRows = tripRouteType == 3,
                                                         onStopClick = {
                                                                 onStopClick(
                                                                         CatenaryStackEnum.StopStack(
@@ -1546,6 +1868,11 @@ fun StopListItem(
         connections: List<StopConnectionChip>? = null,
         isAtStop: Boolean = false,
         movingDotProgress: Float? = null,
+        userLocationAtStop: Boolean = false,
+        userLocationDotProgress: Float? = null,
+        stopDistanceMeters: Double? = null,
+        usUnits: Boolean = false,
+        compactRows: Boolean = false,
 ) {
         val isDark = isSystemInDarkTheme()
         val neutralColor = if (isDark) Color(0xFFDDDDDD) else Color(0xFF333333)
@@ -1965,11 +2292,17 @@ fun StopListItem(
 
         // Define a consistent header height for the "Station Name" row
         val headerHeight = 24.dp
+        val stopRowTopPadding = if (compactRows) 6.dp else 12.dp
+        val interStopPadding = if (compactRows) 2.dp else 4.dp
 
         Column(
                 modifier = Modifier
                         .fillMaxWidth()
-                        .zIndex(if (movingDotProgress != null) 1f else 0f)
+                        .zIndex(
+                                if (movingDotProgress != null || userLocationDotProgress != null || userLocationAtStop)
+                                        1f
+                                else 0f
+                        )
         ) {
                 // 1. Render Above Rows
                 aboveContent.forEachIndexed { index, content ->
@@ -1987,7 +2320,7 @@ fun StopListItem(
                                                         .padding(end = 4.dp)
                                                         .padding(
                                                                 top =
-                                                                        if (index == 0) 12.dp
+                                                                        if (index == 0) stopRowTopPadding
                                                                         else 0.dp
                                                         ),
                                         contentAlignment = Alignment.CenterEnd
@@ -2016,7 +2349,7 @@ fun StopListItem(
                 }
 
                 // 2. Render Main Row
-                val mainRowTopPadding = if (aboveContent.isEmpty()) 12.dp else 0.dp
+                val mainRowTopPadding = if (aboveContent.isEmpty()) stopRowTopPadding else 0.dp
                 Row(
                         modifier = Modifier
                                 .fillMaxWidth()
@@ -2054,6 +2387,12 @@ fun StopListItem(
                                         isAtStop = isAtStop,
                                         movingDotProgress = movingDotProgress
                                 )
+                                UserLocationTripIndicator(
+                                        userLocationAtStop = userLocationAtStop,
+                                        userLocationDotProgress = userLocationDotProgress,
+                                        dotOffset = (headerHeight / 2) + mainRowTopPadding,
+                                        modifier = Modifier.fillMaxSize()
+                                )
                         }
 
                         // Content (Station Name + Platform)
@@ -2075,14 +2414,46 @@ fun StopListItem(
                                 ) {
                                         // Station Name
                                         stopTime.raw.name?.let {
+                                                val stopNameColor =
+                                                        if (isInactive) Color.Gray
+                                                        else MaterialTheme.colorScheme.onSurface
+                                                val stopLabel = buildAnnotatedString {
+                                                        withStyle(
+                                                                SpanStyle(
+                                                                        color = stopNameColor,
+                                                                        textDecoration =
+                                                                                if (isInactive)
+                                                                                        TextDecoration.None
+                                                                                else
+                                                                                        TextDecoration.Underline
+                                                                )
+                                                        ) {
+                                                                append(it)
+                                                        }
+                                                        stopDistanceMeters?.let { distanceMeters ->
+                                                                append(" ")
+                                                                withStyle(
+                                                                        SpanStyle(
+                                                                                color =
+                                                                                        MaterialTheme
+                                                                                                .colorScheme
+                                                                                                .onSurfaceVariant
+                                                                                                .copy(alpha = 0.65f)
+                                                                        )
+                                                                ) {
+                                                                        append(
+                                                                                formatTripStopDistance(
+                                                                                        distanceMeters,
+                                                                                        usUnits
+                                                                                )
+                                                                        )
+                                                                }
+                                                        }
+                                                }
                                                 Text(
-                                                        text = it,
+                                                        text = stopLabel,
                                                         style = MaterialTheme.typography.bodyLarge,
-                                                        color =
-                                                                if (isInactive) Color.Gray
-                                                                else
-                                                                        MaterialTheme.colorScheme
-                                                                                .onSurface,
+                                                        color = stopNameColor,
                                                         fontWeight = FontWeight.Normal,
                                                         modifier =
                                                                 Modifier
@@ -2095,9 +2466,6 @@ fun StopListItem(
                                                                                 fill = false
                                                                         ), // Don't push platform
                                                         // off if name is short
-                                                        textDecoration =
-                                                                if (isInactive) TextDecoration.None
-                                                                else TextDecoration.Underline,
                                                         overflow = TextOverflow.Ellipsis,
                                                         maxLines = 2
                                                 )
@@ -2171,7 +2539,7 @@ fun StopListItem(
                 if (!isLast) {
                         Row(Modifier
                                 .fillMaxWidth()
-                                .height(4.dp)) {
+                                .height(interStopPadding)) {
                                 Box(Modifier.width(timeColumnWidth))
                                 Box(Modifier
                                         .width(16.dp)
@@ -2184,7 +2552,7 @@ fun StopListItem(
                                 }
                         }
                 } else {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(interStopPadding))
                 }
         }
 }

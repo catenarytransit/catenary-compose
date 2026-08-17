@@ -112,6 +112,8 @@
     <string name="settings_show_countdowns_under_1h_description">Only show countdowns within 1 hour of the current time</string>
     <string name="settings_show_local_transit_countdowns">Show countdown for local transit</string>
     <string name="settings_show_local_transit_countdowns_description">Display countdown timers for metro, tram, and bus departures under 1h</string>
+    <string name="settings_show_trip_stop_distances">Show distance to nearby stops on trip screen</string>
+    <string name="settings_show_trip_stop_distances_description">Within 1 km, show the distance after each stop name</string>
     <string name="waiting_for_gps">Waiting for GPS…</string>
 
     <string name="block_screen_block_id">Block: %1$s</string>

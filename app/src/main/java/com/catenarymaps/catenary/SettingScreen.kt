@@ -38,6 +38,8 @@ fun SettingsScreen(
     onShowCountdownsUnder1hChange: (Boolean) -> Unit,
     showLocalTransitCountdowns: Boolean,
     onShowLocalTransitCountdownsChange: (Boolean) -> Unit,
+    showDistanceToNearbyStops: Boolean,
+    onShowDistanceToNearbyStopsChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onHome: () -> Unit
 ) {
@@ -146,6 +148,34 @@ fun SettingsScreen(
                 )
             }
             Switch(checked = showLocalTransitCountdowns, onCheckedChange = onShowLocalTransitCountdownsChange)
+        }
+
+        // Show distance to nearby stops on the trip screen
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        onShowDistanceToNearbyStopsChange(!showDistanceToNearbyStops)
+                    }
+                    .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(id = R.string.settings_show_trip_stop_distances),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(id = R.string.settings_show_trip_stop_distances_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = showDistanceToNearbyStops,
+                onCheckedChange = onShowDistanceToNearbyStopsChange
+            )
         }
 
         // Units (miles/ft vs metric)
