@@ -148,6 +148,8 @@
     <string name="settings_show_countdowns_under_1h_description">현재 시간으로부터 1시간 이내의 남은 시간만 표시</string>
     <string name="settings_show_local_transit_countdowns">지역 대중교통 남은 시간 표시</string>
     <string name="settings_show_local_transit_countdowns_description">1시간 미만의 지하철, 트램, 버스 출발 카운트다운 타이머 표시</string>
+    <string name="settings_show_trip_stop_distances">여행 화면에서 주변 정류장까지의 거리 표시</string>
+    <string name="settings_show_trip_stop_distances_description">1 km 이내의 정류장에서는 각 정류장 이름 뒤에 거리를 표시</string>
     <string name="block">블록</string>
     <string name="platform_abbrev">승강장</string>
     <string name="occupancy_percentage">혼잡도 백분율</string>
