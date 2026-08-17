@@ -377,15 +377,9 @@ private fun UserLocationTripIndicator(
                         }
                 val userDotRadius = 5.dp.toPx()
                 drawCircle(
-                        color = Color(0xFF2196F3).copy(alpha = 0.5f),
+                        color = Color(0xFF2196F3).copy(alpha = 0.8f),
                         radius = userDotRadius,
                         center = markerCenter
-                )
-                drawCircle(
-                        color = Color.White,
-                        radius = userDotRadius,
-                        center = markerCenter,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
                 )
         }
 }
