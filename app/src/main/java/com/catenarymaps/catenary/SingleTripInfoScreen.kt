@@ -364,20 +364,32 @@ private fun UserLocationTripIndicator(
         Canvas(modifier = modifier) {
                 val wCenter = size.width / 2f
                 val hCenter = dotOffset?.toPx() ?: size.height / 2f
+                val userDotRadius = 5.dp.toPx()
+                val userDotOffsetX = 10.dp.toPx()
+                val userDotCenterX = wCenter + userDotOffsetX
+                val userMarkerColor = Color(0xFF1D4ED8).copy(alpha = 0.8f)
+
                 val markerCenter =
                         if (userLocationAtStop) {
-                                Offset(wCenter, hCenter)
+                                Offset(userDotCenterX, hCenter)
                         } else {
                                 Offset(
-                                        wCenter,
+                                        userDotCenterX,
                                         hCenter +
                                                 userLocationDotProgress!!
                                                         .coerceIn(0f, 1f) * size.height
                                 )
                         }
-                val userDotRadius = 5.dp.toPx()
+
+                drawLine(
+                        color = userMarkerColor.copy(alpha = 0.8f),
+                        start = Offset(wCenter, markerCenter.y),
+                        end = Offset(markerCenter.x - userDotRadius, markerCenter.y),
+                        strokeWidth = 2.dp.toPx()
+                )
+
                 drawCircle(
-                        color = Color(0xFF2196F3).copy(alpha = 0.8f),
+                        color = userMarkerColor,
                         radius = userDotRadius,
                         center = markerCenter
                 )
