@@ -1905,6 +1905,10 @@ fun StopListItem(
                 (schedDep != null && schedArr != null && schedDep != schedArr) ||
                         (rtDeparture != null && rtArrival != null && rtDeparture != rtArrival)
 
+        // Keep the clock / delay / countdown stack tight while still reserving
+        // a line for delay text so realtime and scheduled-only rows stay equal height.
+        val timingLineSpacing = (-6).dp
+
         val aboveContent: List<@Composable () -> Unit> =
                 remember(
                         stopTime,
@@ -1953,7 +1957,11 @@ fun StopListItem(
                                                                 )
                                                         }
                                                 }
-                                                Column(horizontalAlignment = Alignment.End) {
+                                                Column(
+                                                                horizontalAlignment = Alignment.End,
+                                                                verticalArrangement =
+                                                                        Arrangement.spacedBy(timingLineSpacing)
+                                                        ) {
                                                         Box(
                                                                 modifier = Modifier.height(20.dp),
                                                                 contentAlignment =
@@ -2063,7 +2071,11 @@ fun StopListItem(
                                                                 )
                                                         }
                                                 }
-                                                Column(horizontalAlignment = Alignment.End) {
+                                                Column(
+                                                                horizontalAlignment = Alignment.End,
+                                                                verticalArrangement =
+                                                                        Arrangement.spacedBy(timingLineSpacing)
+                                                        ) {
                                                         Box(
                                                                 modifier =
                                                                         Modifier.height(
@@ -2103,31 +2115,31 @@ fun StopListItem(
                                                                                         )
                                                                 )
                                                         }
-                                                        if (depHasDelay) {
-                                                                DelayDiff(
-                                                                        diff = depDelay,
-                                                                        show_seconds = showSeconds,
-                                                                        fontSizeOfPolarity = 10.sp,
-                                                                        use_symbol_sign = true,
-                                                                        modifier =
-                                                                                Modifier.offset(
-                                                                                        y = (-6).dp
-                                                                                ),
-                                                                        hide_min_units = !showSeconds,
-                                                                )
+                                                        Box(contentAlignment = Alignment.TopEnd) {
+                                                                if (depHasDelay) {
+                                                                        DelayDiff(
+                                                                                diff = depDelay,
+                                                                                show_seconds = showSeconds,
+                                                                                fontSizeOfPolarity = 10.sp,
+                                                                                use_symbol_sign = true,
+                                                                                hide_min_units = !showSeconds,
+                                                                        )
+                                                                } else {
+                                                                        // Match DelayDiff's tallest text line without
+                                                                        // showing an on-time value.
+                                                                        Text(
+                                                                                text = "\u00A0",
+                                                                                fontSize = 14.sp,
+                                                                                color = Color.Transparent
+                                                                        )
+                                                                }
                                                         }
                                                         if (showCountdown) {
                                                                 Box(
                                                                         modifier =
-                                                                                Modifier
-                                                                                        .padding(
-                                                                                                start =
-                                                                                                        4.dp
-                                                                                        )
-                                                                                        .offset(
-                                                                                                y =
-                                                                                                        (-8).dp
-                                                                                        )
+                                                                                Modifier.padding(
+                                                                                        start = 4.dp
+                                                                                )
                                                                 ) {
                                                                         SelfUpdatingDiffTimer(
                                                                                 targetTimeSeconds =
@@ -2196,7 +2208,9 @@ fun StopListItem(
                                                                 }
                                                         }
                                                         Column(
-                                                                horizontalAlignment = Alignment.End
+                                                                horizontalAlignment = Alignment.End,
+                                                                verticalArrangement =
+                                                                        Arrangement.spacedBy(timingLineSpacing)
                                                         ) {
                                                                 Box(
                                                                         modifier =
@@ -2240,35 +2254,39 @@ fun StopListItem(
                                                                                                 )
                                                                         )
                                                                 }
-                                                                if (hasDelay) {
-                                                                        DelayDiff(
-                                                                                diff = delay,
-                                                                                show_seconds =
-                                                                                        showSeconds,
-                                                                                fontSizeOfPolarity =
-                                                                                        10.sp,
-                                                                                use_symbol_sign =
-                                                                                        true,
-                                                                                modifier =
-                                                                                        Modifier.offset(
-                                                                                                y =
-                                                                                                        (-4).dp
-                                                                                        ),
-                                                                                hide_min_units = !showSeconds,
-                                                                        )
+                                                                Box(
+                                                                        contentAlignment =
+                                                                                Alignment.TopEnd
+                                                                ) {
+                                                                        if (hasDelay) {
+                                                                                DelayDiff(
+                                                                                        diff = delay,
+                                                                                        show_seconds =
+                                                                                                showSeconds,
+                                                                                        fontSizeOfPolarity =
+                                                                                                10.sp,
+                                                                                        use_symbol_sign =
+                                                                                                true,
+                                                                                        hide_min_units =
+                                                                                                !showSeconds,
+                                                                                )
+                                                                        } else {
+                                                                                // Match DelayDiff's tallest text line
+                                                                                // without showing an on-time value.
+                                                                                Text(
+                                                                                        text = "\u00A0",
+                                                                                        fontSize = 14.sp,
+                                                                                        color =
+                                                                                                Color.Transparent
+                                                                                )
+                                                                        }
                                                                 }
                                                                 if (showCountdown) {
                                                                         Box(
                                                                                 modifier =
-                                                                                        Modifier
-                                                                                                .padding(
-                                                                                                        start =
-                                                                                                                4.dp
-                                                                                                )
-                                                                                                .offset(
-                                                                                                        y =
-                                                                                                                (-8).dp
-                                                                                                )
+                                                                                        Modifier.padding(
+                                                                                                start = 4.dp
+                                                                                        )
                                                                         ) {
                                                                                 SelfUpdatingDiffTimer(
                                                                                         targetTimeSeconds =
@@ -2298,8 +2316,9 @@ fun StopListItem(
 
         // Define a consistent header height for the "Station Name" row
         val headerHeight = 24.dp
-        val stopRowTopPadding = if (compactRows) 6.dp else 12.dp
-        val interStopPadding = if (compactRows) 2.dp else 4.dp
+        val compactVerticalSpacing = compactRows || !showConnections
+        val stopRowTopPadding = if (compactVerticalSpacing) 6.dp else 12.dp
+        val interStopPadding = if (compactVerticalSpacing) 2.dp else 4.dp
 
         Column(
                 modifier = Modifier
