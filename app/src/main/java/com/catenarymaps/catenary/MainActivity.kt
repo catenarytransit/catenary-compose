@@ -361,6 +361,8 @@ object LayersPerCategory {
                 const val LabelStops = "other-labelstops"
                 const val Livedots = "other-livedots"
                 const val Labeldots = "other-labeldots"
+                const val AerialLivedots = "other-livedots_aerial"
+                const val AerialLabeldots = "other-labeldots_aerial"
                 const val Pointing = "other-pointing"
                 const val PointingShell = "other-pointingshell"
         }
@@ -397,6 +399,8 @@ object LayersPerCategory {
         object TrajectoryOther {
                 const val Livedots = "traj-other-livedots"
                 const val Labeldots = "traj-other-labeldots"
+                const val AerialLivedots = "traj-other-livedots_aerial"
+                const val AerialLabeldots = "traj-other-labeldots_aerial"
                 const val Pointing = "traj-other-pointing"
                 const val PointingShell = "traj-other-pointingshell"
         }
@@ -1958,8 +1962,12 @@ class MainActivity : ComponentActivity() {
                                                         LayersPerCategory.TrajectoryBus.Labeldots,
                                                         LayersPerCategory.Other.Livedots,
                                                         LayersPerCategory.Other.Labeldots,
+                                                        LayersPerCategory.Other.AerialLivedots,
+                                                        LayersPerCategory.Other.AerialLabeldots,
                                                         LayersPerCategory.TrajectoryOther.Livedots,
                                                         LayersPerCategory.TrajectoryOther.Labeldots,
+                                                        LayersPerCategory.TrajectoryOther.AerialLivedots,
+                                                        LayersPerCategory.TrajectoryOther.AerialLabeldots,
                                                         LayersPerCategory.IntercityRail.Livedots,
                                                         LayersPerCategory.IntercityRail.Labeldots,
                                                         LayersPerCategory.TrajectoryIntercityRail.Livedots,

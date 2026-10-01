@@ -261,6 +261,12 @@ object TrajectoryManager {
                                         "rail" -> 2
                                         "bus", "trolleybus" -> 3
                                         "ferry" -> 4
+                                        "gondola",
+                                        "aerial_tramway",
+                                        "aerial_tram",
+                                        "aerial_lift",
+                                        "aerialway",
+                                        "gondola_lift" -> 6
                                         else -> 3
                                     }
                                 }
