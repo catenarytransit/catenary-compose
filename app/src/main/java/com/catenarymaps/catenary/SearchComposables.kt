@@ -46,6 +46,9 @@ import coil.request.ImageRequest
 fun SearchResultsOverlay(
         modifier: Modifier = Modifier,
         viewModel: SearchViewModel,
+        searchQuery: String,
+        stationHistory: StationHistory,
+        onRecentClick: (RecentStation) -> Unit,
         onCypressClick: (CypressFeature) -> Unit,
         onStopClick: (String, String, StopRanking, StopInfo) -> Unit,
         onRouteClick: (RouteRanking, RouteInfo, Agency?) -> Unit,
@@ -53,6 +56,8 @@ fun SearchResultsOverlay(
 ) {
     val combinedRows by viewModel.searchRows.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    // Read observable history during composition, not only when the query changes.
+    val recentStations = if (searchQuery.isBlank()) stationHistory.topHistory() else emptyList()
 
     Surface(
             modifier =
@@ -72,8 +77,26 @@ fun SearchResultsOverlay(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .windowInsetsPadding(WindowInsets.safeDrawing)
             ) {
-                // Single, intermingled list
-                items(combinedRows) { row ->
+                if (searchQuery.isBlank()) {
+                    if (recentStations.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Recently viewed",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            )
+                        }
+                        items(recentStations, key = { it.stableKey() }) { recent ->
+                            RecentStationResultItem(recent, onClick = { onRecentClick(recent) })
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                            )
+                        }
+                    }
+                } else {
+                    // Single, intermingled list for nonempty queries.
+                    items(combinedRows) { row ->
                     when (row) {
                         is SearchRow.CypressRow -> {
                             CypressResultItem(
@@ -116,15 +139,40 @@ fun SearchResultsOverlay(
                     }
 
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    }
                 }
             }
 
-            if (isLoading) {
+            if (isLoading && searchQuery.isNotBlank()) {
                 CircularProgressIndicator(modifier = Modifier
                     .size(32.dp)
                     .align(Alignment.Center))
             }
         }
+    }
+}
+
+@Composable
+fun RecentStationResultItem(recent: RecentStation, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        Text(
+            text = recent.name,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = if (recent.kind == RecentStationKind.OSM_STATION) "Station" else "Stop",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1
+        )
     }
 }
 

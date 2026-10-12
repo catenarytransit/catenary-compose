@@ -1258,6 +1258,9 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(pin) { prefs.writePinState(pin) }
 
                         val searchViewModel: SearchViewModel = viewModel()
+                        val stationHistory = remember(context) {
+                                StationHistory(context.applicationContext)
+                        }
 
                         // State to hold the chateaux R-tree index
 
@@ -2154,6 +2157,9 @@ class MainActivity : ComponentActivity() {
                                                                         val option = selectionOptions.first().data
                                                                         val stackItem = when (option) {
                                                                                 is MapSelectionSelector.StopMapSelector -> {
+                                                                                        stationHistory.recordStop(
+                                                                                                option.chateau_id, option.stop_id, option.stop_name
+                                                                                        )
                                                                                         CatenaryStackEnum.StopStack(
                                                                                                 chateau_id = option.chateau_id,
                                                                                                 stop_id = option.stop_id
@@ -2185,6 +2191,10 @@ class MainActivity : ComponentActivity() {
                                                                                         }
                                                                                 }
                                                                                 is MapSelectionSelector.OsmStationMapSelector -> {
+                                                                                        stationHistory.recordOsmStation(
+                                                                                                option.osm_id, option.name, option.mode_type,
+                                                                                                option.lat, option.lon
+                                                                                        )
                                                                                         CatenaryStackEnum.OsmStationStack(
                                                                                                 osm_station_id = option.osm_id,
                                                                                                 station_name = option.name,
@@ -3768,6 +3778,7 @@ class MainActivity : ComponentActivity() {
                                                                                                         },
                                                                                                         ktorClient =
                                                                                                                 ktorHttpClient,
+                                                                                                        stationHistory = stationHistory,
                                                                                                         onTripClick = {
                                                                                                                 tripStack
                                                                                                                 ->
@@ -3839,6 +3850,7 @@ class MainActivity : ComponentActivity() {
                                                                                                         },
                                                                                                         ktorClient =
                                                                                                                 ktorHttpClient,
+                                                                                                        stationHistory = stationHistory,
                                                                                                         onTripClick = {
                                                                                                                 tripStack
                                                                                                                 ->
@@ -4403,6 +4415,43 @@ class MainActivity : ComponentActivity() {
                                                 SearchResultsOverlay(
                                                         modifier = overlayBase,
                                                         viewModel = searchViewModel,
+                                                        searchQuery = searchQuery,
+                                                        stationHistory = stationHistory,
+                                                        onRecentClick = { recent ->
+                                                                geoLock.deactivate()
+                                                                val item: CatenaryStackEnum? = when (recent.kind) {
+                                                                        RecentStationKind.GTFS_STOP -> recent.chateauId?.let {
+                                                                                CatenaryStackEnum.StopStack(it, recent.id)
+                                                                        }
+                                                                        RecentStationKind.OSM_STATION ->
+                                                                                CatenaryStackEnum.OsmStationStack(
+                                                                                        osm_station_id = recent.id,
+                                                                                        station_name = recent.name,
+                                                                                        mode_type = recent.modeType,
+                                                                                        lat = recent.latitude,
+                                                                                        lon = recent.longitude
+                                                                                )
+                                                                }
+                                                                if (item != null) {
+                                                                        val newStack = ArrayDeque(catenaryStack)
+                                                                        newStack.addLast(item)
+                                                                        catenaryStack = newStack
+                                                                        scope.launch {
+                                                                                draggableState.animateTo(
+                                                                                        SheetSnapPoint.PartiallyExpanded
+                                                                                )
+                                                                                val lat = recent.latitude
+                                                                                val lon = recent.longitude
+                                                                                if (lat != null && lon != null &&
+                                                                                    lat.isFinite() && lon.isFinite()) {
+                                                                                        camera.animateTo(camera.position.copy(
+                                                                                                target = Position(lon, lat), zoom = 15.0
+                                                                                        ))
+                                                                                }
+                                                                        }
+                                                                        focusManager.clearFocus()
+                                                                }
+                                                        },
                                                         onCypressClick = { result ->
                                                                 geoLock.deactivate()
 
@@ -4466,6 +4515,10 @@ class MainActivity : ComponentActivity() {
                                                                 ranking,
                                                                 stopInfo ->
                                                                 geoLock.deactivate()
+                                                                stationHistory.recordStop(
+                                                                        chateau, gtfsId, stopInfo.name,
+                                                                        stopInfo.point.y, stopInfo.point.x
+                                                                )
 
                                                                 val pos =
                                                                         Position(
@@ -4494,6 +4547,13 @@ class MainActivity : ComponentActivity() {
                                                         },
                                                         onOsmStationClick = { station ->
                                                                 geoLock.deactivate()
+                                                                station.name?.let { name ->
+                                                                        stationHistory.recordOsmStation(
+                                                                                station.osmId.toString(), name,
+                                                                                station.modeType,
+                                                                                station.point?.y, station.point?.x
+                                                                        )
+                                                                }
 
                                                                 val point = station.point
                                                                 if (point != null) {

@@ -221,6 +221,7 @@ fun StopScreen(
         catenaryStack: ArrayDeque<CatenaryStackEnum>,
         reassigncatenarystack: (ArrayDeque<CatenaryStackEnum>) -> Unit,
         ktorClient: HttpClient,
+        stationHistory: StationHistory,
         onTripClick: (CatenaryStackEnum.SingleTrip) -> Unit,
         transitShapeForStopSource: MutableState<GeoJsonSource>,
         stopsContextSource: MutableState<GeoJsonSource>,
@@ -243,6 +244,8 @@ fun StopScreen(
     // If stop stack, key is stop_id
     val key = stopData?.stop_id ?: osmStackData?.osm_station_id ?: "unknown"
     val chateauId = stopData?.chateau_id ?: "osm" // default or handled otherwise?
+    // Only one visit per opened detail screen, even when its departures refresh.
+    var historyRecorded by remember(chateauId, key) { mutableStateOf(false) }
 
     // We keep 'chateau' just for context if available
     // For OSM stack, we might not have chateau_id easily unless passed, but Svelte uses it for
@@ -743,6 +746,26 @@ fun StopScreen(
                         }
                     }
             val data = rawData.copy(events = fixedEvents)
+
+            if (!historyRecorded) {
+                val primary = rawData.primary
+                val stationName = primary?.stop_name ?: osmStackData?.station_name
+                if (!stationName.isNullOrBlank()) {
+                    when (screenData) {
+                        is CatenaryStackEnum.StopStack -> stationHistory.recordStop(
+                            screenData.chateau_id, screenData.stop_id, stationName,
+                            primary?.stop_lat, primary?.stop_lon
+                        )
+                        is CatenaryStackEnum.OsmStationStack -> stationHistory.recordOsmStation(
+                            screenData.osm_station_id, stationName, screenData.mode_type,
+                            primary?.stop_lat ?: screenData.lat,
+                            primary?.stop_lon ?: screenData.lon
+                        )
+                        else -> Unit
+                    }
+                    historyRecorded = true
+                }
+            }
 
             val refreshedAt = Instant.now().epochSecond
             mergePageEvents(id, data, refreshedAt)
