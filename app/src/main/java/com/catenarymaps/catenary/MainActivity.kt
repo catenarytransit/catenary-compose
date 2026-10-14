@@ -2083,6 +2083,12 @@ class MainActivity : ComponentActivity() {
                                                 ) + rankedLayers
                                         }
 
+                                        // These are style layer IDs, not the "poi" source-layer name.
+                                        // Shared by catenary-web's light and dark map styles.
+                                        val poiLayerIds = remember {
+                                            setOf("poi_r1", "poi_r7", "poi_r20", "poi_transit")
+                                        }
+
                                         MaplibreMap(
                                                 modifier =
                                                         Modifier
@@ -2146,6 +2152,39 @@ class MainActivity : ComponentActivity() {
                                                                         clickRect,
                                                                         stopLayerIds
                                                                 )
+
+                                                        // A clicked POI icon or label takes precedence over
+                                                        // route lines underneath, but not transit features.
+                                                        if (vehicleFeatures.isEmpty() &&
+                                                                stopFeatures.isEmpty() &&
+                                                                osmStationFeatures.isEmpty()
+                                                        ) {
+                                                            val poi = projection.queryRenderedFeatures(clickRect, poiLayerIds)
+                                                                .firstNotNullOfOrNull { feature ->
+                                                                    val ref = decodeOpenMapTilesPoiId(feature.id?.content)
+                                                                        ?: return@firstNotNullOfOrNull null
+                                                                    val position = (feature.geometry as? Point)?.coordinates
+                                                                    CatenaryStackEnum.OsmItemStack(
+                                                                        osm_id = ref.osmId,
+                                                                        osm_class = ref.osmClass,
+                                                                        osm_type = feature.getString("subclass")
+                                                                            ?: feature.getString("class"),
+                                                                        name = feature.getString("name")
+                                                                            ?: feature.getString("name_en"),
+                                                                        lat = position?.latitude ?: latlng.latitude,
+                                                                        lon = position?.longitude ?: latlng.longitude
+                                                                    )
+                                                                }
+                                                            if (poi != null) {
+                                                                catenaryStack = ArrayDeque(catenaryStack).apply { addLast(poi) }
+                                                                scope.launch {
+                                                                    if (draggableState.currentValue == SheetSnapPoint.Collapsed) {
+                                                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                                                    }
+                                                                }
+                                                                return@MaplibreMap ClickResult.Pass
+                                                            }
+                                                        }
 
                                                         // Do not queryRenderedFeatures() on route
                                                         // lines: hundreds of intersecting vectors can
