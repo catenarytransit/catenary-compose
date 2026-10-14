@@ -39,12 +39,14 @@ fun NavigationControls(
         onPageInfo: (() -> Unit)? = null,
         isPageInfoPulse: Boolean = false
 ) {
+        // Preserve the compact navigation controls on every screen; the background is
+        // part of the 32dp button rather than extra padding around its icon.
         CompositionLocalProvider(LocalMinimumInteractiveComponentEnforcement provides false) {
                 Row {
                         IconButton(
                                 onClick = onBack,
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(32.dp)
                                 .background(
                                     MaterialTheme.colorScheme.surfaceVariant, CircleShape
                                 )
@@ -61,7 +63,7 @@ fun NavigationControls(
 
                     IconButton(
                         onClick = onHome, modifier = Modifier
-                            .size(40.dp)
+                            .size(32.dp)
                             .background(
                                 MaterialTheme.colorScheme.surfaceVariant, CircleShape
                             )
@@ -102,7 +104,7 @@ fun NavigationControls(
                                 IconButton(
                                         onClick = onPageInfo,
                                         modifier = Modifier
-                                            .size(40.dp)
+                                            .size(32.dp)
                                             .background(
                                                 MaterialTheme.colorScheme.surfaceVariant,
                                                 CircleShape
