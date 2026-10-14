@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -86,6 +88,8 @@ fun SearchBarCatenary(
             onValueChange = onValueChange,
             singleLine = true,
             textStyle = fieldTextStyle,
+            // Material Blue 300 is visible on both light and dark map themes.
+            cursorBrush = SolidColor(Color(0xFF64B5F6)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp) // keep original height
@@ -144,8 +148,18 @@ fun SearchBarCatenary(
                         innerTextField()
                     }
 
-                    // Trailing
-                    if (searchQuery.isEmpty() && !isFocused) {
+                    // Keep the clear action visible for the entire focused search session,
+                    // even after the query is empty. The callback clears both the field
+                    // and SearchViewModel results through MainActivity.onValueChange.
+                    if (isFocused) {
+                        IconButton(onClick = { onValueChange("") }) {
+                            Icon(
+                                Icons.Filled.Cancel,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                contentDescription = "Clear search"
+                            )
+                        }
+                    } else if (searchQuery.isEmpty()) {
                         IconButton(onClick = onSettingsClick) {
                             Icon(
                                 Icons.Filled.Settings,

@@ -232,6 +232,7 @@ fun StopScreen(
         showSeconds: Boolean,
         showCountdownsUnder1h: Boolean,
         showLocalTransitCountdowns: Boolean,
+        onSelectedLocation: (String, Double, Double) -> Unit,
         onBack: () -> Unit,
         onHome: () -> Unit
 ) {
@@ -1092,7 +1093,10 @@ fun StopScreen(
 
         val localLat = lat
         val localLon = lon
-        if (localLat == null || localLon == null) return@LaunchedEffect
+        if (localLat == null || localLon == null || !localLat.isFinite() || !localLon.isFinite()) {
+            return@LaunchedEffect
+        }
+        onSelectedLocation(name, localLat, localLon)
 
         val map = camera
 

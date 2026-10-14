@@ -55,8 +55,16 @@ sealed interface CatenaryStackEnum {
     ) : CatenaryStackEnum
 
     @Serializable
-    data class OsmItemStack(val osm_id: String, val osm_class: String, val osm_type: String?) :
-            CatenaryStackEnum
+    data class OsmItemStack(
+        val osm_id: String,
+        val osm_class: String,
+        val osm_type: String?,
+        val name: String? = null,
+        val address: String? = null,
+        val names: Map<String, String> = emptyMap(),
+        val lat: Double? = null,
+        val lon: Double? = null
+    ) : CatenaryStackEnum
 
     @Serializable
     data class OsmStationStack(

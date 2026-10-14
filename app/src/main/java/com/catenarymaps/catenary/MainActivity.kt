@@ -1253,6 +1253,7 @@ class MainActivity : ComponentActivity() {
 
                         val density = LocalDensity.current
                         var pin by remember { mutableStateOf(initialPinState) }
+                    var selectedLocationPin by remember { mutableStateOf<SelectedLocationPin?>(null) }
 
                         // Whenever pin state changes, save it to SharedPreferences.
                         LaunchedEffect(pin) { prefs.writePinState(pin) }
@@ -1307,6 +1308,44 @@ class MainActivity : ComponentActivity() {
                         var catenaryStack by rememberSaveable(saver = mutableStackSaver) {
                                 mutableStateOf(ArrayDeque<CatenaryStackEnum>())
                         }
+
+                    // Follow navigation, including stop->OSM-station redirects and back/home.
+                    // A StopStack without known coordinates will be completed by StopScreen.
+                    LaunchedEffect(catenaryStack.lastOrNull()) {
+                        val screen = catenaryStack.lastOrNull()
+                        val key = selectedStackPinKey(screen)
+                        selectedLocationPin = when (screen) {
+                            is CatenaryStackEnum.OsmItemStack -> {
+                                if (screen.lat != null && screen.lon != null &&
+                                    screen.lat.isFinite() && screen.lon.isFinite()
+                                ) {
+                                    SelectedLocationPin(
+                                        key!!,
+                                        screen.name ?: "OSM feature",
+                                        Position(screen.lon, screen.lat)
+                                    )
+                                } else null
+                            }
+
+                            is CatenaryStackEnum.OsmStationStack -> {
+                                if (screen.lat != null && screen.lon != null &&
+                                    screen.lat.isFinite() && screen.lon.isFinite()
+                                ) {
+                                    SelectedLocationPin(
+                                        key!!,
+                                        screen.station_name ?: "Station",
+                                        Position(screen.lon, screen.lat)
+                                    )
+                                } else if (selectedLocationPin?.key == key) {
+                                    selectedLocationPin
+                                } else null
+                            }
+
+                            else -> if (key != null && selectedLocationPin?.key == key) {
+                                selectedLocationPin
+                            } else null
+                        }
+                    }
 
                         // Handle back button presses
                         androidx.activity.compose.BackHandler(
@@ -3285,6 +3324,8 @@ class MainActivity : ComponentActivity() {
                                                 // draggable pin section
 
                                                 DraggablePinLayers(pin = pin)
+                                            // Fixed pin tied to the active map selection; no drag hitbox.
+                                            SelectedLocationPinLayers(pin = selectedLocationPin)
                                         }
 
                                         DraggablePinOverlay(
@@ -3372,22 +3413,22 @@ class MainActivity : ComponentActivity() {
                                                         Box(
                                                                 modifier =
                                                                         Modifier
-                                                                                .padding(
-                                                                                        vertical =
-                                                                                                10.dp
-                                                                                )
-                                                                                .width(40.dp)
-                                                                                .height(4.dp)
-                                                                                .clip(CircleShape)
-                                                                                .background(
-                                                                                        MaterialTheme
-                                                                                                .colorScheme
-                                                                                                .onSurfaceVariant
-                                                                                                .copy(
-                                                                                                        alpha =
-                                                                                                                0.4f
-                                                                                                )
-                                                                                )
+                                                                            .padding(
+                                                                                vertical =
+                                                                                    10.dp
+                                                                            )
+                                                                            .width(40.dp)
+                                                                            .height(4.dp)
+                                                                            .clip(CircleShape)
+                                                                            .background(
+                                                                                MaterialTheme
+                                                                                    .colorScheme
+                                                                                    .onSurfaceVariant
+                                                                                    .copy(
+                                                                                        alpha =
+                                                                                            0.4f
+                                                                                    )
+                                                                            )
                                                         )
 
                                                         if (catenaryStack.isEmpty()) {
@@ -3514,6 +3555,14 @@ class MainActivity : ComponentActivity() {
                                                                         // Render the current stack
                                                                         // screen
                                                                         when (currentScreen) {
+                                                                            is CatenaryStackEnum.OsmItemStack -> {
+                                                                                OsmItemScreen(
+                                                                                    item = currentScreen,
+                                                                                    ktorClient = ktorHttpClient,
+                                                                                    onBack = onBack,
+                                                                                    onHome = onHome
+                                                                                )
+                                                                            }
                                                                                 is CatenaryStackEnum.SingleTrip -> {
                                                                                         if (transitShapeSourceRef
                                                                                                         .value !=
@@ -3779,6 +3828,23 @@ class MainActivity : ComponentActivity() {
                                                                                                         ktorClient =
                                                                                                                 ktorHttpClient,
                                                                                                         stationHistory = stationHistory,
+                                                                                                    onSelectedLocation = { label, latitude, longitude ->
+                                                                                                        val selectedKey =
+                                                                                                            selectedStackPinKey(
+                                                                                                                currentScreen
+                                                                                                            )
+                                                                                                        if (selectedKey != null) {
+                                                                                                            selectedLocationPin =
+                                                                                                                SelectedLocationPin(
+                                                                                                                    selectedKey,
+                                                                                                                    label,
+                                                                                                                    Position(
+                                                                                                                        longitude,
+                                                                                                                        latitude
+                                                                                                                    )
+                                                                                                                )
+                                                                                                        }
+                                                                                                    },
                                                                                                         onTripClick = {
                                                                                                                 tripStack
                                                                                                                 ->
@@ -3851,6 +3917,23 @@ class MainActivity : ComponentActivity() {
                                                                                                         ktorClient =
                                                                                                                 ktorHttpClient,
                                                                                                         stationHistory = stationHistory,
+                                                                                                    onSelectedLocation = { label, latitude, longitude ->
+                                                                                                        val selectedKey =
+                                                                                                            selectedStackPinKey(
+                                                                                                                currentScreen
+                                                                                                            )
+                                                                                                        if (selectedKey != null) {
+                                                                                                            selectedLocationPin =
+                                                                                                                SelectedLocationPin(
+                                                                                                                    selectedKey,
+                                                                                                                    label,
+                                                                                                                    Position(
+                                                                                                                        longitude,
+                                                                                                                        latitude
+                                                                                                                    )
+                                                                                                                )
+                                                                                                        }
+                                                                                                    },
                                                                                                         onTripClick = {
                                                                                                                 tripStack
                                                                                                                 ->
@@ -4433,6 +4516,20 @@ class MainActivity : ComponentActivity() {
                                                                                 )
                                                                 }
                                                                 if (item != null) {
+                                                                    val selectedKey =
+                                                                        selectedStackPinKey(item)
+                                                                    val lat = recent.latitude
+                                                                    val lon = recent.longitude
+                                                                    if (selectedKey != null && lat != null && lon != null &&
+                                                                        lat.isFinite() && lon.isFinite()
+                                                                    ) {
+                                                                        selectedLocationPin =
+                                                                            SelectedLocationPin(
+                                                                                selectedKey,
+                                                                                recent.name,
+                                                                                Position(lon, lat)
+                                                                            )
+                                                                    }
                                                                         val newStack = ArrayDeque(catenaryStack)
                                                                         newStack.addLast(item)
                                                                         catenaryStack = newStack
@@ -4454,33 +4551,78 @@ class MainActivity : ComponentActivity() {
                                                         },
                                                         onCypressClick = { result ->
                                                                 geoLock.deactivate()
-
-                                                                val lon =
-                                                                        result.geometry.coordinates[
-                                                                                0]
-                                                                val lat =
-                                                                        result.geometry.coordinates[
-                                                                                1]
-                                                                val pos = Position(lon, lat)
-
-                                                                // === FIX for Error 3 ===
-                                                                scope.launch {
-                                                                        geoLock.deactivate()
-
-                                                                        camera.animateTo(
-                                                                                camera.position
-                                                                                        .copy(
-                                                                                                target =
-                                                                                                        pos,
-                                                                                                zoom =
-                                                                                                        14.0
-                                                                                        )
+                                                            val lon =
+                                                                result.geometry.coordinates.getOrNull(
+                                                                    0
+                                                                )
+                                                            val lat =
+                                                                result.geometry.coordinates.getOrNull(
+                                                                    1
+                                                                )
+                                                            if (lon != null && lat != null && lon.isFinite() && lat.isFinite() &&
+                                                                lon in -180.0..180.0 && lat in -90.0..90.0
+                                                            ) {
+                                                                val props = result.properties
+                                                                val parts =
+                                                                    props.id.split('/', limit = 2)
+                                                                val osmClass =
+                                                                    parts.getOrNull(0)?.takeIf {
+                                                                        it in setOf(
+                                                                            "node",
+                                                                            "way",
+                                                                            "relation"
                                                                         )
+                                                                    } ?: "unknown"
+                                                                val osmId =
+                                                                    parts.getOrNull(1)?.takeIf {
+                                                                        it.isNotEmpty() && it.all(
+                                                                            Char::isDigit
+                                                                        )
+                                                                    } ?: props.id
+                                                                val streetLine = listOfNotNull(
+                                                                    props.street, props.housenumber
+                                                                ).joinToString(" ")
+                                                                val address = listOfNotNull(
+                                                                    streetLine.takeIf { it.isNotBlank() },
+                                                                    props.postcode, props.locality,
+                                                                    props.region, props.country
+                                                                ).joinToString(", ")
+                                                                val item =
+                                                                    CatenaryStackEnum.OsmItemStack(
+                                                                        osm_id = osmId,
+                                                                        osm_class = osmClass,
+                                                                        osm_type = props.layer,
+                                                                        name = props.name,
+                                                                        address = address,
+                                                                        names = props.names,
+                                                                        lat = lat,
+                                                                        lon = lon
+                                                                    )
+                                                                val newStack =
+                                                                    ArrayDeque(catenaryStack)
+                                                                newStack.addLast(item)
+                                                                selectedLocationPin =
+                                                                    SelectedLocationPin(
+                                                                        selectedStackPinKey(item)!!,
+                                                                        props.name,
+                                                                        Position(lon, lat)
+                                                                    )
+                                                                catenaryStack = newStack
+                                                                scope.launch {
+                                                                    camera.animateTo(
+                                                                        camera.position.copy(
+                                                                            target = Position(
+                                                                                lon,
+                                                                                lat
+                                                                            ), zoom = 16.0
+                                                                        )
+                                                                    )
+                                                                    draggableState.animateTo(
+                                                                        SheetSnapPoint.PartiallyExpanded
+                                                                    )
                                                                 }
-                                                                // === FIX for Error 4 ===
-                                                                focusManager
-                                                                        .clearFocus() // This should
-                                                                // now resolve
+                                                            }
+                                                            focusManager.clearFocus()
                                                         },
                                                         onRouteClick = { ranking, routeInfo, agency
                                                                 ->
@@ -4525,6 +4667,14 @@ class MainActivity : ComponentActivity() {
                                                                                 stopInfo.point.x,
                                                                                 stopInfo.point.y
                                                                         )
+                                                            if (pos.longitude.isFinite() && pos.latitude.isFinite()) {
+                                                                selectedLocationPin =
+                                                                    SelectedLocationPin(
+                                                                        "stop:$chateau:$gtfsId",
+                                                                        stopInfo.name,
+                                                                        pos
+                                                                    )
+                                                            }
 
                                                                 val newStack =
                                                                         ArrayDeque(catenaryStack)
