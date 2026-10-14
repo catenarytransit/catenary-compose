@@ -38,7 +38,10 @@ sealed interface CatenaryStackEnum {
             CatenaryStackEnum
 
     @Serializable
-    data class MapSelectionScreen(val arrayofoptions: List<MapSelectionOption>) : CatenaryStackEnum
+    data class MapSelectionScreen(
+        val arrayofoptions: List<MapSelectionOption>,
+        val routeLookup: RouteClickLookup? = null
+    ) : CatenaryStackEnum
 
     @Serializable
     data class SettingsStack(val hi: Boolean? = true) : CatenaryStackEnum

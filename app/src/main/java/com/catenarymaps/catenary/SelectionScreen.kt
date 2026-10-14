@@ -24,7 +24,9 @@ import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Subway
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.Tram
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,7 +59,10 @@ import io.ktor.client.request.setBody
 import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 @Composable
 fun VehicleSelectionItem(
@@ -612,6 +617,46 @@ fun MapSelectionScreen(
         var stopPreviewData by remember { mutableStateOf<StopPreviewResponse?>(null) }
         val scope = rememberCoroutineScope()
 
+        // A LaunchedEffect is tied to THIS stack screen. Leaving the screen or
+        // tapping a different location cancels the request; old hits never appear
+        // in the new sheet. Vehicles can render before this network request ends.
+        val lookup = screenData.routeLookup
+        var remoteRoutes by remember(lookup) { mutableStateOf(emptyList<ServerRouteHit>()) }
+        var routeLoading by remember(lookup) { mutableStateOf(lookup != null) }
+        var routeFailed by remember(lookup) { mutableStateOf(false) }
+        var retryRouteLookup by remember(lookup) { mutableStateOf(0) }
+
+        LaunchedEffect(lookup, retryRouteLookup) {
+                if (lookup == null) return@LaunchedEffect
+                routeLoading = true
+                routeFailed = false
+                remoteRoutes = emptyList()
+                try {
+                        remoteRoutes = withTimeout(6_000L) {
+                                ktorClient.get("https://birch.catenarymaps.org/routes_at_point") {
+                                        url {
+                                                parameters.append("latitude", lookup.latitude.toString())
+                                                parameters.append("longitude", lookup.longitude.toString())
+                                                parameters.append("zoom", lookup.zoom.toString())
+                                                parameters.append("bus", lookup.bus.toString())
+                                                parameters.append("local_rail", lookup.localRail.toString())
+                                                parameters.append("intercity_rail", lookup.intercityRail.toString())
+                                                parameters.append("other", lookup.other.toString())
+                                        }
+                                }.body<List<ServerRouteHit>>()
+                        }
+                } catch (e: TimeoutCancellationException) {
+                        routeFailed = true
+                } catch (e: CancellationException) {
+                        throw e
+                } catch (e: Exception) {
+                        Log.w("MapSelectionScreen", "Route lookup failed", e)
+                        routeFailed = true
+                } finally {
+                        routeLoading = false
+                }
+        }
+
         // Fetch stop preview data
         LaunchedEffect(screenData) {
                 val stopsToQuery =
@@ -705,7 +750,7 @@ fun MapSelectionScreen(
                         .distinctBy { "${it.chateau_id}:${it.stop_id}" }
 
         val routes =
-                screenData.arrayofoptions
+                (screenData.arrayofoptions + remoteRoutes.map { it.toSelectionOption() })
                         .mapNotNull { it.data as? MapSelectionSelector.RouteMapSelector }
                         .distinctBy { "${it.chateau_id}:${it.route_id}" }
 
@@ -739,8 +784,8 @@ fun MapSelectionScreen(
                                         text =
                                                 pluralStringResource(
                                                         R.plurals.items_selected,
-                                                        screenData.arrayofoptions.size,
-                                                        screenData.arrayofoptions.size
+                                                        vehicles.size + stops.size + osmStations.size + routes.size,
+                                                        vehicles.size + stops.size + osmStations.size + routes.size
                                                 ),
                                         style = MaterialTheme.typography.headlineSmall,
                                         modifier = Modifier.padding(vertical = 8.dp)
@@ -879,6 +924,25 @@ fun MapSelectionScreen(
                                         )
                                 }
                         }
+                }
+
+                if (routeLoading) {
+                        item(key = "routes-loading") {
+                                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                                        Text("Loading routes…", style = MaterialTheme.typography.titleMedium)
+                                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                }
+                        }
+                } else if (routeFailed) {
+                        item(key = "routes-failed") {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Routes could not be loaded")
+                                        Button(onClick = { retryRouteLookup++ }) { Text("Retry") }
+                                }
+                        }
+                } else if (routes.isEmpty() && vehicles.isEmpty() &&
+                        stops.isEmpty() && osmStations.isEmpty()) {
+                        item(key = "routes-empty") { Text("No selectable features here") }
                 }
 
                 if (routes.isNotEmpty()) {

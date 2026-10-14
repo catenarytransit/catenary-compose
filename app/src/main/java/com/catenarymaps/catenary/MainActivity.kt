@@ -2026,21 +2026,7 @@ class MainActivity : ComponentActivity() {
                                                         "major-livedots-context-label",
                                                 )
                                         }
-                                        val routeLayerIds = remember {
-                                                setOf(
-                                                        LayersPerCategory.Bus.Shapes,
-                                                        LayersPerCategory.Bus.LabelShapes,
-                                                        LayersPerCategory.Other.Shapes,
-                                                        LayersPerCategory.Other.LabelShapes,
-                                                        LayersPerCategory.Other.FerryShapes,
-                                                        LayersPerCategory.IntercityRail.Shapes,
-                                                        LayersPerCategory.IntercityRail.LabelShapes,
-                                                        LayersPerCategory.Metro.Shapes,
-                                                        LayersPerCategory.Metro.LabelShapes,
-                                                        LayersPerCategory.Tram.Shapes,
-                                                        LayersPerCategory.Tram.LabelShapes
-                                                )
-                                        }
+                                        // Shapes are hit-tested by Birch, not decoded on the UI thread.
                                         val stopLayerIds = remember {
                                                 setOf(
                                                         LayersPerCategory.Bus.Stops,
@@ -2138,22 +2124,35 @@ class MainActivity : ComponentActivity() {
                                                                         clickRect,
                                                                         vehicleLayerIds
                                                                 )
-                                                        val routeFeatures =
-                                                                projection.queryRenderedFeatures(
-                                                                        clickRect,
-                                                                        routeLayerIds
-                                                                )
                                                         val stopFeatures =
                                                                 projection.queryRenderedFeatures(
                                                                         clickRect,
                                                                         stopLayerIds
                                                                 )
-                                                        
+
+                                                        // Do not queryRenderedFeatures() on route
+                                                        // lines: hundreds of intersecting vectors can
+                                                        // block MapLibre's UI callback.
+                                                        val visible = layerSettings.value
+                                                        val routeLookup = if (camera.position.zoom >= 4.0) {
+                                                                RouteClickLookup(
+                                                                        latitude = latlng.latitude,
+                                                                        longitude = latlng.longitude,
+                                                                        zoom = camera.position.zoom,
+                                                                        bus = visible.bus.shapes || visible.bus.labelshapes,
+                                                                        localRail = visible.localrail.shapes || visible.localrail.labelshapes,
+                                                                        intercityRail = visible.intercityrail.shapes || visible.intercityrail.labelshapes,
+                                                                        other = visible.other.shapes || visible.other.labelshapes
+                                                                )
+                                                        } else null
+                                                        val shouldQueryRoutes = routeLookup != null &&
+                                                                (routeLookup.bus || routeLookup.localRail ||
+                                                                        routeLookup.intercityRail || routeLookup.other)
 
                                                         if (vehicleFeatures.isEmpty() &&
-                                                                        routeFeatures.isEmpty() &&
                                                                         stopFeatures.isEmpty() &&
-                                                                        osmStationFeatures.isEmpty()
+                                                                        osmStationFeatures.isEmpty() &&
+                                                                        !shouldQueryRoutes
                                                         ) {
                                                                 Log.d(
                                                                         TAG,
@@ -2164,7 +2163,7 @@ class MainActivity : ComponentActivity() {
 
                                                         Log.d(
                                                                 TAG,
-                                                                "Found ${vehicleFeatures.size} vehicles, ${routeFeatures.size} routes, ${stopFeatures.size} stops, ${osmStationFeatures.size} osm stations."
+                                                                "Found ${vehicleFeatures.size} vehicles, ${stopFeatures.size} stops, ${osmStationFeatures.size} osm stations; routes will be loaded by Birch."
                                                         )
 
                                                         // --- Process each feature list ---
@@ -2176,9 +2175,6 @@ class MainActivity : ComponentActivity() {
                                                                 )
                                                         )
                                                         selectionOptions.addAll(
-                                                                processRouteClicks(routeFeatures)
-                                                        )
-                                                        selectionOptions.addAll(
                                                                 processStopClicks(stopFeatures)
                                                         )
                                                         selectionOptions.addAll(
@@ -2187,12 +2183,13 @@ class MainActivity : ComponentActivity() {
                                                                 )
                                                         )
 
-                                                        // If we found items, update the stack and
-                                                        // open the sheet
-                                                        if (selectionOptions.isNotEmpty()) {
+                                                        // The initial sheet contains vehicles/stops.
+                                                        // Route matches arrive later without replacing
+                                                        // navigation or blocking the map callback.
+                                                        if (selectionOptions.isNotEmpty() || shouldQueryRoutes) {
                                                                 val newStack =
                                                                         ArrayDeque(catenaryStack)
-                                                                if (selectionOptions.size == 1) {
+                                                                if (selectionOptions.size == 1 && !shouldQueryRoutes) {
                                                                         val option = selectionOptions.first().data
                                                                         val stackItem = when (option) {
                                                                                 is MapSelectionSelector.StopMapSelector -> {
@@ -2248,7 +2245,8 @@ class MainActivity : ComponentActivity() {
                                                                         newStack.addLast(
                                                                                 CatenaryStackEnum
                                                                                         .MapSelectionScreen(
-                                                                                                selectionOptions
+                                                                                                selectionOptions,
+                                                                                                routeLookup = if (shouldQueryRoutes) routeLookup else null
                                                                                         )
                                                                         )
                                                                 }
@@ -5673,52 +5671,6 @@ class MainActivity : ComponentActivity() {
                                 Log.e(
                                         TAG,
                                         "Failed to parse VehicleMapSelector: ${e.message} for props ${f.properties}"
-                                )
-                                null
-                        }
-                }
-        }
-
-        /** Processes a list of clicked features known to be ROUTES. */
-        private fun processRouteClicks(
-                features: List<org.maplibre.spatialk.geojson.Feature<*, JsonObject?>>
-        ): List<MapSelectionOption> {
-                val selectedRoutesKeyUnique = mutableSetOf<String>()
-
-                return features.mapNotNull { f ->
-                        // Use chateau + route_label for uniqueness
-                        val key =
-                                (f.getString("chateau") ?: "") + (f.getString("route_label") ?: "")
-                        if (key.isBlank() || !selectedRoutesKeyUnique.add(key))
-                                return@mapNotNull null
-
-                        // JS: x.properties.routes.replace('{', '').replace('}', '').split(',')[0]
-                        val routesProp = f.getString("routes")?.replace(Regex("[{}]"), "")
-                        if (routesProp.isNullOrBlank()) return@mapNotNull null
-
-                        try {
-                                MapSelectionOption(
-                                        MapSelectionSelector.RouteMapSelector(
-                                                chateau_id = f.getString("chateau") ?: "",
-                                                route_id =
-                                                        routesProp
-                                                                .split(',')
-                                                                .first()
-                                                                .removeSurrounding("\""),
-                                                colour = "#${f.getString("color") ?: "FFFFFF"}",
-                                                name = f.getString("route_label"),
-                                                route_type =
-                                                        f.properties
-                                                                ?.get("route_type")
-                                                                ?.jsonPrimitive
-                                                                ?.content
-                                                                ?.toIntOrNull()
-                                        )
-                                )
-                        } catch (e: Exception) {
-                                Log.e(
-                                        TAG,
-                                        "Failed to parse RouteMapSelector: ${e.message} for props ${f.properties}"
                                 )
                                 null
                         }
