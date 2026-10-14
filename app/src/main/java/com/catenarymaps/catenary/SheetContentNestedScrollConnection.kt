@@ -48,7 +48,7 @@ internal class SheetContentNestedScrollConnection(
 
     override suspend fun onPreFling(available: Velocity): Velocity {
         if (available.y >= 0f ||
-            state.requireOffset() <= state.anchors.minAnchor() + 0.5f
+            state.requireOffset() <= state.anchors.positionOf(SheetSnapPoint.Expanded) + 0.5f
         ) {
             return Velocity.Zero
         }
