@@ -15,8 +15,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.EaseOutCirc
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.splineBasedDecay
@@ -77,6 +77,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
@@ -569,8 +570,9 @@ var visibleChateaus: List<String> = emptyList()
 
 var railinframe by mutableStateOf(false)
 
-val easeOutSpec: AnimationSpec<Float> =
-        tween(durationMillis = 300, delayMillis = 0, easing = EaseOutCirc)
+// A spring responds smoothly to release velocity without a fixed 300-ms tween.
+val sheetSpringSpec: AnimationSpec<Float> =
+        spring(dampingRatio = 0.90f, stiffness = Spring.StiffnessMediumLow)
 
 enum class SheetSnapPoint {
         Collapsed,
@@ -1865,13 +1867,13 @@ class MainActivity : ComponentActivity() {
                                                         initialValue =
                                                                 SheetSnapPoint.PartiallyExpanded,
                                                         anchors = anchors,
-                                                        positionalThreshold = {
-                                                                with(density) { 128.dp.toPx() }
+                                                        positionalThreshold = { distance ->
+                                                                distance * 0.35f
                                                         },
                                                         velocityThreshold = {
-                                                                with(density) { 128.dp.toPx() }
+                                                                with(density) { 900.dp.toPx() }
                                                         },
-                                                        snapAnimationSpec = easeOutSpec,
+                                                        snapAnimationSpec = sheetSpringSpec,
                                                         decayAnimationSpec =
                                                                 splineBasedDecay(density),
                                                 )
@@ -1882,6 +1884,17 @@ class MainActivity : ComponentActivity() {
                                         // so the sheet snaps correctly with the new height.
                                         LaunchedEffect(anchors) {
                                                 draggableState.updateAnchors(anchors)
+                                        }
+
+                                        val sheetNestedScrollConnection = remember(
+                                                draggableState, screenHeightPx, density
+                                        ) {
+                                                SheetContentNestedScrollConnection(
+                                                        state = draggableState,
+                                                        viewportHeightPx = screenHeightPx,
+                                                        flingVelocityThresholdPx =
+                                                                with(density) { 900.dp.toPx() }
+                                                )
                                         }
 
                                         val sheetIsExpanded by remember {
@@ -3359,6 +3372,7 @@ class MainActivity : ComponentActivity() {
                                                                             .roundToInt()
                                                                 )
                                                             }
+                                                            .nestedScroll(sheetNestedScrollConnection)
                                                             .anchoredDraggable(
                                                                 state = draggableState,
                                                                 orientation =
