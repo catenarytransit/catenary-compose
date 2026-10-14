@@ -58,7 +58,7 @@ fun NavigationControls(
                                                                 shape = CircleShape
                                                         )
                                                         .padding(6.dp)
-                                                        .size(20.dp) // 6dp inset and 20dp icon fit the 32dp circle
+                                                        .size(16.dp) // 6dp inset and 20dp icon fit the 32dp circle
                                 )
                         }
 
@@ -78,7 +78,7 @@ fun NavigationControls(
                                                                 shape = CircleShape
                                                         )
                                                         .padding(6.dp)
-                                                        .size(20.dp)
+                                                        .size(16.dp)
                                 )
                         }
 
@@ -128,7 +128,7 @@ fun NavigationControls(
                                                                         shape = CircleShape
                                                                 )
                                                                 .padding(6.dp)
-                                                                .size(20.dp)
+                                                                .size(16.dp)
                                         )
                                 }
                         }
