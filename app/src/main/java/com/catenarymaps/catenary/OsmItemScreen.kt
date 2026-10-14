@@ -14,15 +14,16 @@ import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,7 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,10 +50,16 @@ import kotlinx.serialization.Serializable
 private data class OsmApiResponse(val elements: List<OsmApiElement> = emptyList())
 
 @Serializable
+private data class OsmApiCenter(val lat: Double, val lon: Double)
+
+@Serializable
 private data class OsmApiElement(
     val type: String,
     val id: Long,
-    val tags: Map<String, String> = emptyMap()
+    val tags: Map<String, String> = emptyMap(),
+    val lat: Double? = null,
+    val lon: Double? = null,
+    val center: OsmApiCenter? = null
 )
 
 private val osmIdPattern = Regex("[1-9][0-9]*")
@@ -69,14 +78,9 @@ private fun websiteUrl(raw: String?): String? {
 private fun websiteDomain(url: String): String =
     Uri.parse(url).host?.removePrefix("www.") ?: url
 
-private fun humanTagValue(value: String): String = when (value.lowercase()) {
-    "yes" -> "Yes"
-    "no" -> "No"
-    "limited" -> "Limited"
-    "designated" -> "Designated"
-    "only" -> "Only"
-    else -> value.replace('_', ' ').replaceFirstChar { it.titlecase() }
-}
+private fun humanTagValue(value: String, translations: Map<String, String>): String =
+    translations[value.lowercase()]
+        ?: value.replace('_', ' ').replaceFirstChar { it.titlecase() }
 
 private fun titleCaseTag(key: String): String = key.replace(':', ' ').replace('_', ' ')
     .replaceFirstChar { it.titlecase() }
@@ -121,9 +125,14 @@ fun OsmItemScreen(
     item: CatenaryStackEnum.OsmItemStack,
     ktorClient: HttpClient,
     onBack: () -> Unit,
-    onHome: () -> Unit
+    onHome: () -> Unit,
+    onShowNearbyDepartures: (lat: Double, lon: Double) -> Unit
 ) {
     val context = LocalContext.current
+    val language = LocalConfiguration.current.locales[0]?.language
+    val invalidIdError = stringResource(R.string.osm_invalid_id)
+    val missingObjectError = stringResource(R.string.osm_object_missing)
+    val loadError = stringResource(R.string.osm_load_failed)
     var response by remember(item.osm_class, item.osm_id) { mutableStateOf<OsmApiElement?>(null) }
     var loading by remember(item.osm_class, item.osm_id) { mutableStateOf(true) }
     var error by remember(item.osm_class, item.osm_id) { mutableStateOf<String?>(null) }
@@ -139,7 +148,7 @@ fun OsmItemScreen(
         loading = true
         try {
             if (!canFetch) {
-                error = "This search result has no public OSM object identifier."
+                error = invalidIdError
                 return@LaunchedEffect
             }
             // The unsuffixed OSM API URL returns XML; the .json suffix requests JSON.
@@ -148,19 +157,28 @@ fun OsmItemScreen(
             ).body<OsmApiResponse>()
             response = data.elements.firstOrNull {
                 it.type == item.osm_class && it.id.toString() == item.osm_id
-            } ?: throw IllegalStateException("OpenStreetMap did not return this object")
+            } ?: throw IllegalStateException(missingObjectError)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (exception: Exception) {
-            error = exception.message ?: "Could not load OpenStreetMap details"
+            // Do not expose unlocalized Ktor/HTTP exception messages as screen text.
+            error = if (exception.message == missingObjectError) missingObjectError else loadError
         } finally {
             loading = false
         }
     }
 
     val tags = response?.tags.orEmpty()
-    val title = tags["name"] ?: item.name?.takeIf { it.isNotBlank() }
-    ?: "${item.osm_class.replaceFirstChar { it.titlecase() }} ${item.osm_id}"
+    val objectType = when (item.osm_class) {
+        "node" -> stringResource(R.string.osm_node)
+        "way" -> stringResource(R.string.osm_way)
+        "relation" -> stringResource(R.string.osm_relation)
+        else -> stringResource(R.string.osm_feature)
+    }
+    val title = language?.let { tags["name:$it"] }?.takeIf { it.isNotBlank() }
+        ?: tags["name"]?.takeIf { it.isNotBlank() }
+        ?: item.name?.takeIf { it.isNotBlank() }
+        ?: stringResource(R.string.osm_unnamed, objectType, item.osm_id)
     val tagAddress = listOfNotNull(
         listOfNotNull(tags["addr:street"], tags["addr:housenumber"])
             .joinToString(" ").takeIf { it.isNotBlank() },
@@ -168,7 +186,28 @@ fun OsmItemScreen(
     ).joinToString(", ")
     val address = tagAddress.ifBlank { item.address.orEmpty() }
     val kind = tags["amenity"] ?: tags["shop"] ?: tags["tourism"] ?: tags["leisure"]
-    ?: item.osm_type ?: "OpenStreetMap feature"
+    ?: item.osm_type ?: stringResource(R.string.osm_feature)
+
+    // Point searches and map clicks have coordinates already. For OSM nodes we can
+    // also use the API response. Ways/relations need a coordinate from search or
+    // the map: the standard OSM /api/0.6 endpoint does not include their centroid.
+    val nearbyOrigin = sequenceOf(
+        item.lat to item.lon,
+        response?.lat to response?.lon,
+        response?.center?.lat to response?.center?.lon
+    ).firstNotNullOfOrNull { (lat, lon) ->
+        if (lat != null && lon != null && lat.isFinite() && lon.isFinite() &&
+            lat in -90.0..90.0 && lon in -180.0..180.0
+        ) lat to lon else null
+    }
+
+    val localizedTagValues = mapOf(
+        "yes" to stringResource(R.string.osm_yes),
+        "no" to stringResource(R.string.osm_no),
+        "limited" to stringResource(R.string.osm_limited),
+        "designated" to stringResource(R.string.osm_designated),
+        "only" to stringResource(R.string.osm_only)
+    )
 
     // Search results provide alternate names before OSM finishes loading.
     val alternateNames = buildMap {
@@ -242,6 +281,20 @@ fun OsmItemScreen(
                 Text(address, style = MaterialTheme.typography.bodyMedium)
             }
 
+            Button(
+                onClick = {
+                    nearbyOrigin?.let { (lat, lon) -> onShowNearbyDepartures(lat, lon) }
+                },
+                enabled = nearbyOrigin != null,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Text(stringResource(if (nearbyOrigin == null) R.string.osm_nearby_unavailable else R.string.osm_nearby))
+            }
+
             if (loading) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -249,7 +302,7 @@ fun OsmItemScreen(
                 ) {
                     CircularProgressIndicator()
                     Text(
-                        "Loading OpenStreetMap details…",
+                        stringResource(R.string.osm_loading),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -260,7 +313,9 @@ fun OsmItemScreen(
                         Text(error!!, color = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.height(8.dp))
                         if (canFetch) {
-                            OutlinedButton(onClick = { retries++ }) { Text("Retry") }
+                            FilledTonalButton(onClick = { retries++ }) {
+                                Text(stringResource(R.string.osm_retry))
+                            }
                         }
                     }
                 }
@@ -288,15 +343,20 @@ fun OsmItemScreen(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "Other names (${alternateNames.size})",
+                                    text = stringResource(
+                                        R.string.osm_other_names,
+                                        alternateNames.size
+                                    ),
                                     style = MaterialTheme.typography.titleSmall,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(
                                     imageVector = if (namesExpanded) Icons.Filled.KeyboardArrowUp
                                     else Icons.Filled.KeyboardArrowDown,
-                                    contentDescription = if (namesExpanded) "Collapse other names"
-                                    else "Expand other names"
+                                    contentDescription = stringResource(
+                                        if (namesExpanded)
+                                            R.string.osm_collapse_names else R.string.osm_expand_names
+                                    )
                                 )
                             }
                             AnimatedVisibility(visible = namesExpanded) {
@@ -326,7 +386,7 @@ fun OsmItemScreen(
                     if (website != null) {
                         OsmContactCard(
                             icon = Icons.Outlined.Language,
-                            label = "Website",
+                            label = stringResource(R.string.osm_website),
                             value = websiteDomain(website),
                             onClick = { openUrl(website) }
                         )
@@ -334,7 +394,7 @@ fun OsmItemScreen(
                     if (phone != null) {
                         OsmContactCard(
                             icon = Icons.Outlined.Call,
-                            label = "Phone number",
+                            label = stringResource(R.string.osm_phone),
                             value = phone,
                             onClick = { dialPhone(phone) }
                         )
@@ -343,7 +403,7 @@ fun OsmItemScreen(
                         // OSM opening_hours is a rule expression; do not guess 'Open now'.
                         OsmContactCard(
                             icon = Icons.Outlined.Schedule,
-                            label = "Opening hours",
+                            label = stringResource(R.string.osm_hours),
                             value = openingHours
                         )
                     }
@@ -352,25 +412,35 @@ fun OsmItemScreen(
 
             if (response != null) {
                 val features = listOf(
-                    "wheelchair" to "Wheelchair access",
-                    "toilets" to "Toilets",
-                    "toilets:wheelchair" to "Accessible toilets",
-                    "indoor_seating" to "Indoor seating",
-                    "outdoor_seating" to "Outdoor seating",
-                    "takeaway" to "Takeaway",
-                    "drive_through" to "Drive-through",
-                    "air_conditioning" to "Air conditioning",
-                    "internet_access" to "Internet access",
-                    "diet:vegan" to "Vegan options",
-                    "diet:vegetarian" to "Vegetarian options",
-                    "payment:cash" to "Cash",
-                    "payment:credit_cards" to "Credit cards",
-                    "payment:debit_cards" to "Debit cards",
-                    "smoking" to "Smoking",
-                    "level" to "Level"
-                ).mapNotNull { (key, label) -> tags[key]?.let { label to humanTagValue(it) } }
+                    "wheelchair" to stringResource(R.string.osm_wheelchair),
+                    "toilets" to stringResource(R.string.osm_toilets),
+                    "toilets:wheelchair" to stringResource(R.string.osm_accessible_toilets),
+                    "indoor_seating" to stringResource(R.string.osm_indoor_seating),
+                    "outdoor_seating" to stringResource(R.string.osm_outdoor_seating),
+                    "takeaway" to stringResource(R.string.osm_takeaway),
+                    "drive_through" to stringResource(R.string.osm_drive_through),
+                    "air_conditioning" to stringResource(R.string.osm_air_conditioning),
+                    "internet_access" to stringResource(R.string.osm_internet_access),
+                    "diet:vegan" to stringResource(R.string.osm_vegan),
+                    "diet:vegetarian" to stringResource(R.string.osm_vegetarian),
+                    "payment:cash" to stringResource(R.string.osm_cash),
+                    "payment:credit_cards" to stringResource(R.string.osm_credit_cards),
+                    "payment:debit_cards" to stringResource(R.string.osm_debit_cards),
+                    "smoking" to stringResource(R.string.osm_smoking),
+                    "level" to stringResource(R.string.osm_level)
+                ).mapNotNull { (key, label) ->
+                    tags[key]?.let {
+                        label to humanTagValue(
+                            it,
+                            localizedTagValues
+                        )
+                    }
+                }
                 if (features.isNotEmpty()) {
-                    Text("Amenities & accessibility", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.osm_amenities),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         features.forEach { (label, value) ->
                             Surface(shape = MaterialTheme.shapes.small, tonalElevation = 2.dp) {
@@ -384,12 +454,19 @@ fun OsmItemScreen(
                 }
 
                 val extraDetails = listOf(
-                    "operator" to "Operator", "brand" to "Brand", "network" to "Network",
-                    "cuisine" to "Cuisine", "email" to "Email", "contact:email" to "Contact email"
+                    "operator" to stringResource(R.string.osm_operator),
+                    "brand" to stringResource(R.string.osm_brand),
+                    "network" to stringResource(R.string.osm_network),
+                    "cuisine" to stringResource(R.string.osm_cuisine),
+                    "email" to stringResource(R.string.osm_email),
+                    "contact:email" to stringResource(R.string.osm_contact_email)
                 ).mapNotNull { (key, label) -> tags[key]?.let { label to it } }
                 if (extraDetails.isNotEmpty()) {
                     HorizontalDivider()
-                    Text("Details", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.osm_details),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     extraDetails.forEach { (label, value) ->
                         Text("$label: $value", style = MaterialTheme.typography.bodyMedium)
                     }
@@ -398,7 +475,7 @@ fun OsmItemScreen(
 
             val wikidata = tags["wikidata"]?.takeIf(wikidataPattern::matches)
             if (wikidata != null) {
-                TextButton(onClick = { openUrl("https://www.wikidata.org/wiki/$wikidata") }) {
+                FilledTonalButton(onClick = { openUrl("https://www.wikidata.org/wiki/$wikidata") }) {
                     Text("Wikidata ($wikidata) ↗")
                 }
             }
@@ -408,14 +485,14 @@ fun OsmItemScreen(
                     "relation"
                 ) && osmIdPattern.matches(item.osm_id)
             ) {
-                TextButton(onClick = {
+                FilledTonalButton(onClick = {
                     openUrl("https://www.openstreetmap.org/${item.osm_class}/${item.osm_id}")
-                }) { Text("View on OpenStreetMap ↗") }
+                }) { Text(stringResource(R.string.osm_view_osm)) }
             }
 
             if (tags.isNotEmpty()) {
-                TextButton(onClick = { tagsExpanded = !tagsExpanded }) {
-                    Text(if (tagsExpanded) "Hide all OSM tags" else "Show all OSM tags")
+                FilledTonalButton(onClick = { tagsExpanded = !tagsExpanded }) {
+                    Text(stringResource(if (tagsExpanded) R.string.osm_hide_tags else R.string.osm_show_tags))
                 }
                 AnimatedVisibility(tagsExpanded) {
                     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {

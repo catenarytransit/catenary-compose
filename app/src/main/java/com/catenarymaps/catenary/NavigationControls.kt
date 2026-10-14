@@ -28,6 +28,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,40 +43,34 @@ fun NavigationControls(
                 Row {
                         IconButton(
                                 onClick = onBack,
-                                modifier = Modifier.size(32.dp) // shrink the button hitbox
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant, CircleShape
+                                )
                         ) {
                                 Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Go back",
-                                        modifier =
-                                                Modifier
-                                                        .background(
-                                                                color =
-                                                                        MaterialTheme.colorScheme
-                                                                                .surfaceVariant,
-                                                                shape = CircleShape
-                                                        )
-                                                        .padding(8.dp)
-                                                        .size(24.dp) // circle + icon size
+                                    contentDescription = stringResource(R.string.osm_back),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
                                 )
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        IconButton(onClick = onHome, modifier = Modifier.size(32.dp)) {
+                    IconButton(
+                        onClick = onHome, modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant, CircleShape
+                            )
+                    ) {
                                 Icon(
                                         Icons.Filled.Home,
-                                        contentDescription = "Home screen",
-                                        modifier =
-                                                Modifier
-                                                        .background(
-                                                                color =
-                                                                        MaterialTheme.colorScheme
-                                                                                .surfaceVariant,
-                                                                shape = CircleShape
-                                                        )
-                                                        .padding(8.dp)
-                                                        .size(24.dp)
+                                    contentDescription = stringResource(R.string.osm_home),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
                                 )
                         }
 
@@ -107,24 +102,19 @@ fun NavigationControls(
                                 IconButton(
                                         onClick = onPageInfo,
                                         modifier = Modifier
-                                                .size(32.dp)
-                                                .scale(scale)
+                                            .size(40.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.surfaceVariant,
+                                                CircleShape
+                                            )
+                                            .scale(scale)
                                 ) {
                                         Icon(
                                                 Icons.Filled
                                                         .MoreTime,
-                                                contentDescription = "Page Info",
-                                                modifier =
-                                                        Modifier
-                                                                .background(
-                                                                        color =
-                                                                                MaterialTheme
-                                                                                        .colorScheme
-                                                                                        .surfaceVariant,
-                                                                        shape = CircleShape
-                                                                )
-                                                                .padding(8.dp)
-                                                                .size(24.dp)
+                                            contentDescription = stringResource(R.string.osm_page_info),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(20.dp)
                                         )
                                 }
                         }

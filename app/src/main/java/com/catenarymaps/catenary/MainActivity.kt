@@ -2092,10 +2092,10 @@ class MainActivity : ComponentActivity() {
                                         MaplibreMap(
                                                 modifier =
                                                         Modifier
-                                                            .fillMaxSize()
-                                                            .onSizeChanged { newSize ->
-                                                                mapSize = newSize
-                                                            },
+                                                                .fillMaxSize()
+                                                                .onSizeChanged { newSize ->
+                                                                        mapSize = newSize
+                                                                },
                                                 baseStyle = BaseStyle.Uri(styleUri),
                                                 cameraState = camera,
                                                 onMapClick = { latlng, screenPos ->
@@ -3400,27 +3400,29 @@ class MainActivity : ComponentActivity() {
                                         // Main Draggable Bottom Sheet
                                         val sheetModifier =
                                                 Modifier
-                                                    .fillMaxWidth(contentWidthFraction)
-                                                    .align(Alignment.BottomStart)
+                                                        .fillMaxWidth(contentWidthFraction)
+                                                        .align(Alignment.BottomStart)
 
                                         Surface(
                                                 modifier =
                                                         sheetModifier
-                                                            .offset {
-                                                                IntOffset(
-                                                                    x = 0,
-                                                                    y =
-                                                                        draggableState
-                                                                            .requireOffset()
-                                                                            .roundToInt()
+                                                                .offset {
+                                                                        IntOffset(
+                                                                                x = 0,
+                                                                                y =
+                                                                                        draggableState
+                                                                                                .requireOffset()
+                                                                                                .roundToInt()
+                                                                        )
+                                                                }
+                                                                .nestedScroll(
+                                                                        sheetNestedScrollConnection
                                                                 )
-                                                            }
-                                                            .nestedScroll(sheetNestedScrollConnection)
-                                                            .anchoredDraggable(
-                                                                state = draggableState,
-                                                                orientation =
-                                                                    Orientation.Vertical
-                                                            ),
+                                                                .anchoredDraggable(
+                                                                        state = draggableState,
+                                                                        orientation =
+                                                                                Orientation.Vertical
+                                                                ),
                                                 shape =
                                                         RoundedCornerShape(
                                                                 topStart = 20.dp,
@@ -3431,59 +3433,59 @@ class MainActivity : ComponentActivity() {
                                                 Column(
                                                         modifier =
                                                                 Modifier
-                                                                    .fillMaxWidth()
-                                                                    .fillMaxHeight()
-                                                                    .padding( // This padding
-                                                                        // ensures content
-                                                                        // doesn't
-                                                                        // get clipped at
-                                                                        // the bottom
-                                                                        bottom =
-                                                                            with(
-                                                                                LocalDensity
-                                                                                    .current
-                                                                            ) {
-                                                                                ((draggableState
-                                                                                    .requireOffset()))
-                                                                                    .toDp()
-                                                                                    .coerceAtLeast(
-                                                                                        0.dp
-                                                                                    )
-                                                                                    .coerceAtMost(
+                                                                        .fillMaxWidth()
+                                                                        .fillMaxHeight()
+                                                                        .padding( // This padding
+                                                                                // ensures content
+                                                                                // doesn't
+                                                                                // get clipped at
+                                                                                // the bottom
+                                                                                bottom =
                                                                                         with(
-                                                                                            LocalDensity
-                                                                                                .current
+                                                                                                LocalDensity
+                                                                                                        .current
                                                                                         ) {
-                                                                                            maxHeight
-                                                                                                .times(
-                                                                                                    0.9f
-                                                                                                )
+                                                                                                ((draggableState
+                                                                                                        .requireOffset()))
+                                                                                                        .toDp()
+                                                                                                        .coerceAtLeast(
+                                                                                                                0.dp
+                                                                                                        )
+                                                                                                        .coerceAtMost(
+                                                                                                                with(
+                                                                                                                        LocalDensity
+                                                                                                                                .current
+                                                                                                                ) {
+                                                                                                                        maxHeight
+                                                                                                                                .times(
+                                                                                                                                        0.9f
+                                                                                                                                )
+                                                                                                                }
+                                                                                                        )
                                                                                         }
-                                                                                    )
-                                                                            }
-                                                                    ),
+                                                                        ),
                                                         horizontalAlignment =
                                                                 Alignment.CenterHorizontally
                                                 ) {
                                                         Box(
                                                                 modifier =
                                                                         Modifier
-                                                                            .padding(
-                                                                                vertical =
-                                                                                    10.dp
-                                                                            )
-                                                                            .width(40.dp)
-                                                                            .height(4.dp)
-                                                                            .clip(CircleShape)
-                                                                            .background(
-                                                                                MaterialTheme
-                                                                                    .colorScheme
-                                                                                    .onSurfaceVariant
-                                                                                    .copy(
-                                                                                        alpha =
-                                                                                            0.4f
-                                                                                    )
-                                                                            )
+                                                                                .padding(
+                                                                                        vertical =
+                                                                                                10.dp
+                                                                                )
+                                                                                .width(40.dp)
+                                                                                .height(4.dp)
+                                                                                .clip(CircleShape)
+                                                                                .background(
+                                                                                        MaterialTheme
+                                                                                                .colorScheme
+                                                                                                .onSurfaceVariant
+                                                                                                .copy(
+                                                                                                        alpha =
+                                                                                                                0.4f
+                                                                                                )
+                                                                                )
                                                         )
 
                                                         if (catenaryStack.isEmpty()) {
@@ -3615,7 +3617,41 @@ class MainActivity : ComponentActivity() {
                                                                                     item = currentScreen,
                                                                                     ktorClient = ktorHttpClient,
                                                                                     onBack = onBack,
-                                                                                    onHome = onHome
+                                                                                        onHome = onHome,
+                                                                                        onShowNearbyDepartures = { lat, lon ->
+                                                                                                // The existing home nearby-departures
+                                                                                                // screen uses this pin as its origin;
+                                                                                                // never substitute the user's GPS fix.
+                                                                                                pin =
+                                                                                                        PinState(
+                                                                                                                active = true,
+                                                                                                                position = Position(
+                                                                                                                        lon,
+                                                                                                                        lat
+                                                                                                                )
+                                                                                                        )
+                                                                                                catenaryStack =
+                                                                                                        ArrayDeque()
+                                                                                                scope.launch {
+                                                                                                        camera.animateTo(
+                                                                                                                camera.position.copy(
+                                                                                                                        target = Position(
+                                                                                                                                lon,
+                                                                                                                                lat
+                                                                                                                        ),
+                                                                                                                        zoom = maxOf(
+                                                                                                                                camera.position.zoom,
+                                                                                                                                15.0
+                                                                                                                        )
+                                                                                                                )
+                                                                                                        )
+                                                                                                        if (draggableState.currentValue == SheetSnapPoint.Collapsed) {
+                                                                                                                draggableState.animateTo(
+                                                                                                                        SheetSnapPoint.PartiallyExpanded
+                                                                                                                )
+                                                                                                        }
+                                                                                                }
+                                                                                        }
                                                                                 )
                                                                             }
                                                                                 is CatenaryStackEnum.SingleTrip -> {
