@@ -39,40 +39,46 @@ fun NavigationControls(
         onPageInfo: (() -> Unit)? = null,
         isPageInfoPulse: Boolean = false
 ) {
-        // Preserve the compact navigation controls on every screen; the background is
-        // part of the 32dp button rather than extra padding around its icon.
         CompositionLocalProvider(LocalMinimumInteractiveComponentEnforcement provides false) {
                 Row {
                         IconButton(
                                 onClick = onBack,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.surfaceVariant, CircleShape
-                                )
+                                modifier = Modifier.size(32.dp) // shrink the button hitbox
                         ) {
                                 Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.osm_back),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
+                                        contentDescription = stringResource(R.string.osm_back),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier =
+                                                Modifier
+                                                        .background(
+                                                                color =
+                                                                        MaterialTheme.colorScheme
+                                                                                .surfaceVariant,
+                                                                shape = CircleShape
+                                                        )
+                                                        .padding(6.dp)
+                                                        .size(20.dp) // 6dp inset and 20dp icon fit the 32dp circle
                                 )
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                    IconButton(
-                        onClick = onHome, modifier = Modifier
-                            .size(32.dp)
-                            .background(
-                                MaterialTheme.colorScheme.surfaceVariant, CircleShape
-                            )
-                    ) {
+                        IconButton(onClick = onHome, modifier = Modifier.size(32.dp)) {
                                 Icon(
                                         Icons.Filled.Home,
-                                    contentDescription = stringResource(R.string.osm_home),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
+                                        contentDescription = stringResource(R.string.osm_home),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier =
+                                                Modifier
+                                                        .background(
+                                                                color =
+                                                                        MaterialTheme.colorScheme
+                                                                                .surfaceVariant,
+                                                                shape = CircleShape
+                                                        )
+                                                        .padding(6.dp)
+                                                        .size(20.dp)
                                 )
                         }
 
@@ -104,19 +110,25 @@ fun NavigationControls(
                                 IconButton(
                                         onClick = onPageInfo,
                                         modifier = Modifier
-                                            .size(32.dp)
-                                            .background(
-                                                MaterialTheme.colorScheme.surfaceVariant,
-                                                CircleShape
-                                            )
-                                            .scale(scale)
+                                                .size(32.dp)
+                                                .scale(scale)
                                 ) {
                                         Icon(
                                                 Icons.Filled
                                                         .MoreTime,
-                                            contentDescription = stringResource(R.string.osm_page_info),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(20.dp)
+                                                contentDescription = stringResource(R.string.osm_page_info),
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier =
+                                                        Modifier
+                                                                .background(
+                                                                        color =
+                                                                                MaterialTheme
+                                                                                        .colorScheme
+                                                                                        .surfaceVariant,
+                                                                        shape = CircleShape
+                                                                )
+                                                                .padding(6.dp)
+                                                                .size(20.dp)
                                         )
                                 }
                         }
