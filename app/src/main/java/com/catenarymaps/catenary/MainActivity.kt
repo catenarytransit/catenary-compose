@@ -1315,6 +1315,10 @@ class MainActivity : ComponentActivity() {
                     // A StopStack without known coordinates will be completed by StopScreen.
                     LaunchedEffect(catenaryStack.lastOrNull()) {
                         val screen = catenaryStack.lastOrNull()
+                        // Save all opened OSM places, not just search-result clicks.
+                        if (screen is CatenaryStackEnum.OsmItemStack) {
+                            stationHistory.recordOsmItem(screen)
+                        }
                         val key = selectedStackPinKey(screen)
                         selectedLocationPin = when (screen) {
                             is CatenaryStackEnum.OsmItemStack -> {
@@ -4526,6 +4530,18 @@ class MainActivity : ComponentActivity() {
                                                                                         lat = recent.latitude,
                                                                                         lon = recent.longitude
                                                                                 )
+                                                                        RecentStationKind.OSM_ITEM -> recent.osmClass?.let { osmClass ->
+                                                                                CatenaryStackEnum.OsmItemStack(
+                                                                                        osm_id = recent.id,
+                                                                                        osm_class = osmClass,
+                                                                                        osm_type = recent.osmType,
+                                                                                        name = recent.name,
+                                                                                        address = recent.address,
+                                                                                        names = recent.names,
+                                                                                        lat = recent.latitude,
+                                                                                        lon = recent.longitude
+                                                                                )
+                                                                        }
                                                                 }
                                                                 if (item != null) {
                                                                     val selectedKey =

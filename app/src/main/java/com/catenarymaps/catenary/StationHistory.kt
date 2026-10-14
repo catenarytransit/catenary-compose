@@ -11,9 +11,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
-/** Local-only, bounded history of stops and OSM stations opened by the user. */
+/** Local-only, bounded history of GTFS stops, OSM stations, and OSM places. */
 @Serializable
-enum class RecentStationKind { GTFS_STOP, OSM_STATION }
+enum class RecentStationKind { GTFS_STOP, OSM_STATION, OSM_ITEM }
 
 @Serializable
 data class RecentStation(
@@ -24,12 +24,18 @@ data class RecentStation(
     val modeType: String? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,
+    // Required to reopen OSM places; station IDs alone are not sufficient.
+    val osmClass: String? = null,
+    val osmType: String? = null,
+    val address: String? = null,
+    val names: Map<String, String> = emptyMap(),
     val visits: Int = 1,
     val lastVisitMs: Long = 0L,
 ) {
     fun stableKey(): String = when (kind) {
         RecentStationKind.GTFS_STOP -> "stop:${chateauId}:${id}"
         RecentStationKind.OSM_STATION -> "osm:${id}"
+        RecentStationKind.OSM_ITEM -> "osm-item:${osmClass}:${id}"
     }
 }
 
@@ -84,6 +90,25 @@ class StationHistory(context: Context) {
         ))
     }
 
+    /** Record any successfully selected OSM object, independent of its entry point. */
+    fun recordOsmItem(item: CatenaryStackEnum.OsmItemStack) {
+        if (item.osm_class !in OSM_CLASSES || !OSM_ID_PATTERN.matches(item.osm_id)) return
+        val name = item.name?.trim()?.takeIf { it.isNotEmpty() }
+            ?: item.names["default"]?.trim()?.takeIf { it.isNotEmpty() }
+            ?: "${item.osm_class.replaceFirstChar { it.titlecase() }} ${item.osm_id}"
+        record(RecentStation(
+            kind = RecentStationKind.OSM_ITEM,
+            id = item.osm_id,
+            name = name,
+            osmClass = item.osm_class,
+            osmType = item.osm_type,
+            address = item.address,
+            names = item.names,
+            latitude = item.lat,
+            longitude = item.lon,
+        ))
+    }
+
     private fun record(item: RecentStation) {
         val now = System.currentTimeMillis()
         val existing = entries.firstOrNull { it.stableKey() == item.stableKey() }
@@ -98,6 +123,9 @@ class StationHistory(context: Context) {
             latitude = item.latitude ?: existing?.latitude,
             longitude = item.longitude ?: existing?.longitude,
             modeType = item.modeType ?: existing?.modeType,
+            osmType = item.osmType ?: existing?.osmType,
+            address = item.address?.takeIf { it.isNotBlank() } ?: existing?.address,
+            names = item.names.ifEmpty { existing?.names.orEmpty() },
         )
         val newEntries = (listOf(updated) + entries.filterNot {
             it.stableKey() == updated.stableKey()
@@ -115,8 +143,14 @@ class StationHistory(context: Context) {
     private fun readSaved(): List<RecentStation> = try {
         val raw = prefs.getString(KEY, "[]") ?: "[]"
         json.decodeFromString(serializer, raw)
-            .filter { it.id.isNotBlank() && it.name.isNotBlank() &&
-                (it.kind != RecentStationKind.GTFS_STOP || !it.chateauId.isNullOrBlank()) }
+            .filter { item ->
+                item.id.isNotBlank() && item.name.isNotBlank() && when (item.kind) {
+                    RecentStationKind.GTFS_STOP -> !item.chateauId.isNullOrBlank()
+                    RecentStationKind.OSM_STATION -> true
+                    RecentStationKind.OSM_ITEM ->
+                        item.osmClass in OSM_CLASSES && OSM_ID_PATTERN.matches(item.id)
+                }
+            }
             .distinctBy { it.stableKey() }
             .take(MAX_ENTRIES)
     } catch (_: Exception) {
@@ -125,6 +159,8 @@ class StationHistory(context: Context) {
     }
 
     private companion object {
+        private val OSM_CLASSES = setOf("node", "way", "relation")
+        private val OSM_ID_PATTERN = Regex("[1-9][0-9]*")
         const val KEY = "history_v1"
         const val MAX_ENTRIES = 100
         const val VISIT_DEBOUNCE_MS = 30_000L

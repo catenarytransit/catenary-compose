@@ -168,7 +168,16 @@ fun RecentStationResultItem(recent: RecentStation, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            text = if (recent.kind == RecentStationKind.OSM_STATION) "Station" else "Stop",
+            text = when (recent.kind) {
+                RecentStationKind.GTFS_STOP -> "Stop"
+                RecentStationKind.OSM_STATION -> "Station"
+                RecentStationKind.OSM_ITEM -> listOfNotNull(
+                    recent.osmType?.replace('_', ' ')
+                        ?.replaceFirstChar { it.titlecase() }
+                        ?.takeIf { it.isNotBlank() } ?: "OSM place",
+                    recent.address?.takeIf { it.isNotBlank() }
+                ).joinToString(" - ")
+            },
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1
