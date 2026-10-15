@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    //alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 
@@ -25,8 +25,8 @@ android {
         applicationId = "com.catenarymaps.catenary"
         minSdk = 27
         targetSdk = 36
-        versionCode = 331
-        versionName = "2.0.229"
+        versionCode = 332
+        versionName = "2.0.230"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
