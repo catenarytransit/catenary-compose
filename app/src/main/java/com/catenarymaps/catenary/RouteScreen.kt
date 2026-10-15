@@ -813,6 +813,16 @@ fun RouteScreen(
                                 possibleTripUpdates = possibleUpdates,
                         ) // This composable also contains text, but let's shrink the top level
                         // first.
+                        // Mirror the web route screen's per-vehicle trip delay.
+                        // Keep it independent of stop-time updates so a known delay is
+                        // visible even when the next stop cannot be resolved.
+                        vehicle.trip?.delay?.let { delaySeconds ->
+                            DelayDiff(
+                                diff = delaySeconds.toLong(),
+                                use_symbol_sign = true,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
                         OccupancyStatusText(
                                 occupancyStatus = vehicle.occupancy_status,
                                 style = MaterialTheme.typography.labelSmall
