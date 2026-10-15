@@ -103,7 +103,6 @@ dependencies {
     // implementation(libs.dd.sdk.android.rum)
     // implementation(libs.dd.sdk.android.compose)
     implementation(libs.android.maps.utils)
-    implementation(libs.maps.utils.ktx)
     implementation(libs.play.services.maps)
     implementation(libs.app.update)
 // For Kotlin users also add the Kotlin extensions library for Play In-App Update:
