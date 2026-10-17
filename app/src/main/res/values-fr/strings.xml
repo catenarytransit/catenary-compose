@@ -138,6 +138,7 @@
     <string name="label_interpolated_trajectories">Étiqueter les trajectoires interpolées</string>
     <string name="vehicle_labels">Étiquettes des véhicules</string>
     <string name="service_alerts_header">Alertes de service</string>
+    <string name="stop_only_to_exit">Arrêt uniquement pour la descente</string>
     <string name="stop_cancelled">Arrêt annulé</string>
     <string name="last_stop">Terminus</string>
     <string name="settings_show_countdowns_under_1h">Afficher les comptes à rebours des trains</string>

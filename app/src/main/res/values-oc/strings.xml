@@ -138,6 +138,7 @@
     <string name="label_interpolated_trajectories">Etiquetar las trajectòrias interpoladas</string>
     <string name="vehicle_labels">Etiquetas dels veïculs</string>
     <string name="service_alerts_header">Alertas de servici</string>
+    <string name="stop_only_to_exit">Arrèst sonque per davalar</string>
     <string name="stop_cancelled">Arrèst anullat</string>
     <string name="last_stop">Terminus</string>
     <string name="settings_show_countdowns_under_1h">Afichar los comptes a rebors dels trens</string>
