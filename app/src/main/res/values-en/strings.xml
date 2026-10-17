@@ -133,6 +133,7 @@
     <string name="service_alerts_header">Service Alerts</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Stop only to exit</string>
     <string name="stop_cancelled">Stop Cancelled</string>
     <string name="last_stop">Last Stop</string>
     <string name="settings_preferences">Preferences</string>
