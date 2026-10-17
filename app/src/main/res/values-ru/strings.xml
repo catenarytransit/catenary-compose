@@ -143,6 +143,7 @@
     <string name="service_alerts_header">Оповещения службы</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Остановка только для высадки</string>
     <string name="stop_cancelled">Остановка отменена</string>
     <string name="last_stop">Конечная остановка</string>
     <string name="settings_show_countdowns_under_1h">Показывать отсчет времени для поездов</string>
