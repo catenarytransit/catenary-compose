@@ -142,6 +142,7 @@
     <string name="service_alerts_header">Alerte de serviciu</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Stație doar pentru coborâre</string>
     <string name="stop_cancelled">Stație anulată</string>
     <string name="last_stop">Capăt de linie</string>
     <string name="settings_show_countdowns_under_1h">Afișează numărătoarea inversă pentru trenuri</string>

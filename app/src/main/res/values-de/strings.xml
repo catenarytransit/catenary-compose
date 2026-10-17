@@ -138,6 +138,7 @@
     <string name="service_alerts_header">Betriebsmeldungen</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Halt nur zum Aussteigen</string>
     <string name="stop_cancelled">Haltestelle entfällt</string>
     <string name="last_stop">Letzte Haltestelle</string>
     <string name="settings_show_countdowns_under_1h">Zug-Countdowns anzeigen</string>

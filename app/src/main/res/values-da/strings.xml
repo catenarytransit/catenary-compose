@@ -141,6 +141,7 @@
     <string name="service_alerts_header">Driftsmeddelelser</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Kun afstigning</string>
     <string name="stop_cancelled">Stoppested aflyst</string>
     <string name="last_stop">Sidste stop</string>
     <string name="settings_show_countdowns_under_1h">Vis tog-nedtællinger</string>

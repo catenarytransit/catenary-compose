@@ -141,6 +141,7 @@
     <string name="service_alerts_header">Dienstmededelingen</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Halte alleen om uit te stappen</string>
     <string name="stop_cancelled">Halte vervallen</string>
     <string name="last_stop">Eindhalte</string>
     <string name="settings_show_countdowns_under_1h">Aftellende treinen weergeven</string>

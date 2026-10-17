@@ -141,6 +141,7 @@
     <string name="service_alerts_header">Alertas de servicio</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Parada solo para bajar</string>
     <string name="stop_cancelled">Parada cancelada</string>
     <string name="last_stop">Última parada</string>
     <string name="settings_show_countdowns_under_1h">Ver cuentas atrás de trenes</string>

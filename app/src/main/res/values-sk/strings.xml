@@ -143,6 +143,7 @@
     <string name="service_alerts_header">Dopravné obmedzenia</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Zastávka len na vystupovanie</string>
     <string name="stop_cancelled">Zastávka zrušená</string>
     <string name="last_stop">Konečná zastávka</string>
     <string name="settings_show_countdowns_under_1h">Zobraziť odpočty vlakov</string>

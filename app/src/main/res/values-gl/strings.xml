@@ -93,6 +93,7 @@
     <string name="heading_more">Máis</string>
     <string name="update_downloaded">Acaba de descargarse unha actualización.</string>
     <string name="restart">Reiniciar</string>
+    <string name="stop_only_to_exit">Parada só para baixar</string>
     <string name="stop_cancelled">Parada cancelada</string>
     <string name="last_stop">Última parada</string>
 

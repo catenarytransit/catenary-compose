@@ -141,6 +141,7 @@
     <string name="service_alerts_header">Предупреждения за услуги</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Спирка само за слизане</string>
     <string name="stop_cancelled">Спирката е отменена</string>
     <string name="last_stop">Последна спирка</string>
     <string name="settings_show_countdowns_under_1h">Показване на обратно броене за влакове</string>

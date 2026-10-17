@@ -142,6 +142,7 @@
     <string name="service_alerts_header">服务警报</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">仅供下车</string>
     <string name="stop_cancelled">停靠已取消</string>
     <string name="last_stop">终点站</string>
     <string name="settings_show_countdowns_under_1h">显示列车倒计时</string>

@@ -141,6 +141,7 @@
     <string name="service_alerts_header">Trafikmeddelanden</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Hållplats endast för avstigning</string>
     <string name="stop_cancelled">Hållplats inställd</string>
     <string name="last_stop">Ändstation</string>
     <string name="settings_show_countdowns_under_1h">Visa nedräkning för tåg</string>
