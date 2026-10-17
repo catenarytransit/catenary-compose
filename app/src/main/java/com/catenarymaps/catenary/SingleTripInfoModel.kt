@@ -226,7 +226,13 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     private fun mergeRtStopTime(existing: StopTimeCleaned, rt: StopTimeRefresh): StopTimeCleaned {
         val updated =
-                existing.copy(raw = existing.raw.copy(rt_platform_string = rt.rt_platform_string))
+                existing.copy(
+                        raw = existing.raw.copy(
+                                rt_platform_string = rt.rt_platform_string,
+                                schedule_relationship = rt.schedule_relationship
+                                        ?: existing.raw.schedule_relationship
+                        )
+                )
 
         if (rt.rt_arrival?.time != null) {
             updated.rtArrivalTime = rt.rt_arrival.time

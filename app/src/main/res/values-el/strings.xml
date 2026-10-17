@@ -141,6 +141,7 @@
     <string name="service_alerts_header">Ειδοποιήσεις λειτουργίας</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Στάση μόνο για αποβίβαση</string>
     <string name="stop_cancelled">Η στάση ακυρώθηκε</string>
     <string name="last_stop">Τελευταία στάση</string>
     <string name="settings_show_countdowns_under_1h">Εμφάνιση αντίστροφης μέτρησης τρένων</string>

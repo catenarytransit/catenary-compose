@@ -56,6 +56,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -1495,6 +1497,14 @@ fun SingleTripInfoScreen(
                                         }
                                 }
 
+                                val cancellationTimeline =
+                                        remember(stopTimes, data.is_cancelled) {
+                                                classifyTripCancellation(
+                                                        stopTimes.map { it.raw.schedule_relationship == 1 },
+                                                        data.is_cancelled
+                                                )
+                                        }
+
                                 LazyColumn(
                                         modifier =
                                                 Modifier
@@ -1534,6 +1544,10 @@ fun SingleTripInfoScreen(
                                                         isLast = i == stopTimes.lastIndex,
                                                         isInactive = isInactive,
                                                         isBottomSegmentPast = isBottomSegmentPast,
+                                                        isCancelledStop = cancellationTimeline.cancelledStops[i],
+                                                        isTopDashed = i > 0 && cancellationTimeline.dashedSegments[i - 1],
+                                                        isBottomDashed = cancellationTimeline.dashedSegments.getOrElse(i) { false },
+                                                        isExitOnlyStop = cancellationTimeline.exitOnlyStopIndex == i,
                                                         connections = connections,
                                                         isAtStop = (i == currentAtStopIdx),
                                                         movingDotProgress =
@@ -1865,6 +1879,10 @@ fun StopListItem(
         isLast: Boolean,
         isInactive: Boolean,
         isBottomSegmentPast: Boolean,
+        isCancelledStop: Boolean,
+        isTopDashed: Boolean,
+        isBottomDashed: Boolean,
+        isExitOnlyStop: Boolean,
         onStopClick: () -> Unit,
         showSeconds: Boolean,
         showOriginalTimetable: Boolean,
@@ -1882,6 +1900,7 @@ fun StopListItem(
 ) {
         val isDark = isSystemInDarkTheme()
         val neutralColor = if (isDark) Color(0xFFDDDDDD) else Color(0xFF333333)
+        val cancellationColor = if (isDark) Color(0xFFEF4444) else Color(0xFFDC2626)
         val tripColor =
                 try {
                         Color(android.graphics.Color.parseColor(tripColorStr))
@@ -2359,6 +2378,8 @@ fun StopListItem(
                                                 TimelineLine(
                                                         color = neutralColor,
                                                         isPast = isInactive,
+                                                        isDashed = isTopDashed,
+                                                        cancellationColor = cancellationColor,
                                                         modifier = Modifier.fillMaxSize()
                                                 )
                                         }
@@ -2406,6 +2427,10 @@ fun StopListItem(
                                         isLast = isLast,
                                         isTopPast = isInactive,
                                         isBottomPast = isBottomSegmentPast,
+                                        isTopDashed = isTopDashed,
+                                        isBottomDashed = isBottomDashed,
+                                        isCancelledStop = isCancelledStop,
+                                        cancellationColor = cancellationColor,
                                         modifier = Modifier.fillMaxSize(),
                                         // Center dot in the headerHeight
                                         dotOffset = (headerHeight / 2) + mainRowTopPadding,
@@ -2527,6 +2552,23 @@ fun StopListItem(
                                         }
                                 }
 
+                                // Station names keep their original theme/inactive colors.
+                                if (isCancelledStop) {
+                                        Text(
+                                                text = stringResource(R.string.cancelled),
+                                                color = cancellationColor,
+                                                style = MaterialTheme.typography.labelMedium
+                                        )
+                                }
+                                if (isExitOnlyStop) {
+                                        Text(
+                                                text = stringResource(R.string.stop_only_to_exit),
+                                                color = cancellationColor,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.SemiBold
+                                        )
+                                }
+
                                 if (!connections.isNullOrEmpty() && showConnections) {
                                         Spacer(modifier = Modifier.height(4.dp))
                                         SelectionRouteBadges(
@@ -2572,6 +2614,8 @@ fun StopListItem(
                                         TimelineLine(
                                                 color = neutralColor,
                                                 isPast = isBottomSegmentPast,
+                                                isDashed = isBottomDashed,
+                                                cancellationColor = cancellationColor,
                                                 modifier = Modifier.fillMaxSize()
                                         )
                                 }
@@ -2582,17 +2626,42 @@ fun StopListItem(
         }
 }
 
-@Composable
-fun TimelineLine(color: Color, isPast: Boolean, modifier: Modifier = Modifier) {
-        Canvas(modifier = modifier) {
-                val wCenter = size.width / 2
-                val lineWidth = if (isPast) 1.dp.toPx() else 2.dp.toPx()
-                val useColor = if (isPast) color.copy(alpha = 0.5f) else color
+// Each segment uses the exact pearl x-axis and its actual y-offset.
+private fun DrawScope.drawPearlSegment(
+        lineColor: Color,
+        startY: Float,
+        endY: Float,
+        width: Float,
+        dashed: Boolean
+) {
+        if (endY <= startY) return
+        drawLine(
+                color = lineColor,
+                start = Offset(size.width / 2f, startY),
+                end = Offset(size.width / 2f, endY),
+                strokeWidth = width,
+                pathEffect = if (dashed)
+                        PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))
+                else null
+        )
+}
 
-                drawRect(
-                        color = useColor,
-                        topLeft = Offset(wCenter - lineWidth / 2, 0f),
-                        size = androidx.compose.ui.geometry.Size(lineWidth, size.height)
+@Composable
+fun TimelineLine(
+        color: Color,
+        isPast: Boolean,
+        modifier: Modifier = Modifier,
+        isDashed: Boolean = false,
+        cancellationColor: Color = Color.Red
+) {
+        Canvas(modifier = modifier) {
+                drawPearlSegment(
+                        lineColor = (if (isDashed) cancellationColor else color)
+                                .copy(alpha = if (isPast) 0.5f else 1f),
+                        startY = 0f,
+                        endY = size.height,
+                        width = (if (isDashed || !isPast) 2.dp else 1.dp).toPx(),
+                        dashed = isDashed
                 )
         }
 }
@@ -2605,6 +2674,10 @@ fun TripProgressIndicator(
         isLast: Boolean,
         isTopPast: Boolean,
         isBottomPast: Boolean,
+        isTopDashed: Boolean = false,
+        isBottomDashed: Boolean = false,
+        isCancelledStop: Boolean = false,
+        cancellationColor: Color = Color.Red,
         modifier: Modifier = Modifier,
         dotOffset: androidx.compose.ui.unit.Dp? = null,
         isAtStop: Boolean = false,
@@ -2622,33 +2695,24 @@ fun TripProgressIndicator(
                 val activeLineWidth = 2.dp.toPx()
                 val pastLineWidth = 1.dp.toPx()
 
-                // Top line
                 if (!isFirst) {
-                        val topColor =
-                                if (isTopPast) neutralColor.copy(alpha = 0.5f) else neutralColor
-                        val lineWidth = if (isTopPast) pastLineWidth else activeLineWidth
-
-                        drawRect(
-                                color = topColor,
-                                topLeft = Offset(wCenter - lineWidth / 2, 0f),
-                                size = androidx.compose.ui.geometry.Size(lineWidth, hCenter)
+                        drawPearlSegment(
+                                lineColor = (if (isTopDashed) cancellationColor else neutralColor)
+                                        .copy(alpha = if (isTopPast) 0.5f else 1f),
+                                startY = 0f,
+                                endY = hCenter,
+                                width = (if (isTopDashed || !isTopPast) 2.dp else 1.dp).toPx(),
+                                dashed = isTopDashed
                         )
                 }
-
-                // Bottom line
                 if (!isLast) {
-                        val bottomColor =
-                                if (isBottomPast) neutralColor.copy(alpha = 0.5f) else neutralColor
-                        val lineWidth = if (isBottomPast) pastLineWidth else activeLineWidth
-
-                        drawRect(
-                                color = bottomColor,
-                                topLeft = Offset(wCenter - lineWidth / 2, hCenter),
-                                size =
-                                        androidx.compose.ui.geometry.Size(
-                                                lineWidth,
-                                                canvasHeight - hCenter
-                                        )
+                        drawPearlSegment(
+                                lineColor = (if (isBottomDashed) cancellationColor else neutralColor)
+                                        .copy(alpha = if (isBottomPast) 0.5f else 1f),
+                                startY = hCenter,
+                                endY = canvasHeight,
+                                width = (if (isBottomDashed || !isBottomPast) 2.dp else 1.dp).toPx(),
+                                dashed = isBottomDashed
                         )
                 }
 
@@ -2656,7 +2720,8 @@ fun TripProgressIndicator(
                 val dotRadius = 4.dp.toPx()
                 val center = Offset(wCenter, hCenter)
                 val dotNeutralColor =
-                        if (isTopPast) neutralColor.copy(alpha = 0.5f) else neutralColor
+                        if (isCancelledStop) cancellationColor
+                        else if (isTopPast) neutralColor.copy(alpha = 0.5f) else neutralColor
 
                 // Always Neutral Circle
                 if (isDark) {
@@ -2707,6 +2772,8 @@ fun TripProgressIndicator(
                         drawCircle(color = color, radius = dotRadius * 0.8f, center = center)
                 }
 
+                // Keep the route-color center; the moving dot follows the segment color.
+                val movingMarkerColor = if (isBottomDashed) cancellationColor else color
                 // Moving Dot Interpolation
                 if (movingDotProgress != null) {
                         // progress is 0.0 to 1.0 representing travel from THIS stop to NEXT stop.
@@ -2829,7 +2896,7 @@ fun TripProgressIndicator(
 
                         val targetY = hCenter + movingDotProgress * size.height
                         drawCircle(
-                                color = color,
+                                color = movingMarkerColor,
                                 radius =
                                         dotRadius * 1.0f, // Make "moving" dot slightly distinctive?
                                 // Svelte uses
@@ -2838,7 +2905,7 @@ fun TripProgressIndicator(
                         )
                         // Pulse ring
                         drawCircle(
-                                color = color,
+                                color = movingMarkerColor,
                                 radius = dotRadius,
                                 center = Offset(wCenter, targetY),
                                 style =

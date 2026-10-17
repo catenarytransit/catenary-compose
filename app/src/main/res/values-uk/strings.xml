@@ -143,6 +143,7 @@
     <string name="service_alerts_header">Сповіщення служби</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Зупинка лише для висадки</string>
     <string name="stop_cancelled">Скасовано зупинку</string>
     <string name="last_stop">Кінцева зупинка</string>
     <string name="settings_show_countdowns_under_1h">Показувати відлік часу для поїздів</string>

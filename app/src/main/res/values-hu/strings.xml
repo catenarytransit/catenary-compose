@@ -141,6 +141,7 @@
     <string name="service_alerts_header">Forgalmi információk</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Megálló csak leszállásra</string>
     <string name="stop_cancelled">Megállóhely kihagyva</string>
     <string name="last_stop">Végállomás</string>
     <string name="settings_show_countdowns_under_1h">Vonat visszaszámlálás mutatása</string>

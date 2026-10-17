@@ -91,6 +91,7 @@
     <string name="heading_more">Gehiago</string>
     <string name="update_downloaded">Eguneratze bat deskargatu berri da.</string>
     <string name="restart">Berrabiarazi</string>
+    <string name="stop_only_to_exit">Geralekua jaisteko soilik</string>
     <string name="stop_cancelled">Geralekua bertan behera utzita</string>
     <string name="last_stop">Azken geralekua</string>
 

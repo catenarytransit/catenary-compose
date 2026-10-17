@@ -141,6 +141,7 @@
     <string name="service_alerts_header">Driftsmeldinger</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Stopp kun for avstigning</string>
     <string name="stop_cancelled">Stoppested innstilt</string>
     <string name="last_stop">Endestasjon</string>
     <string name="settings_show_countdowns_under_1h">Vis tog-nedtellinger</string>

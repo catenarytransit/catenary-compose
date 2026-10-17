@@ -143,6 +143,7 @@
     <string name="service_alerts_header">Mimořádnosti v provozu</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">Transilien</string>
+    <string name="stop_only_to_exit">Zastávka pouze pro výstup</string>
     <string name="stop_cancelled">Zastávka zrušena</string>
     <string name="last_stop">Konečná zastávka</string>
     <string name="settings_show_countdowns_under_1h">Zobrazit odpočty vlaků</string>

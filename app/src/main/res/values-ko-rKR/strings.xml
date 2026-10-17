@@ -142,6 +142,7 @@
     <string name="service_alerts_header">서비스 알림</string>
     <string name="heading_rer">RER</string>
     <string name="heading_transilien">트랑시리앵</string>
+    <string name="stop_only_to_exit">하차 전용 정류장</string>
     <string name="stop_cancelled">정류장 취소됨</string>
     <string name="last_stop">종점</string>
     <string name="settings_show_countdowns_under_1h">열차 남은 시간 표시</string>
