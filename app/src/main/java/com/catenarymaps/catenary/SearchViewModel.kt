@@ -139,12 +139,12 @@ class SearchViewModel : ViewModel() {
                             launch {
                                 val response =
                                     try {
-                                        var catenaryUrl =
-                                            "https://birch.catenarymaps.org/text_search_v1?text=$query&map_lat=${mapCenter.latitude}&map_lon=${mapCenter.longitude}&map_z=10"
-                                        if (userLocation != null) {
-                                            catenaryUrl +=
-                                                "&user_lat=${userLocation.first}&user_lon=${userLocation.second}"
-                                        }
+                                        val catenaryUrl = buildCatenarySearchUrl(
+                                            query = query,
+                                            mapLatitude = mapCenter.latitude,
+                                            mapLongitude = mapCenter.longitude,
+                                            userLocation = userLocation,
+                                        )
 
                                         client.get(catenaryUrl).body<CatenarySearchResponse>()
                                     } catch (e: Exception) {
@@ -160,17 +160,11 @@ class SearchViewModel : ViewModel() {
                             launch {
                                 val features =
                                     try {
-                                        val baseUrl = "https://cypress.catenarymaps.org/v2/search"
-                                        val params = mutableListOf(
-                                            "text=${query}"
+                                        val cypressUrl = buildCypressSearchUrl(
+                                            query = query,
+                                            focusLatitude = mapCenter.latitude,
+                                            focusLongitude = mapCenter.longitude,
                                         )
-                                        // Add focus point if available
-                                        if (mapCenter != null) {
-                                            params += "focus.point.lat=${mapCenter.latitude}"
-                                            params += "focus.point.lon=${mapCenter.longitude}"
-                                            params += "focus.point.weight=4"
-                                        }
-                                        val cypressUrl = baseUrl + "?" + params.joinToString("&")
 
                                         val response = client.get(cypressUrl).body<CypressResponse>()
                                         response.features
