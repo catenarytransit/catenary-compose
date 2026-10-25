@@ -127,10 +127,11 @@ fun getLiveDotStyle(
                     interpolate(
                             type = linear(),
                             input = zoom(),
-                            7.0 to const(1.2.dp),
-                            8.0 to const(1.6.dp),
-                            9.0 to const(1.7.dp),
-                            10.0 to const(2.0.dp),
+                            7.0 to const(1.dp),
+                            8.0 to const(1.5.dp),
+                            9.0 to const(1.6.dp),
+                            10.0 to const(1.5.dp),
+                            12.0 to const(2.0.dp),
                             16.0 to const(6.0.dp)
                     )
             dotStrokeWidth =
@@ -246,9 +247,9 @@ fun getLiveDotStyle(
                                     13.0 to if (railInFrame) const(0.9f) else const(0.95f),
                             )
             labelHaloWidth = if (isDark) const(2.0.dp) else const(1.0.dp)
-            minLayerDotsZoom = 9F
+            minLayerDotsZoom = 11F
             minLabelDotsZoom = 13F
-            minBearingZoom = 11.5F
+            minBearingZoom = 12F
         }
         "metro" -> {
             dotRadius =
@@ -433,7 +434,7 @@ fun getLiveDotStyle(
                             3.0 to const(2.0.dp),
                             6.0 to const(2.3.dp),
                             8.0 to const(3.5.dp),
-                            11.0 to const(5.5.dp),
+                            11.0 to const(5.0.dp),
                             16.0 to const(9.5.dp)
                     )
             dotStrokeWidth =
