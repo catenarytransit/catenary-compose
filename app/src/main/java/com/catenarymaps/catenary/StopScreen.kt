@@ -233,6 +233,7 @@ fun StopScreen(
         showCountdownsUnder1h: Boolean,
         showLocalTransitCountdowns: Boolean,
         onSelectedLocation: (String, Double, Double) -> Unit,
+        onDirections: (Boolean, DirectionsLocation) -> Unit,
         onBack: () -> Unit,
         onHome: () -> Unit
 ) {
@@ -1256,6 +1257,14 @@ fun StopScreen(
                     )
                     NavigationControls(onBack = onBack, onHome = onHome)
                 }
+                val directionsLat = lat
+                val directionsLon = lon
+                DirectionsActions(
+                    if (directionsLat != null && directionsLon != null) DirectionsLocation(
+                        meta?.primary?.stop_name ?: osmStackData?.station_name ?: "Station", directionsLat, directionsLon
+                    ) else null,
+                    onDirections
+                )
                 if (timezone != null) {
                     FormattedTimeText(
                             timezone = zoneId.id,

@@ -46,6 +46,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AltRoute
+import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Layers
@@ -1230,6 +1231,8 @@ class MainActivity : ComponentActivity() {
 
                         val scope = rememberCoroutineScope()
                         val snackbars = remember { SnackbarHostState() }
+                        val tripPlanner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                        val directionsSearch: SearchViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "directions-search")
 
                         val appUpdateManager = remember {
                                 AppUpdateManagerFactory.create(this.applicationContext)
@@ -1310,6 +1313,21 @@ class MainActivity : ComponentActivity() {
                         var catenaryStack by rememberSaveable(saver = mutableStackSaver) {
                                 mutableStateOf(ArrayDeque<CatenaryStackEnum>())
                         }
+
+                    val directionsVisible = catenaryStack.lastOrNull() is CatenaryStackEnum.DirectionsStack
+                    val openDirections: (Boolean, DirectionsLocation) -> Unit = { origin, location ->
+                        tripPlanner.choose(origin, location)
+                        catenaryStack = ArrayDeque(catenaryStack.filterNot { it is CatenaryStackEnum.DirectionsStack }).apply {
+                            addLast(CatenaryStackEnum.DirectionsStack)
+                        }
+                    }
+                    LaunchedEffect(directionsVisible) {
+                        if (!directionsVisible) tripPlanner.leave()
+                        else {
+                            selectedLocationPin = null
+                            stopsToHide = emptySet()
+                        }
+                    }
 
                     // Follow navigation, including stop->OSM-station redirects and back/home.
                     // A StopStack without known coordinates will be completed by StopScreen.
@@ -2153,6 +2171,18 @@ class MainActivity : ComponentActivity() {
                                                                         stopLayerIds
                                                                 )
 
+                                                        if (directionsVisible && tripPlanner.editing != null) {
+                                                            val candidates = osmStationFeatures + stopFeatures +
+                                                                projection.queryRenderedFeatures(clickRect, poiLayerIds)
+                                                            val feature = candidates.firstOrNull { it.geometry is Point }
+                                                            val point = (feature?.geometry as? Point)?.coordinates ?: latlng
+                                                            val name = feature?.getString("name") ?: feature?.getString("stop_name")
+                                                                ?: feature?.getString("name_en") ?: feature?.getString("displayname") ?: feature?.getString("label")
+                                                                ?: "%.6f, %.6f".format(java.util.Locale.ROOT, point.latitude, point.longitude)
+                                                            tripPlanner.choose(tripPlanner.editing!!, DirectionsLocation(name, point.latitude, point.longitude))
+                                                            return@MaplibreMap ClickResult.Consume
+                                                        }
+
                                                         // A clicked POI icon or label takes precedence over
                                                         // route lines underneath, but not transit features.
                                                         if (vehicleFeatures.isEmpty() &&
@@ -2911,6 +2941,16 @@ class MainActivity : ComponentActivity() {
                                                 }
 
 
+                                                LaunchedEffect(directionsVisible) {
+                                                    if (directionsVisible) {
+                                                        val empty = GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>()))
+                                                        listOf(transitShapeSource.value, transitShapeDetourSource.value,
+                                                            transitShapeForStopSource.value, stopsContextSource.value, majorDotsSource.value)
+                                                            .forEach { it.setData(empty) }
+                                                        applyFilterToLiveDots.value = const(true)
+                                                    }
+                                                }
+
                                                 AddShapes(
                                                         layerSettings = layerSettings.value,
                                                         railInFrame = railinframe
@@ -2924,6 +2964,7 @@ class MainActivity : ComponentActivity() {
                                                 // --- Detour Line ---
                                                 LineLayer(
                                                         id = "contextlinebackingdetour",
+                                                        visible = !directionsVisible,
                                                         source = transitShapeDetourSource.value,
                                                         color = const(Color(0xFFFB9CAC)),
                                                         width =
@@ -2938,6 +2979,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 LineLayer(
                                                         id = "contextlinedetour",
+                                                        visible = !directionsVisible,
                                                         source = transitShapeDetourSource.value,
                                                         color = get("color").cast(),
                                                         width =
@@ -2955,6 +2997,7 @@ class MainActivity : ComponentActivity() {
                                                 // --- Main Trip Shape Line ---
                                                 LineLayer(
                                                         id = "contextlinebacking",
+                                                        visible = !directionsVisible,
                                                         source = transitShapeSource.value,
                                                         color =
                                                                 if (isDark) const(Color(0xFF111133))
@@ -2971,6 +3014,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 LineLayer(
                                                         id = "contextline",
+                                                        visible = !directionsVisible,
                                                         source = transitShapeSource.value,
                                                         color = get("color").cast(),
                                                         width =
@@ -2986,6 +3030,7 @@ class MainActivity : ComponentActivity() {
                                                 // --- Shape for Stop (if needed) ---
                                                 LineLayer(
                                                         id = "contextlinebackingforstop",
+                                                        visible = !directionsVisible,
                                                         source = transitShapeForStopSource.value,
                                                         color =
                                                                 if (isDark) const(Color(0xFF111133))
@@ -3003,6 +3048,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 LineLayer(
                                                         id = "contextlineforstop",
+                                                        visible = !directionsVisible,
                                                         source = transitShapeForStopSource.value,
                                                         color = get("color").cast(),
                                                         width =
@@ -3023,6 +3069,7 @@ class MainActivity : ComponentActivity() {
                                                 // Bus Stops
                                                 CircleLayer(
                                                         id = "contextbusstops",
+                                                        visible = !directionsVisible,
                                                         source = stopsContextSource.value,
                                                         color = const(Color.White),
                                                         radius =
@@ -3064,6 +3111,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 SymbolLayer(
                                                         id = "contextbusstops_label",
+                                                        visible = !directionsVisible,
                                                         source = stopsContextSource.value,
                                                         textField = get("map_label").cast(),
                                                         textSize =
@@ -3109,6 +3157,7 @@ class MainActivity : ComponentActivity() {
                                                 // Metro Stops
                                                 CircleLayer(
                                                         id = "contextmetrostops",
+                                                        visible = !directionsVisible,
                                                         source = stopsContextSource.value,
                                                         color = const(Color.White),
                                                         radius =
@@ -3143,6 +3192,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 SymbolLayer(
                                                         id = "contextmetrostops_label",
+                                                        visible = !directionsVisible,
                                                         source = stopsContextSource.value,
                                                         textField = get("map_label").cast(),
                                                         textSize =
@@ -3182,6 +3232,7 @@ class MainActivity : ComponentActivity() {
                                                 // Rail Stops
                                                 CircleLayer(
                                                         id = "contextrailstops",
+                                                        visible = !directionsVisible,
                                                         source = stopsContextSource.value,
                                                         color = const(Color.White),
                                                         radius =
@@ -3209,6 +3260,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 SymbolLayer(
                                                         id = "contextrailstops_label",
+                                                        visible = !directionsVisible,
                                                         source = stopsContextSource.value,
                                                         textField = get("map_label").cast(),
                                                         textSize =
@@ -3281,6 +3333,7 @@ class MainActivity : ComponentActivity() {
                                                 // and route screens.
                                                 CircleLayer(
                                                         id = "major-livedots-context-dot",
+                                                        visible = !directionsVisible,
                                                         source = majorDotsSource.value,
                                                         color = get("color").cast<ColorValue>(),
                                                         radius =
@@ -3307,6 +3360,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 SymbolLayer(
                                                         id = "major-livedots-context-label",
+                                                        visible = !directionsVisible,
                                                         source = majorDotsSource.value,
                                                         textField = get("maptag").cast<StringValue>(),
                                                         textFont = const(listOf("Arimo-SemiBold")),
@@ -3377,12 +3431,15 @@ class MainActivity : ComponentActivity() {
 
                                                 // draggable pin section
 
-                                                DraggablePinLayers(pin = pin)
+                                                DraggablePinLayers(pin = pin.copy(active = pin.active && !directionsVisible))
                                             // Fixed pin tied to the active map selection; no drag hitbox.
                                             SelectedLocationPinLayers(pin = selectedLocationPin)
+                                            if (directionsVisible) TripPlannerMap(tripPlanner)
                                         }
 
-                                        DraggablePinOverlay(
+                                        if (directionsVisible) TripPlannerEndpoints(camera, mapSize, tripPlanner) { geoLock.deactivate() }
+
+                                        if (!directionsVisible) DraggablePinOverlay(
                                                 camera = camera,
                                                 mapSize = mapSize,
                                                 pin = pin,
@@ -3612,8 +3669,35 @@ class MainActivity : ComponentActivity() {
                                                                         // Render the current stack
                                                                         // screen
                                                                         when (currentScreen) {
+                                                                            is CatenaryStackEnum.DirectionsStack -> {
+                                                                                TripPlannerScreen(
+                                                                                    planner = tripPlanner,
+                                                                                    client = ktorHttpClient,
+                                                                                    search = directionsSearch,
+                                                                                    stationHistory = stationHistory,
+                                                                                    currentLocation = currentLocation,
+                                                                                    mapCenter = camera.position.target,
+                                                                                    onSelectJourney = { journey ->
+                                                                                        val positions = journey.legs.flatMap { directionsCoordinates(it) }
+                                                                                        if (positions.isNotEmpty()) scope.launch {
+                                                                                            geoLock.deactivate()
+                                                                                            camera.animateTo(
+                                                                                                boundingBox = org.maplibre.spatialk.geojson.BoundingBox(
+                                                                                                    positions.minOf { it.second } - 0.001,
+                                                                                                    positions.minOf { it.first } - 0.001,
+                                                                                                    positions.maxOf { it.second } + 0.001,
+                                                                                                    positions.maxOf { it.first } + 0.001
+                                                                                                ), padding = desiredPadding
+                                                                                            )
+                                                                                        }
+                                                                                    },
+                                                                                    onBack = onBack, onHome = onHome
+                                                                                )
+                                                                            }
+
                                                                             is CatenaryStackEnum.OsmItemStack -> {
                                                                                 OsmItemScreen(
+                                                                                    onDirections = openDirections,
                                                                                     item = currentScreen,
                                                                                     ktorClient = ktorHttpClient,
                                                                                     onBack = onBack,
@@ -3908,6 +3992,7 @@ class MainActivity : ComponentActivity() {
                                                                                                                 null // <-- Added this check
                                                                                         ) {
                                                                                                 StopScreen(
+                                                                                                        onDirections = openDirections,
                                                                                                         screenData =
                                                                                                                 currentScreen,
                                                                                                         catenaryStack =
@@ -3997,6 +4082,7 @@ class MainActivity : ComponentActivity() {
                                                                                                                 null
                                                                                         ) {
                                                                                                 StopScreen(
+                                                                                                        onDirections = openDirections,
                                                                                                         screenData =
                                                                                                                 currentScreen,
                                                                                                         catenaryStack =
@@ -4173,8 +4259,8 @@ class MainActivity : ComponentActivity() {
 
                                         AnimatedVisibility(
                                                 visible =
-                                                        !sheetIsExpanded ||
-                                                                isSearchFocused, // hide when sheet
+                                                        !directionsVisible && (!sheetIsExpanded ||
+                                                                isSearchFocused), // hide when sheet
                                                 // is
                                                 // fully expanded
                                                 modifier =
@@ -4469,7 +4555,7 @@ class MainActivity : ComponentActivity() {
                                                                                                         .roundToInt()
                                                                                         },
                                                                                 y =
-                                                                                        fabYAboveSheet
+                                                                                        (fabYAboveSheet - with(density) { 68.dp.roundToPx() })
                                                                                                 .coerceAtLeast(
                                                                                                         0
                                                                                                 )
@@ -4501,6 +4587,19 @@ class MainActivity : ComponentActivity() {
                                                         ),
                                                 exit = slideOutVertically(targetOffsetY = { it })
                                         ) {
+                                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                FloatingActionButton(
+                                                    onClick = {
+                                                        catenaryStack = ArrayDeque(catenaryStack.filterNot { it is CatenaryStackEnum.DirectionsStack }).apply {
+                                                            addLast(CatenaryStackEnum.DirectionsStack)
+                                                        }
+                                                        scope.launch { draggableState.animateTo(SheetSnapPoint.PartiallyExpanded) }
+                                                    },
+                                                    shape = CircleShape,
+                                                    containerColor = MaterialTheme.colorScheme.surface
+                                                ) {
+                                                    Icon(Icons.Filled.Directions, contentDescription = getString(R.string.directions_title))
+                                                }
                                                 FloatingActionButton(
                                                         onClick = {
                                                                 val loc = currentLocation
@@ -4558,13 +4657,15 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
+                                        }
+
                                         // The results overlay that shows when the searchbar is
                                         // focused.
                                         // On tablets (contentWidthFraction < 1f) it covers the left
                                         // pane,
                                         // on phones it covers the full window.
                                         AnimatedVisibility(
-                                                visible = isSearchFocused,
+                                                visible = isSearchFocused && !directionsVisible,
                                                 modifier =
                                                         Modifier
                                                                 .align(Alignment.TopStart)

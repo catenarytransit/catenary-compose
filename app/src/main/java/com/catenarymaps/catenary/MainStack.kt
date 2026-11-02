@@ -10,6 +10,9 @@ data class StackInterface(val data: CatenaryStackEnum)
 @Serializable
 sealed interface CatenaryStackEnum {
     @Serializable
+    data object DirectionsStack : CatenaryStackEnum
+
+    @Serializable
     data class SingleTrip(
             val chateau_id: String,
             val trip_id: String?,
