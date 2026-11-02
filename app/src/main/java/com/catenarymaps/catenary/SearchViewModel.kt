@@ -86,6 +86,7 @@ class SearchViewModel : ViewModel() {
     val isLoading = _isLoading.asStateFlow()
 
     private var searchJob: Job? = null
+    @Volatile private var searchGeneration = 0
 
     // Setup the JSON parser for Ktor
     private val json = Json { ignoreUnknownKeys = true }
@@ -104,6 +105,8 @@ class SearchViewModel : ViewModel() {
             mapCenter: Position,
     ) {
         searchJob?.cancel() // Cancel previous job
+        val generation = ++searchGeneration
+        _searchRows.value = emptyList()
         if (query.isBlank()) {
             _isLoading.value = false
             _searchRows.value = emptyList()
@@ -126,6 +129,7 @@ class SearchViewModel : ViewModel() {
                             val partialResults = PartialResults()
 
                             fun recomputeRows() {
+                                if (generation != searchGeneration) return
                                 _searchRows.value =
                                     buildCombinedRows(
                                         partialResults.catenary,
@@ -148,6 +152,7 @@ class SearchViewModel : ViewModel() {
 
                                         client.get(catenaryUrl).body<CatenarySearchResponse>()
                                     } catch (e: Exception) {
+                                        if (e is kotlinx.coroutines.CancellationException) throw e
                                         e.printStackTrace()
                                         null
                                     }
@@ -169,6 +174,7 @@ class SearchViewModel : ViewModel() {
                                         val response = client.get(cypressUrl).body<CypressResponse>()
                                         response.features
                                     } catch (e: Exception) {
+                                        if (e is kotlinx.coroutines.CancellationException) throw e
                                         e.printStackTrace()
                                         emptyList()
                                     }
@@ -210,6 +216,7 @@ class SearchViewModel : ViewModel() {
                                                 >(bodyText)
                                             parsed.results
                                         } catch (e: Exception) {
+                                            if (e is kotlinx.coroutines.CancellationException) throw e
                                             Log.e(
                                                 "SearchViewModel",
                                                 "Failed to deserialize OSM station search response",
@@ -222,6 +229,7 @@ class SearchViewModel : ViewModel() {
                                             emptyList()
                                         }
                                     } catch (e: Exception) {
+                                        if (e is kotlinx.coroutines.CancellationException) throw e
                                         Log.e(
                                             "SearchViewModel",
                                             "OSM station search request failed",
@@ -236,7 +244,7 @@ class SearchViewModel : ViewModel() {
                         }
                     } finally {
                         // This now correctly runs *after* both jobs are finished
-                        _isLoading.value = false
+                        if (generation == searchGeneration) _isLoading.value = false
                     }
                 }
     }
