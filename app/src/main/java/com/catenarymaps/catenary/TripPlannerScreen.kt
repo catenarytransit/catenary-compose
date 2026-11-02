@@ -3,11 +3,10 @@ package com.catenarymaps.catenary
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -15,11 +14,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,32 +55,11 @@ fun DirectionsActions(location: DirectionsLocation?, onDirections: (Boolean, Dir
 
 @Composable
 fun TripPlannerScreen(
-    planner: TripPlannerViewModel, client: HttpClient, search: SearchViewModel,
-    currentLocation: Pair<Double, Double>?, mapCenter: Position, stationHistory: StationHistory,
+    planner: TripPlannerViewModel, client: HttpClient, streetUsUnits: Boolean,
     onSelectJourney: (DirectionsItinerary) -> Unit, onBack: () -> Unit, onHome: () -> Unit
 ) {
     val focus = LocalFocusManager.current
-    val rows by search.searchRows.collectAsState()
-    val searchLoading by search.isLoading.collectAsState()
     var showOptions by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("directions_recent", android.content.Context.MODE_PRIVATE) }
-    var recent by remember {
-        mutableStateOf(runCatching {
-            Json.decodeFromString<List<DirectionsLocation>>(prefs.getString("places", "[]")!!)
-        }.getOrDefault(emptyList()).filter { it.isValid() })
-    }
-    fun select(isOrigin: Boolean, location: DirectionsLocation, save: Boolean = true) {
-        planner.choose(isOrigin, location)
-        focus.clearFocus()
-        if (save) {
-            recent = (listOf(location) + recent.filter {
-                it.name != location.name || kotlin.math.abs(it.lat - location.lat) > 0.00001 ||
-                    kotlin.math.abs(it.lon - location.lon) > 0.00001
-            }).take(20)
-            prefs.edit().putString("places", Json.encodeToString(recent)).apply()
-        }
-    }
     // Match the web planner: resolve a new journey after choosing endpoints or changing options.
     LaunchedEffect(planner.origin, planner.destination, planner.time, planner.now, planner.arriveBy, planner.options) {
         if (planner.origin != null && planner.destination != null) {
@@ -86,12 +68,6 @@ fun TripPlannerScreen(
         }
     }
     androidx.activity.compose.BackHandler(enabled = planner.details) { planner.details = false }
-    LaunchedEffect(planner.editing) { if (planner.editing == null) focus.clearFocus() }
-    val query = when (planner.editing) { true -> planner.originText; false -> planner.destinationText; null -> "" }
-    LaunchedEffect(query, planner.editing) {
-        search.onSearchQueryChanged(if (planner.editing == null) "" else query, currentLocation, mapCenter)
-    }
-    DisposableEffect(Unit) { onDispose { search.onSearchQueryChanged("", null, mapCenter) } }
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -101,54 +77,13 @@ fun TripPlannerScreen(
         if (planner.details) {
             TextButton(onClick = { planner.details = false }) { Text(stringResource(R.string.directions_all_journeys)) }
             planner.itineraries.getOrNull(planner.selected)?.let { journey ->
-                JourneyPreview(journey, true, onClick = { onSelectJourney(journey) }, onDetails = { planner.details = false })
+                JourneyPreview(journey, true, streetUsUnits, onClick = { onSelectJourney(journey) }, onDetails = { planner.details = false })
                 LazyColumn(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                    items(journey.detailLegs()) { leg -> JourneyLegDetails(leg) }
+                    items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits) }
                 }
             }
         } else {
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    OutlinedTextField(value = planner.originText, onValueChange = { planner.edit(true, it) },
-                        placeholder = { Text(stringResource(R.string.directions_start_placeholder)) },
-                        label = { Text(stringResource(R.string.directions_origin)) }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) planner.editing = true })
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        IconButton(onClick = { focus.clearFocus(); planner.swap() }) {
-                            Icon(Icons.Default.SwapVert, stringResource(R.string.directions_swap))
-                        }
-                    }
-                    OutlinedTextField(value = planner.destinationText, onValueChange = { planner.edit(false, it) },
-                        placeholder = { Text(stringResource(R.string.directions_destination_placeholder)) },
-                        label = { Text(stringResource(R.string.directions_destination)) }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) planner.editing = false })
-                }
-                if (planner.editing != null) {
-                    item {
-                        Text(stringResource(R.string.directions_map_hint), style = MaterialTheme.typography.bodySmall)
-                        TextButton(enabled = currentLocation != null, onClick = {
-                            currentLocation?.let { select(planner.editing ?: true,
-                                DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second), false) }
-                        }) { Icon(Icons.Default.MyLocation, null); Text(stringResource(R.string.directions_my_location)) }
-                        parseDirectionsCoordinate(query)?.let { coordinate ->
-                            TextButton(onClick = { select(planner.editing ?: true, coordinate) }) {
-                                Icon(Icons.Default.GridOn, null); Text(coordinate.name)
-                            }
-                        }
-                        if (searchLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
-                    }
-                    val history = stationHistory.entries.mapNotNull { item ->
-                        val latitude = item.latitude; val longitude = item.longitude
-                        if (latitude != null && longitude != null) DirectionsLocation(item.name, latitude, longitude).takeIf { it.isValid() } else null
-                    }
-                    val suggestions = (if (query.isBlank()) recent + history else rows.mapNotNull { it.directionsLocation() })
-                        .distinctBy { Triple(it.name, it.lat, it.lon) }
-                    items(suggestions.take(12)) { location ->
-                        ListItem(headlineContent = { Text(location.name) },
-                            supportingContent = { Text("%.5f, %.5f".format(location.lat, location.lon)) },
-                            modifier = Modifier.clickable { select(planner.editing ?: true, location) })
-                    }
-                }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         FilterChip(selected = !planner.arriveBy, onClick = { planner.invalidate(); planner.arriveBy = false },
@@ -181,9 +116,101 @@ fun TripPlannerScreen(
                 }
                 items(planner.itineraries.size) { index ->
                     val journey = planner.itineraries[index]
-                    JourneyPreview(journey, index == planner.selected,
+                    JourneyPreview(journey, index == planner.selected, streetUsUnits,
                         onClick = { planner.selected = index; planner.showTransfers = true; focus.clearFocus(); planner.editing = null; onSelectJourney(journey) },
                         onDetails = { planner.selected = index; planner.showTransfers = true; planner.details = true; planner.editing = null; focus.clearFocus(); onSelectJourney(journey) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TripPlannerHeader(
+    planner: TripPlannerViewModel, search: SearchViewModel,
+    currentLocation: Pair<Double, Double>?, mapCenter: Position, stationHistory: StationHistory,
+    modifier: Modifier = Modifier, cardModifier: Modifier = Modifier
+) {
+    val focus = LocalFocusManager.current
+    val rows by search.searchRows.collectAsState()
+    val searchLoading by search.isLoading.collectAsState()
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("directions_recent", android.content.Context.MODE_PRIVATE) }
+    var recent by remember {
+        mutableStateOf(runCatching {
+            Json.decodeFromString<List<DirectionsLocation>>(prefs.getString("places", "[]")!!)
+        }.getOrDefault(emptyList()).filter { it.isValid() })
+    }
+    fun select(isOrigin: Boolean, location: DirectionsLocation, save: Boolean = true) {
+        planner.choose(isOrigin, location)
+        focus.clearFocus()
+        if (save) {
+            recent = (listOf(location) + recent.filter {
+                it.name != location.name || kotlin.math.abs(it.lat - location.lat) > 0.00001 ||
+                    kotlin.math.abs(it.lon - location.lon) > 0.00001
+            }).take(20)
+            prefs.edit().putString("places", Json.encodeToString(recent)).apply()
+        }
+    }
+    LaunchedEffect(planner.editing) { if (planner.editing == null) focus.clearFocus() }
+    val query = when (planner.editing) { true -> planner.originText; false -> planner.destinationText; null -> "" }
+    LaunchedEffect(query, planner.editing) {
+        search.onSearchQueryChanged(if (planner.editing == null) "" else query, currentLocation, mapCenter)
+    }
+    DisposableEffect(Unit) { onDispose { search.onSearchQueryChanged("", null, mapCenter) } }
+
+    androidx.activity.compose.BackHandler(enabled = planner.editing != null) {
+        planner.editing = null
+        focus.clearFocus()
+    }
+    Column(modifier.imePadding()) {
+        ElevatedCard(modifier = cardModifier.fillMaxWidth().padding(8.dp),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)) {
+            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = planner.originText, onValueChange = { planner.edit(true, it) },
+                        placeholder = { Text(stringResource(R.string.directions_start_placeholder)) },
+                        label = { Text(stringResource(R.string.directions_origin)) }, singleLine = true,
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) planner.editing = true })
+                    OutlinedTextField(value = planner.destinationText, onValueChange = { planner.edit(false, it) },
+                        placeholder = { Text(stringResource(R.string.directions_destination_placeholder)) },
+                        label = { Text(stringResource(R.string.directions_destination)) }, singleLine = true,
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) planner.editing = false })
+                }
+                IconButton(onClick = { focus.clearFocus(); planner.swap() }) {
+                    Icon(Icons.Default.SwapVert, stringResource(R.string.directions_swap))
+                }
+            }
+        }
+        if (planner.editing != null) {
+            Surface(Modifier.fillMaxWidth().weight(1f), color = MaterialTheme.colorScheme.surface) {
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
+                    item {
+                        TextButton(onClick = { planner.editing = null; focus.clearFocus() }) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                        TextButton(enabled = currentLocation != null, onClick = {
+                            currentLocation?.let { select(planner.editing ?: true,
+                                DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second), false) }
+                        }) { Icon(Icons.Default.MyLocation, null); Text(stringResource(R.string.directions_my_location)) }
+                        parseDirectionsCoordinate(query)?.let { coordinate ->
+                            TextButton(onClick = { select(planner.editing ?: true, coordinate) }) {
+                                Icon(Icons.Default.GridOn, null); Text(coordinate.name)
+                            }
+                        }
+                        if (searchLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
+                    val history = stationHistory.entries.mapNotNull { item ->
+                        val latitude = item.latitude; val longitude = item.longitude
+                        if (latitude != null && longitude != null) DirectionsLocation(item.name, latitude, longitude).takeIf { it.isValid() } else null
+                    }
+                    val suggestions = (if (query.isBlank()) recent + history else rows.mapNotNull { it.directionsLocation() })
+                        .distinctBy { Triple(it.name, it.lat, it.lon) }
+                    items(suggestions.take(12)) { location ->
+                        ListItem(headlineContent = { Text(location.name) },
+                            supportingContent = { Text("%.5f, %.5f".format(location.lat, location.lon)) },
+                            modifier = Modifier.clickable { select(planner.editing ?: true, location) })
+                    }
                 }
             }
         }
@@ -257,40 +284,41 @@ private fun LegBadge(leg: DirectionsLeg) {
 }
 
 @Composable
-private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, onClick: () -> Unit, onDetails: () -> Unit) {
+private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, streetUsUnits: Boolean, onClick: () -> Unit, onDetails: () -> Unit) {
     val visible = remember(journey) { journey.previewLegs() }
-    val firstTransit = visible.firstOrNull { !it.street }
-    val lastTransit = visible.lastOrNull { !it.street }
+    val times = remember(journey) { journey.previewTimeGroups() }
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text(directionsTime(journey.startTime), fontWeight = if (visible.firstOrNull()?.street == false) FontWeight.Bold else FontWeight.Normal)
-                    if (visible.firstOrNull()?.street == true && firstTransit != null) Text(directionsTime(firstTransit.startTime), fontWeight = FontWeight.Bold)
-                }
-                Text(directionsDuration(journey.seconds), fontWeight = FontWeight.Bold)
-                Column(horizontalAlignment = Alignment.End) {
-                    if (visible.lastOrNull()?.street == true && lastTransit != null) Text(directionsTime(lastTransit.endTime), fontWeight = FontWeight.Bold)
-                    Text(directionsTime(journey.endTime), fontWeight = if (visible.lastOrNull()?.street == false) FontWeight.Bold else FontWeight.Normal)
-                }
-            }
-            Row(Modifier.fillMaxWidth().height(12.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                visible.forEach { leg ->
-                    val color = if (leg.street) MaterialTheme.colorScheme.onSurfaceVariant else legColor(leg)
-                    Canvas(Modifier.weight(leg.seconds.toFloat().coerceAtLeast(1f)).fillMaxHeight()) {
-                        drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height / 2),
-                            androidx.compose.ui.geometry.Offset(size.width, size.height / 2), strokeWidth = 6f,
-                            pathEffect = if (leg.street) PathEffect.dashPathEffect(floatArrayOf(3f, 7f)) else null)
+            PreviewTimeRow(times, directionsDuration(journey.seconds))
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                // Keep icons and their labels in the same segment column even on long journeys.
+                val timelineWidth = maxOf(maxWidth, (visible.size * 48).dp)
+                val weights = timelineWeights(visible, timelineWidth.value)
+                Row(Modifier.horizontalScroll(rememberScrollState())) {
+                    Row(Modifier.width(timelineWidth)) {
+                        visible.forEachIndexed { index, leg ->
+                            val color = if (leg.street) MaterialTheme.colorScheme.onSurfaceVariant else legColor(leg)
+                            Column(Modifier.weight(weights[index]).clipToBounds()) {
+                                Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    LegModeIcon(leg)
+                                    Canvas(Modifier.weight(1f).fillMaxHeight()) {
+                                        drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height / 2),
+                                            androidx.compose.ui.geometry.Offset(size.width, size.height / 2), strokeWidth = 2.dp.toPx(),
+                                            pathEffect = if (leg.street) PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 4.dp.toPx())) else null)
+                                    }
+                                }
+                                if (leg.street) {
+                                    Text(streetLegLabel(leg, streetUsUnits), fontSize = 12.sp,
+                                        modifier = Modifier.padding(top = 4.dp, end = 4.dp),
+                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                } else {
+                                    Box(Modifier.padding(top = 4.dp, end = 4.dp)) { LegBadge(leg) }
+                                }
+                            }
+                        }
                     }
-                }
-            }
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                visible.forEach { leg ->
-                    LegModeIcon(leg)
-                    if (leg.street) {
-                        Text(directionsDuration(leg.seconds) + (directionsDistance(leg)?.let { " · ${it.roundToInt()} m" } ?: ""), fontSize = 12.sp)
-                    } else LegBadge(leg)
                 }
             }
             TextButton(onClick = onDetails) { Text(stringResource(R.string.directions_show_details)) }
@@ -299,7 +327,50 @@ private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, onCl
 }
 
 @Composable
-private fun JourneyLegDetails(leg: DirectionsLeg) {
+private fun PreviewTimeRow(times: PreviewTimeGroups, duration: String) {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val style = LocalTextStyle.current
+    fun groupWidth(markers: List<PreviewTimeMarker>): Int = markers.sumOf { marker ->
+        measurer.measure(previewClockTime(marker.time), style.copy(
+            fontSize = if (marker.transit) 14.sp else 12.sp,
+            fontWeight = if (marker.transit) FontWeight.Bold else FontWeight.Normal), maxLines = 1).size.width
+    } + with(density) { (8.dp * (markers.size - 1).coerceAtLeast(0)).roundToPx() }
+    val sides = maxOf(groupWidth(times.departure), groupWidth(times.arrival))
+    val durationWidth = measurer.measure(duration, style.copy(fontSize = 12.sp), maxLines = 1).size.width
+    val requiredWidth = with(density) { (sides * 2 + durationWidth).toDp() } + 16.dp
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        // Scroll only when narrow screens or large fonts cannot fit all times on one row.
+        val width = maxOf(maxWidth, requiredWidth)
+        Row(Modifier.horizontalScroll(rememberScrollState())) {
+            Row(Modifier.width(width), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) { PreviewTimes(times.departure) }
+                Text(duration, modifier = Modifier.padding(horizontal = 8.dp), fontSize = 12.sp, maxLines = 1)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { PreviewTimes(times.arrival) }
+            }
+        }
+    }
+}
+
+private fun previewClockTime(time: String): String = runCatching {
+    DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault()).format(Instant.parse(time))
+}.getOrDefault("")
+
+@Composable
+private fun PreviewTimes(markers: List<PreviewTimeMarker>) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        markers.forEach { marker ->
+            Text(previewClockTime(marker.time), fontWeight = if (marker.transit) FontWeight.Bold else FontWeight.Normal,
+                fontSize = if (marker.transit) 14.sp else 12.sp, maxLines = 1)
+        }
+    }
+}
+
+private fun streetLegLabel(leg: DirectionsLeg, imperial: Boolean): String =
+    directionsDuration(leg.seconds) + (directionsDistance(leg)?.let { " · ${formatDistanceMeters(it, imperial)}" } ?: "")
+
+@Composable
+private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
     var expanded by remember(leg) { mutableStateOf(false) }
     val rail = if (leg.street) MaterialTheme.colorScheme.onSurfaceVariant else legColor(leg)
     Row(Modifier.fillMaxWidth()) {
@@ -323,7 +394,7 @@ private fun JourneyLegDetails(leg: DirectionsLeg) {
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 LegModeIcon(leg)
-                if (leg.street) Text(directionsDuration(leg.seconds) + (directionsDistance(leg)?.let { " · ${it.roundToInt()} m" } ?: ""))
+                if (leg.street) Text(streetLegLabel(leg, streetUsUnits))
                 else LegBadge(leg)
             }
             if (!leg.street) {
