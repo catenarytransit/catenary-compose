@@ -109,7 +109,7 @@ fun decodeDirectionsPolyline(encoded: String, precision: Int = 6): List<Pair<Dou
 }
 
 private fun lonDelta(a: Double, b: Double) = ((a - b + 540) % 360) - 180
-private data class ShapeProjection(val index: Int, val fraction: Double, val point: Pair<Double, Double>, val distance: Double)
+private data class DirectionsShapeProjection(val index: Int, val fraction: Double, val point: Pair<Double, Double>, val distance: Double)
 
 /** Project and trim full GTFS shapes to boarding/alighting stops, including reversed shapes. */
 fun directionsCoordinates(leg: DirectionsLeg): List<Pair<Double, Double>> {
@@ -118,7 +118,7 @@ fun directionsCoordinates(leg: DirectionsLeg): List<Pair<Double, Double>> {
     val from = leg.from; val to = leg.to
     if (leg.street || points.size < 2 || from?.lat == null || from.lon == null || to?.lat == null || to.lon == null) return points
     if (haversineDistance(from.lat, from.lon, to.lat, to.lon) < 20) return points
-    fun projections(stop: DirectionsPoint): List<ShapeProjection> {
+    fun projections(stop: DirectionsPoint): List<DirectionsShapeProjection> {
         val latitude = stop.lat!!; val longitude = stop.lon!!
         val scale = 111195 * max(0.00001, cos(Math.toRadians(latitude)))
         val candidates = points.zipWithNext().mapIndexedNotNull { i, (a, b) ->
@@ -130,7 +130,7 @@ fun directionsCoordinates(leg: DirectionsLeg): List<Pair<Double, Double>> {
             val fraction = (-(ax * dx + ay * dy) / square).coerceIn(0.0, 1.0)
             val x = ax + fraction * dx; val y = ay + fraction * dy
             val distance = hypot(x, y)
-            if (distance > 350) null else ShapeProjection(i, fraction,
+            if (distance > 350) null else DirectionsShapeProjection(i, fraction,
                 latitude + y / 111195 to ((longitude + x / scale + 540) % 360 - 180), distance)
         }.sortedBy { it.distance }
         val cutoff = min(350.0, (candidates.firstOrNull()?.distance ?: return emptyList()) + 30)
