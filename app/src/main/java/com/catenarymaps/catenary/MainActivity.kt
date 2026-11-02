@@ -225,6 +225,7 @@ private const val K_GA_CONSENT = "ga_consent"
 private const val K_SHOW_ZOMBIE_BUSES = "show_zombie_buses"
 private const val K_SHOW_SECONDS = "show_seconds"
 private const val K_USE_US_UNITS = "use_us_units"
+private const val K_STREET_US_UNITS = "street_us_units"
 private const val K_SHOW_TRIP_STOP_DISTANCES = "show_trip_stop_distances"
 private const val K_SERVER_SUPPORT_DISMISSED_UNTIL = "server_support_dismissed_until"
 private const val SERVER_SUPPORT_DISMISS_DURATION_MS = 24L * 60L * 60L * 1000L
@@ -1523,6 +1524,12 @@ class MainActivity : ComponentActivity() {
                         // State for settings from JS
                         var showZombieBuses by remember { mutableStateOf(initialShowZombieBuses) }
                         var usUnits by remember { mutableStateOf(initialUsUnits) }
+                        var streetUsUnits by remember {
+                                mutableStateOf(prefs.getBoolean(K_STREET_US_UNITS, initialUsUnits))
+                        }
+                        LaunchedEffect(streetUsUnits) {
+                                prefs.edit().putBoolean(K_STREET_US_UNITS, streetUsUnits).apply()
+                        }
                         var showSeconds by remember {
                                 mutableStateOf(prefs.getBoolean(K_SHOW_SECONDS, false))
                         }
@@ -1875,13 +1882,17 @@ class MainActivity : ComponentActivity() {
                                         val collapsedAnchor =
                                                 screenHeightPx - collapsedHandleHeight - bottomInset
 
+                                        var directionsHeaderHeight by remember { mutableIntStateOf(0) }
+                                        val directionsTopInset = WindowInsets.safeDrawing.getTop(density)
+                                        val expandedAnchor = maxOf(with(density) { 60.dp.toPx() },
+                                                if (directionsVisible) directionsHeaderHeight.toFloat() + directionsTopInset else 0f)
+                                                .coerceAtMost(collapsedAnchor)
                                         val anchors =
                                                 DraggableAnchors<SheetSnapPoint> {
                                                         SheetSnapPoint.Collapsed at collapsedAnchor
                                                         SheetSnapPoint.PartiallyExpanded at
-                                                                screenHeightPx / 2f - bottomInset
-                                                        SheetSnapPoint.Expanded at
-                                                                with(density) { 60.dp.toPx() }
+                                                                maxOf(expandedAnchor, screenHeightPx / 2f - bottomInset)
+                                                        SheetSnapPoint.Expanded at expandedAnchor
                                                 }
 
                                         val draggableState = remember {
@@ -3673,10 +3684,7 @@ class MainActivity : ComponentActivity() {
                                                                                 TripPlannerScreen(
                                                                                     planner = tripPlanner,
                                                                                     client = ktorHttpClient,
-                                                                                    search = directionsSearch,
-                                                                                    stationHistory = stationHistory,
-                                                                                    currentLocation = currentLocation,
-                                                                                    mapCenter = camera.position.target,
+                                                                                    streetUsUnits = streetUsUnits,
                                                                                     onSelectJourney = { journey ->
                                                                                         val positions = journey.legs.flatMap { directionsCoordinates(it) }
                                                                                         if (positions.isNotEmpty()) scope.launch {
@@ -3881,6 +3889,8 @@ class MainActivity : ComponentActivity() {
                                                                                                 },
                                                                                                 usUnits =
                                                                                                         usUnits,
+                                                                                                streetUsUnits = streetUsUnits,
+                                                                                                onStreetUsUnitsChange = { streetUsUnits = it },
                                                                                                 onUsUnitsChange = {
                                                                                                         usUnits =
                                                                                                                 it
@@ -4246,6 +4256,23 @@ class MainActivity : ComponentActivity() {
                                                                 }
                                                         }
                                                 }
+                                        }
+
+                                        if (directionsVisible) {
+                                                TripPlannerHeader(
+                                                        planner = tripPlanner,
+                                                        search = directionsSearch,
+                                                        stationHistory = stationHistory,
+                                                        currentLocation = currentLocation,
+                                                        mapCenter = camera.position.target,
+                                                        modifier = Modifier
+                                                                .align(Alignment.TopStart)
+                                                                .fillMaxWidth(contentWidthFraction)
+                                                                .then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier)
+                                                                .windowInsetsPadding(WindowInsets.safeDrawing)
+                                                                .zIndex(6f),
+                                                        cardModifier = Modifier.onSizeChanged { directionsHeaderHeight = it.height }
+                                                )
                                         }
 
                                         val layerButtonColor =

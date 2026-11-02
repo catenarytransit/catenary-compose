@@ -344,15 +344,8 @@ private fun userTripMarker(
         return null
 }
 
-private fun formatTripStopDistance(distanceMeters: Double, usUnits: Boolean): String {
-        return if (usUnits) {
-                "${Math.round(distanceMeters * 3.280839895)} ft"
-        } else if (distanceMeters >= 1_000.0) {
-                "1.0 km"
-        } else {
-                "${Math.round(distanceMeters)} m"
-        }
-}
+private fun formatTripStopDistance(distanceMeters: Double, usUnits: Boolean): String =
+        formatDistanceMeters(distanceMeters, usUnits)
 
 @Composable
 private fun UserLocationTripIndicator(

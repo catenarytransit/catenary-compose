@@ -33,6 +33,8 @@ fun SettingsScreen(
     showSeconds: Boolean,
     onShowSecondsChange: (Boolean) -> Unit,
     usUnits: Boolean,
+    streetUsUnits: Boolean,
+    onStreetUsUnitsChange: (Boolean) -> Unit,
     onUsUnitsChange: (Boolean) -> Unit,
     showCountdownsUnder1h: Boolean,
     onShowCountdownsUnder1hChange: (Boolean) -> Unit,
@@ -189,11 +191,22 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(id = R.string.settings_use_imperial_units),
+                    text = stringResource(id = R.string.settings_imperial_transport),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
             Switch(checked = usUnits, onCheckedChange = onUsUnitsChange)
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .clickable { onStreetUsUnitsChange(!streetUsUnits) }
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(stringResource(R.string.settings_imperial_street),
+                style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Switch(checked = streetUsUnits, onCheckedChange = onStreetUsUnitsChange)
         }
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
