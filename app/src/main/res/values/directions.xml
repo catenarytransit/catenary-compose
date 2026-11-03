@@ -26,4 +26,8 @@
     <string name="directions_all_journeys">All journeys</string>
     <string name="directions_show_details">Show details</string>
     <string name="directions_stops_duration">%1$d stops · %2$s</string>
+    <string name="directions_done">Done</string>
+    <string name="directions_distance_unavailable">Distance unavailable</string>
+    <string name="directions_show_stops">Show intermediate stops</string>
+    <string name="directions_hide_stops">Hide intermediate stops</string>
 </resources>
