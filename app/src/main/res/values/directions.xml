@@ -5,8 +5,8 @@
     <string name="directions_as_destination">As destination</string>
     <string name="directions_origin">Start</string>
     <string name="directions_destination">Destination</string>
-    <string name="directions_start_placeholder">Search start or click on the map</string>
-    <string name="directions_destination_placeholder">Search destination or click on the map</string>
+    <string name="directions_start_placeholder">From</string>
+    <string name="directions_destination_placeholder">To</string>
     <string name="directions_swap">Swap start and destination</string>
     <string name="directions_my_location">Current location</string>
     <string name="directions_map_hint">Search for a place, enter coordinates, or tap the map to set this location.</string>
