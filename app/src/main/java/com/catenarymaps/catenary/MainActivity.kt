@@ -4624,17 +4624,19 @@ class MainActivity : ComponentActivity() {
                                                 exit = slideOutVertically(targetOffsetY = { it })
                                         ) {
                                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                                FloatingActionButton(
-                                                    onClick = {
-                                                        catenaryStack = ArrayDeque(catenaryStack.filterNot { it is CatenaryStackEnum.DirectionsStack }).apply {
-                                                            addLast(CatenaryStackEnum.DirectionsStack)
-                                                        }
-                                                        scope.launch { draggableState.animateTo(SheetSnapPoint.PartiallyExpanded) }
-                                                    },
-                                                    shape = CircleShape,
-                                                    containerColor = MaterialTheme.colorScheme.surface
-                                                ) {
-                                                    Icon(Icons.Filled.Directions, contentDescription = getString(R.string.directions_title))
+                                                if (!directionsVisible) {
+                                                    FloatingActionButton(
+                                                        onClick = {
+                                                            catenaryStack = ArrayDeque(catenaryStack.filterNot { it is CatenaryStackEnum.DirectionsStack }).apply {
+                                                                addLast(CatenaryStackEnum.DirectionsStack)
+                                                            }
+                                                            scope.launch { draggableState.animateTo(SheetSnapPoint.PartiallyExpanded) }
+                                                        },
+                                                        shape = CircleShape,
+                                                        containerColor = MaterialTheme.colorScheme.surface
+                                                    ) {
+                                                        Icon(Icons.Filled.Directions, contentDescription = getString(R.string.directions_title))
+                                                    }
                                                 }
                                                 FloatingActionButton(
                                                         onClick = {
