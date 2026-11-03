@@ -28,6 +28,16 @@ class TripPlannerTest {
         assertTrue(arrive["detailed_legs"]!!.jsonPrimitive.boolean)
     }
 
+    @Test fun cyclingBudgetsStayWithinEdelweissContract() {
+        val request = directionsRequest(from, to, 1793642246, false,
+            DirectionsOptions(cycling = true, accessSeconds = 7200f,
+                egressSeconds = 0f, directSeconds = 14400f))
+        assertEquals(3600, request["maxPreTransitTime"]!!.jsonPrimitive.int)
+        assertEquals(1, request["maxPostTransitTime"]!!.jsonPrimitive.int)
+        assertEquals(3600, request["maxDirectTime"]!!.jsonPrimitive.int)
+        assertEquals("BIKE", request["preTransitModes"]!!.jsonArray[0].jsonPrimitive.content)
+    }
+
     @Test fun acceptsSignedCardinalAndDmsCoordinates() {
         for (text in listOf("34.5, -118.25", "34.5 N, 118.25 W", "34°30′0″N 118°15′0″W", "34.5 -118.25")) {
             val coordinate = parseDirectionsCoordinate(text)
