@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -78,13 +79,12 @@ fun TripPlannerScreen(
     }
     androidx.activity.compose.BackHandler(enabled = planner.details) { planner.details = false }
 
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Column(Modifier.fillMaxSize().background(Color(0xFFF7F7F7))) {
+        if (!planner.details) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.directions_title), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
             NavigationControls(onBack = { if (planner.details) planner.details = false else onBack() }, onHome = onHome)
         }
         if (planner.details) {
-            TextButton(onClick = { planner.details = false }) { Text(stringResource(R.string.directions_all_journeys)) }
             planner.itineraries.getOrNull(planner.selected)?.let { journey ->
                 LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
@@ -105,7 +105,7 @@ fun TripPlannerScreen(
                 }
                 items(planner.itineraries.size) { index ->
                     val journey = planner.itineraries[index]
-                    JourneyPreview(journey, index == planner.selected, streetUsUnits,
+                    JourneyPreview(journey, streetUsUnits,
                         onClick = { planner.selected = index; planner.showTransfers = true; planner.details = true; planner.editing = null; focus.clearFocus(); onSelectJourney(journey) })
                 }
             }
@@ -152,10 +152,15 @@ fun TripPlannerHeader(
         planner.editing = null
         focus.clearFocus()
     }
-    Column(modifier.imePadding()) {
+    Column(modifier.imePadding().then(if (planner.details) Modifier.background(Color(0xFFF7F7F7)) else Modifier)) {
         if (planner.details) {
+            TextButton(onClick = { planner.details = false }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.directions_all_journeys))
+            }
             planner.itineraries.getOrNull(planner.selected)?.let { journey ->
-                JourneyPreview(journey, true, streetUsUnits, onClick = null,
+                JourneyPreview(journey, streetUsUnits, onClick = null,
                     modifier = cardModifier.fillMaxWidth().padding(8.dp))
             }
         } else ElevatedCard(modifier = cardModifier.fillMaxWidth().padding(8.dp),
@@ -368,28 +373,26 @@ private fun LegModeIcon(leg: DirectionsLeg) {
         "WALK" -> Icons.Default.DirectionsWalk
         "FERRY" -> Icons.Default.DirectionsBoat
         else -> Icons.Default.Train
-    }, leg.mode, modifier = Modifier.size(24.dp))
+    }, leg.mode, modifier = Modifier.size(if (leg.street) 18.dp else 24.dp))
 }
 
 @Composable
 private fun LegBadge(leg: DirectionsLeg) {
-    SelectionRouteBadges(routeIds = listOf(leg.routeId ?: leg.label), resolveRouteInfo = {
+    SelectionRouteBadges(routeIds = listOf(leg.routeId ?: leg.label), textSize = 12.sp, resolveRouteInfo = {
         ResolvedRouteBadgeInfo(leg.routeId ?: leg.label, leg.routeShortName, leg.routeLongName,
             leg.routeColor ?: "2563EB", leg.routeTextColor ?: "FFFFFF", chateauId = leg.chateau)
     })
 }
 
 @Composable
-private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, streetUsUnits: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
+private fun JourneyPreview(journey: DirectionsItinerary, streetUsUnits: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     val visible = remember(journey) { journey.previewLegs() }
     val times = remember(journey) { journey.previewTimeGroups() }
     Card(modifier = modifier.fillMaxWidth().then(if (onClick != null)
             Modifier.clip(MaterialTheme.shapes.medium).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick) else Modifier),
-        border = BorderStroke(if (selected) 2.dp else 1.dp,
-            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = Color(0xFF202124)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             PreviewTimeRow(times, directionsDuration(journey.seconds))
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 // Keep icons and their labels in the same segment column even on long journeys.
@@ -398,7 +401,7 @@ private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, stre
                 Row(Modifier.horizontalScroll(rememberScrollState())) {
                     Row(Modifier.width(timelineWidth)) {
                         visible.forEachIndexed { index, leg ->
-                            val color = if (leg.street) MaterialTheme.colorScheme.onSurfaceVariant else legColor(leg)
+                            val color = if (leg.street) Color(0xFF5F6368) else legColor(leg)
                             Column(Modifier.weight(weights[index]).clipToBounds()) {
                                 Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -410,11 +413,11 @@ private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, stre
                                     }
                                 }
                                 if (leg.street) {
-                                    Text(streetLegLabel(leg, streetUsUnits), fontSize = 12.sp,
-                                        modifier = Modifier.padding(top = 4.dp, end = 4.dp),
+                                    Text(streetLegLabel(leg, streetUsUnits), fontSize = 14.sp,
+                                        modifier = Modifier.padding(top = 2.dp, end = 4.dp),
                                         maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 } else {
-                                    Box(Modifier.padding(top = 4.dp, end = 4.dp)) { LegBadge(leg) }
+                                    Box(Modifier.padding(top = 2.dp, end = 4.dp)) { LegBadge(leg) }
                                 }
                             }
                         }
@@ -432,11 +435,11 @@ private fun PreviewTimeRow(times: PreviewTimeGroups, duration: String) {
     val style = LocalTextStyle.current
     fun groupWidth(markers: List<PreviewTimeMarker>): Int = markers.sumOf { marker ->
         measurer.measure(previewClockTime(marker.time), style.copy(
-            fontSize = if (marker.transit) 14.sp else 12.sp,
+            fontSize = if (marker.transit) 16.sp else 14.sp,
             fontWeight = if (marker.transit) FontWeight.Bold else FontWeight.Normal), maxLines = 1).size.width
     } + with(density) { (8.dp * (markers.size - 1).coerceAtLeast(0)).roundToPx() }
     val sides = maxOf(groupWidth(times.departure), groupWidth(times.arrival))
-    val durationWidth = measurer.measure(duration, style.copy(fontSize = 12.sp), maxLines = 1).size.width
+    val durationWidth = measurer.measure(duration, style.copy(fontSize = 14.sp), maxLines = 1).size.width
     val requiredWidth = with(density) { (sides * 2 + durationWidth).toDp() } + 16.dp
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         // Scroll only when narrow screens or large fonts cannot fit all times on one row.
@@ -444,7 +447,7 @@ private fun PreviewTimeRow(times: PreviewTimeGroups, duration: String) {
         Row(Modifier.horizontalScroll(rememberScrollState())) {
             Row(Modifier.width(width), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) { PreviewTimes(times.departure) }
-                Text(duration, modifier = Modifier.padding(horizontal = 8.dp), fontSize = 12.sp, maxLines = 1)
+                Text(duration, modifier = Modifier.padding(horizontal = 8.dp), fontSize = 14.sp, maxLines = 1)
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { PreviewTimes(times.arrival) }
             }
         }
@@ -460,7 +463,7 @@ private fun PreviewTimes(markers: List<PreviewTimeMarker>) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         markers.forEach { marker ->
             Text(previewClockTime(marker.time), fontWeight = if (marker.transit) FontWeight.Bold else FontWeight.Normal,
-                fontSize = if (marker.transit) 14.sp else 12.sp, maxLines = 1)
+                fontSize = if (marker.transit) 16.sp else 14.sp, maxLines = 1)
         }
     }
 }
@@ -470,11 +473,10 @@ private fun streetLegLabel(leg: DirectionsLeg, imperial: Boolean): String =
 
 @Composable
 private fun JourneyEndpoint(name: String, first: Boolean) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+    Card(colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = Color(0xFF202124))) {
         Box(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-            ConnectionRow(rail = MaterialTheme.colorScheme.onSurface, pearl = true, first = first, last = !first) {
-                Text(name, fontWeight = FontWeight.Bold)
+            ConnectionRow(rail = Color(0xFF202124), pearl = true, first = first, last = !first) {
+                Text(name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
@@ -488,7 +490,7 @@ private fun ConnectionRow(
     content: @Composable RowScope.() -> Unit
 ) {
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
-        Text(time, modifier = Modifier.width(52.dp), fontSize = 12.sp, fontWeight = FontWeight.Bold,
+        Text(time, modifier = Modifier.width(60.dp), fontSize = 14.sp, fontWeight = FontWeight.Bold,
             textAlign = androidx.compose.ui.text.style.TextAlign.End)
         Spacer(Modifier.width(8.dp))
         Box(Modifier.width(20.dp).fillMaxHeight()) {
@@ -501,59 +503,59 @@ private fun ConnectionRow(
             }
         }
         Spacer(Modifier.width(8.dp))
-        Row(Modifier.weight(1f).heightIn(min = 40.dp).padding(vertical = 4.dp),
+        Row(Modifier.weight(1f).heightIn(min = 28.dp).padding(vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp), content = content)
         if (platform.isNotBlank()) Text(platform, modifier = Modifier.widthIn(max = 48.dp).padding(start = 8.dp),
-            style = MaterialTheme.typography.labelSmall, textAlign = androidx.compose.ui.text.style.TextAlign.End)
+            style = MaterialTheme.typography.labelMedium, textAlign = androidx.compose.ui.text.style.TextAlign.End)
     }
 }
 
 @Composable
 private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
     var expanded by remember(leg) { mutableStateOf(false) }
-    val surface = MaterialTheme.colorScheme.surface
+    val surface = Color.White
     val rawRail = legColor(leg)
     // Keep near-white/black route colors visible against the current card surface.
-    val rail = if (leg.street) MaterialTheme.colorScheme.onSurfaceVariant
-        else if (kotlin.math.abs(rawRail.luminance() - surface.luminance()) < 0.15f) MaterialTheme.colorScheme.onSurface else rawRail
+    val rail = if (leg.street) Color(0xFF5F6368)
+        else if (kotlin.math.abs(rawRail.luminance() - surface.luminance()) < 0.15f) Color(0xFF202124) else rawRail
     Card(modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = if (leg.street) Color.Transparent else surface),
-        border = BorderStroke(1.dp, if (leg.street) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.outlineVariant)) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        colors = CardDefaults.cardColors(containerColor = surface, contentColor = Color(0xFF202124)),
+        border = if (leg.street) BorderStroke(1.dp, Color(0xFF9AA0A6)) else null) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
             if (leg.street) {
                 ConnectionRow(rail, time = directionsDuration(leg.seconds), dotted = true) {
                     LegModeIcon(leg)
                     Text(directionsDistance(leg)?.let { formatDistanceMeters(it, streetUsUnits) }
-                        ?: stringResource(R.string.directions_distance_unavailable), style = MaterialTheme.typography.bodyMedium)
+                        ?: stringResource(R.string.directions_distance_unavailable), style = MaterialTheme.typography.bodyLarge)
                 }
             } else {
                 ConnectionRow(rail, directionsTime(leg.startTime), leg.fromPlatform ?: leg.from?.platform ?: leg.from?.platformCode ?: "",
                     pearl = true, first = true) {
-                    Text(leg.from?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
+                    Text(leg.from?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }
                 ConnectionRow(rail) {
                     LegModeIcon(leg)
                     Box(Modifier.weight(1f)) { LegBadge(leg) }
                 }
                 if (!leg.routeLongName.isNullOrBlank()) ConnectionRow(rail) {
-                    Text(leg.routeLongName, style = MaterialTheme.typography.bodySmall)
+                    Text(leg.routeLongName, style = MaterialTheme.typography.bodyMedium)
                 }
                 ConnectionRow(rail) {
                     TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) {
                         Text(stringResource(R.string.directions_stops_duration, leg.intermediateStops.size, directionsDuration(leg.seconds)),
-                            modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                            modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                         Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             stringResource(if (expanded) R.string.directions_hide_stops else R.string.directions_show_stops))
                     }
                 }
                 if (expanded) leg.intermediateStops.forEach { stop ->
                     ConnectionRow(rail, directionsTime(stop.departure ?: stop.arrival ?: stop.scheduledDeparture ?: stop.scheduledArrival), pearl = true) {
-                        Text(stop.name, style = MaterialTheme.typography.bodySmall)
+                        Text(stop.name, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 ConnectionRow(rail, directionsTime(leg.endTime), leg.toPlatform ?: leg.to?.platform ?: leg.to?.platformCode ?: "",
                     pearl = true, last = true) {
-                    Text(leg.to?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
+                    Text(leg.to?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }
             }
         }

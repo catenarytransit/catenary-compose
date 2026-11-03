@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
@@ -42,7 +43,8 @@ data class ResolvedRouteBadgeInfo(
 fun SelectionRouteBadges(
         routeIds: List<String>,
         resolveRouteInfo: (String) -> ResolvedRouteBadgeInfo?,
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
+        textSize: TextUnit = 10.sp
 ) {
     val routeInfos =
         remember(routeIds) {
@@ -96,6 +98,7 @@ fun SelectionRouteBadges(
                             Text(
                                 text = info.name,
                                 style = MaterialTheme.typography.labelSmall,
+                                fontSize = if (textSize == 10.sp) TextUnit.Unspecified else textSize,
                                 fontWeight = FontWeight.SemiBold
                             )
                                 }
@@ -158,7 +161,7 @@ fun SelectionRouteBadges(
                                                         // Or just skip?
                                                         // Usually existing logic falls back to
                                                         // standard badge.
-                                                        StandardRouteBadge(route)
+                                                        StandardRouteBadge(route, textSize)
                                                 }
                                         } else if (isMta) {
                                                 val iconUrl =
@@ -192,10 +195,10 @@ fun SelectionRouteBadges(
                                                                 modifier = Modifier.size(20.dp)
                                                         )
                                                 } else {
-                                                        StandardRouteBadge(route)
+                                                        StandardRouteBadge(route, textSize)
                                                 }
                                         } else {
-                                                StandardRouteBadge(route)
+                                                StandardRouteBadge(route, textSize)
                                         }
                                 }
                         }
@@ -204,7 +207,7 @@ fun SelectionRouteBadges(
 }
 
 @Composable
-fun StandardRouteBadge(route: ResolvedRouteBadgeInfo) {
+fun StandardRouteBadge(route: ResolvedRouteBadgeInfo, textSize: TextUnit = 10.sp) {
         Box(
                 modifier =
                         Modifier
@@ -217,7 +220,7 @@ fun StandardRouteBadge(route: ResolvedRouteBadgeInfo) {
                                         ?: route.longName?.replace(" Line", "") ?: route.routeId,
                         color = parseColor(route.textColor, Color.White),
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp,
+                        fontSize = textSize,
                 )
         }
 }
