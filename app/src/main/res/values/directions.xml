@@ -30,4 +30,6 @@
     <string name="directions_distance_unavailable">Distance unavailable</string>
     <string name="directions_show_stops">Show intermediate stops</string>
     <string name="directions_hide_stops">Hide intermediate stops</string>
+    <string name="directions_departure">Departure</string>
+    <string name="directions_arrival">Arrival</string>
 </resources>

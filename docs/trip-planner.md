@@ -54,7 +54,7 @@ Manual device checks:
 The floating input card has borderless, single-line fields with 4 dp inner
 padding and 48 dp minimum touch targets. A pearl string joins the endpoints;
 the swap control overlays the divider between them. The third row contains
-the existing date/time picker, departure/arrival menu, and speed options button.
+the existing date/time picker, departure/arrival mode label, and speed options button.
 On narrow screens the time controls scroll horizontally while options stay visible.
 Speed options open a scrollable dialog, preserving the current values on dismissal.
 
@@ -67,3 +67,27 @@ height follows each row, including wrapped stop names and expanded stops.
 For device review, check long endpoint names, large system fonts, dark/light
 mode, narrow screens, the swap control, Now/future/arrive-by searches, popup
 scrolling and dismissal, expanded stop lists, and metric/imperial distances.
+
+## Summary navigation and travel-date mode
+
+Tap anywhere on a result card to select the route and open its details. The floating
+endpoint card becomes the selected journey timeline summary while details are open;
+Back or All journeys restores the endpoint fields. There are no Show details or
+Find journeys buttons; endpoint and option changes trigger routing automatically.
+
+The shared TimeSelectorButton accepts optional arriveBy/onArriveByChange values.
+When supplied, the time dialog shows a rounded Departure/Arrival sliding selector.
+Mode and wheel changes are staged until confirmation; Cancel discards them. Arrival
+clears Now, while choosing Now selects Departure. Existing callers omit these
+parameters and keep their existing time-only picker.
+
+Current-location selections carry an explicit flag, allowing either endpoint to
+show a blue location icon even after swapping. Editing or dragging to a new place
+clears that identity. Both map themes query poi_named, poi_r1, poi_r7 and poi_transit
+for POI taps, including restaurant labels; transit features retain click priority.
+
+Device checks: tap result cards and return from details; confirm that the summary
+replaces the endpoint card and occurs only once. Select My location for each endpoint,
+swap, edit and drag it. Apply and cancel both time modes, including Arrival then Now.
+Open a restaurant and other named POIs in both map themes, then select those POIs
+as routing endpoints while a field has focus.

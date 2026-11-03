@@ -2115,7 +2115,7 @@ class MainActivity : ComponentActivity() {
                                         // These are style layer IDs, not the "poi" source-layer name.
                                         // Shared by catenary-web's light and dark map styles.
                                         val poiLayerIds = remember {
-                                            setOf("poi_r1", "poi_r7", "poi_r20", "poi_transit")
+                                            setOf("poi_named", "poi_r1", "poi_r7", "poi_transit")
                                         }
 
                                         MaplibreMap(
@@ -2223,7 +2223,7 @@ class MainActivity : ComponentActivity() {
                                                                         draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
                                                                     }
                                                                 }
-                                                                return@MaplibreMap ClickResult.Pass
+                                                                return@MaplibreMap ClickResult.Consume
                                                             }
                                                         }
 
@@ -4263,6 +4263,7 @@ class MainActivity : ComponentActivity() {
                                                         planner = tripPlanner,
                                                         search = directionsSearch,
                                                         stationHistory = stationHistory,
+                                                        streetUsUnits = streetUsUnits,
                                                         currentLocation = currentLocation,
                                                         mapCenter = camera.position.target,
                                                         modifier = Modifier

@@ -1,5 +1,6 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
@@ -22,6 +23,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -84,7 +86,6 @@ fun TripPlannerScreen(
         if (planner.details) {
             TextButton(onClick = { planner.details = false }) { Text(stringResource(R.string.directions_all_journeys)) }
             planner.itineraries.getOrNull(planner.selected)?.let { journey ->
-                JourneyPreview(journey, true, streetUsUnits, onClick = { onSelectJourney(journey) }, onDetails = { planner.details = false })
                 LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
                     items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits) }
@@ -94,10 +95,6 @@ fun TripPlannerScreen(
         } else {
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    Button(enabled = planner.origin != null && planner.destination != null && !planner.loading,
-                        onClick = { focus.clearFocus(); planner.search(client) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.directions_search))
-                    }
                     if (planner.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
                     planner.error?.let {
                         Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
@@ -109,8 +106,7 @@ fun TripPlannerScreen(
                 items(planner.itineraries.size) { index ->
                     val journey = planner.itineraries[index]
                     JourneyPreview(journey, index == planner.selected, streetUsUnits,
-                        onClick = { planner.selected = index; planner.showTransfers = true; focus.clearFocus(); planner.editing = null; onSelectJourney(journey) },
-                        onDetails = { planner.selected = index; planner.showTransfers = true; planner.details = true; planner.editing = null; focus.clearFocus(); onSelectJourney(journey) })
+                        onClick = { planner.selected = index; planner.showTransfers = true; planner.details = true; planner.editing = null; focus.clearFocus(); onSelectJourney(journey) })
                 }
             }
         }
@@ -121,6 +117,7 @@ fun TripPlannerScreen(
 fun TripPlannerHeader(
     planner: TripPlannerViewModel, search: SearchViewModel,
     currentLocation: Pair<Double, Double>?, mapCenter: Position, stationHistory: StationHistory,
+    streetUsUnits: Boolean,
     modifier: Modifier = Modifier, cardModifier: Modifier = Modifier
 ) {
     val focus = LocalFocusManager.current
@@ -156,23 +153,17 @@ fun TripPlannerHeader(
         focus.clearFocus()
     }
     Column(modifier.imePadding()) {
-        ElevatedCard(modifier = cardModifier.fillMaxWidth().padding(8.dp),
+        if (planner.details) {
+            planner.itineraries.getOrNull(planner.selected)?.let { journey ->
+                JourneyPreview(journey, true, streetUsUnits, onClick = null,
+                    modifier = cardModifier.fillMaxWidth().padding(8.dp))
+            }
+        } else ElevatedCard(modifier = cardModifier.fillMaxWidth().padding(8.dp),
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
             colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                 Row(Modifier.height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
-                    val rail = MaterialTheme.colorScheme.onSurface
-                    Box(Modifier.width(24.dp).fillMaxHeight()) {
-                    Canvas(Modifier.matchParentSize()) {
-                        val x = size.width / 2
-                        val top = size.height / 4
-                        val bottom = size.height * 3 / 4
-                        drawLine(rail, androidx.compose.ui.geometry.Offset(x, top), androidx.compose.ui.geometry.Offset(x, bottom), 2.dp.toPx())
-                        listOf(top, bottom).forEach { y ->
-                            drawCircle(rail, 6.dp.toPx(), androidx.compose.ui.geometry.Offset(x, y), style = Stroke(2.dp.toPx()))
-                        }
-                    }
-                    }
+                    EndpointPearls(planner.origin?.isCurrentLocation == true, planner.destination?.isCurrentLocation == true)
                     Spacer(Modifier.width(8.dp))
                     Box(Modifier.weight(1f)) {
                         Column {
@@ -203,7 +194,7 @@ fun TripPlannerHeader(
                         }
                         TextButton(enabled = currentLocation != null, onClick = {
                             currentLocation?.let { select(planner.editing ?: true,
-                                DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second), false) }
+                                DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second, isCurrentLocation = true), false) }
                         }) { Icon(Icons.Default.MyLocation, null); Text(stringResource(R.string.directions_my_location)) }
                         parseDirectionsCoordinate(query)?.let { coordinate ->
                             TextButton(onClick = { select(planner.editing ?: true, coordinate) }) {
@@ -222,6 +213,31 @@ fun TripPlannerHeader(
                         ListItem(headlineContent = { Text(location.name) },
                             supportingContent = { Text("%.5f, %.5f".format(location.lat, location.lon)) },
                             modifier = Modifier.clickable { select(planner.editing ?: true, location) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.EndpointPearls(originIsCurrent: Boolean, destinationIsCurrent: Boolean) {
+    val rail = MaterialTheme.colorScheme.onSurface
+    val surface = MaterialTheme.colorScheme.surface
+    Box(Modifier.width(24.dp).fillMaxHeight()) {
+        Canvas(Modifier.matchParentSize()) {
+            val x = size.width / 2
+            drawLine(rail, androidx.compose.ui.geometry.Offset(x, size.height / 4),
+                androidx.compose.ui.geometry.Offset(x, size.height * 3 / 4), 2.dp.toPx())
+        }
+        Column(Modifier.fillMaxSize()) {
+            listOf(originIsCurrent, destinationIsCurrent).forEach { current ->
+                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    if (current) Icon(Icons.Default.MyLocation, stringResource(R.string.directions_my_location),
+                        tint = Color(0xFF2196F3), modifier = Modifier.size(20.dp).background(surface, CircleShape))
+                    else Canvas(Modifier.size(16.dp)) {
+                        drawCircle(surface, 6.dp.toPx())
+                        drawCircle(rail, 6.dp.toPx(), style = Stroke(2.dp.toPx()))
                     }
                 }
             }
@@ -249,26 +265,14 @@ private fun EndpointInput(value: String, placeholder: String, label: String, onC
 @Composable
 private fun JourneyTimeControls(planner: TripPlannerViewModel, modifier: Modifier = Modifier) {
     var showOptions by remember { mutableStateOf(false) }
-    var showTimeMode by remember { mutableStateOf(false) }
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.weight(1f).horizontalScroll(rememberScrollState())) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TimeSelectorButton(epochSeconds = planner.time, timezoneId = ZoneId.systemDefault().id,
-                    isNow = planner.now, onTimeChange = { planner.invalidate(); planner.time = it; planner.now = false },
-                    onIsNowChange = { planner.invalidate(); planner.now = it; if (it) planner.arriveBy = false })
-                Box {
-                    TextButton(onClick = { showTimeMode = true }, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                        Text(stringResource(if (planner.arriveBy) R.string.directions_arrive_by else R.string.directions_depart_at))
-                        Icon(Icons.Default.ArrowDropDown, null)
-                    }
-                    DropdownMenu(expanded = showTimeMode, onDismissRequest = { showTimeMode = false }) {
-                        listOf(false, true).forEach { arrive ->
-                            DropdownMenuItem(text = { Text(stringResource(if (arrive) R.string.directions_arrive_by else R.string.directions_depart_at)) },
-                                onClick = { showTimeMode = false; planner.invalidate(); planner.arriveBy = arrive; if (arrive) planner.now = false })
-                        }
-                    }
-                }
-            }
+            TimeSelectorButton(epochSeconds = planner.time, timezoneId = ZoneId.systemDefault().id,
+                isNow = planner.now, onTimeChange = { planner.invalidate(); planner.time = it },
+                onIsNowChange = { planner.invalidate(); planner.now = it; if (it) planner.arriveBy = false },
+                arriveBy = planner.arriveBy,
+                onArriveByChange = { planner.invalidate(); planner.arriveBy = it; if (it) planner.now = false },
+                labelPrefix = stringResource(if (planner.arriveBy) R.string.directions_arrival else R.string.directions_departure))
         }
         VerticalDivider(Modifier.height(40.dp), color = MaterialTheme.colorScheme.outlineVariant)
         IconButton(onClick = { showOptions = true }) {
@@ -350,10 +354,11 @@ private fun LegBadge(leg: DirectionsLeg) {
 }
 
 @Composable
-private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, streetUsUnits: Boolean, onClick: () -> Unit, onDetails: () -> Unit) {
+private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, streetUsUnits: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     val visible = remember(journey) { journey.previewLegs() }
     val times = remember(journey) { journey.previewTimeGroups() }
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(),
+    Card(modifier = modifier.fillMaxWidth().then(if (onClick != null)
+            Modifier.clip(MaterialTheme.shapes.medium).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick) else Modifier),
         border = BorderStroke(if (selected) 2.dp else 1.dp,
             if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -390,7 +395,6 @@ private fun JourneyPreview(journey: DirectionsItinerary, selected: Boolean, stre
                     }
                 }
             }
-            TextButton(onClick = onDetails) { Text(stringResource(R.string.directions_show_details)) }
         }
     }
 }
