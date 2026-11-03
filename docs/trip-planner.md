@@ -48,3 +48,22 @@ Manual device checks:
    walking distances, and map paths. Check light/dark themes.
 7. Leave while routing or searching, then reopen. Check that stale responses do
    not replace new choices and directions paths disappear on Back/Home.
+
+## Compact planner and connection cards
+
+The floating input card has borderless, single-line fields with 4 dp inner
+padding and 48 dp minimum touch targets. A pearl string joins the endpoints;
+the swap control overlays the divider between them. The third row contains
+the existing date/time picker, departure/arrival menu, and speed options button.
+On narrow screens the time controls scroll horizontally while options stay visible.
+Speed options open a scrollable dialog, preserving the current values on dismissal.
+
+Journey previews use neutral cards with an outline on the selected alternative.
+Details follow the web connection-card layout: separate origin/destination cards,
+solid route-colored rails in transit cards, expandable intermediate stops, platform
+labels on the right, and outlined walking/cycling cards with dotted rails. Rail
+height follows each row, including wrapped stop names and expanded stops.
+
+For device review, check long endpoint names, large system fonts, dark/light
+mode, narrow screens, the swap control, Now/future/arrive-by searches, popup
+scrolling and dismissal, expanded stop lists, and metric/imperial distances.
