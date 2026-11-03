@@ -8,7 +8,7 @@
     <string name="directions_start_placeholder">Search start or click on the map</string>
     <string name="directions_destination_placeholder">Search destination or click on the map</string>
     <string name="directions_swap">Swap start and destination</string>
-    <string name="directions_my_location">My location</string>
+    <string name="directions_my_location">Current location</string>
     <string name="directions_map_hint">Search for a place, enter coordinates, or tap the map to set this location.</string>
     <string name="directions_depart_at">Depart at</string>
     <string name="directions_arrive_by">Arrive by</string>
@@ -32,4 +32,7 @@
     <string name="directions_hide_stops">Hide intermediate stops</string>
     <string name="directions_departure">Departure</string>
     <string name="directions_arrival">Arrival</string>
+    <string name="directions_choose_on_map">Choose on map</string>
+    <string name="directions_map_location">Map location</string>
+    <string name="directions_align_pin">Move the map to position the pin, then press OK.</string>
 </resources>

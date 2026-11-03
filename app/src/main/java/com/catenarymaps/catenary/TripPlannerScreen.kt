@@ -187,19 +187,25 @@ fun TripPlannerHeader(
         }
         if (planner.editing != null) {
             Surface(Modifier.fillMaxWidth().weight(1f), color = MaterialTheme.colorScheme.surface) {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
                     item {
                         TextButton(onClick = { planner.editing = null; focus.clearFocus() }) {
                             Text(stringResource(R.string.cancel))
                         }
-                        TextButton(enabled = currentLocation != null, onClick = {
-                            currentLocation?.let { select(planner.editing ?: true,
-                                DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second, isCurrentLocation = true), false) }
-                        }) { Icon(Icons.Default.MyLocation, null); Text(stringResource(R.string.directions_my_location)) }
+                        if (query.isBlank()) {
+                            SearchResultRow(stringResource(R.string.directions_choose_on_map), icon = Icons.Default.LocationOn,
+                                onClick = { planner.mapPicking = planner.editing; planner.editing = null; focus.clearFocus() })
+                        }
+                        SearchResultRow(stringResource(R.string.directions_my_location), icon = Icons.Default.MyLocation,
+                            enabled = currentLocation != null, onClick = {
+                                currentLocation?.let { select(planner.editing ?: true,
+                                    DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second, isCurrentLocation = true), false) }
+                            })
                         parseDirectionsCoordinate(query)?.let { coordinate ->
-                            TextButton(onClick = { select(planner.editing ?: true, coordinate) }) {
-                                Icon(Icons.Default.GridOn, null); Text(coordinate.name)
-                            }
+                            val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
+                            SearchResultRow(coordinate.name, icon = Icons.Default.GridOn,
+                                distance = formatDistanceMeters(haversineDistance(reference.first, reference.second, coordinate.lat, coordinate.lon), streetUsUnits),
+                                onClick = { select(planner.editing ?: true, coordinate) })
                         }
                         if (searchLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
                     }
@@ -210,14 +216,33 @@ fun TripPlannerHeader(
                     val suggestions = (if (query.isBlank()) recent + history else rows.mapNotNull { it.directionsLocation() })
                         .distinctBy { Triple(it.name, it.lat, it.lon) }
                     items(suggestions.take(12)) { location ->
-                        ListItem(headlineContent = { Text(location.name) },
-                            supportingContent = { Text("%.5f, %.5f".format(location.lat, location.lon)) },
-                            modifier = Modifier.clickable { select(planner.editing ?: true, location) })
+                        val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
+                        SearchResultRow(location.name,
+                            distance = formatDistanceMeters(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits),
+                            onClick = { select(planner.editing ?: true, location) })
                     }
                 }
             }
         }
     }
+}
+
+/** Compact whole-row targets with a consistent divider and optional straight-line distance. */
+@Composable
+private fun SearchResultRow(
+    name: String, icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    distance: String? = null, enabled: Boolean = true, onClick: () -> Unit
+) {
+    Row(Modifier.fillMaxWidth().clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+        .heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (icon != null) Icon(icon, null, modifier = Modifier.size(24.dp),
+            tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f))
+        Text(name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f))
+        if (distance != null) Text(distance, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 @Composable
@@ -238,6 +263,7 @@ private fun RowScope.EndpointPearls(originIsCurrent: Boolean, destinationIsCurre
                     else Canvas(Modifier.size(16.dp)) {
                         drawCircle(surface, 6.dp.toPx())
                         drawCircle(rail, 6.dp.toPx(), style = Stroke(2.dp.toPx()))
+                        drawCircle(rail, 2.5.dp.toPx(), style = Stroke(1.dp.toPx()))
                     }
                 }
             }
