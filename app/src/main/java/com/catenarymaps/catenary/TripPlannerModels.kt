@@ -5,7 +5,7 @@ import kotlinx.serialization.json.*
 import kotlin.math.*
 
 @Serializable
-data class DirectionsLocation(val name: String, val lat: Double, val lon: Double) {
+data class DirectionsLocation(val name: String, val lat: Double, val lon: Double, val isCurrentLocation: Boolean = false) {
     fun isValid() = lat.isFinite() && lon.isFinite() && lat in -90.0..90.0 && lon in -180.0..180.0
 }
 
