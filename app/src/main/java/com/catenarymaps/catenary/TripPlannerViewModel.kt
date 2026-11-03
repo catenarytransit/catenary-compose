@@ -22,6 +22,8 @@ class TripPlannerViewModel : ViewModel() {
         private set
     // true = origin, false = destination, null = no endpoint has focus.
     var editing by mutableStateOf<Boolean?>(null)
+    // Endpoint being selected with the fixed centre pin, separate from text search.
+    var mapPicking by mutableStateOf<Boolean?>(null)
     var options by mutableStateOf(DirectionsOptions())
     var arriveBy by mutableStateOf(false)
     var now by mutableStateOf(true)
@@ -57,6 +59,7 @@ class TripPlannerViewModel : ViewModel() {
         if (isOrigin) { origin = location; originText = location.name }
         else { destination = location; destinationText = location.name }
         editing = null
+        mapPicking = null
     }
     fun swap() {
         invalidate()
@@ -65,6 +68,7 @@ class TripPlannerViewModel : ViewModel() {
         editing = null
     }
     fun leave() {
+        mapPicking = null
         generation++
         request?.cancel()
         if (loading) searched = false

@@ -91,3 +91,27 @@ replaces the endpoint card and occurs only once. Select My location for each end
 swap, edit and drag it. Apply and cancel both time modes, including Arrival then Now.
 Open a restaurant and other named POIs in both map themes, then select those POIs
 as routing endpoints while a field has focus.
+
+## Map selection and compact search rows
+
+The Current location action is a full-width row with a 12 dp icon/text gap. Regular
+endpoint pearls have a smaller outlined circle inside; GPS selections retain the
+blue location icon.
+
+An empty focused endpoint search starts with Choose on map. This hides the search
+and journey sheet, disables POI click navigation and endpoint dragging, and displays
+a fixed centre pin above the interactive map. Pan/zoom to align the pin and press OK
+to select that endpoint. The pin tip and projected viewport centre use the same
+screen position, including when the map has camera padding. Cancel or Back restores
+the search without changing either selected endpoint.
+
+Search rows have 6 dp vertical padding, a 48 dp minimum touch target and thin grey
+separators. Straight-line (haversine) distances use the current device position,
+falling back to the map centre when GPS is unavailable, and respect metric/imperial
+settings.
+
+Device review: select Current location by tapping blank space on its row; verify
+icon spacing and double-ring pearls. Choose on map for each endpoint, pan and zoom,
+then confirm/cancel/back; check both portrait and wide layouts and that a POI tap
+does not navigate away while selecting. Compare nearby/far search distances with
+GPS available/unavailable and metric/imperial settings.

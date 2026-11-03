@@ -2128,6 +2128,7 @@ class MainActivity : ComponentActivity() {
                                                 baseStyle = BaseStyle.Uri(styleUri),
                                                 cameraState = camera,
                                                 onMapClick = { latlng, screenPos ->
+                                                        if (directionsVisible && tripPlanner.mapPicking != null) return@MaplibreMap ClickResult.Consume
                                                         println("map clicked")
 
                                                         val projection =
@@ -3448,7 +3449,7 @@ class MainActivity : ComponentActivity() {
                                             if (directionsVisible) TripPlannerMap(tripPlanner)
                                         }
 
-                                        if (directionsVisible) TripPlannerEndpoints(camera, mapSize, tripPlanner) { geoLock.deactivate() }
+                                        if (directionsVisible && tripPlanner.mapPicking == null) TripPlannerEndpoints(camera, mapSize, tripPlanner) { geoLock.deactivate() }
 
                                         if (!directionsVisible) DraggablePinOverlay(
                                                 camera = camera,
@@ -3471,7 +3472,7 @@ class MainActivity : ComponentActivity() {
                                                         .fillMaxWidth(contentWidthFraction)
                                                         .align(Alignment.BottomStart)
 
-                                        Surface(
+                                        if (!directionsVisible || tripPlanner.mapPicking == null) Surface(
                                                 modifier =
                                                         sheetModifier
                                                                 .offset {
@@ -4258,7 +4259,14 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
-                                        if (directionsVisible) {
+                                        LaunchedEffect(tripPlanner.mapPicking) {
+                                                if (tripPlanner.mapPicking != null) geoLock.deactivate()
+                                        }
+                                        if (directionsVisible && tripPlanner.mapPicking != null) {
+                                                TripPlannerMapPicker(camera, mapSize, tripPlanner,
+                                                    modifier = Modifier.fillMaxSize().zIndex(7f))
+                                        }
+                                        if (directionsVisible && tripPlanner.mapPicking == null) {
                                                 TripPlannerHeader(
                                                         planner = tripPlanner,
                                                         search = directionsSearch,
