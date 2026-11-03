@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -79,12 +80,11 @@ fun TripPlannerScreen(
     androidx.activity.compose.BackHandler(enabled = planner.details) { planner.details = false }
 
     Column(Modifier.fillMaxSize().background(Color(0xFFF7F7F7))) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (!planner.details) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.directions_title), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
             NavigationControls(onBack = { if (planner.details) planner.details = false else onBack() }, onHome = onHome)
         }
         if (planner.details) {
-            TextButton(onClick = { planner.details = false }) { Text(stringResource(R.string.directions_all_journeys)) }
             planner.itineraries.getOrNull(planner.selected)?.let { journey ->
                 LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
@@ -154,6 +154,11 @@ fun TripPlannerHeader(
     }
     Column(modifier.imePadding().then(if (planner.details) Modifier.background(Color(0xFFF7F7F7)) else Modifier)) {
         if (planner.details) {
+            TextButton(onClick = { planner.details = false }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.directions_all_journeys))
+            }
             planner.itineraries.getOrNull(planner.selected)?.let { journey ->
                 JourneyPreview(journey, streetUsUnits, onClick = null,
                     modifier = cardModifier.fillMaxWidth().padding(8.dp))
