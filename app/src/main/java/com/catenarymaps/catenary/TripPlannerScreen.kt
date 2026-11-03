@@ -52,6 +52,23 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlin.math.roundToInt
 
+/** Shared by the drawer surface and its cards, using the active app theme. */
+internal object TripPlannerColors {
+    private val dark: Boolean
+        @Composable get() = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+
+    val background: Color
+        @Composable get() = if (dark) Color.Black else Color(0xFFF7F7F7)
+    val card: Color
+        @Composable get() = if (dark) Color(0xFF202124) else Color.White
+    val content: Color
+        @Composable get() = if (dark) Color(0xFFF1F3F4) else Color(0xFF202124)
+    val secondaryContent: Color
+        @Composable get() = if (dark) Color(0xFFBDC1C6) else Color(0xFF5F6368)
+    val streetBorder: Color
+        @Composable get() = if (dark) Color(0xFF5F6368) else Color(0xFF9AA0A6)
+}
+
 @Composable
 fun DirectionsActions(location: DirectionsLocation?, onDirections: (Boolean, DirectionsLocation) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(horizontal = 8.dp)) {
@@ -79,7 +96,7 @@ fun TripPlannerScreen(
     }
     androidx.activity.compose.BackHandler(enabled = planner.details) { planner.details = false }
 
-    Column(Modifier.fillMaxSize().background(Color(0xFFF7F7F7))) {
+    Column(Modifier.fillMaxSize().background(TripPlannerColors.background)) {
         if (!planner.details) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.directions_title), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
             NavigationControls(onBack = { if (planner.details) planner.details = false else onBack() }, onHome = onHome)
@@ -152,7 +169,7 @@ fun TripPlannerHeader(
         planner.editing = null
         focus.clearFocus()
     }
-    Column(modifier.imePadding().then(if (planner.details) Modifier.background(Color(0xFFF7F7F7)) else Modifier)) {
+    Column(modifier.imePadding().then(if (planner.details) Modifier.background(TripPlannerColors.background) else Modifier)) {
         if (planner.details) {
             TextButton(onClick = { planner.details = false }, modifier = Modifier.padding(horizontal = 8.dp)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -165,7 +182,7 @@ fun TripPlannerHeader(
             }
         } else ElevatedCard(modifier = cardModifier.fillMaxWidth().padding(8.dp),
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+            colors = CardDefaults.elevatedCardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                 Row(Modifier.height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
                     EndpointPearls(planner.origin?.isCurrentLocation == true, planner.destination?.isCurrentLocation == true)
@@ -179,7 +196,7 @@ fun TripPlannerHeader(
                                 stringResource(R.string.directions_destination), { planner.edit(false, it) }, { planner.editing = false })
                         }
                         Surface(modifier = Modifier.align(Alignment.CenterEnd), shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+                            color = TripPlannerColors.card, contentColor = TripPlannerColors.content, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                             IconButton(onClick = { focus.clearFocus(); planner.swap() }) {
                                 Icon(Icons.Default.SwapVert, stringResource(R.string.directions_swap))
                             }
@@ -253,7 +270,7 @@ private fun SearchResultRow(
 @Composable
 private fun RowScope.EndpointPearls(originIsCurrent: Boolean, destinationIsCurrent: Boolean) {
     val rail = MaterialTheme.colorScheme.onSurface
-    val surface = MaterialTheme.colorScheme.surface
+    val surface = TripPlannerColors.card
     Box(Modifier.width(24.dp).fillMaxHeight()) {
         Canvas(Modifier.matchParentSize()) {
             val x = size.width / 2
@@ -390,7 +407,7 @@ private fun JourneyPreview(journey: DirectionsItinerary, streetUsUnits: Boolean,
     val times = remember(journey) { journey.previewTimeGroups() }
     Card(modifier = modifier.fillMaxWidth().then(if (onClick != null)
             Modifier.clip(MaterialTheme.shapes.medium).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick) else Modifier),
-        colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = Color(0xFF202124)),
+        colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             PreviewTimeRow(times, directionsDuration(journey.seconds))
@@ -401,7 +418,10 @@ private fun JourneyPreview(journey: DirectionsItinerary, streetUsUnits: Boolean,
                 Row(Modifier.horizontalScroll(rememberScrollState())) {
                     Row(Modifier.width(timelineWidth)) {
                         visible.forEachIndexed { index, leg ->
-                            val color = if (leg.street) Color(0xFF5F6368) else legColor(leg)
+                            val rawColor = legColor(leg)
+                            val color = if (leg.street) TripPlannerColors.secondaryContent
+                                else if (kotlin.math.abs(rawColor.luminance() - TripPlannerColors.card.luminance()) < 0.15f)
+                                    TripPlannerColors.content else rawColor
                             Column(Modifier.weight(weights[index]).clipToBounds()) {
                                 Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -473,9 +493,9 @@ private fun streetLegLabel(leg: DirectionsLeg, imperial: Boolean): String =
 
 @Composable
 private fun JourneyEndpoint(name: String, first: Boolean) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = Color(0xFF202124))) {
+    Card(colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
         Box(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-            ConnectionRow(rail = Color(0xFF202124), pearl = true, first = first, last = !first) {
+            ConnectionRow(rail = TripPlannerColors.content, pearl = true, first = first, last = !first) {
                 Text(name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
             }
         }
@@ -513,14 +533,14 @@ private fun ConnectionRow(
 @Composable
 private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
     var expanded by remember(leg) { mutableStateOf(false) }
-    val surface = Color.White
+    val surface = TripPlannerColors.card
     val rawRail = legColor(leg)
     // Keep near-white/black route colors visible against the current card surface.
-    val rail = if (leg.street) Color(0xFF5F6368)
-        else if (kotlin.math.abs(rawRail.luminance() - surface.luminance()) < 0.15f) Color(0xFF202124) else rawRail
+    val rail = if (leg.street) TripPlannerColors.secondaryContent
+        else if (kotlin.math.abs(rawRail.luminance() - surface.luminance()) < 0.15f) TripPlannerColors.content else rawRail
     Card(modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = surface, contentColor = Color(0xFF202124)),
-        border = if (leg.street) BorderStroke(1.dp, Color(0xFF9AA0A6)) else null) {
+        colors = CardDefaults.cardColors(containerColor = surface, contentColor = TripPlannerColors.content),
+        border = if (leg.street) BorderStroke(1.dp, TripPlannerColors.streetBorder) else null) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
             if (leg.street) {
                 ConnectionRow(rail, time = directionsDuration(leg.seconds), dotted = true) {

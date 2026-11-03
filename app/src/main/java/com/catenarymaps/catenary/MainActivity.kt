@@ -3497,6 +3497,8 @@ class MainActivity : ComponentActivity() {
                                                                 topStart = 20.dp,
                                                                 topEnd = 20.dp
                                                         ),
+                                                // Color the complete drawer, including the handle and bottom inset.
+                                                color = if (directionsVisible) TripPlannerColors.background else MaterialTheme.colorScheme.surface,
                                                 shadowElevation = 8.dp
                                         ) {
                                                 Column(
