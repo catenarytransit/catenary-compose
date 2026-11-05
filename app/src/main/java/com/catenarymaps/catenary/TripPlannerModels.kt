@@ -65,6 +65,12 @@ fun directionsRequest(from: DirectionsLocation, to: DirectionsLocation, time: Lo
                       arriveBy: Boolean, options: DirectionsOptions): JsonObject {
     require(from.isValid() && to.isValid())
     require(options.walkingPace > 0 && options.cyclingKmh > 0)
+    // Match Edelweiss's 1..3600-second contract, including options retained
+    // from older UI versions that allowed zero or several hours.
+    fun budget(seconds: Float): Int {
+        require(seconds.isFinite())
+        return seconds.toInt().coerceIn(1, 3600)
+    }
     fun point(p: DirectionsLocation) = buildJsonObject { put("lat", p.lat); put("lon", p.lon) }
     return buildJsonObject {
         put("from", point(from)); put("to", point(to))
@@ -73,9 +79,9 @@ fun directionsRequest(from: DirectionsLocation, to: DirectionsLocation, time: Lo
         put("preTransitModes", mode); put("postTransitModes", mode)
         put("pedestrianSpeed", 1000.0 / options.walkingPace)
         put("cyclingSpeed", options.cyclingKmh / 3.6)
-        put("maxPreTransitTime", options.accessSeconds.toInt())
-        put("maxPostTransitTime", options.egressSeconds.toInt())
-        put("maxDirectTime", options.directSeconds.toInt()); put("detailed_legs", true)
+        put("maxPreTransitTime", budget(options.accessSeconds))
+        put("maxPostTransitTime", budget(options.egressSeconds))
+        put("maxDirectTime", budget(options.directSeconds)); put("detailed_legs", true)
     }
 }
 
