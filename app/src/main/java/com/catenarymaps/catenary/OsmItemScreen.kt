@@ -126,6 +126,7 @@ fun OsmItemScreen(
     ktorClient: HttpClient,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    onDirections: (Boolean, DirectionsLocation) -> Unit,
     onShowNearbyDepartures: (lat: Double, lon: Double) -> Unit
 ) {
     val context = LocalContext.current
@@ -263,6 +264,8 @@ fun OsmItemScreen(
             )
             NavigationControls(onBack = onBack, onHome = onHome)
         }
+
+        DirectionsActions(nearbyOrigin?.let { DirectionsLocation(title, it.first, it.second) }, onDirections)
 
         Column(
             modifier = Modifier

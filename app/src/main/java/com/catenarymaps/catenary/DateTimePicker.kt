@@ -1,5 +1,9 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,7 +65,10 @@ fun TimeSelectorButton(
     onTimeChange: (Long) -> Unit,
     onIsNowChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    labelPrefix: String? = null
+    labelPrefix: String? = null,
+    // Opt in to the journey mode switch; other date/time consumers stay unchanged.
+    arriveBy: Boolean? = null,
+    onArriveByChange: ((Boolean) -> Unit)? = null
 ) {
     val locale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
     val zone: ZoneId = remember(timezoneId) {
@@ -159,9 +166,11 @@ fun TimeSelectorButton(
             timezoneId = zone.id,
             isNowInitial = isNow,
             onDismiss = { showDialog = false },
-            onConfirm = { newEpoch, lockNow ->
+            arriveByInitial = arriveBy.takeIf { onArriveByChange != null },
+            onConfirm = { newEpoch, lockNow, arrival ->
                 onIsNowChange(lockNow)
                 onTimeChange(newEpoch)
+                if (arrival != null) onArriveByChange?.invoke(arrival)
                 showDialog = false
             }
         )
@@ -174,7 +183,8 @@ private fun TimeSelectorDialog(
     timezoneId: String,
     isNowInitial: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (Long, Boolean) -> Unit
+    arriveByInitial: Boolean? = null,
+    onConfirm: (Long, Boolean, Boolean?) -> Unit
 ) {
     val locale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
     val zone: ZoneId = remember(timezoneId) {
@@ -206,6 +216,7 @@ private fun TimeSelectorDialog(
     var selectedHour by remember { mutableStateOf(initialZoned.hour) }
     var selectedMinute by remember { mutableStateOf(initialZoned.minute) }
     var lockToNow by remember { mutableStateOf(isNowInitial) }
+    var arriveBy by remember { mutableStateOf(arriveByInitial) }
 
     val today = remember(zone) { LocalDate.now(zone) }
     // Allow a wider history window for inspecting past trips.
@@ -259,6 +270,14 @@ private fun TimeSelectorDialog(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                arriveBy?.let { arrival ->
+                    DepartureArrivalSlider(arrival) {
+                        arriveBy = it
+                        if (it) lockToNow = false
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -346,6 +365,7 @@ private fun TimeSelectorDialog(
                             onClick = {
                                 if (!lockToNow) {
                                     lockToNow = true
+                                    if (arriveBy != null) arriveBy = false
                                     val now = ZonedDateTime.now(zone)
                                     selectedDate = now.toLocalDate()
                                     selectedHour = now.hour
@@ -373,7 +393,7 @@ private fun TimeSelectorDialog(
                                     val localTime = LocalTime.of(selectedHour, selectedMinute)
                                     ZonedDateTime.of(selectedDate, localTime, zone).toInstant()
                                 }
-                                onConfirm(finalInstant.epochSecond, lockToNow)
+                                onConfirm(finalInstant.epochSecond, lockToNow, arriveBy)
                             }
                         ) {
                             val previewTime = if (lockToNow) {
@@ -390,6 +410,29 @@ private fun TimeSelectorDialog(
         }
     }
 }
+/** Rounded two-position slider with its labels inside the track. Changes are staged until Apply. */
+@Composable
+private fun DepartureArrivalSlider(arriveBy: Boolean, onChange: (Boolean) -> Unit) {
+    val shape = RoundedCornerShape(50)
+    BoxWithConstraints(Modifier.fillMaxWidth().clip(shape)
+        .background(MaterialTheme.colorScheme.surfaceVariant)
+        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)) {
+        val thumbOffset by animateDpAsState(if (arriveBy) maxWidth / 2 else 0.dp, label = "journey time mode")
+        Box(Modifier.offset(x = thumbOffset).width(maxWidth / 2).height(48.dp)
+            .clip(shape).background(MaterialTheme.colorScheme.secondaryContainer)
+            .border(1.dp, MaterialTheme.colorScheme.outline, shape))
+        Row(Modifier.fillMaxWidth().selectableGroup()) {
+            listOf(false, true).forEach { arrival ->
+                Box(Modifier.weight(1f).height(48.dp).selectable(selected = arriveBy == arrival,
+                    role = Role.RadioButton, onClick = { onChange(arrival) }), contentAlignment = Alignment.Center) {
+                    Text(stringResource(if (arrival) R.string.directions_arrival else R.string.directions_departure),
+                        color = if (arriveBy == arrival) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun <T> WheelPicker(
     items: List<T>,

@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
@@ -42,7 +43,9 @@ data class ResolvedRouteBadgeInfo(
 fun SelectionRouteBadges(
         routeIds: List<String>,
         resolveRouteInfo: (String) -> ResolvedRouteBadgeInfo?,
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
+        textSize: TextUnit = 10.sp,
+        compact: Boolean = false
 ) {
     val routeInfos =
         remember(routeIds) {
@@ -96,7 +99,8 @@ fun SelectionRouteBadges(
                             Text(
                                 text = info.name,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold
+                                fontSize = if (textSize == 10.sp && !compact) TextUnit.Unspecified else textSize,
+                                fontWeight = if (compact) FontWeight.Normal else FontWeight.SemiBold
                             )
                                 }
                         }
@@ -151,14 +155,14 @@ fun SelectionRouteBadges(
                                                                 imageLoader = imageLoader,
                                                                 contentDescription =
                                                                         route.shortName,
-                                                                modifier = Modifier.size(20.dp)
+                                                                modifier = Modifier.size(if (compact) 16.dp else 20.dp)
                                                         )
                                                 } else {
                                                         // Fallback to standard badge if icon fails?
                                                         // Or just skip?
                                                         // Usually existing logic falls back to
                                                         // standard badge.
-                                                        StandardRouteBadge(route)
+                                                        StandardRouteBadge(route, textSize, compact)
                                                 }
                                         } else if (isMta) {
                                                 val iconUrl =
@@ -189,13 +193,13 @@ fun SelectionRouteBadges(
                                                                 imageLoader = imageLoader,
                                                                 contentDescription =
                                                                         route.shortName,
-                                                                modifier = Modifier.size(20.dp)
+                                                                modifier = Modifier.size(if (compact) 16.dp else 20.dp)
                                                         )
                                                 } else {
-                                                        StandardRouteBadge(route)
+                                                        StandardRouteBadge(route, textSize, compact)
                                                 }
                                         } else {
-                                                StandardRouteBadge(route)
+                                                StandardRouteBadge(route, textSize, compact)
                                         }
                                 }
                         }
@@ -204,20 +208,21 @@ fun SelectionRouteBadges(
 }
 
 @Composable
-fun StandardRouteBadge(route: ResolvedRouteBadgeInfo) {
+fun StandardRouteBadge(route: ResolvedRouteBadgeInfo, textSize: TextUnit = 10.sp, compact: Boolean = false) {
         Box(
                 modifier =
                         Modifier
                             .clip(RoundedCornerShape(4.dp))
                             .background(parseColor(route.color, Color.Black))
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                            .padding(horizontal = if (compact) 3.dp else 4.dp, vertical = if (compact) 1.dp else 2.dp)
         ) {
                 Text(
                         text = route.shortName
                                         ?: route.longName?.replace(" Line", "") ?: route.routeId,
                         color = parseColor(route.textColor, Color.White),
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp,
+                        fontSize = textSize,
+                        fontWeight = if (compact) FontWeight.Normal else null,
                 )
         }
 }
