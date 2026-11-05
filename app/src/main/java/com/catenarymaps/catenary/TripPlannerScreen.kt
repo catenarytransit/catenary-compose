@@ -457,9 +457,18 @@ private fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: B
                                 val trailingStreet = leg.street && index == visible.lastIndex && index > 0
                                 if (!trailingStreet) LegModeIcon(leg, preview = true)
                                 Canvas(Modifier.weight(1f).fillMaxHeight()) {
-                                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height / 2),
-                                        androidx.compose.ui.geometry.Offset(size.width, size.height / 2), strokeWidth = 2.dp.toPx(),
-                                        pathEffect = if (leg.street) PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 4.dp.toPx())) else null)
+                                    if (leg.street) {
+                                        val radius = 1.dp.toPx()
+                                        val spacing = 6.dp.toPx()
+                                        var x = radius
+                                        while (x + radius <= size.width) {
+                                            drawCircle(color, radius, androidx.compose.ui.geometry.Offset(x, size.height / 2))
+                                            x += spacing
+                                        }
+                                    } else {
+                                        drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height / 2),
+                                            androidx.compose.ui.geometry.Offset(size.width, size.height / 2), strokeWidth = 2.dp.toPx())
+                                    }
                                 }
                                 if (trailingStreet) LegModeIcon(leg, preview = true)
                             }

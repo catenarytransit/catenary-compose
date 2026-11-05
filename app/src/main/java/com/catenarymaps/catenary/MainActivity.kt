@@ -140,6 +140,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.EncodeDefault
@@ -1197,6 +1198,10 @@ class MainActivity : ComponentActivity() {
                         }
                 }
 
+                // Read before constructing navigation so a cold launch opens the saved screen.
+                lifecycleScope.launch {
+                    val plannerSessionStore = TripPlannerSessionStore(File(noBackupFilesDir, "trip-planner-session.json"))
+                    val initialPlannerSession = withContext(Dispatchers.IO) { plannerSessionStore.read() }
                 setContent {
                         val context = LocalContext.current
                         val lifecycleOwner = LocalLifecycleOwner.current
@@ -1231,6 +1236,8 @@ class MainActivity : ComponentActivity() {
                         val scope = rememberCoroutineScope()
                         val snackbars = remember { SnackbarHostState() }
                         val tripPlanner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                        val plannerWasCreated = remember(tripPlanner) { tripPlanner.restoreSession(initialPlannerSession) }
+                        val restorePlanner = remember(tripPlanner) { tripPlanner.session(visible = true) != null }
                         val directionsSearch: SearchViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "directions-search")
 
                         val appUpdateManager = remember {
@@ -1291,7 +1298,13 @@ class MainActivity : ComponentActivity() {
                                                 } catch (e: Exception) {
                                                         emptyList()
                                                 }
-                                                ArrayDeque(list)
+                                                // A process-restored blank planner has no usable session.
+                                                // Ordinary configuration changes retain the ViewModel instead.
+                                                ArrayDeque(when {
+                                                        plannerWasCreated && restorePlanner -> listOf(CatenaryStackEnum.DirectionsStack)
+                                                        plannerWasCreated && list.lastOrNull() is CatenaryStackEnum.DirectionsStack -> emptyList()
+                                                        else -> list
+                                                })
                                         }
                                 )
 
@@ -1310,10 +1323,20 @@ class MainActivity : ComponentActivity() {
                                 )
 
                         var catenaryStack by rememberSaveable(saver = mutableStackSaver) {
-                                mutableStateOf(ArrayDeque<CatenaryStackEnum>())
+                                mutableStateOf(ArrayDeque<CatenaryStackEnum>().apply {
+                                        if (restorePlanner) addLast(CatenaryStackEnum.DirectionsStack)
+                                })
                         }
 
                     val directionsVisible = catenaryStack.lastOrNull() is CatenaryStackEnum.DirectionsStack
+                    val plannerVisible by rememberUpdatedState(directionsVisible)
+                    LaunchedEffect(tripPlanner, plannerSessionStore) {
+                        // Observe navigation and selection as well as results. Sequential atomic writes
+                        // keep an older result from overwriting a newer details/cleared state.
+                        snapshotFlow { tripPlanner.session(plannerVisible) }.collect { session ->
+                            withContext(Dispatchers.IO) { plannerSessionStore.write(session) }
+                        }
+                    }
                     var currentLocation by remember {
                         mutableStateOf<Pair<Double, Double>?>(null)
                     }
@@ -5868,6 +5891,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                 }
                         }
+                }
                 }
         }
 

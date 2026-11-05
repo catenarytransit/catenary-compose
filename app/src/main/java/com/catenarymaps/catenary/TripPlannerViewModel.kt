@@ -42,6 +42,32 @@ class TripPlannerViewModel : ViewModel() {
     private var request: Job? = null
     private var generation = 0
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
+    private var sessionInitialized = false
+
+    /** A retained ViewModel already owns the latest state during Activity recreation. */
+    internal fun restoreSession(session: TripPlannerSession?): Boolean {
+        if (sessionInitialized) return false
+        sessionInitialized = true
+        val saved = session?.validated() ?: return true
+        origin = saved.origin; originText = saved.origin.name
+        destination = saved.destination; destinationText = saved.destination.name
+        options = saved.options; arriveBy = saved.arriveBy; now = saved.now; time = saved.time
+        itineraries = saved.itineraries; selected = saved.selected
+        details = saved.details; showTransfers = saved.showTransfers
+        searched = true
+        return true
+    }
+
+    /** Empty, invalidated and unfinished searches must never reopen an empty planner. */
+    internal fun session(visible: Boolean): TripPlannerSession? {
+        if (!visible || loading || !searched || error != null || itineraries.isEmpty()) return null
+        return TripPlannerSession(
+            origin = origin ?: return null, destination = destination ?: return null,
+            options = options, arriveBy = arriveBy, now = now, time = time,
+            itineraries = itineraries, selected = selected, details = details,
+            showTransfers = showTransfers
+        ).validated()
+    }
 
     fun invalidate() {
         generation++; request?.cancel(); loading = false; searched = false

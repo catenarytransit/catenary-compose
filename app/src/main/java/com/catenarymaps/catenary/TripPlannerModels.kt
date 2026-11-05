@@ -55,6 +55,7 @@ data class DirectionsPlan(
     val direct: List<DirectionsItinerary> = emptyList()
 )
 
+@Serializable
 data class DirectionsOptions(
     val cycling: Boolean = false, val walkingPace: Float = 840f, val cyclingKmh: Float = 16f,
     val accessSeconds: Float = 900f, val egressSeconds: Float = 900f, val directSeconds: Float = 1800f
