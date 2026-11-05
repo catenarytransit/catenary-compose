@@ -1883,6 +1883,7 @@ class MainActivity : ComponentActivity() {
                                                 screenHeightPx - collapsedHandleHeight - bottomInset
 
                                         var directionsHeaderHeight by remember { mutableIntStateOf(0) }
+                                        var directionsDetailsHeight by remember { mutableIntStateOf(0) }
                                         val directionsTopInset = WindowInsets.safeDrawing.getTop(density)
                                         // Floating planner cards may overlap the sheet; they never constrain its anchors.
                                         val expandedAnchor = maxOf(with(density) { 60.dp.toPx() }, directionsTopInset.toFloat())
@@ -3699,6 +3700,12 @@ class MainActivity : ComponentActivity() {
                                                                                     planner = tripPlanner,
                                                                                     client = ktorHttpClient,
                                                                                     streetUsUnits = streetUsUnits,
+                                                                                    // The handle occupies 24.dp above the list. Reserve only
+                                                                                    // the remaining overlap beneath the floating summary.
+                                                                                    detailsTopPadding = with(density) {
+                                                                                        (directionsTopInset + directionsDetailsHeight - draggableState.requireOffset() - 24.dp.toPx())
+                                                                                            .coerceAtLeast(0f).toDp()
+                                                                                    },
                                                                                     onSelectJourney = { journey ->
                                                                                         val positions = journey.legs.flatMap { directionsCoordinates(it) }
                                                                                         if (positions.isNotEmpty()) scope.launch {
@@ -4271,6 +4278,13 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
+                                        // Start loading at the middle position so the input card stays open.
+                                        LaunchedEffect(directionsVisible, tripPlanner.loading) {
+                                                if (directionsVisible && tripPlanner.loading) {
+                                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                                }
+                                        }
+
                                         // Fit once per completed response, after restoring the middle drawer position.
                                         LaunchedEffect(directionsVisible, tripPlanner.loading, tripPlanner.itineraries) {
                                                 if (directionsVisible && tripPlanner.searched && !tripPlanner.loading && tripPlanner.error == null) {
@@ -4314,12 +4328,14 @@ class MainActivity : ComponentActivity() {
                                                                 .windowInsetsPadding(WindowInsets.safeDrawing)
                                                                 .zIndex(6f),
                                                         compact = isLandscape && configuration.screenHeightDp < 480 && configuration.smallestScreenWidthDp < 600,
-                                                        collapseInputs = draggableState.requireOffset() < directionsHeaderHeight + directionsTopInset + with(density) { 16.dp.toPx() },
+                                                        collapseInputs = tripPlanner.searched && !tripPlanner.loading &&
+                                                                draggableState.requireOffset() < directionsHeaderHeight + directionsTopInset + with(density) { 16.dp.toPx() },
                                                         collapseDetails = draggableState.requireOffset() < screenHeightPx * 0.3f ||
                                                                 draggableState.requireOffset() > screenHeightPx * 0.75f,
                                                         onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) },
                                                         cardModifier = Modifier,
-                                                        onExpandedHeight = { directionsHeaderHeight = it }
+                                                        onExpandedHeight = { directionsHeaderHeight = it },
+                                                        onDetailsHeight = { directionsDetailsHeight = it }
 
                                                 )
                                         }

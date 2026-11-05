@@ -1,5 +1,10 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
@@ -86,6 +91,7 @@ fun DirectionsActions(location: DirectionsLocation?, onDirections: (Boolean, Dir
 @Composable
 fun TripPlannerScreen(
     planner: TripPlannerViewModel, client: HttpClient, streetUsUnits: Boolean,
+    detailsTopPadding: androidx.compose.ui.unit.Dp = 0.dp,
     onSelectJourney: (DirectionsItinerary) -> Unit
 ) {
     val focus = LocalFocusManager.current
@@ -101,7 +107,7 @@ fun TripPlannerScreen(
     Column(Modifier.fillMaxSize().background(TripPlannerColors.background)) {
         if (planner.details) {
             planner.itineraries.getOrNull(planner.selected)?.let { journey ->
-                LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyColumn(Modifier.weight(1f).padding(top = detailsTopPadding), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
                     items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits) }
                     item { JourneyEndpoint(planner.destination?.name.orEmpty(), false) }
@@ -135,7 +141,8 @@ fun TripPlannerHeader(
     streetUsUnits: Boolean,
     modifier: Modifier = Modifier, cardModifier: Modifier = Modifier,
     compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Boolean = false,
-    onBack: () -> Unit = {}, onExpandedHeight: (Int) -> Unit = {}
+    onBack: () -> Unit = {}, onExpandedHeight: (Int) -> Unit = {},
+    onDetailsHeight: (Int) -> Unit = {}
 ) {
     val focus = LocalFocusManager.current
     val rows by search.searchRows.collectAsState()
@@ -174,23 +181,29 @@ fun TripPlannerHeader(
     val collapsed = collapseInputs && !inputsExpanded && planner.editing == null
     val originName = planner.originText.ifBlank { stringResource(R.string.directions_origin) }
     val destinationName = planner.destinationText.ifBlank { stringResource(R.string.directions_destination) }
-    Column(modifier.imePadding()) {
+    Column(modifier.imePadding().onSizeChanged { if (planner.details) onDetailsHeight(it.height) }) {
         if (planner.details) {
             FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp),
                 shape = CircleShape, colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back))
             }
-            androidx.compose.animation.AnimatedContent(targetState = collapseDetails, label = "journey header") { small ->
-                if (small) Card(modifier = cardModifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
-                    Column(Modifier.padding(12.dp)) {
+            // Keep the surface in place; only its contents fade and its height changes.
+            Card(modifier = cardModifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+                AnimatedContent(
+                    modifier = Modifier.fillMaxWidth(),
+                    targetState = collapseDetails,
+                    transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(150)) },
+                    label = "journey summary contents"
+                ) { small ->
+                    if (small) Column(Modifier.padding(12.dp)) {
                         Text("$originName →", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(destinationName, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    } else planner.itineraries.getOrNull(planner.selected)?.let { journey ->
+                        JourneyPreviewContent(journey, streetUsUnits)
                     }
-                } else planner.itineraries.getOrNull(planner.selected)?.let { journey ->
-                    JourneyPreview(journey, streetUsUnits, onClick = null,
-                        modifier = cardModifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp))
                 }
             }
         } else ElevatedCard(modifier = cardModifier.fillMaxWidth().padding(8.dp)
@@ -425,45 +438,50 @@ private fun LegBadge(leg: DirectionsLeg, preview: Boolean = false) {
 
 @Composable
 private fun JourneyPreview(journey: DirectionsItinerary, streetUsUnits: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
-    val visible = remember(journey) { journey.previewLegs() }
-    val times = remember(journey) { journey.previewTimeGroups() }
     Card(modifier = modifier.fillMaxWidth().then(if (onClick != null)
             Modifier.clip(MaterialTheme.shapes.medium).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick) else Modifier),
         colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            PreviewTimeRow(times, directionsDuration(journey.seconds))
-            BoxWithConstraints(Modifier.fillMaxWidth()) {
-                // Keep icons and their labels in the same segment column even on long journeys.
-                val timelineWidth = maxOf(maxWidth, (visible.size * 48).dp)
-                val weights = timelineWeights(visible, timelineWidth.value)
-                Row(Modifier.horizontalScroll(rememberScrollState())) {
-                    Row(Modifier.width(timelineWidth)) {
-                        visible.forEachIndexed { index, leg ->
-                            val rawColor = legColor(leg)
-                            val color = if (leg.street) TripPlannerColors.secondaryContent
-                                else if (kotlin.math.abs(rawColor.luminance() - TripPlannerColors.card.luminance()) < 0.15f)
-                                    TripPlannerColors.content else rawColor
-                            Column(Modifier.weight(weights[index]).clipToBounds()) {
-                                Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    val trailingStreet = leg.street && index == visible.lastIndex && index > 0
-                                    if (!trailingStreet) LegModeIcon(leg, preview = true)
-                                    Canvas(Modifier.weight(1f).fillMaxHeight()) {
-                                        drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height / 2),
-                                            androidx.compose.ui.geometry.Offset(size.width, size.height / 2), strokeWidth = 2.dp.toPx(),
-                                            pathEffect = if (leg.street) PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 4.dp.toPx())) else null)
-                                    }
-                                    if (trailingStreet) LegModeIcon(leg, preview = true)
+        JourneyPreviewContent(journey, streetUsUnits)
+    }
+}
+
+@Composable
+private fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: Boolean) {
+    val visible = remember(journey) { journey.previewLegs() }
+    val times = remember(journey) { journey.previewTimeGroups() }
+    Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        PreviewTimeRow(times, directionsDuration(journey.seconds))
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            // Keep icons and their labels in the same segment column even on long journeys.
+            val timelineWidth = maxOf(maxWidth, (visible.size * 48).dp)
+            val weights = timelineWeights(visible, timelineWidth.value)
+            Row(Modifier.horizontalScroll(rememberScrollState())) {
+                Row(Modifier.width(timelineWidth)) {
+                    visible.forEachIndexed { index, leg ->
+                        val rawColor = legColor(leg)
+                        val color = if (leg.street) TripPlannerColors.secondaryContent
+                            else if (kotlin.math.abs(rawColor.luminance() - TripPlannerColors.card.luminance()) < 0.15f)
+                                TripPlannerColors.content else rawColor
+                        Column(Modifier.weight(weights[index]).clipToBounds()) {
+                            Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                val trailingStreet = leg.street && index == visible.lastIndex && index > 0
+                                if (!trailingStreet) LegModeIcon(leg, preview = true)
+                                Canvas(Modifier.weight(1f).fillMaxHeight()) {
+                                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height / 2),
+                                        androidx.compose.ui.geometry.Offset(size.width, size.height / 2), strokeWidth = 2.dp.toPx(),
+                                        pathEffect = if (leg.street) PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 4.dp.toPx())) else null)
                                 }
-                                if (leg.street) {
-                                    Text("${(leg.seconds / 60).roundToInt()}′" +
-                                        (directionsDistance(leg)?.let { " · ${formatDistanceMeters(it, streetUsUnits)}" } ?: ""), fontSize = 10.sp,
-                                        modifier = Modifier.padding(top = 2.dp, end = 4.dp),
-                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                } else {
-                                    Box(Modifier.padding(top = 2.dp, end = 4.dp)) { LegBadge(leg, preview = true) }
-                                }
+                                if (trailingStreet) LegModeIcon(leg, preview = true)
+                            }
+                            if (leg.street) {
+                                Text("${(leg.seconds / 60).roundToInt()}′" +
+                                    (directionsDistance(leg)?.let { " · ${formatDistanceMeters(it, streetUsUnits)}" } ?: ""), fontSize = 10.sp,
+                                    modifier = Modifier.padding(top = 2.dp, end = 4.dp),
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            } else {
+                                Box(Modifier.padding(top = 2.dp, end = 4.dp)) { LegBadge(leg, preview = true) }
                             }
                         }
                     }
@@ -586,9 +604,12 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
                     Text(leg.routeLongName, style = MaterialTheme.typography.bodyMedium)
                 }
                 ConnectionRow(rail) {
-                    TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) {
-                        Text(stringResource(R.string.directions_stops_duration, leg.intermediateStops.size, directionsDuration(leg.seconds)),
-                            modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                    val stopsDuration = stringResource(R.string.directions_stops_duration,
+                        leg.intermediateStops.size, directionsDuration(leg.seconds))
+                    if (leg.intermediateStops.isEmpty()) {
+                        Text(stopsDuration, style = MaterialTheme.typography.bodyMedium)
+                    } else TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) {
+                        Text(stopsDuration, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                         Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             stringResource(if (expanded) R.string.directions_hide_stops else R.string.directions_show_stops))
                     }
