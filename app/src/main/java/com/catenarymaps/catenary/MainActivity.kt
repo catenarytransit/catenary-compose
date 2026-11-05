@@ -1314,8 +1314,18 @@ class MainActivity : ComponentActivity() {
                         }
 
                     val directionsVisible = catenaryStack.lastOrNull() is CatenaryStackEnum.DirectionsStack
+                    var currentLocation by remember {
+                        mutableStateOf<Pair<Double, Double>?>(null)
+                    }
+                    val currentLocationLabel = stringResource(R.string.directions_my_location)
                     val openDirections: (Boolean, DirectionsLocation) -> Unit = { origin, location ->
-                        tripPlanner.choose(origin, location)
+                        tripPlanner.chooseFromLocationAction(
+                            origin,
+                            location,
+                            currentLocation?.let { (lat, lon) ->
+                                DirectionsLocation(currentLocationLabel, lat, lon, isCurrentLocation = true)
+                            }
+                        )
                         catenaryStack = ArrayDeque(catenaryStack.filterNot { it is CatenaryStackEnum.DirectionsStack }).apply {
                             addLast(CatenaryStackEnum.DirectionsStack)
                         }
@@ -1647,9 +1657,6 @@ class MainActivity : ComponentActivity() {
 
                         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-                        var currentLocation by remember {
-                                mutableStateOf<Pair<Double, Double>?>(null)
-                        }
 
                         // Start live location updates and keep currentLocation in sync
                         val hasFinePermission =

@@ -61,6 +61,21 @@ class TripPlannerViewModel : ViewModel() {
         editing = null
         mapPicking = null
     }
+    /** Location-card shortcuts seed the opposite endpoint with a nearby user location. */
+    fun chooseFromLocationAction(
+        isOrigin: Boolean,
+        location: DirectionsLocation,
+        currentLocation: DirectionsLocation?
+    ) {
+        if (!location.isValid()) return
+        choose(isOrigin, location)
+        if (currentLocation?.isValid() == true &&
+            haversineDistance(location.lat, location.lon, currentLocation.lat, currentLocation.lon) < 500_000.0
+        ) {
+            choose(!isOrigin, currentLocation)
+        }
+    }
+
     fun swap() {
         invalidate()
         val old = origin; origin = destination; destination = old
