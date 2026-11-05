@@ -1241,7 +1241,7 @@ class MainActivity : ComponentActivity() {
                         val directionsSearch: SearchViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "directions-search")
 
                         val appUpdateManager = remember {
-                                AppUpdateManagerFactory.create(this.applicationContext)
+                                AppUpdateManagerFactory.create(this@MainActivity.applicationContext)
                         }
 
                         var stopsToHide by remember { mutableStateOf(emptySet<String>()) }
@@ -1456,7 +1456,7 @@ class MainActivity : ComponentActivity() {
 
                                 val optOut = !isChecked
                                 try {
-                                        GoogleAnalytics.getInstance(this).appOptOut = optOut
+                                        GoogleAnalytics.getInstance(this@MainActivity).appOptOut = optOut
 
                                         firebaseAnalytics.setConsent(
                                                 mapOf(
@@ -1678,13 +1678,13 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
 
-                        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+                        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
 
 
                         // Start live location updates and keep currentLocation in sync
                         val hasFinePermission =
                                 ContextCompat.checkSelfPermission(
-                                        this,
+                                        this@MainActivity,
                                         Manifest.permission.ACCESS_FINE_LOCATION
                                 ) == PackageManager.PERMISSION_GRANTED
 
