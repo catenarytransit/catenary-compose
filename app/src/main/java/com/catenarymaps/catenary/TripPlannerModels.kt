@@ -32,7 +32,8 @@ data class DirectionsLeg(
     val from: DirectionsPoint? = null, val to: DirectionsPoint? = null,
     val fromPlatform: String? = null, val toPlatform: String? = null,
     val intermediateStops: List<DirectionsStop> = emptyList(),
-    val legGeometry: DirectionsGeometry? = null
+    val legGeometry: DirectionsGeometry? = null,
+    val headsign: String? = null
 ) {
     val street get() = mode.uppercase() in setOf("WALK", "BIKE", "BICYCLE")
     val label get() = routeShortName ?: routeLongName ?: routeId ?: mode
