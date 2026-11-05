@@ -3473,6 +3473,10 @@ class MainActivity : ComponentActivity() {
                                                 Modifier
                                                         .fillMaxWidth(contentWidthFraction)
                                                         .align(Alignment.BottomStart)
+                                                        // Landscape three-button navigation can occupy either side.
+                                                        .windowInsetsPadding(
+                                                                WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+                                                        )
 
                                         if (!directionsVisible || tripPlanner.mapPicking == null) Surface(
                                                 modifier =
@@ -3536,6 +3540,11 @@ class MainActivity : ComponentActivity() {
                                                                                                                 }
                                                                                                         )
                                                                                         }
+                                                                        )
+                                                                        // Apply after offset compensation so the visible drawer
+                                                                        // content ends above bottom navigation in every snap state.
+                                                                        .windowInsetsPadding(
+                                                                                WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
                                                                         ),
                                                         horizontalAlignment =
                                                                 Alignment.CenterHorizontally
