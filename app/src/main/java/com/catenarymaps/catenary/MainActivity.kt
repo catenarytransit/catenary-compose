@@ -1884,8 +1884,8 @@ class MainActivity : ComponentActivity() {
 
                                         var directionsHeaderHeight by remember { mutableIntStateOf(0) }
                                         val directionsTopInset = WindowInsets.safeDrawing.getTop(density)
-                                        val expandedAnchor = maxOf(with(density) { 60.dp.toPx() },
-                                                if (directionsVisible) directionsHeaderHeight.toFloat() + directionsTopInset else 0f)
+                                        // Floating planner cards may overlap the sheet; they never constrain its anchors.
+                                        val expandedAnchor = maxOf(with(density) { 60.dp.toPx() }, directionsTopInset.toFloat())
                                                 .coerceAtMost(collapsedAnchor)
                                         val anchors =
                                                 DraggableAnchors<SheetSnapPoint> {
@@ -3446,10 +3446,12 @@ class MainActivity : ComponentActivity() {
                                                 DraggablePinLayers(pin = pin.copy(active = pin.active && !directionsVisible))
                                             // Fixed pin tied to the active map selection; no drag hitbox.
                                             SelectedLocationPinLayers(pin = selectedLocationPin)
-                                            if (directionsVisible) TripPlannerMap(tripPlanner)
+                                            if (directionsVisible) {
+                                                TripPlannerMap(tripPlanner)
+                                                if (tripPlanner.mapPicking == null) TripPlannerEndpoints(tripPlanner)
+                                            }
                                         }
 
-                                        if (directionsVisible && tripPlanner.mapPicking == null) TripPlannerEndpoints(camera, mapSize, tripPlanner) { geoLock.deactivate() }
 
                                         if (!directionsVisible) DraggablePinOverlay(
                                                 camera = camera,
@@ -3471,6 +3473,10 @@ class MainActivity : ComponentActivity() {
                                                 Modifier
                                                         .fillMaxWidth(contentWidthFraction)
                                                         .align(Alignment.BottomStart)
+                                                        // Landscape three-button navigation can occupy either side.
+                                                        .windowInsetsPadding(
+                                                                WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+                                                        )
 
                                         if (!directionsVisible || tripPlanner.mapPicking == null) Surface(
                                                 modifier =
@@ -3534,6 +3540,11 @@ class MainActivity : ComponentActivity() {
                                                                                                                 }
                                                                                                         )
                                                                                         }
+                                                                        )
+                                                                        // Apply after offset compensation so the visible drawer
+                                                                        // content ends above bottom navigation in every snap state.
+                                                                        .windowInsetsPadding(
+                                                                                WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
                                                                         ),
                                                         horizontalAlignment =
                                                                 Alignment.CenterHorizontally
@@ -3701,8 +3712,7 @@ class MainActivity : ComponentActivity() {
                                                                                                 ), padding = desiredPadding
                                                                                             )
                                                                                         }
-                                                                                    },
-                                                                                    onBack = onBack, onHome = onHome
+                                                                                    }
                                                                                 )
                                                                             }
 
@@ -4261,6 +4271,27 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
+                                        // Fit once per completed response, after restoring the middle drawer position.
+                                        LaunchedEffect(directionsVisible, tripPlanner.loading, tripPlanner.itineraries) {
+                                                if (directionsVisible && tripPlanner.searched && !tripPlanner.loading && tripPlanner.error == null) {
+                                                        tripPlanner.editing = null
+                                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                                        val positions = tripPlanner.itineraries.flatMap { journey -> journey.legs.flatMap { directionsCoordinates(it) } }
+                                                        if (positions.isNotEmpty()) {
+                                                                geoLock.deactivate()
+                                                                val fitPadding = if (contentWidthFraction == 1f) PaddingValues(
+                                                                        top = with(density) { (directionsHeaderHeight + directionsTopInset).toDp() } + 16.dp,
+                                                                        bottom = with(density) { (screenHeightPx - draggableState.requireOffset()).toDp() } + 16.dp,
+                                                                        start = 24.dp, end = 24.dp
+                                                                ) else PaddingValues(start = with(density) { (mapSize.width * contentWidthFraction).toDp() } + 24.dp,
+                                                                        top = 24.dp, end = 24.dp, bottom = 24.dp)
+                                                                camera.animateTo(boundingBox = org.maplibre.spatialk.geojson.BoundingBox(
+                                                                        positions.minOf { it.second } - 0.001, positions.minOf { it.first } - 0.001,
+                                                                        positions.maxOf { it.second } + 0.001, positions.maxOf { it.first } + 0.001), padding = fitPadding)
+                                                        }
+                                                }
+                                        }
+
                                         LaunchedEffect(tripPlanner.mapPicking) {
                                                 if (tripPlanner.mapPicking != null) geoLock.deactivate()
                                         }
@@ -4282,7 +4313,14 @@ class MainActivity : ComponentActivity() {
                                                                 .then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier)
                                                                 .windowInsetsPadding(WindowInsets.safeDrawing)
                                                                 .zIndex(6f),
-                                                        cardModifier = Modifier.onSizeChanged { directionsHeaderHeight = it.height }
+                                                        compact = isLandscape && configuration.screenHeightDp < 480 && configuration.smallestScreenWidthDp < 600,
+                                                        collapseInputs = draggableState.requireOffset() < directionsHeaderHeight + directionsTopInset + with(density) { 16.dp.toPx() },
+                                                        collapseDetails = draggableState.requireOffset() < screenHeightPx * 0.3f ||
+                                                                draggableState.requireOffset() > screenHeightPx * 0.75f,
+                                                        onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) },
+                                                        cardModifier = Modifier,
+                                                        onExpandedHeight = { directionsHeaderHeight = it }
+
                                                 )
                                         }
 
@@ -4593,10 +4631,10 @@ class MainActivity : ComponentActivity() {
                                                                                                         .roundToInt()
                                                                                         },
                                                                                 y =
-                                                                                        (fabYAboveSheet - with(density) { 68.dp.roundToPx() })
+                                                                                        (fabYAboveSheet - with(density) { if (directionsVisible) 0 else 68.dp.roundToPx() })
                                                                                                 .coerceAtLeast(
-                                                                                                        0
-                                                                                                )
+                                                                                                        directionsTopInset
+                                                                                                ).coerceAtMost(with(density) { (maxHeight - fabSize - fabMargin).roundToPx() } - bottomInset)
                                                                         )
                                                                 }
                                                                 .zIndex(4f)
@@ -4610,6 +4648,7 @@ class MainActivity : ComponentActivity() {
                                                                         end = 16.dp,
                                                                         bottom = 16.dp
                                                                 )
+                                                                .windowInsetsPadding(WindowInsets.safeDrawing)
                                                                 .zIndex(4f)
                                                 }
 
