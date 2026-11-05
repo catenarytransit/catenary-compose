@@ -14,8 +14,6 @@ import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Translate
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -265,7 +263,13 @@ fun OsmItemScreen(
             NavigationControls(onBack = onBack, onHome = onHome)
         }
 
-        DirectionsActions(nearbyOrigin?.let { DirectionsLocation(title, it.first, it.second) }, onDirections)
+        DirectionsActions(
+            location = nearbyOrigin?.let { DirectionsLocation(title, it.first, it.second) },
+            onDirections = onDirections,
+            onNearbyDepartures = { location ->
+                onShowNearbyDepartures(location.lat, location.lon)
+            }
+        )
 
         Column(
             modifier = Modifier
@@ -282,20 +286,6 @@ fun OsmItemScreen(
             )
             if (address.isNotBlank()) {
                 Text(address, style = MaterialTheme.typography.bodyMedium)
-            }
-
-            Button(
-                onClick = {
-                    nearbyOrigin?.let { (lat, lon) -> onShowNearbyDepartures(lat, lon) }
-                },
-                enabled = nearbyOrigin != null,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Text(stringResource(if (nearbyOrigin == null) R.string.osm_nearby_unavailable else R.string.osm_nearby))
             }
 
             if (loading) {

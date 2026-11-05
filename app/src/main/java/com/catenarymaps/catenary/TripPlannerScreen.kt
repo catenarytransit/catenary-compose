@@ -77,18 +77,6 @@ internal object TripPlannerColors {
 }
 
 @Composable
-fun DirectionsActions(location: DirectionsLocation?, onDirections: (Boolean, DirectionsLocation) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(horizontal = 8.dp)) {
-        OutlinedButton(enabled = location?.isValid() == true, onClick = { location?.let { onDirections(true, it) } }) {
-            Text(stringResource(R.string.directions_as_origin))
-        }
-        OutlinedButton(enabled = location?.isValid() == true, onClick = { location?.let { onDirections(false, it) } }) {
-            Text(stringResource(R.string.directions_as_destination))
-        }
-    }
-}
-
-@Composable
 fun TripPlannerScreen(
     planner: TripPlannerViewModel, client: HttpClient, streetUsUnits: Boolean,
     detailsTopPadding: androidx.compose.ui.unit.Dp = 0.dp,
