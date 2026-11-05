@@ -3,6 +3,7 @@ package com.catenarymaps.catenary
 import android.util.AtomicFile
 import android.util.Log
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 
 /** Called on Dispatchers.IO. Keep route geometry out of Bundles and device backups. */
@@ -11,10 +12,11 @@ internal class TripPlannerSessionStore(file: File) {
 
     fun read(): TripPlannerSession? = synchronized(lock) {
         try {
-            if (!atomicFile.exists()) return@synchronized null
             val session = TripPlannerSessionCodec.decode(atomicFile.openRead().bufferedReader().use { it.readText() })
             if (session == null) atomicFile.delete()
             session
+        } catch (_: FileNotFoundException) {
+            null
         } catch (e: IOException) {
             Log.w("TripPlannerSession", "Unable to read saved journey", e)
             null
