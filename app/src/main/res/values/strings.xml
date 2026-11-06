@@ -162,4 +162,5 @@
     <string name="vehicle_labels">Vehicle Labels</string>
     <string name="settings_imperial_transport">Use Imperial distance for transport</string>
     <string name="settings_imperial_street">Use Imperial distance for foot and cycling</string>
+    <string name="reset_route_filters">Reset route filters</string>
 </resources>
