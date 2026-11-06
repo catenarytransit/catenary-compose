@@ -467,12 +467,7 @@ fun StopScreen(
     }
 
     fun getModeForEvent(ev: StopEvent, routeType: Int, shortName: String?): String {
-        return when (routeType) {
-            3, 11, 700 -> "bus"
-            0, 1, 5, 7, 12, 900 -> "metro"
-            2, 106, 107, 101, 100, 102, 103 -> "rail"
-            else -> "other"
-        }
+        return departureRouteMode(routeType)
     }
 
     LaunchedEffect(mergedEvents, dataMeta) {
@@ -544,7 +539,28 @@ fun StopScreen(
 
     val context = LocalContext.current
 
-    val datesToEventsFiltered by remember {
+    var selectedRoutes by remember(chateauId, key, activeTab) {
+        mutableStateOf(emptySet<DepartureRouteFilterKey>())
+    }
+    val routeFilters = remember(dataMeta?.routes, activeTab) {
+        val modeRoutes = dataMeta?.routes.orEmpty().mapValues { (_, routes) ->
+            routes.filterValues { route ->
+                departureRouteMode(route.route_type ?: 3) == activeTab
+            }
+        }
+        departureRouteFilters(modeRoutes)
+    }
+    val routeFiltersEnabled = routeFilters.size > 1 &&
+        !(activeTab == "rail" && (trainCategories.containsKey(primaryChateauId) ||
+            dataMeta?.routes?.containsKey("nationalrailuk") == true))
+    LaunchedEffect(routeFilters, routeFiltersEnabled, dataMeta != null) {
+        if (dataMeta == null) return@LaunchedEffect
+        selectedRoutes = if (routeFiltersEnabled) {
+            selectedRoutes.intersect(routeFilters.map { it.key }.toSet())
+        } else emptySet()
+    }
+
+    val datesToEventsFiltered by remember(selectedRoutes, routeFiltersEnabled, routeFilters) {
         derivedStateOf {
             val tz =
                     displayTimezone?.let {
@@ -580,6 +596,10 @@ fun StopScreen(
                                 return@filter false
                             }
                         }
+
+                        if (routeFiltersEnabled && !matchesDepartureRouteFilters(
+                                event.chateau, event.route_id, selectedRoutes, routeFilters
+                            )) return@filter false
 
                         // Category filter for rail
                         if (activeTab == "rail" && trainCategories.containsKey(primaryChateauId)) {
@@ -1302,6 +1322,18 @@ fun StopScreen(
                     },
                     modifier = Modifier.padding(top = 4.dp),
                     labelPrefix = null
+                )
+            }
+
+            if (routeFiltersEnabled) {
+                DepartureRouteFilterRow(
+                    filters = routeFilters,
+                    selected = selectedRoutes,
+                    onToggle = { route ->
+                        selectedRoutes = if (route in selectedRoutes) selectedRoutes - route
+                            else selectedRoutes + route
+                    },
+                    onReset = { selectedRoutes = emptySet() }
                 )
             }
 
