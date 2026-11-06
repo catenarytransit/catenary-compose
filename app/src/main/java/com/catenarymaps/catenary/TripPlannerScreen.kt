@@ -571,6 +571,7 @@ private fun ConnectionRow(
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
     var expanded by remember(leg) { mutableStateOf(false) }
     val surface = TripPlannerColors.card
@@ -595,10 +596,22 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
                 }
                 ConnectionRow(rail) {
                     LegModeIcon(leg)
-                    Box(Modifier.weight(1f)) { LegBadge(leg) }
+                    FlowRow(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Box(Modifier.align(Alignment.CenterVertically)) { LegBadge(leg) }
+                        leg.tripShortName?.takeIf { it.isNotBlank() }?.let { tripShortName ->
+                            Text(tripShortName, modifier = Modifier.align(Alignment.CenterVertically),
+                                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
                 }
-                if (!leg.routeLongName.isNullOrBlank()) ConnectionRow(rail) {
-                    Text(leg.routeLongName, style = MaterialTheme.typography.bodyMedium)
+                val direction = leg.headsign?.takeIf { it.isNotBlank() }
+                    ?: leg.routeLongName?.takeIf { it.isNotBlank() }
+                if (direction != null) ConnectionRow(rail) {
+                    Text(direction, style = MaterialTheme.typography.bodyMedium)
                 }
                 ConnectionRow(rail) {
                     val stopsDuration = stringResource(R.string.directions_stops_duration,
