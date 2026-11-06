@@ -258,13 +258,30 @@ fun TripPlannerHeader(
                         val latitude = item.latitude; val longitude = item.longitude
                         if (latitude != null && longitude != null) DirectionsLocation(item.name, latitude, longitude).takeIf { it.isValid() } else null
                     }
-                    val suggestions = (if (query.isBlank()) recent + history else rows.mapNotNull { it.directionsLocation() })
-                        .distinctBy { Triple(it.name, it.lat, it.lon) }
-                    items(suggestions.take(12)) { location ->
-                        val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
-                        SearchResultRow(location.name,
-                            distance = formatDistanceMeters(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits),
-                            onClick = { select(planner.editing ?: true, location) })
+                    val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
+                    if (query.isBlank()) {
+                        val suggestions = (recent + history).distinctBy { Triple(it.name, it.lat, it.lon) }
+                        items(suggestions.take(12)) { location ->
+                            SearchResultRow(location.name, icon = Icons.Default.History,
+                                distance = formatDistanceMeters(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits),
+                                onClick = { select(planner.editing ?: true, location) })
+                        }
+                    } else {
+                        // Retain the source row so addresses, location types and route badges are shared with regular search.
+                        val suggestions = rows.mapNotNull { row -> row.directionsLocation()?.let { row to it } }
+                            .distinctBy { (_, location) -> Triple(location.name, location.lat, location.lon) }
+                        items(suggestions.take(12)) { (row, location) ->
+                            val distance = formatDistanceMeters(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits)
+                            val onClick = { select(planner.editing ?: true, location) }
+                            when (row) {
+                                is SearchRow.CypressRow -> CypressResultItem(row.item, distance, onClick)
+                                is SearchRow.OsmStationRow -> OsmStationResultItem(row.result, distance, onClick)
+                                is SearchRow.StopRow -> StopResultItem(row.stopInfo, row.ranking, row.routes,
+                                    row.agencyNames, distanceMetres = null, distance = distance, onClick = onClick)
+                                is SearchRow.RouteRow -> Unit
+                            }
+                            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        }
                     }
                 }
             }
