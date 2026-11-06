@@ -679,18 +679,10 @@ fun SingleTripInfoScreen(
                                                                                 ?: b.first.longName
                                                                                         ?: ""
 
-                                                                val aNameAsInt = aName.toIntOrNull()
-                                                                val bNameAsInt = bName.toIntOrNull()
-
-                                                                if (aNameAsInt != null &&
-                                                                                bNameAsInt != null
-                                                                ) {
-                                                                        aNameAsInt.compareTo(
-                                                                                bNameAsInt
-                                                                        )
-                                                                } else {
-                                                                        aName.compareTo(bName)
-                                                                }
+                                                                connectionRouteNameComparator.compare(
+                                                                        aName,
+                                                                        bName
+                                                                )
                                                         }
                                         )
 
