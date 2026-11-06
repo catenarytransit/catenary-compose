@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -185,8 +190,52 @@ fun RecentStationResultItem(recent: RecentStation, onClick: () -> Unit) {
     }
 }
 
+/** Shared location result layout; the planner supplies a distance in the user's units. */
 @Composable
-fun CypressResultItem(item: CypressFeature, onClick: () -> Unit) {
+private fun LocationResultItem(
+    icon: ImageVector,
+    distance: String?,
+    onClick: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp),
+            content = content)
+        if (distance != null) {
+            Text(distance, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        }
+    }
+}
+
+private fun locationTypeIcon(type: String): ImageVector = when (type.lowercase()) {
+    "bus", "bus_stop", "bus_station" -> Icons.Default.DirectionsBus
+    "tram", "light_rail" -> Icons.Default.Tram
+    "subway", "metro" -> Icons.Default.Subway
+    "rail", "train", "railway", "station" -> Icons.Default.Train
+    "ferry", "ferry_terminal" -> Icons.Default.DirectionsBoat
+    "airport", "aerodrome" -> Icons.Default.Flight
+    "restaurant", "cafe", "fast_food", "food" -> Icons.Default.Restaurant
+    "school", "university", "college", "education" -> Icons.Default.School
+    "hospital", "clinic", "healthcare" -> Icons.Default.LocalHospital
+    "hotel", "motel", "accommodation" -> Icons.Default.Hotel
+    "shop", "supermarket", "retail" -> Icons.Default.ShoppingCart
+    "park", "garden", "recreation" -> Icons.Default.Park
+    "address", "building" -> Icons.Default.Home
+    "street", "road" -> Icons.Default.Signpost
+    "country", "region", "county", "locality", "neighbourhood" -> Icons.Default.Public
+    else -> Icons.Default.Place
+}
+
+@Composable
+fun CypressResultItem(item: CypressFeature, distance: String? = null, onClick: () -> Unit) {
     val props = item.properties
     // Construct a title/subtitle
     val title = props.name ?: props.names?.get("default") ?: "Unknown"
@@ -210,20 +259,17 @@ fun CypressResultItem(item: CypressFeature, onClick: () -> Unit) {
                 props.layer.replaceFirstChar { it.uppercase() }
             }
 
-    Column(
-            modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable { onClick() }
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
+    val type = props.categories.firstOrNull()?.substringAfter(':') ?: props.layer
+    LocationResultItem(icon = locationTypeIcon(type), distance = distance, onClick = onClick) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                     text = title,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f, fill = false),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
             )
             // Optional: Show layer type or category tag
             val tag = props.categories?.firstOrNull()?.split(":")?.getOrNull(1) ?: props.layer
@@ -231,7 +277,9 @@ fun CypressResultItem(item: CypressFeature, onClick: () -> Unit) {
                     text = tag,
                     fontWeight = FontWeight.Light,
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
             )
         }
         Text(
@@ -252,46 +300,29 @@ fun StopResultItem(
         routes: List<RouteInfo>,
         agencyNames: List<String>,
         distanceMetres: Double?,
+        distance: String? = null,
         onClick: () -> Unit
 ) {
-    Column(
-            modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable { onClick() }
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        // Row for Name + Distance
-        Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                    text = stopInfo.name,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f, fill = false),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-            )
-            if (distanceMetres != null) {
-                val distanceText =
-                        if (distanceMetres > 1000) {
-                            String.format("%.1f km", distanceMetres / 1000)
-                        } else {
-                            String.format("%.0f m", distanceMetres)
-                        }
-                Text(
-                        text = distanceText,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
+    val distanceText = distance ?: distanceMetres?.let {
+        if (it > 1000) String.format("%.1f km", it / 1000) else String.format("%.0f m", it)
+    }
+    val icon = when (routes.firstOrNull()?.routeType) {
+        0 -> Icons.Default.Tram
+        1 -> Icons.Default.Subway
+        2 -> Icons.Default.Train
+        3 -> Icons.Default.DirectionsBus
+        4 -> Icons.Default.DirectionsBoat
+        else -> Icons.Default.Place
+    }
+    LocationResultItem(icon = icon, distance = distanceText, onClick = onClick) {
+        Text(
+            text = stopInfo.name,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
 
         // Agency Names
         if (agencyNames.isNotEmpty()) {
@@ -371,7 +402,7 @@ fun RouteResultItem(routeInfo: RouteInfo, agency: Agency?, onClick: () -> Unit) 
 }
 
 @Composable
-fun OsmStationResultItem(result: OsmStationSearchResult, onClick: () -> Unit) {
+fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = null, onClick: () -> Unit) {
     val hierarchy = result.adminHierarchy
     val subtitleParts =
         listOfNotNull(
@@ -381,14 +412,7 @@ fun OsmStationResultItem(result: OsmStationSearchResult, onClick: () -> Unit) {
         )
     val subtitle = subtitleParts.joinToString(", ")
 
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable { onClick() }
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
+    LocationResultItem(icon = locationTypeIcon(result.modeType), distance = distance, onClick = onClick) {
         Text(
             text = result.name ?: "Unknown station",
             fontWeight = FontWeight.Medium,
