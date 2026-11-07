@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Reittiohjeet</string>
+    <string name="directions_as_origin">Lähtöpaikaksi</string>
+    <string name="directions_as_destination">Määränpääksi</string>
+    <string name="directions_origin">Lähtöpaikka</string>
+    <string name="directions_destination">Määränpää</string>
+    <string name="directions_start_placeholder">Mistä</string>
+    <string name="directions_destination_placeholder">Minne</string>
+    <string name="directions_swap">Vaihda lähtöpaikka ja määränpää</string>
+    <string name="directions_my_location">Nykyinen sijainti</string>
+    <string name="directions_map_hint">Hae paikkaa, syötä koordinaatit tai napauta karttaa asettaaksesi sijainnin.</string>
+    <string name="directions_depart_at">Lähtö klo</string>
+    <string name="directions_arrive_by">Perillä viimeistään</string>
+    <string name="directions_speed_options">Kävelyn/juoksun/pyöräilyn nopeus- ja etäisyysasetukset</string>
+    <string name="directions_search">Hae matkoja</string>
+    <string name="directions_no_journeys">Matkoja ei löytynyt. Kokeile toista aikaa tai kasvata kävelyn tai pyöräilyn rajoja.</string>
+    <string name="directions_walk">Kävele / Juokse</string>
+    <string name="directions_cycle">Pyöräile</string>
+    <string name="directions_walk_pace">Kävelyvauhti: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Pyöräilynopeus: %1$.1f km/h</string>
+    <string name="directions_access_limit">Enimmäisaika joukkoliikenteeseen: %1$s</string>
+    <string name="directions_egress_limit">Enimmäisaika joukkoliikenteestä: %1$s</string>
+    <string name="directions_direct_limit">Suoran kävelyn/pyöräilyn aikaraja: %1$s</string>
+    <string name="directions_reset">Palauta asetukset</string>
+    <string name="directions_all_journeys">Kaikki matkat</string>
+    <string name="directions_show_details">Näytä tiedot</string>
+    <string name="directions_stops_duration">%1$d pysäkkiä · %2$s</string>
+    <string name="directions_done">Valmis</string>
+    <string name="directions_distance_unavailable">Etäisyys ei saatavilla</string>
+    <string name="directions_show_stops">Näytä välipysäkit</string>
+    <string name="directions_hide_stops">Piilota välipysäkit</string>
+    <string name="directions_departure">Lähtö</string>
+    <string name="directions_arrival">Saapuminen</string>
+    <string name="directions_choose_on_map">Valitse kartalta</string>
+    <string name="directions_map_location">Sijainti kartalla</string>
+    <string name="directions_align_pin">Siirrä karttaa asettaaksesi merkin ja paina sitten OK.</string>
+    <string name="nearby_departures_offline">Ei verkkoyhteyttä</string>
+    <string name="directions_error">Matkaa ei voitu suunnitella. Yritä uudelleen.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d t %2$d min</string>
+    <string name="directions_ferry">Lautta</string>
+</resources>

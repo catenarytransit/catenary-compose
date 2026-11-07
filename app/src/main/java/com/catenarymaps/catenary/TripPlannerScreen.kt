@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -106,7 +107,7 @@ fun TripPlannerScreen(
                 item {
                     if (planner.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
                     planner.error?.let {
-                        Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
+                        Text(stringResource(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
                     }
                     if (planner.searched && !planner.loading && planner.error == null && planner.itineraries.isEmpty()) {
                         Text(stringResource(R.string.directions_no_journeys))
@@ -249,7 +250,7 @@ fun TripPlannerHeader(
                         parseDirectionsCoordinate(query)?.let { coordinate ->
                             val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
                             SearchResultRow(coordinate.name, icon = Icons.Default.GridOn,
-                                distance = formatDistanceMeters(haversineDistance(reference.first, reference.second, coordinate.lat, coordinate.lon), streetUsUnits),
+                                distance = plannerDistance(haversineDistance(reference.first, reference.second, coordinate.lat, coordinate.lon), streetUsUnits),
                                 onClick = { select(planner.editing ?: true, coordinate) })
                         }
                         if (searchLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -263,7 +264,7 @@ fun TripPlannerHeader(
                         val suggestions = (recent + history).distinctBy { Triple(it.name, it.lat, it.lon) }
                         items(suggestions.take(12)) { location ->
                             SearchResultRow(location.name, icon = Icons.Default.History,
-                                distance = formatDistanceMeters(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits),
+                                distance = plannerDistance(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits),
                                 onClick = { select(planner.editing ?: true, location) })
                         }
                     } else {
@@ -271,7 +272,7 @@ fun TripPlannerHeader(
                         val suggestions = rows.mapNotNull { row -> row.directionsLocation()?.let { row to it } }
                             .distinctBy { (_, location) -> Triple(location.name, location.lat, location.lon) }
                         items(suggestions.take(12)) { (row, location) ->
-                            val distance = formatDistanceMeters(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits)
+                            val distance = plannerDistance(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits)
                             val onClick = { select(planner.editing ?: true, location) }
                             when (row) {
                                 is SearchRow.CypressRow -> CypressResultItem(row.item, distance, onClick)
@@ -390,28 +391,61 @@ private fun StreetOptions(planner: TripPlannerViewModel) {
         Slider(value = 1440 - options.walkingPace, onValueChange = { update(options.copy(walkingPace = 1440 - it)) }, valueRange = 240f..1200f)
         Text(stringResource(R.string.directions_cycle_speed, options.cyclingKmh))
         Slider(value = options.cyclingKmh, onValueChange = { update(options.copy(cyclingKmh = it)) }, valueRange = 5f..40f)
-        fun limitLabel(seconds: Float) = "${(seconds / 60).roundToInt()} min"
-        Text(stringResource(R.string.directions_access_limit, limitLabel(options.accessSeconds)))
+        Text(stringResource(R.string.directions_access_limit, directionsDuration(options.accessSeconds.toDouble())))
         Slider(value = options.accessSeconds, onValueChange = { update(options.copy(accessSeconds = it)) }, valueRange = 0f..7200f)
-        Text(stringResource(R.string.directions_egress_limit, limitLabel(options.egressSeconds)))
+        Text(stringResource(R.string.directions_egress_limit, directionsDuration(options.egressSeconds.toDouble())))
         Slider(value = options.egressSeconds, onValueChange = { update(options.copy(egressSeconds = it)) }, valueRange = 0f..7200f)
-        Text(stringResource(R.string.directions_direct_limit, limitLabel(options.directSeconds)))
+        Text(stringResource(R.string.directions_direct_limit, directionsDuration(options.directSeconds.toDouble())))
         Slider(value = options.directSeconds, onValueChange = { update(options.copy(directSeconds = it)) }, valueRange = 0f..14400f)
         TextButton(onClick = { update(DirectionsOptions()) }) { Text(stringResource(R.string.directions_reset)) }
     }
 }
 
+/** Android ICU supplies translated distance units for the app's selected language. */
+@Composable
+private fun plannerDistance(meters: Double, imperial: Boolean): String {
+    val locale = LocalConfiguration.current.locales[0]
+    val (value, unit, decimals) = when {
+        imperial && meters >= 1609.344 -> Triple(meters / 1609.344, android.icu.util.MeasureUnit.MILE, 1)
+        imperial -> Triple((meters / 0.3048).roundToInt().toDouble(), android.icu.util.MeasureUnit.FOOT, 0)
+        meters >= 1000 -> Triple(meters / 1000, android.icu.util.MeasureUnit.KILOMETER, 1)
+        else -> Triple(meters.roundToInt().toDouble(), android.icu.util.MeasureUnit.METER, 0)
+    }
+    val numberFormat = android.icu.text.NumberFormat.getNumberInstance(locale).apply {
+        minimumFractionDigits = decimals
+        maximumFractionDigits = decimals
+    }
+    return android.icu.text.MeasureFormat.getInstance(
+        locale, android.icu.text.MeasureFormat.FormatWidth.SHORT, numberFormat
+    ).format(android.icu.util.Measure(value, unit))
+}
+
 internal fun directionsTime(value: String?): String = runCatching {
     DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).format(Instant.parse(value))
 }.getOrDefault("")
+@Composable
 internal fun directionsDuration(seconds: Double): String {
     val minutes = (seconds / 60).roundToInt().coerceAtLeast(0)
-    return if (minutes >= 60) "${minutes / 60} h ${minutes % 60} min" else "$minutes min"
+    return if (minutes >= 60) stringResource(R.string.directions_hours_minutes, minutes / 60, minutes % 60)
+        else stringResource(R.string.directions_minutes, minutes)
 }
 private fun legColor(leg: DirectionsLeg) = parseColor(leg.routeColor ?: "", Color(0xFF2563EB))
 
 @Composable
+private fun legModeLabel(leg: DirectionsLeg): String = stringResource(when {
+        leg.mode.uppercase() in setOf("WALK") -> R.string.directions_walk
+        leg.mode.uppercase() in setOf("BIKE", "BICYCLE") -> R.string.directions_cycle
+        leg.mode.uppercase() in setOf("BUS", "COACH") || leg.routeType == 3 -> R.string.heading_bus
+        leg.mode.uppercase() in setOf("SUBWAY", "METRO") || leg.routeType == 1 -> R.string.heading_metro
+        leg.mode.uppercase() in setOf("TRAM", "LIGHT_RAIL") || leg.routeType == 0 -> R.string.heading_tram
+        leg.mode.uppercase() == "FERRY" || leg.routeType == 4 -> R.string.directions_ferry
+        leg.mode.uppercase() in setOf("RAIL", "TRAIN", "REGIONAL_RAIL", "HIGH_SPEED_RAIL") || leg.routeType == 2 -> R.string.heading_intercity_rail
+        else -> R.string.heading_other
+    })
+
+@Composable
 private fun LegModeIcon(leg: DirectionsLeg, preview: Boolean = false) {
+    val modeLabel = legModeLabel(leg)
     val icon = when {
         leg.street -> null
         leg.mode.uppercase() in setOf("BUS", "COACH") || leg.routeType == 3 -> "bus"
@@ -424,19 +458,20 @@ private fun LegModeIcon(leg: DirectionsLeg, preview: Boolean = false) {
         val context = LocalContext.current
         val loader = remember(context) { ImageLoader.Builder(context).components { add(SvgDecoder.Factory()) }.build() }
         AsyncImage(model = "file:///android_asset/directions/$icon.svg", imageLoader = loader,
-            contentDescription = leg.mode, colorFilter = ColorFilter.tint(LocalContentColor.current), modifier = Modifier.size(if (preview) 16.dp else 24.dp))
+            contentDescription = modeLabel, colorFilter = ColorFilter.tint(LocalContentColor.current), modifier = Modifier.size(if (preview) 16.dp else 24.dp))
     } else Icon(when (leg.mode.uppercase()) {
         "BIKE", "BICYCLE" -> Icons.Default.DirectionsBike
         "WALK" -> Icons.Default.DirectionsWalk
         "FERRY" -> Icons.Default.DirectionsBoat
         else -> Icons.Default.Train
-    }, leg.mode, modifier = Modifier.size(if (preview) 14.dp else if (leg.street) 18.dp else 24.dp))
+    }, modeLabel, modifier = Modifier.size(if (preview) 14.dp else if (leg.street) 18.dp else 24.dp))
 }
 
 @Composable
 private fun LegBadge(leg: DirectionsLeg, preview: Boolean = false) {
-    SelectionRouteBadges(routeIds = listOf(leg.routeId ?: leg.label), textSize = if (preview) 10.sp else 12.sp, compact = preview, resolveRouteInfo = {
-        ResolvedRouteBadgeInfo(leg.routeId ?: leg.label, leg.routeShortName, leg.routeLongName,
+    val label = leg.routeShortName ?: leg.routeLongName ?: leg.routeId ?: legModeLabel(leg)
+    SelectionRouteBadges(routeIds = listOf(leg.routeId ?: label), textSize = if (preview) 10.sp else 12.sp, compact = preview, resolveRouteInfo = {
+        ResolvedRouteBadgeInfo(leg.routeId ?: label, leg.routeShortName ?: label.takeIf { leg.routeLongName == null && leg.routeId == null }, leg.routeLongName,
             leg.routeColor ?: "2563EB", leg.routeTextColor ?: "FFFFFF", chateauId = leg.chateau)
     })
 }
@@ -490,8 +525,8 @@ private fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: B
                                 if (trailingStreet) LegModeIcon(leg, preview = true)
                             }
                             if (leg.street) {
-                                Text("${(leg.seconds / 60).roundToInt()}′" +
-                                    (directionsDistance(leg)?.let { " · ${formatDistanceMeters(it, streetUsUnits)}" } ?: ""), fontSize = 10.sp,
+                                Text(directionsDuration(leg.seconds) +
+                                    (directionsDistance(leg)?.let { " · ${plannerDistance(it, streetUsUnits)}" } ?: ""), fontSize = 10.sp,
                                     modifier = Modifier.padding(top = 2.dp, end = 4.dp),
                                     maxLines = 2, overflow = TextOverflow.Ellipsis)
                             } else {
@@ -544,9 +579,6 @@ private fun PreviewTimes(markers: List<PreviewTimeMarker>) {
         }
     }
 }
-
-private fun streetLegLabel(leg: DirectionsLeg, imperial: Boolean): String =
-    directionsDuration(leg.seconds) + (directionsDistance(leg)?.let { " · ${formatDistanceMeters(it, imperial)}" } ?: "")
 
 @Composable
 private fun JourneyEndpoint(name: String, first: Boolean) {
@@ -603,7 +635,7 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
             if (leg.street) {
                 ConnectionRow(rail, time = directionsDuration(leg.seconds), dotted = true) {
                     LegModeIcon(leg)
-                    Text(directionsDistance(leg)?.let { formatDistanceMeters(it, streetUsUnits) }
+                    Text(directionsDistance(leg)?.let { plannerDistance(it, streetUsUnits) }
                         ?: stringResource(R.string.directions_distance_unavailable), style = MaterialTheme.typography.bodyLarge)
                 }
             } else {

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Vägbeskrivning</string>
+    <string name="directions_as_origin">Som start</string>
+    <string name="directions_as_destination">Som destination</string>
+    <string name="directions_origin">Start</string>
+    <string name="directions_destination">Destination</string>
+    <string name="directions_start_placeholder">Från</string>
+    <string name="directions_destination_placeholder">Till</string>
+    <string name="directions_swap">Byt start och destination</string>
+    <string name="directions_my_location">Nuvarande plats</string>
+    <string name="directions_map_hint">Sök efter en plats, ange koordinater eller tryck på kartan för att välja denna plats.</string>
+    <string name="directions_depart_at">Avgång kl.</string>
+    <string name="directions_arrive_by">Ankomst senast</string>
+    <string name="directions_speed_options">Hastighets- och avståndsalternativ för gång/löpning/cykling</string>
+    <string name="directions_search">Sök resor</string>
+    <string name="directions_no_journeys">Inga resor hittades. Prova en annan tid eller öka gränserna för gång eller cykling.</string>
+    <string name="directions_walk">Gå / Spring</string>
+    <string name="directions_cycle">Cykla</string>
+    <string name="directions_walk_pace">Gångtempo: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Cykelhastighet: %1$.1f km/h</string>
+    <string name="directions_access_limit">Maximal tid till kollektivtrafik: %1$s</string>
+    <string name="directions_egress_limit">Maximal tid från kollektivtrafik: %1$s</string>
+    <string name="directions_direct_limit">Gräns för direkt gång/cykling: %1$s</string>
+    <string name="directions_reset">Återställ alternativ</string>
+    <string name="directions_all_journeys">Alla resor</string>
+    <string name="directions_show_details">Visa detaljer</string>
+    <string name="directions_stops_duration">%1$d hållplatser · %2$s</string>
+    <string name="directions_done">Klar</string>
+    <string name="directions_distance_unavailable">Avstånd saknas</string>
+    <string name="directions_show_stops">Visa mellanliggande hållplatser</string>
+    <string name="directions_hide_stops">Dölj mellanliggande hållplatser</string>
+    <string name="directions_departure">Avgång</string>
+    <string name="directions_arrival">Ankomst</string>
+    <string name="directions_choose_on_map">Välj på kartan</string>
+    <string name="directions_map_location">Plats på kartan</string>
+    <string name="directions_align_pin">Flytta kartan för att placera nålen och tryck sedan på OK.</string>
+    <string name="nearby_departures_offline">Offline</string>
+    <string name="directions_error">Kunde inte planera resan. Försök igen.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d tim %2$d min</string>
+    <string name="directions_ferry">Färja</string>
+</resources>

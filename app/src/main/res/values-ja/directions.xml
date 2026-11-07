@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">経路案内</string>
+    <string name="directions_as_origin">出発地に設定</string>
+    <string name="directions_as_destination">目的地に設定</string>
+    <string name="directions_origin">出発地</string>
+    <string name="directions_destination">目的地</string>
+    <string name="directions_start_placeholder">出発地</string>
+    <string name="directions_destination_placeholder">目的地</string>
+    <string name="directions_swap">出発地と目的地を入れ替える</string>
+    <string name="directions_my_location">現在地</string>
+    <string name="directions_map_hint">場所を検索するか、座標を入力するか、地図をタップして場所を設定してください。</string>
+    <string name="directions_depart_at">出発時刻</string>
+    <string name="directions_arrive_by">到着時刻</string>
+    <string name="directions_speed_options">徒歩・ランニング・自転車の速度と距離の設定</string>
+    <string name="directions_search">経路を検索</string>
+    <string name="directions_no_journeys">経路が見つかりませんでした。時刻を変更するか、徒歩または自転車の上限を増やしてください。</string>
+    <string name="directions_walk">徒歩 / ランニング</string>
+    <string name="directions_cycle">自転車</string>
+    <string name="directions_walk_pace">歩行ペース：%1$d:%2$02d 分/km（%3$.1f km/h）</string>
+    <string name="directions_cycle_speed">自転車の速度：%1$.1f km/h</string>
+    <string name="directions_access_limit">公共交通機関までの最大時間：%1$s</string>
+    <string name="directions_egress_limit">公共交通機関からの最大時間：%1$s</string>
+    <string name="directions_direct_limit">徒歩・自転車のみの移動の上限：%1$s</string>
+    <string name="directions_reset">設定をリセット</string>
+    <string name="directions_all_journeys">すべての経路</string>
+    <string name="directions_show_details">詳細を表示</string>
+    <string name="directions_stops_duration">%1$d停留所 · %2$s</string>
+    <string name="directions_done">完了</string>
+    <string name="directions_distance_unavailable">距離を取得できません</string>
+    <string name="directions_show_stops">途中の停留所を表示</string>
+    <string name="directions_hide_stops">途中の停留所を非表示</string>
+    <string name="directions_departure">出発</string>
+    <string name="directions_arrival">到着</string>
+    <string name="directions_choose_on_map">地図で選択</string>
+    <string name="directions_map_location">地図上の場所</string>
+    <string name="directions_align_pin">地図を動かしてピンの位置を合わせ、OKを押してください。</string>
+    <string name="nearby_departures_offline">オフライン</string>
+    <string name="directions_error">経路を検索できませんでした。もう一度お試しください。</string>
+    <string name="directions_minutes">%1$d分</string>
+    <string name="directions_hours_minutes">%1$d時間%2$d分</string>
+    <string name="directions_ferry">フェリー</string>
+</resources>

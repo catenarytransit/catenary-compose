@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Wskazówki dojazdu</string>
+    <string name="directions_as_origin">Jako początek</string>
+    <string name="directions_as_destination">Jako cel</string>
+    <string name="directions_origin">Początek</string>
+    <string name="directions_destination">Cel</string>
+    <string name="directions_start_placeholder">Z</string>
+    <string name="directions_destination_placeholder">Do</string>
+    <string name="directions_swap">Zamień początek i cel</string>
+    <string name="directions_my_location">Bieżąca lokalizacja</string>
+    <string name="directions_map_hint">Wyszukaj miejsce, wpisz współrzędne lub dotknij mapy, aby ustawić tę lokalizację.</string>
+    <string name="directions_depart_at">Odjazd o</string>
+    <string name="directions_arrive_by">Przyjazd przed</string>
+    <string name="directions_speed_options">Opcje prędkości i odległości marszu/biegu/jazdy rowerem</string>
+    <string name="directions_search">Szukaj połączeń</string>
+    <string name="directions_no_journeys">Nie znaleziono połączeń. Spróbuj innej godziny lub zwiększ limity marszu lub jazdy rowerem.</string>
+    <string name="directions_walk">Marsz / Bieg</string>
+    <string name="directions_cycle">Rower</string>
+    <string name="directions_walk_pace">Tempo marszu: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Prędkość roweru: %1$.1f km/h</string>
+    <string name="directions_access_limit">Maksymalny czas dojścia do transportu: %1$s</string>
+    <string name="directions_egress_limit">Maksymalny czas dojścia od transportu: %1$s</string>
+    <string name="directions_direct_limit">Limit bezpośredniego marszu/jazdy rowerem: %1$s</string>
+    <string name="directions_reset">Przywróć opcje</string>
+    <string name="directions_all_journeys">Wszystkie połączenia</string>
+    <string name="directions_show_details">Pokaż szczegóły</string>
+    <string name="directions_stops_duration">Przystanki: %1$d · %2$s</string>
+    <string name="directions_done">Gotowe</string>
+    <string name="directions_distance_unavailable">Odległość niedostępna</string>
+    <string name="directions_show_stops">Pokaż przystanki pośrednie</string>
+    <string name="directions_hide_stops">Ukryj przystanki pośrednie</string>
+    <string name="directions_departure">Odjazd</string>
+    <string name="directions_arrival">Przyjazd</string>
+    <string name="directions_choose_on_map">Wybierz na mapie</string>
+    <string name="directions_map_location">Miejsce na mapie</string>
+    <string name="directions_align_pin">Przesuń mapę, aby ustawić znacznik, a następnie naciśnij OK.</string>
+    <string name="nearby_departures_offline">Brak połączenia</string>
+    <string name="directions_error">Nie udało się zaplanować podróży. Spróbuj ponownie.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d godz. %2$d min</string>
+    <string name="directions_ferry">Prom</string>
+</resources>

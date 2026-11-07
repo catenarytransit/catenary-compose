@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Útvonalterv</string>
+    <string name="directions_as_origin">Indulási helyként</string>
+    <string name="directions_as_destination">Úti célként</string>
+    <string name="directions_origin">Indulási hely</string>
+    <string name="directions_destination">Úti cél</string>
+    <string name="directions_start_placeholder">Honnan</string>
+    <string name="directions_destination_placeholder">Hová</string>
+    <string name="directions_swap">Indulási hely és úti cél felcserélése</string>
+    <string name="directions_my_location">Jelenlegi hely</string>
+    <string name="directions_map_hint">Keressen egy helyet, adjon meg koordinátákat, vagy koppintson a térképre a hely beállításához.</string>
+    <string name="directions_depart_at">Indulás ekkor</string>
+    <string name="directions_arrive_by">Érkezés eddig</string>
+    <string name="directions_speed_options">Gyaloglás/futás/kerékpározás sebesség- és távolságbeállításai</string>
+    <string name="directions_search">Útvonalak keresése</string>
+    <string name="directions_no_journeys">Nem található útvonal. Próbáljon más időpontot, vagy növelje a gyaloglási vagy kerékpározási korlátokat.</string>
+    <string name="directions_walk">Gyaloglás / Futás</string>
+    <string name="directions_cycle">Kerékpározás</string>
+    <string name="directions_walk_pace">Gyaloglási tempó: %1$d:%2$02d perc/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Kerékpározási sebesség: %1$.1f km/h</string>
+    <string name="directions_access_limit">Legnagyobb idő a közösségi közlekedésig: %1$s</string>
+    <string name="directions_egress_limit">Legnagyobb idő a közösségi közlekedéstől: %1$s</string>
+    <string name="directions_direct_limit">Közvetlen gyaloglás/kerékpározás korlátja: %1$s</string>
+    <string name="directions_reset">Beállítások visszaállítása</string>
+    <string name="directions_all_journeys">Minden útvonal</string>
+    <string name="directions_show_details">Részletek megjelenítése</string>
+    <string name="directions_stops_duration">%1$d megálló · %2$s</string>
+    <string name="directions_done">Kész</string>
+    <string name="directions_distance_unavailable">Távolság nem érhető el</string>
+    <string name="directions_show_stops">Köztes megállók megjelenítése</string>
+    <string name="directions_hide_stops">Köztes megállók elrejtése</string>
+    <string name="directions_departure">Indulás</string>
+    <string name="directions_arrival">Érkezés</string>
+    <string name="directions_choose_on_map">Kiválasztás a térképen</string>
+    <string name="directions_map_location">Térképes hely</string>
+    <string name="directions_align_pin">Mozgassa a térképet a jelölő elhelyezéséhez, majd nyomja meg az OK gombot.</string>
+    <string name="nearby_departures_offline">Nincs kapcsolat</string>
+    <string name="directions_error">Az útvonal nem tervezhető meg. Próbálja újra.</string>
+    <string name="directions_minutes">%1$d perc</string>
+    <string name="directions_hours_minutes">%1$d óra %2$d perc</string>
+    <string name="directions_ferry">Komp</string>
+</resources>

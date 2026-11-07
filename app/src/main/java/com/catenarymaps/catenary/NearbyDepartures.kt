@@ -48,6 +48,7 @@ import java.time.ZoneId
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -403,7 +404,9 @@ private suspend fun fetchNearby(
                                         }
                                 }
                         }
-                } catch (t: Throwable) {
+                } catch (e: CancellationException) {
+                        throw e
+                } catch (t: Exception) {
                         Log.e(
                                 NEARBY_TAG,
                                 "Network error on ${Thread.currentThread().name}: ${t.message}",
@@ -494,6 +497,7 @@ fun NearbyDepartures(
 
         var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
         var loading by remember { mutableStateOf(false) }
+        var offline by remember { mutableStateOf(false) }
         var firstAttemptSent by remember { mutableStateOf(false) }
         var firstLoadComplete by remember { mutableStateOf(false) }
         var serverMs by remember { mutableStateOf<Long?>(null) }
@@ -572,6 +576,7 @@ fun NearbyDepartures(
                                 firstAttemptSent = true
                                 println("Fetching nearby departures for $origin")
                                 val res = fetchNearby(origin.first, origin.second, departureTime)
+                                offline = res == null
 
                                 if (res != null) {
                                         stopsTableLongDistance = res.longDistance
@@ -866,7 +871,14 @@ fun NearbyDepartures(
                                                         )
                                                 ),
                         ) {
-                                if (sorted.isEmpty() && firstLoadComplete && !loading) {
+                                if (offline) {
+                                        item {
+                                                Text(stringResource(R.string.nearby_departures_offline),
+                                                        color = MaterialTheme.colorScheme.error,
+                                                        modifier = Modifier.padding(8.dp))
+                                        }
+                                }
+                                if (sorted.isEmpty() && firstLoadComplete && !loading && !offline) {
                                         item {
                                                 Spacer(Modifier.height(8.dp))
                                                 Text(

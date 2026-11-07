@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Itinerari</string>
+    <string name="directions_as_origin">Coma origina</string>
+    <string name="directions_as_destination">Coma destinacion</string>
+    <string name="directions_origin">Partença</string>
+    <string name="directions_destination">Destinacion</string>
+    <string name="directions_start_placeholder">De</string>
+    <string name="directions_destination_placeholder">A</string>
+    <string name="directions_swap">Inversar la partença e la destinacion</string>
+    <string name="directions_my_location">Posicion actuala</string>
+    <string name="directions_map_hint">Cercatz un luòc, picatz de coordenadas o tocatz la mapa per definir aquesta posicion.</string>
+    <string name="directions_depart_at">Partir a</string>
+    <string name="directions_arrive_by">Arribar abans</string>
+    <string name="directions_speed_options">Opcions de velocitat e de distància a pè/en corsa/a bicicleta</string>
+    <string name="directions_search">Cercar de trajèctes</string>
+    <string name="directions_no_journeys">Cap de trajècte trobat. Ensajatz una autra ora o aumentatz los limits de marcha o de bicicleta.</string>
+    <string name="directions_walk">Caminar / Córrer</string>
+    <string name="directions_cycle">Bicicleta</string>
+    <string name="directions_walk_pace">Ritme de marcha : %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Velocitat a bicicleta : %1$.1f km/h</string>
+    <string name="directions_access_limit">Durada maximala cap als transpòrts : %1$s</string>
+    <string name="directions_egress_limit">Durada maximala dempuèi los transpòrts : %1$s</string>
+    <string name="directions_direct_limit">Limit dirècte a pè/a bicicleta : %1$s</string>
+    <string name="directions_reset">Reïnicializar las opcions</string>
+    <string name="directions_all_journeys">Totes los trajèctes</string>
+    <string name="directions_show_details">Afichar los detalhs</string>
+    <string name="directions_stops_duration">%1$d arrèsts · %2$s</string>
+    <string name="directions_done">Acabat</string>
+    <string name="directions_distance_unavailable">Distància indisponibla</string>
+    <string name="directions_show_stops">Afichar los arrèsts intermediaris</string>
+    <string name="directions_hide_stops">Amagar los arrèsts intermediaris</string>
+    <string name="directions_departure">Partença</string>
+    <string name="directions_arrival">Arribada</string>
+    <string name="directions_choose_on_map">Causir sus la mapa</string>
+    <string name="directions_map_location">Luòc sus la mapa</string>
+    <string name="directions_align_pin">Desplaçatz la mapa per posicionar lo marcador, puèi quichatz sus OK.</string>
+    <string name="nearby_departures_offline">Fòra linha</string>
+    <string name="directions_error">Impossible de calcular lo trajècte. Tornatz ensajar.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Bac</string>
+</resources>

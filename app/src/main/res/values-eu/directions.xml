@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Argibideak</string>
+    <string name="directions_as_origin">Jatorri gisa</string>
+    <string name="directions_as_destination">Helmuga gisa</string>
+    <string name="directions_origin">Hasiera</string>
+    <string name="directions_destination">Helmuga</string>
+    <string name="directions_start_placeholder">Nondik</string>
+    <string name="directions_destination_placeholder">Nora</string>
+    <string name="directions_swap">Trukatu hasiera eta helmuga</string>
+    <string name="directions_my_location">Uneko kokapena</string>
+    <string name="directions_map_hint">Bilatu toki bat, sartu koordenatuak edo ukitu mapa kokapen hau ezartzeko.</string>
+    <string name="directions_depart_at">Irteera ordua</string>
+    <string name="directions_arrive_by">Iritsi ordurako</string>
+    <string name="directions_speed_options">Oinez/korrika/bizikletaz joateko abiadura eta distantzia aukerak</string>
+    <string name="directions_search">Bilatu bidaiak</string>
+    <string name="directions_no_journeys">Ez da bidaiarik aurkitu. Saiatu beste ordu batekin edo handitu oinez edo bizikletaz joateko mugak.</string>
+    <string name="directions_walk">Oinez / Korrika</string>
+    <string name="directions_cycle">Bizikletaz</string>
+    <string name="directions_walk_pace">Oinezko erritmoa: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Bizikletaren abiadura: %1$.1f km/h</string>
+    <string name="directions_access_limit">Garraiorainoko gehieneko denbora: %1$s</string>
+    <string name="directions_egress_limit">Garraiotik aurrerako gehieneko denbora: %1$s</string>
+    <string name="directions_direct_limit">Oinez/bizikletaz zuzenean joateko muga: %1$s</string>
+    <string name="directions_reset">Berrezarri aukerak</string>
+    <string name="directions_all_journeys">Bidaia guztiak</string>
+    <string name="directions_show_details">Erakutsi xehetasunak</string>
+    <string name="directions_stops_duration">%1$d geltoki · %2$s</string>
+    <string name="directions_done">Eginda</string>
+    <string name="directions_distance_unavailable">Distantzia ez dago erabilgarri</string>
+    <string name="directions_show_stops">Erakutsi tarteko geltokiak</string>
+    <string name="directions_hide_stops">Ezkutatu tarteko geltokiak</string>
+    <string name="directions_departure">Irteera</string>
+    <string name="directions_arrival">Iritsiera</string>
+    <string name="directions_choose_on_map">Aukeratu mapan</string>
+    <string name="directions_map_location">Mapako kokapena</string>
+    <string name="directions_align_pin">Mugitu mapa marka kokatzeko, eta sakatu Ados.</string>
+    <string name="nearby_departures_offline">Lineaz kanpo</string>
+    <string name="directions_error">Ezin izan da bidaia planifikatu. Saiatu berriro.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Ferrya</string>
+</resources>

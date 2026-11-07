@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Indicaciones</string>
+    <string name="directions_as_origin">Como origen</string>
+    <string name="directions_as_destination">Como destino</string>
+    <string name="directions_origin">Inicio</string>
+    <string name="directions_destination">Destino</string>
+    <string name="directions_start_placeholder">Desde</string>
+    <string name="directions_destination_placeholder">Hasta</string>
+    <string name="directions_swap">Intercambiar origen y destino</string>
+    <string name="directions_my_location">Ubicación actual</string>
+    <string name="directions_map_hint">Busca un lugar, introduce coordenadas o toca el mapa para establecer esta ubicación.</string>
+    <string name="directions_depart_at">Salir a las</string>
+    <string name="directions_arrive_by">Llegar antes de</string>
+    <string name="directions_speed_options">Opciones de velocidad y distancia a pie/corriendo/en bicicleta</string>
+    <string name="directions_search">Buscar viajes</string>
+    <string name="directions_no_journeys">No se encontraron viajes. Prueba otra hora o aumenta los límites a pie o en bicicleta.</string>
+    <string name="directions_walk">Caminar / Correr</string>
+    <string name="directions_cycle">Bicicleta</string>
+    <string name="directions_walk_pace">Ritmo a pie: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Velocidad en bicicleta: %1$.1f km/h</string>
+    <string name="directions_access_limit">Tiempo máximo hasta el transporte: %1$s</string>
+    <string name="directions_egress_limit">Tiempo máximo desde el transporte: %1$s</string>
+    <string name="directions_direct_limit">Límite directo a pie/en bicicleta: %1$s</string>
+    <string name="directions_reset">Restablecer opciones</string>
+    <string name="directions_all_journeys">Todos los viajes</string>
+    <string name="directions_show_details">Mostrar detalles</string>
+    <string name="directions_stops_duration">%1$d paradas · %2$s</string>
+    <string name="directions_done">Listo</string>
+    <string name="directions_distance_unavailable">Distancia no disponible</string>
+    <string name="directions_show_stops">Mostrar paradas intermedias</string>
+    <string name="directions_hide_stops">Ocultar paradas intermedias</string>
+    <string name="directions_departure">Salida</string>
+    <string name="directions_arrival">Llegada</string>
+    <string name="directions_choose_on_map">Elegir en el mapa</string>
+    <string name="directions_map_location">Ubicación en el mapa</string>
+    <string name="directions_align_pin">Mueve el mapa para colocar el marcador y pulsa Aceptar.</string>
+    <string name="nearby_departures_offline">Sin conexión</string>
+    <string name="directions_error">No se pudo planificar el viaje. Inténtalo de nuevo.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Ferri</string>
+</resources>
