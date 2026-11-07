@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Маршруты</string>
+    <string name="directions_as_origin">Как отправление</string>
+    <string name="directions_as_destination">Как назначение</string>
+    <string name="directions_origin">Начало</string>
+    <string name="directions_destination">Назначение</string>
+    <string name="directions_start_placeholder">Откуда</string>
+    <string name="directions_destination_placeholder">Куда</string>
+    <string name="directions_swap">Поменять начало и назначение</string>
+    <string name="directions_my_location">Текущее местоположение</string>
+    <string name="directions_map_hint">Найдите место, введите координаты или нажмите на карту, чтобы задать местоположение.</string>
+    <string name="directions_depart_at">Отправление в</string>
+    <string name="directions_arrive_by">Прибытие к</string>
+    <string name="directions_speed_options">Настройки скорости и расстояния для ходьбы/бега/велосипеда</string>
+    <string name="directions_search">Найти маршруты</string>
+    <string name="directions_no_journeys">Маршруты не найдены. Попробуйте другое время или увеличьте ограничения для ходьбы или велосипеда.</string>
+    <string name="directions_walk">Ходьба / Бег</string>
+    <string name="directions_cycle">Велосипед</string>
+    <string name="directions_walk_pace">Темп ходьбы: %1$d:%2$02d мин/км (%3$.1f км/ч)</string>
+    <string name="directions_cycle_speed">Скорость велосипеда: %1$.1f км/ч</string>
+    <string name="directions_access_limit">Максимальное время до транспорта: %1$s</string>
+    <string name="directions_egress_limit">Максимальное время от транспорта: %1$s</string>
+    <string name="directions_direct_limit">Ограничение прямого пути пешком/на велосипеде: %1$s</string>
+    <string name="directions_reset">Сбросить настройки</string>
+    <string name="directions_all_journeys">Все маршруты</string>
+    <string name="directions_show_details">Показать подробности</string>
+    <string name="directions_stops_duration">Остановок: %1$d · %2$s</string>
+    <string name="directions_done">Готово</string>
+    <string name="directions_distance_unavailable">Расстояние недоступно</string>
+    <string name="directions_show_stops">Показать промежуточные остановки</string>
+    <string name="directions_hide_stops">Скрыть промежуточные остановки</string>
+    <string name="directions_departure">Отправление</string>
+    <string name="directions_arrival">Прибытие</string>
+    <string name="directions_choose_on_map">Выбрать на карте</string>
+    <string name="directions_map_location">Место на карте</string>
+    <string name="directions_align_pin">Переместите карту, чтобы установить метку, затем нажмите ОК.</string>
+    <string name="nearby_departures_offline">Нет подключения</string>
+    <string name="directions_error">Не удалось построить маршрут. Повторите попытку.</string>
+    <string name="directions_minutes">%1$d мин</string>
+    <string name="directions_hours_minutes">%1$d ч %2$d мин</string>
+    <string name="directions_ferry">Паром</string>
+</resources>

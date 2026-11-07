@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Indicații</string>
+    <string name="directions_as_origin">Ca plecare</string>
+    <string name="directions_as_destination">Ca destinație</string>
+    <string name="directions_origin">Plecare</string>
+    <string name="directions_destination">Destinație</string>
+    <string name="directions_start_placeholder">De la</string>
+    <string name="directions_destination_placeholder">La</string>
+    <string name="directions_swap">Inversează plecarea și destinația</string>
+    <string name="directions_my_location">Locația actuală</string>
+    <string name="directions_map_hint">Caută un loc, introdu coordonate sau atinge harta pentru a seta această locație.</string>
+    <string name="directions_depart_at">Plecare la</string>
+    <string name="directions_arrive_by">Sosire până la</string>
+    <string name="directions_speed_options">Opțiuni de viteză și distanță pentru mers/alergare/bicicletă</string>
+    <string name="directions_search">Caută călătorii</string>
+    <string name="directions_no_journeys">Nu s-au găsit călătorii. Încearcă altă oră sau mărește limitele de mers pe jos ori cu bicicleta.</string>
+    <string name="directions_walk">Mers / Alergare</string>
+    <string name="directions_cycle">Bicicletă</string>
+    <string name="directions_walk_pace">Ritm de mers: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Viteză cu bicicleta: %1$.1f km/h</string>
+    <string name="directions_access_limit">Timp maxim până la transport: %1$s</string>
+    <string name="directions_egress_limit">Timp maxim de la transport: %1$s</string>
+    <string name="directions_direct_limit">Limită directă pe jos/cu bicicleta: %1$s</string>
+    <string name="directions_reset">Resetează opțiunile</string>
+    <string name="directions_all_journeys">Toate călătoriile</string>
+    <string name="directions_show_details">Arată detalii</string>
+    <string name="directions_stops_duration">%1$d opriri · %2$s</string>
+    <string name="directions_done">Gata</string>
+    <string name="directions_distance_unavailable">Distanță indisponibilă</string>
+    <string name="directions_show_stops">Arată opririle intermediare</string>
+    <string name="directions_hide_stops">Ascunde opririle intermediare</string>
+    <string name="directions_departure">Plecare</string>
+    <string name="directions_arrival">Sosire</string>
+    <string name="directions_choose_on_map">Alege pe hartă</string>
+    <string name="directions_map_location">Locație pe hartă</string>
+    <string name="directions_align_pin">Mută harta pentru a poziționa marcajul, apoi apasă OK.</string>
+    <string name="nearby_departures_offline">Fără conexiune</string>
+    <string name="directions_error">Călătoria nu a putut fi planificată. Încearcă din nou.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Feribot</string>
+</resources>

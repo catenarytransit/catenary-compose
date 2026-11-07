@@ -37,7 +37,7 @@ class TripPlannerViewModel : ViewModel() {
         private set
     var searched by mutableStateOf(false)
         private set
-    var error by mutableStateOf<String?>(null)
+    var error by mutableStateOf<Int?>(null)
         private set
     private var request: Job? = null
     private var generation = 0
@@ -140,7 +140,8 @@ class TripPlannerViewModel : ViewModel() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                if (token == generation) error = e.message ?: "Unable to plan journey"
+                android.util.Log.e("TripPlanner", "Unable to plan journey", e)
+                if (token == generation) error = R.string.directions_error
             } finally {
                 if (token == generation) loading = false
             }

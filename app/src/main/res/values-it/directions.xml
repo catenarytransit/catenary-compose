@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Indicazioni</string>
+    <string name="directions_as_origin">Come partenza</string>
+    <string name="directions_as_destination">Come destinazione</string>
+    <string name="directions_origin">Partenza</string>
+    <string name="directions_destination">Destinazione</string>
+    <string name="directions_start_placeholder">Da</string>
+    <string name="directions_destination_placeholder">A</string>
+    <string name="directions_swap">Scambia partenza e destinazione</string>
+    <string name="directions_my_location">Posizione attuale</string>
+    <string name="directions_map_hint">Cerca un luogo, inserisci le coordinate o tocca la mappa per impostare questa posizione.</string>
+    <string name="directions_depart_at">Parti alle</string>
+    <string name="directions_arrive_by">Arriva entro</string>
+    <string name="directions_speed_options">Opzioni di velocità e distanza a piedi/di corsa/in bici</string>
+    <string name="directions_search">Cerca itinerari</string>
+    <string name="directions_no_journeys">Nessun itinerario trovato. Prova un altro orario o aumenta i limiti a piedi o in bici.</string>
+    <string name="directions_walk">Cammina / Corri</string>
+    <string name="directions_cycle">Bici</string>
+    <string name="directions_walk_pace">Passo a piedi: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Velocità in bici: %1$.1f km/h</string>
+    <string name="directions_access_limit">Tempo massimo verso i mezzi: %1$s</string>
+    <string name="directions_egress_limit">Tempo massimo dai mezzi: %1$s</string>
+    <string name="directions_direct_limit">Limite diretto a piedi/in bici: %1$s</string>
+    <string name="directions_reset">Ripristina opzioni</string>
+    <string name="directions_all_journeys">Tutti gli itinerari</string>
+    <string name="directions_show_details">Mostra dettagli</string>
+    <string name="directions_stops_duration">%1$d fermate · %2$s</string>
+    <string name="directions_done">Fine</string>
+    <string name="directions_distance_unavailable">Distanza non disponibile</string>
+    <string name="directions_show_stops">Mostra fermate intermedie</string>
+    <string name="directions_hide_stops">Nascondi fermate intermedie</string>
+    <string name="directions_departure">Partenza</string>
+    <string name="directions_arrival">Arrivo</string>
+    <string name="directions_choose_on_map">Scegli sulla mappa</string>
+    <string name="directions_map_location">Posizione sulla mappa</string>
+    <string name="directions_align_pin">Sposta la mappa per posizionare il segnaposto, poi premi OK.</string>
+    <string name="nearby_departures_offline">Offline</string>
+    <string name="directions_error">Impossibile pianificare il viaggio. Riprova.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Traghetto</string>
+</resources>

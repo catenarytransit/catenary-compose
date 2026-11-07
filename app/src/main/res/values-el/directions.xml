@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Οδηγίες</string>
+    <string name="directions_as_origin">Ως αφετηρία</string>
+    <string name="directions_as_destination">Ως προορισμός</string>
+    <string name="directions_origin">Αφετηρία</string>
+    <string name="directions_destination">Προορισμός</string>
+    <string name="directions_start_placeholder">Από</string>
+    <string name="directions_destination_placeholder">Προς</string>
+    <string name="directions_swap">Εναλλαγή αφετηρίας και προορισμού</string>
+    <string name="directions_my_location">Τρέχουσα τοποθεσία</string>
+    <string name="directions_map_hint">Αναζητήστε ένα μέρος, εισαγάγετε συντεταγμένες ή πατήστε στον χάρτη για να ορίσετε αυτήν την τοποθεσία.</string>
+    <string name="directions_depart_at">Αναχώρηση στις</string>
+    <string name="directions_arrive_by">Άφιξη έως</string>
+    <string name="directions_speed_options">Επιλογές ταχύτητας και απόστασης για περπάτημα/τρέξιμο/ποδήλατο</string>
+    <string name="directions_search">Εύρεση διαδρομών</string>
+    <string name="directions_no_journeys">Δεν βρέθηκαν διαδρομές. Δοκιμάστε άλλη ώρα ή αυξήστε τα όρια περπατήματος ή ποδηλάτου.</string>
+    <string name="directions_walk">Περπάτημα / Τρέξιμο</string>
+    <string name="directions_cycle">Ποδήλατο</string>
+    <string name="directions_walk_pace">Ρυθμός περπατήματος: %1$d:%2$02d λεπτά/χλμ. (%3$.1f χλμ./ώρα)</string>
+    <string name="directions_cycle_speed">Ταχύτητα ποδηλάτου: %1$.1f χλμ./ώρα</string>
+    <string name="directions_access_limit">Μέγιστος χρόνος προς τη συγκοινωνία: %1$s</string>
+    <string name="directions_egress_limit">Μέγιστος χρόνος από τη συγκοινωνία: %1$s</string>
+    <string name="directions_direct_limit">Όριο απευθείας περπατήματος/ποδηλάτου: %1$s</string>
+    <string name="directions_reset">Επαναφορά επιλογών</string>
+    <string name="directions_all_journeys">Όλες οι διαδρομές</string>
+    <string name="directions_show_details">Εμφάνιση λεπτομερειών</string>
+    <string name="directions_stops_duration">%1$d στάσεις · %2$s</string>
+    <string name="directions_done">Τέλος</string>
+    <string name="directions_distance_unavailable">Η απόσταση δεν είναι διαθέσιμη</string>
+    <string name="directions_show_stops">Εμφάνιση ενδιάμεσων στάσεων</string>
+    <string name="directions_hide_stops">Απόκρυψη ενδιάμεσων στάσεων</string>
+    <string name="directions_departure">Αναχώρηση</string>
+    <string name="directions_arrival">Άφιξη</string>
+    <string name="directions_choose_on_map">Επιλογή στον χάρτη</string>
+    <string name="directions_map_location">Τοποθεσία στον χάρτη</string>
+    <string name="directions_align_pin">Μετακινήστε τον χάρτη για να τοποθετήσετε την πινέζα και πατήστε OK.</string>
+    <string name="nearby_departures_offline">Εκτός σύνδεσης</string>
+    <string name="directions_error">Δεν ήταν δυνατός ο σχεδιασμός του ταξιδιού. Δοκιμάστε ξανά.</string>
+    <string name="directions_minutes">%1$d λεπτά</string>
+    <string name="directions_hours_minutes">%1$d ώ. %2$d λεπτά</string>
+    <string name="directions_ferry">Πλοίο</string>
+</resources>

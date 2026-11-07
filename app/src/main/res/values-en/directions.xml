@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Directions</string>
+    <string name="directions_as_origin">As origin</string>
+    <string name="directions_as_destination">As destination</string>
+    <string name="directions_origin">Start</string>
+    <string name="directions_destination">Destination</string>
+    <string name="directions_start_placeholder">From</string>
+    <string name="directions_destination_placeholder">To</string>
+    <string name="directions_swap">Swap start and destination</string>
+    <string name="directions_my_location">Current location</string>
+    <string name="directions_map_hint">Search for a place, enter coordinates, or tap the map to set this location.</string>
+    <string name="directions_depart_at">Depart at</string>
+    <string name="directions_arrive_by">Arrive by</string>
+    <string name="directions_speed_options">Walking/Running/Cycling speed &amp; distance options</string>
+    <string name="directions_search">Find journeys</string>
+    <string name="directions_no_journeys">No journeys found. Try another time or increase the walking or cycling limits.</string>
+    <string name="directions_walk">Walk / Run</string>
+    <string name="directions_cycle">Cycle</string>
+    <string name="directions_walk_pace">Walking pace: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Cycling speed: %1$.1f km/h</string>
+    <string name="directions_access_limit">Maximum time to transit: %1$s</string>
+    <string name="directions_egress_limit">Maximum time from transit: %1$s</string>
+    <string name="directions_direct_limit">Direct walk/cycle limit: %1$s</string>
+    <string name="directions_reset">Reset options</string>
+    <string name="directions_all_journeys">All journeys</string>
+    <string name="directions_show_details">Show details</string>
+    <string name="directions_stops_duration">%1$d stops · %2$s</string>
+    <string name="directions_done">Done</string>
+    <string name="directions_distance_unavailable">Distance unavailable</string>
+    <string name="directions_show_stops">Show intermediate stops</string>
+    <string name="directions_hide_stops">Hide intermediate stops</string>
+    <string name="directions_departure">Departure</string>
+    <string name="directions_arrival">Arrival</string>
+    <string name="directions_choose_on_map">Choose on map</string>
+    <string name="directions_map_location">Map location</string>
+    <string name="directions_align_pin">Move the map to position the pin, then press OK.</string>
+    <string name="nearby_departures_offline">Offline</string>
+    <string name="directions_error">Unable to plan journey. Please try again.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Ferry</string>
+</resources>

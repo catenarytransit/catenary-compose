@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">길찾기</string>
+    <string name="directions_as_origin">출발지로 설정</string>
+    <string name="directions_as_destination">목적지로 설정</string>
+    <string name="directions_origin">출발지</string>
+    <string name="directions_destination">목적지</string>
+    <string name="directions_start_placeholder">출발</string>
+    <string name="directions_destination_placeholder">도착</string>
+    <string name="directions_swap">출발지와 목적지 바꾸기</string>
+    <string name="directions_my_location">현재 위치</string>
+    <string name="directions_map_hint">장소를 검색하거나 좌표를 입력하거나 지도를 눌러 위치를 설정하세요.</string>
+    <string name="directions_depart_at">출발 시간</string>
+    <string name="directions_arrive_by">도착 시간</string>
+    <string name="directions_speed_options">걷기/달리기/자전거 속도 및 거리 설정</string>
+    <string name="directions_search">경로 찾기</string>
+    <string name="directions_no_journeys">경로를 찾을 수 없습니다. 다른 시간을 선택하거나 걷기 또는 자전거 제한을 늘려 보세요.</string>
+    <string name="directions_walk">걷기 / 달리기</string>
+    <string name="directions_cycle">자전거</string>
+    <string name="directions_walk_pace">걷기 페이스: %1$d:%2$02d 분/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">자전거 속도: %1$.1f km/h</string>
+    <string name="directions_access_limit">대중교통까지 최대 시간: %1$s</string>
+    <string name="directions_egress_limit">대중교통에서 최대 시간: %1$s</string>
+    <string name="directions_direct_limit">도보/자전거 직행 제한: %1$s</string>
+    <string name="directions_reset">설정 초기화</string>
+    <string name="directions_all_journeys">모든 경로</string>
+    <string name="directions_show_details">상세 정보 보기</string>
+    <string name="directions_stops_duration">정류장 %1$d개 · %2$s</string>
+    <string name="directions_done">완료</string>
+    <string name="directions_distance_unavailable">거리 정보 없음</string>
+    <string name="directions_show_stops">중간 정류장 보기</string>
+    <string name="directions_hide_stops">중간 정류장 숨기기</string>
+    <string name="directions_departure">출발</string>
+    <string name="directions_arrival">도착</string>
+    <string name="directions_choose_on_map">지도에서 선택</string>
+    <string name="directions_map_location">지도상의 위치</string>
+    <string name="directions_align_pin">지도를 움직여 핀을 배치한 다음 확인을 누르세요.</string>
+    <string name="nearby_departures_offline">오프라인</string>
+    <string name="directions_error">경로를 계획할 수 없습니다. 다시 시도해 주세요.</string>
+    <string name="directions_minutes">%1$d분</string>
+    <string name="directions_hours_minutes">%1$d시간 %2$d분</string>
+    <string name="directions_ferry">페리</string>
+</resources>
