@@ -156,4 +156,10 @@
     <string name="route_category_tram">Spårvagn</string>
     <string name="route_category_bus">Buss</string>
     <string name="route_category_other">Annat</string>
+    <string name="home_explore">Utforska</string>
+    <string name="home_trips">Resor</string>
+    <string name="saved_journeys_empty">Inga sparade resor.</string>
+    <string name="saved_journeys_description">Vill du få information om din förbindelse under resan och meddelanden om trafikstörningar? Spara din resa i tidtabellssökningen genom att trycka på stjärnknappen.</string>
+    <string name="saved_journeys_plan">Planera en resa</string>
+    <string name="saved_journeys_select">Välj en resa för att visa detaljer.</string>
 </resources>

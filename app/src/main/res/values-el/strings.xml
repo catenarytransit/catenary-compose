@@ -156,4 +156,10 @@
     <string name="route_category_tram">Τραμ</string>
     <string name="route_category_bus">Λεωφορείο</string>
     <string name="route_category_other">Άλλο</string>
+    <string name="home_explore">Εξερεύνηση</string>
+    <string name="home_trips">Ταξίδια</string>
+    <string name="saved_journeys_empty">Δεν υπάρχουν αποθηκευμένα ταξίδια.</string>
+    <string name="saved_journeys_description">Θέλετε να λαμβάνετε πληροφορίες για τη σύνδεσή σας κατά τη διάρκεια του ταξιδιού και ειδοποιήσεις για διαταραχές; Αποθηκεύστε το ταξίδι σας στην αναζήτηση δρομολογίων πατώντας το κουμπί με το αστέρι.</string>
+    <string name="saved_journeys_plan">Σχεδιασμός ταξιδιού</string>
+    <string name="saved_journeys_select">Επιλέξτε ένα ταξίδι για να δείτε λεπτομέρειες.</string>
 </resources>

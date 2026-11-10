@@ -158,4 +158,10 @@
     <string name="route_category_tram">Трамвай</string>
     <string name="route_category_bus">Автобус</string>
     <string name="route_category_other">Другое</string>
+    <string name="home_explore">Обзор</string>
+    <string name="home_trips">Поездки</string>
+    <string name="saved_journeys_empty">Нет сохранённых поездок.</string>
+    <string name="saved_journeys_description">Хотите получать информацию о своём маршруте во время поездки и уведомления о сбоях? Сохраните поездку в поиске расписаний, нажав кнопку со звездой.</string>
+    <string name="saved_journeys_plan">Спланировать поездку</string>
+    <string name="saved_journeys_select">Выберите поездку, чтобы посмотреть подробности.</string>
 </resources>

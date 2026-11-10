@@ -151,4 +151,10 @@
     <string name="route_category_tram">Tramvia</string>
     <string name="route_category_bus">Autobús</string>
     <string name="route_category_other">Autre</string>
+    <string name="home_explore">Explorar</string>
+    <string name="home_trips">Viatges</string>
+    <string name="saved_journeys_empty">Cap de viatge enregistrat.</string>
+    <string name="saved_journeys_description">Volètz recebre d’informacions sus vòstra correspondéncia pendent lo viatge e èsser avisat de las perturbacions ? Enregistratz vòstre viatge dins la recèrca d’oraris en quichant sul boton estela.</string>
+    <string name="saved_journeys_plan">Planificar un viatge</string>
+    <string name="saved_journeys_select">Seleccionatz un viatge per veire los detalhs.</string>
 </resources>

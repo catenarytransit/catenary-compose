@@ -154,4 +154,10 @@
     <string name="heading_cable_tram">Kable-tranbia</string>
     <string name="label_interpolated_trajectories">Etiketatu interpolatutako ibilbideak</string>
     <string name="vehicle_labels">Ibilgailuen etiketak</string>
+    <string name="home_explore">Arakatu</string>
+    <string name="home_trips">Bidaiak</string>
+    <string name="saved_journeys_empty">Ez dago gordetako bidaiarik.</string>
+    <string name="saved_journeys_description">Bidaian zehar zure konexioari buruzko informazioa eta gorabeheren jakinarazpenak jaso nahi dituzu? Gorde bidaia ordutegien bilaketan izarraren botoia sakatuz.</string>
+    <string name="saved_journeys_plan">Bidaia planifikatu</string>
+    <string name="saved_journeys_select">Hautatu bidaia bat xehetasunak ikusteko.</string>
 </resources>

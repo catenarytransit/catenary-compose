@@ -28,7 +28,8 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
-    collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier
+    collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier,
+    showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}
 ) {
     val journey = planner.selectedJourney ?: return
     val context = LocalContext.current.applicationContext
@@ -45,7 +46,7 @@ internal fun JourneySummary(
         finally { busy = false }
     }
     Column(modifier) {
-        FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp).size(32.dp),
+        if (showBack) FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp).size(32.dp),
             shape = CircleShape, colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back), modifier = Modifier.size(18.dp))
@@ -87,6 +88,7 @@ internal fun JourneySummary(
                                     }
                                 }
                                 saved = !wasSaved
+                                onSavedChanged()
                             } catch (e: CancellationException) { throw e }
                             catch (_: Exception) { failed = true }
                             finally { busy = false }
@@ -96,7 +98,7 @@ internal fun JourneySummary(
                     Icon(if (saved) Icons.Default.Star else Icons.Default.StarBorder,
                         stringResource(if (saved) R.string.directions_unsave_trip else R.string.directions_save_trip))
                 }
-                if (!planner.streetOnly) SummaryAction(onClick = { planner.mapMode = !planner.usingMap }) {
+                if (showMapAction && !planner.streetOnly) SummaryAction(onClick = { planner.mapMode = !planner.usingMap }) {
                     Icon(if (planner.usingMap) Icons.AutoMirrored.Filled.List else Icons.Default.Map,
                         stringResource(if (planner.usingMap) R.string.directions_list_view else R.string.directions_map_view))
                 }

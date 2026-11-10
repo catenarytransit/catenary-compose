@@ -162,4 +162,10 @@
     <string name="directions_list_view">Mostrar lista</string>
     <string name="directions_save_error">No se pudo actualizar el viaje guardado. Inténtalo de nuevo.</string>
     <string name="directions_retry">Volver a cargar conexiones</string>
+    <string name="home_explore">Explorar</string>
+    <string name="home_trips">Viajes</string>
+    <string name="saved_journeys_empty">No hay viajes guardados.</string>
+    <string name="saved_journeys_description">¿Le gustaría recibir información sobre su conexión durante el viaje y avisos de incidencias? Guarde su viaje en la búsqueda de horarios pulsando el botón de estrella.</string>
+    <string name="saved_journeys_plan">Planificar un viaje</string>
+    <string name="saved_journeys_select">Seleccione un viaje para ver los detalles.</string>
 </resources>
