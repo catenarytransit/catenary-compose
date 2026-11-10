@@ -356,12 +356,13 @@ fun TripPlannerHeader(
                         TextButton(onClick = { planner.editing = null; focus.clearFocus() }) {
                             Text(stringResource(R.string.cancel))
                         }
-                        SearchResultRow(stringResource(R.string.directions_my_location), icon = Icons.Default.MyLocation,
-                            enabled = currentLocation != null, onClick = {
-                                currentLocation?.let { select(planner.editing ?: true,
-                                    DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second, isCurrentLocation = true), false) }
-                            })
                         if (query.isBlank()) {
+                            SearchResultRow(stringResource(R.string.directions_my_location), icon = Icons.Default.MyLocation,
+                                iconTint = Color(0xFF1976D2),
+                                enabled = currentLocation != null, onClick = {
+                                    currentLocation?.let { select(planner.editing ?: true,
+                                        DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second, isCurrentLocation = true), false) }
+                                })
                             SearchResultRow(stringResource(R.string.directions_choose_on_map), icon = Icons.Default.LocationOn,
                                 onClick = { planner.mapPicking = planner.editing; planner.editing = null; focus.clearFocus() })
                         }
@@ -412,13 +413,15 @@ fun TripPlannerHeader(
 @Composable
 private fun SearchResultRow(
     name: String, icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-    distance: String? = null, enabled: Boolean = true, onClick: () -> Unit
+    distance: String? = null, enabled: Boolean = true,
+    iconTint: Color = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color.LightGray else Color.DarkGray,
+    onClick: () -> Unit
 ) {
     Row(Modifier.fillMaxWidth().clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
         .heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         if (icon != null) Icon(icon, null, modifier = Modifier.size(24.dp),
-            tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f))
+            tint = iconTint.copy(alpha = if (enabled) 1f else 0.38f))
         Text(name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f))
         if (distance != null) Text(distance, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
