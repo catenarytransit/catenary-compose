@@ -126,10 +126,14 @@ internal fun JourneyDetails(
 ) {
     key(journey.identity()) {
         val state = rememberLazyListState()
-        val summaryScroll = remember(planner) {
-            JourneyDetailsScrollConnection { planner.detailsScrolled = it }
+        val thresholdPx = with(LocalDensity.current) { 24.dp.toPx() }
+        val summaryScroll = remember(planner, thresholdPx) {
+            JourneyDetailsScrollConnection(thresholdPx,
+                range = { planner.detailsCollapseRangePx },
+                fraction = { planner.detailsCollapse },
+                setFraction = { planner.detailsCollapse = it })
         }
-        LazyColumn(Modifier.fillMaxSize().padding(top = topPadding).nestedScroll(summaryScroll),
+        LazyColumn(Modifier.fillMaxSize().padding(top = topPadding).then(if (planner.usingMap) Modifier else Modifier.nestedScroll(summaryScroll)),
             state = state, contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
@@ -257,7 +261,7 @@ fun TripPlannerHeader(
     currentLocation: Pair<Double, Double>?, mapCenter: Position, stationHistory: StationHistory,
     streetUsUnits: Boolean,
     modifier: Modifier = Modifier, cardModifier: Modifier = Modifier,
-    compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Boolean = planner.detailsScrolled,
+    compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Float = planner.detailsCollapse,
     onBack: () -> Unit = {}, onExpandedHeight: (Int) -> Unit = {},
     onDetailsHeight: (Int) -> Unit = {},
     forceInputs: Boolean = false
@@ -679,8 +683,8 @@ private fun PreviewTimeRow(times: PreviewTimeGroups, duration: String) {
     val style = LocalTextStyle.current
     fun groupWidth(markers: List<PreviewTimeMarker>): Int = markers.sumOf { marker ->
         measurer.measure(previewClockTime(marker.time), style.copy(
-            fontSize = if (marker.transit) 16.sp else 14.sp,
-            fontWeight = if (marker.transit) FontWeight.Bold else FontWeight.Normal), maxLines = 1).size.width
+            fontSize = if (marker.endpoint) 16.sp else 14.sp,
+            fontWeight = if (marker.endpoint) FontWeight.Bold else FontWeight.Normal), maxLines = 1).size.width
     } + with(density) { (8.dp * (markers.size - 1).coerceAtLeast(0)).roundToPx() }
     val sides = maxOf(groupWidth(times.departure), groupWidth(times.arrival))
     val durationWidth = measurer.measure(duration, style.copy(fontSize = 14.sp), maxLines = 1).size.width
@@ -706,8 +710,8 @@ private fun previewClockTime(time: String): String = runCatching {
 private fun PreviewTimes(markers: List<PreviewTimeMarker>) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         markers.forEach { marker ->
-            Text(previewClockTime(marker.time), fontWeight = if (marker.transit) FontWeight.Bold else FontWeight.Normal,
-                fontSize = if (marker.transit) 16.sp else 14.sp, maxLines = 1)
+            Text(previewClockTime(marker.time), fontWeight = if (marker.endpoint) FontWeight.Bold else FontWeight.Normal,
+                fontSize = if (marker.endpoint) 16.sp else 14.sp, maxLines = 1)
         }
     }
 }

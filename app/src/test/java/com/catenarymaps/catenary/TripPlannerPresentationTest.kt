@@ -49,11 +49,11 @@ class TripPlannerPresentationTest {
             DirectionsLeg("WALK", startTime = start, endTime = board), transit,
             DirectionsLeg("BIKE", startTime = alight, endTime = end)))
         val groups = journey.previewTimeGroups()
-        assertEquals(listOf(PreviewTimeMarker(start, false), PreviewTimeMarker(board, true)), groups.departure)
-        assertEquals(listOf(PreviewTimeMarker(alight, true), PreviewTimeMarker(end, false)), groups.arrival)
+        assertEquals(listOf(PreviewTimeMarker(start, true), PreviewTimeMarker(board, false)), groups.departure)
+        assertEquals(listOf(PreviewTimeMarker(alight, false), PreviewTimeMarker(end, true)), groups.arrival)
         val direct = journey.copy(legs = listOf(DirectionsLeg("WALK"))).previewTimeGroups()
-        assertEquals(listOf(PreviewTimeMarker(start, false)), direct.departure)
-        assertEquals(listOf(PreviewTimeMarker(end, false)), direct.arrival)
+        assertEquals(listOf(PreviewTimeMarker(start, true)), direct.departure)
+        assertEquals(listOf(PreviewTimeMarker(end, true)), direct.arrival)
     }
 
     @Test fun negligibleAccessUsesEndpointTimeAndDoesNotDuplicateTransitTime() {

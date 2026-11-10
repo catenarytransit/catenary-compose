@@ -4329,7 +4329,11 @@ class MainActivity : ComponentActivity() {
                                                 JourneySummary(
                                                         planner = tripPlanner,
                                                         streetUsUnits = streetUsUnits,
-                                                        compact = tripPlanner.detailsScrolled,
+                                                        // Above half height, the sheet removes one preview pixel per pixel dragged.
+                                                        collapseFraction =
+                                                                ((maxOf(expandedAnchor, screenHeightPx / 2f - bottomInset) -
+                                                                        draggableState.requireOffset() - with(density) { 24.dp.toPx() }) /
+                                                                        tripPlanner.detailsCollapseRangePx).coerceIn(0f, 1f),
                                                         modifier = Modifier
                                                                 .align(Alignment.TopStart)
                                                                 .fillMaxWidth(contentWidthFraction)

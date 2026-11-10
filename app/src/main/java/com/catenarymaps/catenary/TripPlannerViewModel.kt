@@ -30,7 +30,8 @@ class TripPlannerViewModel : ViewModel() {
         private set
     var selected by mutableIntStateOf(0)
     var details by mutableStateOf(false)
-    var detailsScrolled by mutableStateOf(false)
+    var detailsCollapse by mutableFloatStateOf(0f)
+    var detailsCollapseRangePx by mutableFloatStateOf(1f)
     private var awaitingCurrentOrigin = false
     var mapMode by mutableStateOf(false)
     val selectedJourney get() = itineraries.getOrNull(selected)
@@ -40,7 +41,7 @@ class TripPlannerViewModel : ViewModel() {
     fun selectJourney(journey: DirectionsItinerary) {
         selected = itineraries.indexOfFirst { it.identity() == journey.identity() }.coerceAtLeast(0)
         mapMode = false
-        detailsScrolled = false
+        detailsCollapse = 0f
         showTransfers = true
         details = true
         editing = null
