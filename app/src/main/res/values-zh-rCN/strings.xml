@@ -158,4 +158,10 @@
     <string name="route_category_bus">公交车</string>
     <string name="route_category_other">其他</string>
     <string name="directions_select_connection">点击一个出行方案以查看详情</string>
+    <string name="home_explore">探索</string>
+    <string name="home_trips">行程</string>
+    <string name="saved_journeys_empty">尚未保存任何行程。</string>
+    <string name="saved_journeys_description">您想在旅途中接收接续信息和运营中断通知吗？请在时刻表搜索中点击星标按钮保存行程。</string>
+    <string name="saved_journeys_plan">规划行程</string>
+    <string name="saved_journeys_select">选择行程以查看详情。</string>
 </resources>

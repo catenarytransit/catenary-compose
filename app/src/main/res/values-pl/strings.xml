@@ -159,4 +159,10 @@
     <string name="route_category_bus">Autobus</string>
     <string name="route_category_other">Inne</string>
     <string name="directions_select_connection">Kliknij połączenie, aby wyświetlić szczegóły</string>
+    <string name="home_explore">Odkrywaj</string>
+    <string name="home_trips">Podróże</string>
+    <string name="saved_journeys_empty">Brak zapisanych podróży.</string>
+    <string name="saved_journeys_description">Czy chcesz otrzymywać informacje o swoim połączeniu podczas podróży i powiadomienia o zakłóceniach? Zapisz podróż w wyszukiwarce rozkładów jazdy, naciskając przycisk z gwiazdką.</string>
+    <string name="saved_journeys_plan">Zaplanuj podróż</string>
+    <string name="saved_journeys_select">Wybierz podróż, aby zobaczyć szczegóły.</string>
 </resources>

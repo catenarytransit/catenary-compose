@@ -157,4 +157,10 @@
     <string name="route_category_bus">Autobus</string>
     <string name="route_category_other">Altro</string>
     <string name="directions_select_connection">Fai clic su un collegamento per visualizzare i dettagli</string>
+    <string name="home_explore">Esplora</string>
+    <string name="home_trips">Viaggi</string>
+    <string name="saved_journeys_empty">Nessun viaggio salvato.</string>
+    <string name="saved_journeys_description">Vuoi ricevere informazioni sul tuo collegamento durante il viaggio e notifiche sulle perturbazioni? Salva il viaggio nella ricerca degli orari premendo il pulsante a stella.</string>
+    <string name="saved_journeys_plan">Pianifica un viaggio</string>
+    <string name="saved_journeys_select">Seleziona un viaggio per visualizzare i dettagli.</string>
 </resources>

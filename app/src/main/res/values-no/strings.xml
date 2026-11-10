@@ -157,4 +157,10 @@
     <string name="route_category_bus">Buss</string>
     <string name="route_category_other">Annet</string>
     <string name="directions_select_connection">Klikk på en forbindelse for å se detaljer</string>
+    <string name="home_explore">Utforsk</string>
+    <string name="home_trips">Reiser</string>
+    <string name="saved_journeys_empty">Ingen lagrede reiser.</string>
+    <string name="saved_journeys_description">Vil du motta informasjon om forbindelsen din under reisen og bli varslet om driftsforstyrrelser? Lagre reisen i rutesøket ved å trykke på stjerneknappen.</string>
+    <string name="saved_journeys_plan">Planlegg en reise</string>
+    <string name="saved_journeys_select">Velg en reise for å se detaljer.</string>
 </resources>

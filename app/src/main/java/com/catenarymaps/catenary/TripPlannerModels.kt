@@ -15,12 +15,14 @@ data class DirectionsLocation(
 @Serializable
 data class DirectionsPoint(
     val name: String = "", val lat: Double? = null, val lon: Double? = null,
-    val platform: String? = null, val platformCode: String? = null
+    val platform: String? = null, val platformCode: String? = null,
+    val timezone: String? = null
 )
 @Serializable
 data class DirectionsStop(
     val name: String = "", val arrival: String? = null, val departure: String? = null,
-    val scheduledArrival: String? = null, val scheduledDeparture: String? = null
+    val scheduledArrival: String? = null, val scheduledDeparture: String? = null,
+    val timezone: String? = null
 )
 @Serializable
 data class DirectionsGeometry(val points: String? = null, val precision: Int = 6)

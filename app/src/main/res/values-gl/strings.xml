@@ -150,4 +150,10 @@
     <string name="label_interpolated_trajectories">Etiquetar traxectorias interpoladas</string>
     <string name="vehicle_labels">Etiquetas dos vehículos</string>
     <string name="directions_select_connection">Fai clic nunha conexión para ver os detalles</string>
+    <string name="home_explore">Explorar</string>
+    <string name="home_trips">Viaxes</string>
+    <string name="saved_journeys_empty">Non hai viaxes gardadas.</string>
+    <string name="saved_journeys_description">Quere recibir información sobre a súa conexión durante a viaxe e avisos de incidencias? Garde a viaxe na busca de horarios premendo o botón da estrela.</string>
+    <string name="saved_journeys_plan">Planificar unha viaxe</string>
+    <string name="saved_journeys_select">Seleccione unha viaxe para ver os detalles.</string>
 </resources>

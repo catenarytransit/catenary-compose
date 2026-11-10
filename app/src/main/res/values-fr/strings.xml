@@ -160,4 +160,10 @@
     <string name="directions_save_error">Impossible de mettre à jour le trajet enregistré. Veuillez réessayer.</string>
     <string name="directions_retry">Réessayer de charger les relations</string>
     <string name="directions_select_connection">Cliquez sur une relation pour afficher les détails</string>
+    <string name="home_explore">Explorer</string>
+    <string name="home_trips">Voyages</string>
+    <string name="saved_journeys_empty">Aucun voyage enregistré.</string>
+    <string name="saved_journeys_description">Souhaitez-vous recevoir des informations sur votre trajet pendant le voyage et être informé des perturbations ? Enregistrez votre voyage dans la recherche d’horaires en appuyant sur le bouton étoile.</string>
+    <string name="saved_journeys_plan">Planifier un voyage</string>
+    <string name="saved_journeys_select">Sélectionnez un voyage pour afficher ses détails.</string>
 </resources>

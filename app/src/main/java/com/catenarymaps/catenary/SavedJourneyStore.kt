@@ -42,12 +42,20 @@ internal class SavedJourneyStore(context: Context, name: String = "saved-journey
         writableDatabase.delete("saved_journeys", "identity = ?", arrayOf(identity))
     }
 
-    /** Reserved for a future saved-trips screen; newest saves appear first. */
-    fun readAll(): List<SavedJourney> = readableDatabase.query(
-        "saved_journeys", arrayOf("snapshot"), null, null, null, null, "saved_at DESC"
-    ).use { cursor ->
-        buildList {
-            while (cursor.moveToNext()) add(Json.decodeFromString<SavedJourney>(cursor.getString(0)))
+    /** Remove snapshots twelve hours after arrival, including while the app remains open. */
+    fun readAll(now: java.time.Instant = java.time.Instant.now()): List<SavedJourney> {
+        val snapshots = readableDatabase.query(
+            "saved_journeys", arrayOf("snapshot"), null, null, null, null, "saved_at DESC"
+        ).use { cursor ->
+            buildList {
+                while (cursor.moveToNext()) add(Json.decodeFromString<SavedJourney>(cursor.getString(0)))
+            }
+        }
+        return snapshots.filter { snapshot ->
+            val end = runCatching { java.time.Instant.parse(snapshot.journey.endTime) }.getOrNull()
+            val expired = end != null && end.isBefore(now.minusSeconds(12 * 60 * 60))
+            if (expired) remove(snapshot.journey.identity())
+            !expired
         }
     }
 }

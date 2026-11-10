@@ -158,4 +158,10 @@
     <string name="route_category_bus">Autobuz</string>
     <string name="route_category_other">Altul</string>
     <string name="directions_select_connection">Faceți clic pe o conexiune pentru a vedea detaliile</string>
+    <string name="home_explore">Explorează</string>
+    <string name="home_trips">Călătorii</string>
+    <string name="saved_journeys_empty">Nicio călătorie salvată.</string>
+    <string name="saved_journeys_description">Doriți să primiți informații despre conexiunea dumneavoastră în timpul călătoriei și notificări despre perturbări? Salvați călătoria în căutarea orarelor apăsând butonul cu stea.</string>
+    <string name="saved_journeys_plan">Planifică o călătorie</string>
+    <string name="saved_journeys_select">Selectați o călătorie pentru a vedea detaliile.</string>
 </resources>

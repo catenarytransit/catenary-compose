@@ -7,6 +7,49 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class TripPlannerPresentationTest {
+    @Test fun clocksUseStopZonesAnd24HourTimeRegardlessOfLocale() {
+        val oldLocale = Locale.getDefault()
+        val oldZone = java.util.TimeZone.getDefault()
+        try {
+            Locale.setDefault(Locale.US)
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Tokyo"))
+            assertEquals("09:00", directionsTime("2026-11-10T17:00:00Z", "America/Los_Angeles"))
+            assertEquals("12:00", directionsTime("2026-11-10T17:00:00Z", "America/New_York"))
+            assertEquals("14:00", directionsTime("2026-07-10T18:00:00Z", "America/New_York"))
+            assertEquals("13:00", directionsTime("2026-11-10T18:00:00Z", "America/New_York"))
+            assertEquals("02:00", directionsTime("2026-11-10T17:00:00Z"))
+            assertEquals("02:00", directionsTime("2026-11-10T17:00:00Z", "invalid"))
+            assertEquals("", directionsTime("bad", "America/New_York"))
+        } finally {
+            Locale.setDefault(oldLocale)
+            java.util.TimeZone.setDefault(oldZone)
+        }
+    }
+
+    @Test fun summaryUsesBoardingAndAlightingZonesAcrossAccessAndEgress() {
+        val journey = DirectionsItinerary(start, end, legs = listOf(
+            DirectionsLeg("WALK", from = DirectionsPoint(timezone = "America/Phoenix")),
+            transit.copy(from = DirectionsPoint(timezone = "America/Los_Angeles"),
+                to = DirectionsPoint(timezone = "America/New_York")),
+            DirectionsLeg("WALK", to = DirectionsPoint(timezone = "America/Chicago"))))
+        assertTrue(journey.previewTimeGroups().departure.all { it.timezone == "America/Los_Angeles" })
+        assertTrue(journey.previewTimeGroups().arrival.all { it.timezone == "America/New_York" })
+        val direct = journey.copy(legs = listOf(DirectionsLeg("BIKE",
+            from = DirectionsPoint(timezone = "America/Phoenix"),
+            to = DirectionsPoint(timezone = "America/Chicago"))))
+        assertEquals("America/Phoenix", direct.previewTimeGroups().departure.single().timezone)
+        assertEquals("America/Chicago", direct.previewTimeGroups().arrival.single().timezone)
+    }
+
+    @Test fun optionalStopTimezonesDeserializeForNewAndCachedResponses() {
+        val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+        val point = json.decodeFromString<DirectionsPoint>("""{"name":"Stop","timezone":"Europe/Paris"}""")
+        val stop = json.decodeFromString<DirectionsStop>("""{"name":"Stop","timezone":"Europe/Berlin"}""")
+        assertEquals("Europe/Paris", point.timezone)
+        assertEquals("Europe/Berlin", stop.timezone)
+        assertNull(json.decodeFromString<DirectionsPoint>("""{"name":"Old stop"}""").timezone)
+    }
+
     @Test fun dateHeadingAppearsAtLocalMidnightRatherThanUtcMidnight() {
         val zone = ZoneId.of("America/Los_Angeles")
         assertNull(connectionDateHeading("2026-11-10T23:55:00Z", "2026-11-11T00:05:00Z", zone))
@@ -49,11 +92,11 @@ class TripPlannerPresentationTest {
             DirectionsLeg("WALK", startTime = start, endTime = board), transit,
             DirectionsLeg("BIKE", startTime = alight, endTime = end)))
         val groups = journey.previewTimeGroups()
-        assertEquals(listOf(PreviewTimeMarker(start, false), PreviewTimeMarker(board, true)), groups.departure)
-        assertEquals(listOf(PreviewTimeMarker(alight, true), PreviewTimeMarker(end, false)), groups.arrival)
+        assertEquals(listOf(PreviewTimeMarker(start, true), PreviewTimeMarker(board, false)), groups.departure)
+        assertEquals(listOf(PreviewTimeMarker(alight, false), PreviewTimeMarker(end, true)), groups.arrival)
         val direct = journey.copy(legs = listOf(DirectionsLeg("WALK"))).previewTimeGroups()
-        assertEquals(listOf(PreviewTimeMarker(start, false)), direct.departure)
-        assertEquals(listOf(PreviewTimeMarker(end, false)), direct.arrival)
+        assertEquals(listOf(PreviewTimeMarker(start, true)), direct.departure)
+        assertEquals(listOf(PreviewTimeMarker(end, true)), direct.arrival)
     }
 
     @Test fun negligibleAccessUsesEndpointTimeAndDoesNotDuplicateTransitTime() {

@@ -1,5 +1,7 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -126,10 +128,27 @@ internal fun JourneyDetails(
 ) {
     key(journey.identity()) {
         val state = rememberLazyListState()
-        val summaryScroll = remember(planner) {
-            JourneyDetailsScrollConnection { planner.detailsScrolled = it }
+        val thresholdPx = with(LocalDensity.current) { 24.dp.toPx() }
+        val summaryScroll = remember(planner, state, thresholdPx) {
+            JourneyDetailsScrollConnection(thresholdPx,
+                range = { planner.detailsCollapseRangePx },
+                fraction = { planner.detailsCollapse },
+                setFraction = { planner.detailsCollapse = it },
+                settle = { target ->
+                    // Use the list's scroll mutation so touching it again cancels settling.
+                    state.scroll {
+                        val range = planner.detailsCollapseRangePx
+                        var previous = planner.detailsCollapse
+                        animate(previous, target, animationSpec = tween(220, easing = LinearOutSlowInEasing)) { value, _ ->
+                            planner.detailsCollapse = value
+                            // Continue the gesture in the list while its header settles.
+                            scrollBy((value - previous) * range)
+                            previous = value
+                        }
+                    }
+                })
         }
-        LazyColumn(Modifier.fillMaxSize().padding(top = topPadding).nestedScroll(summaryScroll),
+        LazyColumn(Modifier.fillMaxSize().padding(top = topPadding).then(if (planner.usingMap) Modifier else Modifier.nestedScroll(summaryScroll)),
             state = state, contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
@@ -148,7 +167,6 @@ private fun ConnectionResults(
     val journeys = planner.itineraries
     val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
         .withLocale(LocalConfiguration.current.locales[0])
-    val dateZone = ZoneId.systemDefault()
     LaunchedEffect(planner.searched) {
         if (planner.searched && state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0) {
             snapshotFlow { planner.itineraries.isNotEmpty() }.first { it }
@@ -206,7 +224,7 @@ private fun ConnectionResults(
         // Keep each date label in its connection item so paging indices and keys stay stable.
         itemsIndexed(journeys, key = { _, journey -> journey.identity() }) { index, journey ->
             Column {
-                connectionDateHeading(journeys.getOrNull(index - 1)?.startTime, journey.startTime, dateZone)?.let { date ->
+                connectionDateHeading(journeys.getOrNull(index - 1)?.startTime, journey.startTime, directionsZone(journey.departureTimezone))?.let { date ->
                     Text(date.format(dateFormatter),
                         style = MaterialTheme.typography.titleSmall,
                         color = TripPlannerColors.secondaryContent,
@@ -257,7 +275,7 @@ fun TripPlannerHeader(
     currentLocation: Pair<Double, Double>?, mapCenter: Position, stationHistory: StationHistory,
     streetUsUnits: Boolean,
     modifier: Modifier = Modifier, cardModifier: Modifier = Modifier,
-    compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Boolean = planner.detailsScrolled,
+    compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Float = planner.detailsCollapse,
     onBack: () -> Unit = {}, onExpandedHeight: (Int) -> Unit = {},
     onDetailsHeight: (Int) -> Unit = {},
     forceInputs: Boolean = false
@@ -551,9 +569,6 @@ private fun plannerDistance(meters: Double, imperial: Boolean): String {
     ).format(android.icu.util.Measure(value, unit))
 }
 
-internal fun directionsTime(value: String?): String = runCatching {
-    DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).format(Instant.parse(value))
-}.getOrDefault("")
 @Composable
 internal fun directionsDuration(seconds: Double): String {
     val minutes = (seconds / 60).roundToInt().coerceAtLeast(0)
@@ -678,9 +693,9 @@ private fun PreviewTimeRow(times: PreviewTimeGroups, duration: String) {
     val density = LocalDensity.current
     val style = LocalTextStyle.current
     fun groupWidth(markers: List<PreviewTimeMarker>): Int = markers.sumOf { marker ->
-        measurer.measure(previewClockTime(marker.time), style.copy(
-            fontSize = if (marker.transit) 16.sp else 14.sp,
-            fontWeight = if (marker.transit) FontWeight.Bold else FontWeight.Normal), maxLines = 1).size.width
+        measurer.measure(directionsTime(marker.time, marker.timezone), style.copy(
+            fontSize = if (marker.endpoint) 16.sp else 14.sp,
+            fontWeight = if (marker.endpoint) FontWeight.Bold else FontWeight.Normal), maxLines = 1).size.width
     } + with(density) { (8.dp * (markers.size - 1).coerceAtLeast(0)).roundToPx() }
     val sides = maxOf(groupWidth(times.departure), groupWidth(times.arrival))
     val durationWidth = measurer.measure(duration, style.copy(fontSize = 14.sp), maxLines = 1).size.width
@@ -698,16 +713,12 @@ private fun PreviewTimeRow(times: PreviewTimeGroups, duration: String) {
     }
 }
 
-private fun previewClockTime(time: String): String = runCatching {
-    DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault()).format(Instant.parse(time))
-}.getOrDefault("")
-
 @Composable
 private fun PreviewTimes(markers: List<PreviewTimeMarker>) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         markers.forEach { marker ->
-            Text(previewClockTime(marker.time), fontWeight = if (marker.transit) FontWeight.Bold else FontWeight.Normal,
-                fontSize = if (marker.transit) 16.sp else 14.sp, maxLines = 1)
+            Text(directionsTime(marker.time, marker.timezone), fontWeight = if (marker.endpoint) FontWeight.Bold else FontWeight.Normal,
+                fontSize = if (marker.endpoint) 16.sp else 14.sp, maxLines = 1)
         }
     }
 }
@@ -771,7 +782,7 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
                         ?: stringResource(R.string.directions_distance_unavailable), style = MaterialTheme.typography.bodyLarge)
                 }
             } else {
-                ConnectionRow(rail, directionsTime(leg.startTime), leg.fromPlatform ?: leg.from?.platform ?: leg.from?.platformCode ?: "",
+                ConnectionRow(rail, directionsTime(leg.startTime, leg.from?.timezone), leg.fromPlatform ?: leg.from?.platform ?: leg.from?.platformCode ?: "",
                     pearl = true, first = true) {
                     Text(leg.from?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }
@@ -806,11 +817,11 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
                     }
                 }
                 if (expanded) leg.intermediateStops.forEach { stop ->
-                    ConnectionRow(rail, directionsTime(stop.departure ?: stop.arrival ?: stop.scheduledDeparture ?: stop.scheduledArrival), pearl = true) {
+                    ConnectionRow(rail, directionsTime(stop.departure ?: stop.arrival ?: stop.scheduledDeparture ?: stop.scheduledArrival, stop.timezone), pearl = true) {
                         Text(stop.name, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-                ConnectionRow(rail, directionsTime(leg.endTime), leg.toPlatform ?: leg.to?.platform ?: leg.to?.platformCode ?: "",
+                ConnectionRow(rail, directionsTime(leg.endTime, leg.to?.timezone), leg.toPlatform ?: leg.to?.platform ?: leg.to?.platformCode ?: "",
                     pearl = true, last = true) {
                     Text(leg.to?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }

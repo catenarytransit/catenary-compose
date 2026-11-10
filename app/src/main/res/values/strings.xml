@@ -172,4 +172,10 @@
     <string name="directions_save_error">Could not update saved trip. Please try again.</string>
     <string name="directions_retry">Retry loading connections</string>
     <string name="directions_select_connection">Click on a connection to view details</string>
+    <string name="home_explore">Explore</string>
+    <string name="home_trips">Trips</string>
+    <string name="saved_journeys_empty">No journeys saved.</string>
+    <string name="saved_journeys_description">Would you like to receive information about your connection during journey and be notified of disruptions? Save your journey in the timetable search by pressing the star button.</string>
+    <string name="saved_journeys_plan">Plan a journey</string>
+    <string name="saved_journeys_select">Select a journey to view details.</string>
 </resources>

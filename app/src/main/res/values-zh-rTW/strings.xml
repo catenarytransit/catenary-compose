@@ -158,4 +158,10 @@
     <string name="route_category_bus">公車</string>
     <string name="route_category_other">其他</string>
     <string name="directions_select_connection">點選行程以查看詳細資訊</string>
+    <string name="home_explore">探索</string>
+    <string name="home_trips">行程</string>
+    <string name="saved_journeys_empty">尚未儲存任何行程。</string>
+    <string name="saved_journeys_description">您想在旅途中接收轉乘資訊和營運中斷通知嗎？請在時刻表搜尋中點選星號按鈕儲存行程。</string>
+    <string name="saved_journeys_plan">規劃行程</string>
+    <string name="saved_journeys_select">選擇行程以查看詳細資訊。</string>
 </resources>

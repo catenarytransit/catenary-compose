@@ -157,4 +157,10 @@
     <string name="route_category_bus">Bussi</string>
     <string name="route_category_other">Muu</string>
     <string name="directions_select_connection">Näytä tiedot napsauttamalla yhteyttä</string>
+    <string name="home_explore">Tutustu</string>
+    <string name="home_trips">Matkat</string>
+    <string name="saved_journeys_empty">Ei tallennettuja matkoja.</string>
+    <string name="saved_journeys_description">Haluatko saada tietoa yhteydestäsi matkan aikana ja ilmoituksia häiriöistä? Tallenna matkasi aikatauluhaussa painamalla tähtipainiketta.</string>
+    <string name="saved_journeys_plan">Suunnittele matka</string>
+    <string name="saved_journeys_select">Valitse matka nähdäksesi tiedot.</string>
 </resources>

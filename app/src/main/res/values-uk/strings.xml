@@ -159,4 +159,10 @@
     <string name="route_category_bus">Автобус</string>
     <string name="route_category_other">Інше</string>
     <string name="directions_select_connection">Натисніть на варіант поїздки, щоб переглянути подробиці</string>
+    <string name="home_explore">Огляд</string>
+    <string name="home_trips">Подорожі</string>
+    <string name="saved_journeys_empty">Немає збережених подорожей.</string>
+    <string name="saved_journeys_description">Бажаєте отримувати інформацію про своє сполучення під час подорожі та сповіщення про збої? Збережіть подорож у пошуку розкладів, натиснувши кнопку із зіркою.</string>
+    <string name="saved_journeys_plan">Спланувати подорож</string>
+    <string name="saved_journeys_select">Виберіть подорож, щоб переглянути подробиці.</string>
 </resources>

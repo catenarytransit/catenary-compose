@@ -159,4 +159,10 @@
     <string name="route_category_bus">Autobus</string>
     <string name="route_category_other">Ostatní</string>
     <string name="directions_select_connection">Kliknutím na spojení zobrazíte podrobnosti</string>
+    <string name="home_explore">Objevovat</string>
+    <string name="home_trips">Cesty</string>
+    <string name="saved_journeys_empty">Žádné uložené cesty.</string>
+    <string name="saved_journeys_description">Chcete během cesty dostávat informace o svém spojení a upozornění na mimořádnosti? Uložte si cestu ve vyhledávání jízdních řádů stisknutím tlačítka s hvězdičkou.</string>
+    <string name="saved_journeys_plan">Naplánovat cestu</string>
+    <string name="saved_journeys_select">Vyberte cestu pro zobrazení podrobností.</string>
 </resources>

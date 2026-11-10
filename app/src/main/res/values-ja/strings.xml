@@ -158,4 +158,10 @@
     <string name="route_category_bus">バス</string>
     <string name="route_category_other">その他</string>
     <string name="directions_select_connection">経路をクリックすると詳細が表示されます</string>
+    <string name="home_explore">探索</string>
+    <string name="home_trips">旅程</string>
+    <string name="saved_journeys_empty">保存された旅程はありません。</string>
+    <string name="saved_journeys_description">旅行中に乗り継ぎの情報や運行障害の通知を受け取りたいですか？時刻表検索で星ボタンを押して旅程を保存してください。</string>
+    <string name="saved_journeys_plan">旅程を計画</string>
+    <string name="saved_journeys_select">旅程を選択すると詳細が表示されます。</string>
 </resources>
