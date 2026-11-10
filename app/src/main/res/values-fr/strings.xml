@@ -151,4 +151,6 @@
     <string name="route_category_tram">Tramway</string>
     <string name="route_category_bus">Bus</string>
     <string name="route_category_other">Autre</string>
+    <string name="directions_earlier_connections">Relations précédentes</string>
+    <string name="directions_later_connections">Relations suivantes</string>
 </resources>

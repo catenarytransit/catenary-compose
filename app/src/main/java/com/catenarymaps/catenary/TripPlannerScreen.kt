@@ -1,5 +1,11 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -73,6 +79,8 @@ internal object TripPlannerColors {
         @Composable get() = if (dark) Color(0xFFF1F3F4) else Color(0xFF202124)
     val secondaryContent: Color
         @Composable get() = if (dark) Color(0xFFBDC1C6) else Color(0xFF5F6368)
+    val streetLine: Color
+        @Composable get() = if (dark) Color(0xFF67E8F9) else Color(0xFF2563EB)
     val streetBorder: Color
         @Composable get() = if (dark) Color(0xFF5F6368) else Color(0xFF9AA0A6)
 }
@@ -105,7 +113,7 @@ fun TripPlannerScreen(
         } else {
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    if (planner.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    if (planner.earlierLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
                     planner.error?.let {
                         Text(stringResource(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
                     }
@@ -113,12 +121,67 @@ fun TripPlannerScreen(
                         Text(stringResource(R.string.directions_no_journeys))
                     }
                 }
-                items(planner.itineraries.size) { index ->
-                    val journey = planner.itineraries[index]
-                    JourneyPreview(journey, streetUsUnits,
-                        onClick = { planner.selected = index; planner.showTransfers = true; planner.details = true; planner.editing = null; focus.clearFocus(); onSelectJourney(journey) })
+                if (planner.searched) item(key = "earlier") {
+                    ConnectionPageButton(planner, client, earlier = true)
+                }
+                items(planner.itineraries, key = { it.identity() }) { journey ->
+                    var visible by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) { visible = true }
+                    val slide = with(LocalDensity.current) { 16.dp.roundToPx() }
+                    Box(Modifier.animateItem()) {
+                        AnimatedVisibility(visible, enter = fadeIn(tween(240)) + slideInVertically(tween(240)) {
+                            if (journey.identity() in planner.earlierInsertedIds) -slide else slide
+                        }) {
+                            JourneyPreview(journey, streetUsUnits,
+                                onClick = {
+                                    planner.selected = planner.itineraries.indexOfFirst { it.identity() == journey.identity() }.coerceAtLeast(0)
+                                    planner.showTransfers = true; planner.details = true; planner.editing = null
+                                    focus.clearFocus(); onSelectJourney(journey)
+                                })
+                        }
+                    }
+                }
+                // Earlier pages have no skeleton rows: all new cards slide in together.
+                if (planner.loading || planner.laterLoading) {
+                    items(if (planner.laterLoading) 5 else 3, key = { "skeleton-$it" }) {
+                        ConnectionSkeleton()
+                    }
+                }
+                if (planner.searched) item(key = "later") {
+                    ConnectionPageButton(planner, client, earlier = false)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ConnectionPageButton(planner: TripPlannerViewModel, client: HttpClient, earlier: Boolean) {
+    val busy = if (earlier) planner.earlierLoading else planner.laterLoading
+    FilledTonalButton(
+        onClick = { planner.loadConnections(client, earlier) },
+        enabled = if (earlier) planner.canLoadEarlier else planner.canLoadLater,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = ButtonDefaults.filledTonalButtonColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)
+    ) {
+        if (busy) {
+            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(stringResource(if (earlier) R.string.directions_earlier_connections else R.string.directions_later_connections))
+    }
+}
+
+@Composable
+private fun ConnectionSkeleton() {
+    val transition = rememberInfiniteTransition(label = "connection-loading")
+    val alpha by transition.animateFloat(0.25f, 0.65f,
+        infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "connection-pulse")
+    Card(colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(Modifier.fillMaxWidth(0.65f).height(18.dp).background(TripPlannerColors.secondaryContent.copy(alpha = alpha), MaterialTheme.shapes.small))
+            Box(Modifier.fillMaxWidth().height(28.dp).background(TripPlannerColors.secondaryContent.copy(alpha = alpha), MaterialTheme.shapes.small))
         }
     }
 }
