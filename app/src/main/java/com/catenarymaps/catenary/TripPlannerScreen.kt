@@ -124,21 +124,17 @@ fun TripPlannerScreen(
                     ConnectionPageButton(planner, client, earlier = true)
                 }
                 items(planner.itineraries, key = { it.identity() }) { journey ->
-                    var visible by remember { mutableStateOf(false) }
-                    LaunchedEffect(Unit) { visible = true }
-                    val slide = with(LocalDensity.current) { 16.dp.roundToPx() }
-                    Box(Modifier.animateItem()) {
-                        androidx.compose.animation.AnimatedVisibility(visible, enter = fadeIn(tween(240)) + slideInVertically(tween(240)) {
-                            if (journey.identity() in planner.earlierInsertedIds) -slide else slide
-                        }) {
-                            JourneyPreview(journey, streetUsUnits,
-                                onClick = {
-                                    planner.selected = planner.itineraries.indexOfFirst { it.identity() == journey.identity() }.coerceAtLeast(0)
-                                    planner.showTransfers = true; planner.details = true; planner.editing = null
-                                    focus.clearFocus(); onSelectJourney(journey)
-                                })
+                    AnimatedJourneyPreview(
+                        journey = journey,
+                        streetUsUnits = streetUsUnits,
+                        earlier = journey.identity() in planner.earlierInsertedIds,
+                        modifier = Modifier.animateItem(),
+                        onClick = {
+                            planner.selected = planner.itineraries.indexOfFirst { it.identity() == journey.identity() }.coerceAtLeast(0)
+                            planner.showTransfers = true; planner.details = true; planner.editing = null
+                            focus.clearFocus(); onSelectJourney(journey)
                         }
-                    }
+                    )
                 }
                 // Earlier pages have no skeleton rows: all new cards slide in together.
                 if (planner.loading || planner.laterLoading) {
@@ -150,6 +146,31 @@ fun TripPlannerScreen(
                     ConnectionPageButton(planner, client, earlier = false)
                 }
             }
+        }
+    }
+}
+
+// Keep the visibility animation outside layout receiver scopes so Kotlin cannot
+// select the ColumnScope or RowScope AnimatedVisibility extensions.
+@Composable
+private fun AnimatedJourneyPreview(
+    journey: DirectionsItinerary,
+    streetUsUnits: Boolean,
+    earlier: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+    val slide = with(LocalDensity.current) { 16.dp.roundToPx() }
+    Box(modifier) {
+        androidx.compose.animation.AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(240)) + slideInVertically(tween(240)) {
+                if (earlier) -slide else slide
+            }
+        ) {
+            JourneyPreview(journey, streetUsUnits, onClick = onClick)
         }
     }
 }
