@@ -149,4 +149,5 @@
     <string name="heading_cable_tram">Tranvía por cable</string>
     <string name="label_interpolated_trajectories">Etiquetar traxectorias interpoladas</string>
     <string name="vehicle_labels">Etiquetas dos vehículos</string>
+    <string name="directions_select_connection">Fai clic nunha conexión para ver os detalles</string>
 </resources>

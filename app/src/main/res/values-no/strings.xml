@@ -156,4 +156,5 @@
     <string name="route_category_tram">Trikk</string>
     <string name="route_category_bus">Buss</string>
     <string name="route_category_other">Annet</string>
+    <string name="directions_select_connection">Klikk på en forbindelse for å se detaljer</string>
 </resources>

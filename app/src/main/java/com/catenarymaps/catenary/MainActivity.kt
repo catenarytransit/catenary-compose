@@ -4366,9 +4366,16 @@ class MainActivity : ComponentActivity() {
                                                                                 VerticalDivider()
                                                                                 Column(Modifier.weight(1f).fillMaxHeight()) {
                                                                                         if (tripPlanner.details) {
-                                                                                                JourneySummary(tripPlanner, streetUsUnits)
+                                                                                                JourneySummary(tripPlanner, streetUsUnits, showBackButton = false)
                                                                                                 Box(Modifier.weight(1f)) {
                                                                                                         tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits) }
+                                                                                                }
+                                                                                        } else {
+                                                                                                Box(Modifier.fillMaxSize().background(TripPlannerColors.background).padding(24.dp),
+                                                                                                        contentAlignment = Alignment.Center) {
+                                                                                                        Text(stringResource(R.string.directions_select_connection),
+                                                                                                                color = TripPlannerColors.secondaryContent,
+                                                                                                                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                                                                                                 }
                                                                                         }
                                                                                 }

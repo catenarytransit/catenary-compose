@@ -164,4 +164,5 @@
     <string name="directions_list_view">Liste anzeigen</string>
     <string name="directions_save_error">Die gespeicherte Verbindung konnte nicht aktualisiert werden. Bitte erneut versuchen.</string>
     <string name="directions_retry">Verbindungen erneut laden</string>
+    <string name="directions_select_connection">Klicken Sie auf eine Verbindung, um Details anzuzeigen</string>
 </resources>

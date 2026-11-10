@@ -159,4 +159,5 @@
     <string name="directions_list_view">Afficher la liste</string>
     <string name="directions_save_error">Impossible de mettre à jour le trajet enregistré. Veuillez réessayer.</string>
     <string name="directions_retry">Réessayer de charger les relations</string>
+    <string name="directions_select_connection">Cliquez sur une relation pour afficher les détails</string>
 </resources>

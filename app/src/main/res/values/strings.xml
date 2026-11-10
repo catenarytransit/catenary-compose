@@ -171,4 +171,5 @@
     <string name="directions_list_view">Show list</string>
     <string name="directions_save_error">Could not update saved trip. Please try again.</string>
     <string name="directions_retry">Retry loading connections</string>
+    <string name="directions_select_connection">Click on a connection to view details</string>
 </resources>

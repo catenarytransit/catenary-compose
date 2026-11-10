@@ -157,4 +157,5 @@
     <string name="route_category_tram">路面電車</string>
     <string name="route_category_bus">バス</string>
     <string name="route_category_other">その他</string>
+    <string name="directions_select_connection">経路をクリックすると詳細が表示されます</string>
 </resources>

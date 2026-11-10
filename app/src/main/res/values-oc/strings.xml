@@ -151,4 +151,5 @@
     <string name="route_category_tram">Tramvia</string>
     <string name="route_category_bus">Autobús</string>
     <string name="route_category_other">Autre</string>
+    <string name="directions_select_connection">Clicatz sus una correspondéncia per veire los detalhs</string>
 </resources>

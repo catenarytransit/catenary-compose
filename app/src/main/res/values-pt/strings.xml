@@ -156,4 +156,5 @@
     <string name="route_category_tram">Elétrico</string>
     <string name="route_category_bus">Autocarro</string>
     <string name="route_category_other">Outro</string>
+    <string name="directions_select_connection">Clique numa ligação para ver os detalhes</string>
 </resources>

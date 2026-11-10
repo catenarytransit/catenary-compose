@@ -156,4 +156,5 @@
     <string name="route_category_tram">Raitiovaunu</string>
     <string name="route_category_bus">Bussi</string>
     <string name="route_category_other">Muu</string>
+    <string name="directions_select_connection">Näytä tiedot napsauttamalla yhteyttä</string>
 </resources>

@@ -157,4 +157,5 @@
     <string name="route_category_tram">有轨电车</string>
     <string name="route_category_bus">公交车</string>
     <string name="route_category_other">其他</string>
+    <string name="directions_select_connection">点击一个出行方案以查看详情</string>
 </resources>

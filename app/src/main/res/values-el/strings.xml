@@ -156,4 +156,5 @@
     <string name="route_category_tram">Τραμ</string>
     <string name="route_category_bus">Λεωφορείο</string>
     <string name="route_category_other">Άλλο</string>
+    <string name="directions_select_connection">Κάντε κλικ σε μια σύνδεση για να δείτε λεπτομέρειες</string>
 </resources>

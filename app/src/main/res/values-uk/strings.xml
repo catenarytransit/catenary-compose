@@ -158,4 +158,5 @@
     <string name="route_category_tram">Трамвай</string>
     <string name="route_category_bus">Автобус</string>
     <string name="route_category_other">Інше</string>
+    <string name="directions_select_connection">Натисніть на варіант поїздки, щоб переглянути подробиці</string>
 </resources>

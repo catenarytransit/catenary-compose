@@ -28,7 +28,8 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
-    compact: Boolean = planner.detailsScrolled, modifier: Modifier = Modifier
+    compact: Boolean = planner.detailsScrolled, modifier: Modifier = Modifier,
+    showBackButton: Boolean = true
 ) {
     val journey = planner.selectedJourney ?: return
     val context = LocalContext.current.applicationContext
@@ -45,10 +46,12 @@ internal fun JourneySummary(
         finally { busy = false }
     }
     Column(modifier) {
-        FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp),
-            shape = CircleShape, colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back))
+        if (showBackButton) {
+            FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp),
+                shape = CircleShape, colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back))
+            }
         }
         // Buttons overlap the summary's lower edge while retaining full touch targets.
         Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 4.dp)) {

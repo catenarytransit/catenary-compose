@@ -156,4 +156,5 @@
     <string name="route_category_tram">Sporvogn</string>
     <string name="route_category_bus">Bus</string>
     <string name="route_category_other">Andet</string>
+    <string name="directions_select_connection">Klik på en forbindelse for at se detaljer</string>
 </resources>

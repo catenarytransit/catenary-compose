@@ -157,4 +157,5 @@
     <string name="route_category_tram">Tramvai</string>
     <string name="route_category_bus">Autobuz</string>
     <string name="route_category_other">Altul</string>
+    <string name="directions_select_connection">Faceți clic pe o conexiune pentru a vedea detaliile</string>
 </resources>

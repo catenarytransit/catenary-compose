@@ -162,4 +162,5 @@
     <string name="directions_list_view">Mostrar lista</string>
     <string name="directions_save_error">No se pudo actualizar el viaje guardado. Inténtalo de nuevo.</string>
     <string name="directions_retry">Volver a cargar conexiones</string>
+    <string name="directions_select_connection">Haz clic en una conexión para ver los detalles</string>
 </resources>

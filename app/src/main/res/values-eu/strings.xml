@@ -154,4 +154,5 @@
     <string name="heading_cable_tram">Kable-tranbia</string>
     <string name="label_interpolated_trajectories">Etiketatu interpolatutako ibilbideak</string>
     <string name="vehicle_labels">Ibilgailuen etiketak</string>
+    <string name="directions_select_connection">Egin klik konexio batean xehetasunak ikusteko</string>
 </resources>

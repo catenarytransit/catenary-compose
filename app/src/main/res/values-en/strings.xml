@@ -153,4 +153,5 @@
     <string name="route_category_tram">Tram</string>
     <string name="route_category_bus">Bus</string>
     <string name="route_category_other">Other</string>
+    <string name="directions_select_connection">Click on a connection to view details</string>
 </resources>
