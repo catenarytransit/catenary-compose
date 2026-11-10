@@ -156,4 +156,10 @@
     <string name="route_category_tram">Elétrico</string>
     <string name="route_category_bus">Autocarro</string>
     <string name="route_category_other">Outro</string>
+    <string name="home_explore">Explorar</string>
+    <string name="home_trips">Viagens</string>
+    <string name="saved_journeys_empty">Nenhuma viagem guardada.</string>
+    <string name="saved_journeys_description">Gostaria de receber informações sobre a sua ligação durante a viagem e notificações de perturbações? Guarde a sua viagem na pesquisa de horários premindo o botão de estrela.</string>
+    <string name="saved_journeys_plan">Planear uma viagem</string>
+    <string name="saved_journeys_select">Selecione uma viagem para ver os detalhes.</string>
 </resources>

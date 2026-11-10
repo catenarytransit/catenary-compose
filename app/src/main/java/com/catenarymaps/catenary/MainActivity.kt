@@ -1330,6 +1330,20 @@ class MainActivity : ComponentActivity() {
                                 })
                         }
 
+                    var savedTripsVisible by rememberSaveable { mutableStateOf(false) }
+                    val homeNavigationVisible = savedTripsVisible || catenaryStack.isEmpty() ||
+                        catenaryStack.lastOrNull() is CatenaryStackEnum.NearbyDeparturesStack
+                    var homeNavigationHeight by remember { mutableStateOf(0.dp) }
+                    // Run on resume and periodically even when the saved-trips screen is closed.
+                    LaunchedEffect(isAppInForeground) {
+                        if (isAppInForeground) while (true) {
+                            try {
+                                withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.readAll() } }
+                            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                            catch (e: Exception) { android.util.Log.w("SavedJourneys", "Could not prune saved journeys", e) }
+                            kotlinx.coroutines.delay(60_000)
+                        }
+                    }
                     val directionsVisible = catenaryStack.lastOrNull() is CatenaryStackEnum.DirectionsStack
                     val plannerVisible by rememberUpdatedState(directionsVisible)
                     LaunchedEffect(tripPlanner, plannerSessionStore) {
@@ -3504,13 +3518,14 @@ class MainActivity : ComponentActivity() {
                                         val sheetModifier =
                                                 Modifier
                                                         .fillMaxWidth(contentWidthFraction)
+                                                        .padding(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp)
                                                         .align(Alignment.BottomStart)
                                                         // Landscape three-button navigation can occupy either side.
                                                         .windowInsetsPadding(
                                                                 WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
                                                         )
 
-                                        if (!directionsVisible || (tripPlanner.usingMap && tripPlanner.mapPicking == null)) Surface(
+                                        if (!savedTripsVisible && (!directionsVisible || (tripPlanner.usingMap && tripPlanner.mapPicking == null))) Surface(
                                                 modifier =
                                                         sheetModifier
                                                                 .offset {
@@ -3576,7 +3591,7 @@ class MainActivity : ComponentActivity() {
                                                                         // Apply after offset compensation so the visible drawer
                                                                         // content ends above bottom navigation in every snap state.
                                                                         .windowInsetsPadding(
-                                                                                WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+                                                                                if (homeNavigationVisible) WindowInsets(0, 0, 0, 0) else WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
                                                                         ),
                                                         horizontalAlignment =
                                                                 Alignment.CenterHorizontally
@@ -4389,6 +4404,36 @@ class MainActivity : ComponentActivity() {
                                                                 }
                                                         }
                                                 }
+                                        }
+
+                                        if (savedTripsVisible) {
+                                            SavedJourneysScreen(
+                                                streetUsUnits = streetUsUnits,
+                                                wide = isWideLayout,
+                                                foreground = isAppInForeground,
+                                                onExplore = { savedTripsVisible = false },
+                                                onPlan = {
+                                                    savedTripsVisible = false
+                                                    tripPlanner.details = false
+                                                    tripPlanner.mapMode = false
+                                                    tripPlanner.open(currentLocation?.let { (lat, lon) ->
+                                                        DirectionsLocation(currentLocationLabel, lat, lon, isCurrentLocation = true)
+                                                    })
+                                                    catenaryStack = ArrayDeque<CatenaryStackEnum>().apply {
+                                                        addLast(CatenaryStackEnum.DirectionsStack)
+                                                    }
+                                                },
+                                                modifier = Modifier.fillMaxSize().padding(bottom = homeNavigationHeight).zIndex(8f)
+                                            )
+                                        }
+                                        if (homeNavigationVisible) {
+                                            HomeNavigation(
+                                                tripsSelected = savedTripsVisible,
+                                                onExplore = { savedTripsVisible = false; catenaryStack = ArrayDeque() },
+                                                onTrips = { catenaryStack = ArrayDeque(); savedTripsVisible = true },
+                                                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().zIndex(9f)
+                                                    .onSizeChanged { homeNavigationHeight = with(density) { it.height.toDp() } }
+                                            )
                                         }
 
                                         val layerButtonColor =

@@ -157,4 +157,10 @@
     <string name="route_category_tram">路面電車</string>
     <string name="route_category_bus">巴士</string>
     <string name="route_category_other">其他</string>
+    <string name="home_explore">探索</string>
+    <string name="home_trips">行程</string>
+    <string name="saved_journeys_empty">尚未儲存任何行程。</string>
+    <string name="saved_journeys_description">你想在旅途中接收轉乘資訊和服務受阻通知嗎？請在時間表搜尋中按星號按鈕儲存行程。</string>
+    <string name="saved_journeys_plan">規劃行程</string>
+    <string name="saved_journeys_select">選擇行程以查看詳情。</string>
 </resources>

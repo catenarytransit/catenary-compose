@@ -47,6 +47,14 @@ class TripPlannerViewModel : ViewModel() {
         editing = null
     }
 
+    internal fun openSavedJourney(snapshot: SavedJourney) {
+        invalidate()
+        origin = snapshot.origin; originText = snapshot.origin?.name.orEmpty()
+        destination = snapshot.destination; destinationText = snapshot.destination?.name.orEmpty()
+        itineraries = listOf(snapshot.journey)
+        selectJourney(snapshot.journey)
+    }
+
     var showTransfers by mutableStateOf(false)
     var loading by mutableStateOf(false)
         private set

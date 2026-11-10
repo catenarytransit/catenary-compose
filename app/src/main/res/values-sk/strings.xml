@@ -158,4 +158,10 @@
     <string name="route_category_tram">Električka</string>
     <string name="route_category_bus">Autobus</string>
     <string name="route_category_other">Iné</string>
+    <string name="home_explore">Objavovať</string>
+    <string name="home_trips">Cesty</string>
+    <string name="saved_journeys_empty">Žiadne uložené cesty.</string>
+    <string name="saved_journeys_description">Chcete počas cesty dostávať informácie o svojom spojení a upozornenia na mimoriadnosti? Uložte si cestu vo vyhľadávaní cestovných poriadkov stlačením tlačidla s hviezdičkou.</string>
+    <string name="saved_journeys_plan">Naplánovať cestu</string>
+    <string name="saved_journeys_select">Vyberte cestu na zobrazenie podrobností.</string>
 </resources>
