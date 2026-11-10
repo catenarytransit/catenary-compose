@@ -35,13 +35,44 @@ class JourneyDetailsScrollConnectionTest {
         assertEquals(0f, fraction, 0.001f)
     }
 
-    @Test fun flingAndHorizontalMotionDoNotChangeHeightAndNewGestureHasThreshold() = runBlocking {
+    @Test fun releaseAtMidpointExpandsAndNewGestureHasThreshold() = runBlocking {
         scroll(-74f)
         connection.onPreScroll(Offset(0f, 100f), NestedScrollSource.SideEffect)
         connection.onPreScroll(Offset(100f, 0f), NestedScrollSource.UserInput)
         assertEquals(0.5f, fraction, 0.001f)
         connection.onPreFling(Velocity(0f, -1000f))
+        assertEquals(0f, fraction, 0.001f)
         scroll(-20f)
-        assertEquals(0.5f, fraction, 0.001f)
+        assertEquals(0f, fraction, 0.001f)
+    }
+
+    @Test fun releasePastMidpointCollapsesEvenWithoutFlingVelocity() = runBlocking {
+        scroll(-84f)
+        connection.onPreFling(Velocity.Zero)
+        assertEquals(1f, fraction, 0.001f)
+    }
+
+    @Test fun releaseBelowMidpointExpandsEvenAfterUpwardMotion() = runBlocking {
+        scroll(-64f)
+        connection.onPreFling(Velocity.Zero)
+        assertEquals(0f, fraction, 0.001f)
+    }
+
+    @Test fun drawerAndSummaryShareMidpointAndEndpoints() {
+        assertEquals(0f, drawerSummaryCollapseFraction(700f, 500f, 100f), 0.001f)
+        assertEquals(0f, drawerSummaryCollapseFraction(500f, 500f, 100f), 0.001f)
+        assertEquals(0.5f, drawerSummaryCollapseFraction(300f, 500f, 100f), 0.001f)
+        assertEquals(1f, drawerSummaryCollapseFraction(100f, 500f, 100f), 0.001f)
+        assertEquals(1f, drawerSummaryCollapseFraction(50f, 500f, 100f), 0.001f)
+        assertEquals(0f, drawerSummaryCollapseFraction(100f, 100f, 100f), 0.001f)
+        assertEquals(0f, summarySettleTarget(drawerSummaryCollapseFraction(301f, 500f, 100f)), 0.001f)
+        assertEquals(1f, summarySettleTarget(drawerSummaryCollapseFraction(299f, 500f, 100f)), 0.001f)
+    }
+
+    @Test fun settlingReceivesNearestEndpoint() = runBlocking {
+        var target = -1f
+        val custom = JourneyDetailsScrollConnection(24f, { 100f }, { 0.75f }, {}, { target = it })
+        custom.onPreFling(Velocity.Zero)
+        assertEquals(1f, target, 0.001f)
     }
 }

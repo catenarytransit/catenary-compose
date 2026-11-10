@@ -1,5 +1,7 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -127,11 +129,24 @@ internal fun JourneyDetails(
     key(journey.identity()) {
         val state = rememberLazyListState()
         val thresholdPx = with(LocalDensity.current) { 24.dp.toPx() }
-        val summaryScroll = remember(planner, thresholdPx) {
+        val summaryScroll = remember(planner, state, thresholdPx) {
             JourneyDetailsScrollConnection(thresholdPx,
                 range = { planner.detailsCollapseRangePx },
                 fraction = { planner.detailsCollapse },
-                setFraction = { planner.detailsCollapse = it })
+                setFraction = { planner.detailsCollapse = it },
+                settle = { target ->
+                    // Use the list's scroll mutation so touching it again cancels settling.
+                    state.scroll {
+                        val range = planner.detailsCollapseRangePx
+                        var previous = planner.detailsCollapse
+                        animate(previous, target, animationSpec = tween(220, easing = LinearOutSlowInEasing)) { value, _ ->
+                            planner.detailsCollapse = value
+                            // Continue the gesture in the list while its header settles.
+                            scrollBy((value - previous) * range)
+                            previous = value
+                        }
+                    }
+                })
         }
         LazyColumn(Modifier.fillMaxSize().padding(top = topPadding).then(if (planner.usingMap) Modifier else Modifier.nestedScroll(summaryScroll)),
             state = state, contentPadding = PaddingValues(12.dp),

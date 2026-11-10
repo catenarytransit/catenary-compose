@@ -1932,10 +1932,11 @@ class MainActivity : ComponentActivity() {
                                                                 SheetSnapPoint.PartiallyExpanded,
                                                         anchors = anchors,
                                                         positionalThreshold = { distance ->
-                                                                distance * 0.35f
+                                                                distance * if (plannerVisible && tripPlanner.usingMap) 0.5f else 0.35f
                                                         },
                                                         velocityThreshold = {
-                                                                with(density) { 900.dp.toPx() }
+                                                                if (plannerVisible && tripPlanner.usingMap) Float.POSITIVE_INFINITY
+                                                                else with(density) { 900.dp.toPx() }
                                                         },
                                                         snapAnimationSpec = sheetSpringSpec,
                                                         decayAnimationSpec =
@@ -4329,11 +4330,12 @@ class MainActivity : ComponentActivity() {
                                                 JourneySummary(
                                                         planner = tripPlanner,
                                                         streetUsUnits = streetUsUnits,
-                                                        // Above half height, the sheet removes one preview pixel per pixel dragged.
+                                                        // Share the drawer's half-to-expanded travel and midpoint settling.
                                                         collapseFraction =
-                                                                ((maxOf(expandedAnchor, screenHeightPx / 2f - bottomInset) -
-                                                                        draggableState.requireOffset() - with(density) { 24.dp.toPx() }) /
-                                                                        tripPlanner.detailsCollapseRangePx).coerceIn(0f, 1f),
+                                                                drawerSummaryCollapseFraction(
+                                                                        draggableState.requireOffset(),
+                                                                        maxOf(expandedAnchor, screenHeightPx / 2f - bottomInset),
+                                                                        expandedAnchor),
                                                         modifier = Modifier
                                                                 .align(Alignment.TopStart)
                                                                 .fillMaxWidth(contentWidthFraction)
