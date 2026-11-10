@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -92,6 +93,7 @@ fun TripPlannerScreen(
     onSelectJourney: (DirectionsItinerary) -> Unit
 ) {
     val focus = LocalFocusManager.current
+    val resultsListState = rememberLazyListState()
     // Match the web planner: resolve a new journey after choosing endpoints or changing options.
     LaunchedEffect(planner.origin, planner.destination, planner.time, planner.now, planner.arriveBy, planner.options) {
         if (planner.origin != null && planner.destination != null) {
@@ -111,9 +113,8 @@ fun TripPlannerScreen(
                 }
             }
         } else {
-            LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    if (planner.earlierLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            LazyColumn(Modifier.weight(1f), state = resultsListState, contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item(key = "results-status") {
                     planner.error?.let {
                         Text(stringResource(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
                     }
@@ -128,8 +129,6 @@ fun TripPlannerScreen(
                     AnimatedJourneyPreview(
                         journey = journey,
                         streetUsUnits = streetUsUnits,
-                        earlier = journey.identity() in planner.earlierInsertedIds,
-                        modifier = Modifier.animateItem(),
                         onClick = {
                             planner.selected = planner.itineraries.indexOfFirst { it.identity() == journey.identity() }.coerceAtLeast(0)
                             planner.showTransfers = true; planner.details = true; planner.editing = null
@@ -137,9 +136,9 @@ fun TripPlannerScreen(
                         }
                     )
                 }
-                // Earlier pages have no skeleton rows: all new cards slide in together.
-                if (planner.loading || planner.laterLoading) {
-                    items(if (planner.laterLoading) 5 else 3, key = { "skeleton-$it" }) {
+                // Paging progress stays in the buttons so loading rows cannot move the viewport.
+                if (planner.loading && planner.itineraries.isEmpty()) {
+                    items(3, key = { "skeleton-$it" }) {
                         ConnectionSkeleton()
                     }
                 }
@@ -155,18 +154,15 @@ fun TripPlannerScreen(
 private fun AnimatedJourneyPreview(
     journey: DirectionsItinerary,
     streetUsUnits: Boolean,
-    earlier: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val progress = remember { Animatable(0f) }
-    val slide = with(LocalDensity.current) { 16.dp.toPx() }
     LaunchedEffect(Unit) {
-        progress.animateTo(1f, animationSpec = tween(240))
+        progress.animateTo(1f, animationSpec = tween(120))
     }
     Box(modifier.graphicsLayer {
         alpha = progress.value
-        translationY = (if (earlier) -slide else slide) * (1f - progress.value)
     }) {
         JourneyPreview(journey, streetUsUnits, onClick = onClick)
     }
