@@ -1,10 +1,33 @@
 package com.catenarymaps.catenary
 
 import java.util.Locale
+import java.time.LocalDate
+import java.time.ZoneId
 import org.junit.Assert.*
 import org.junit.Test
 
 class TripPlannerPresentationTest {
+    @Test fun dateHeadingAppearsAtLocalMidnightRatherThanUtcMidnight() {
+        val zone = ZoneId.of("America/Los_Angeles")
+        assertNull(connectionDateHeading("2026-11-10T23:55:00Z", "2026-11-11T00:05:00Z", zone))
+        assertEquals(LocalDate.of(2026, 11, 11),
+            connectionDateHeading("2026-11-11T07:55:00Z", "2026-11-11T08:05:00Z", zone))
+    }
+
+    @Test fun dateHeadingHandlesYearChangesAndMalformedTimes() {
+        val utc = ZoneId.of("UTC")
+        assertEquals(LocalDate.of(2027, 1, 1),
+            connectionDateHeading("2026-12-31T23:59:00Z", "2027-01-01T00:00:00Z", utc))
+        assertNull(connectionDateHeading(null, "2027-01-01T00:00:00Z", utc))
+        assertNull(connectionDateHeading("bad", "2027-01-01T00:00:00Z", utc))
+        assertNull(connectionDateHeading("2026-12-31T23:59:00Z", "bad", utc))
+    }
+
+    @Test fun dateHeadingHandlesRepeatedHourAtDaylightSavingChange() {
+        assertNull(connectionDateHeading("2026-11-01T08:30:00Z", "2026-11-01T09:30:00Z",
+            ZoneId.of("America/Los_Angeles")))
+    }
+
     @Test fun distancesSwitchUnitsAtKilometresAndMiles() {
         assertEquals("999 m", formatDistanceMeters(999.0, false, Locale.US))
         assertEquals("1.0 km", formatDistanceMeters(1000.0, false, Locale.US))

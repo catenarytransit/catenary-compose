@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
@@ -145,6 +146,9 @@ private fun ConnectionResults(
     onSelectJourney: (DirectionsItinerary) -> Unit
 ) {
     val journeys = planner.itineraries
+    val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
+        .withLocale(LocalConfiguration.current.locales[0])
+    val dateZone = ZoneId.systemDefault()
     LaunchedEffect(planner.searched) {
         if (planner.searched && state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0) {
             snapshotFlow { planner.itineraries.isNotEmpty() }.first { it }
@@ -199,9 +203,18 @@ private fun ConnectionResults(
             }
         }
         item(key = "earlier") { ConnectionLoadingEdge(planner, client, earlier = true) }
-        items(journeys, key = { it.identity() }) { journey ->
-            JourneyPreview(journey, streetUsUnits, onClick = { onSelectJourney(journey) },
-                modifier = Modifier.padding(bottom = 8.dp))
+        // Keep each date label in its connection item so paging indices and keys stay stable.
+        itemsIndexed(journeys, key = { _, journey -> journey.identity() }) { index, journey ->
+            Column {
+                connectionDateHeading(journeys.getOrNull(index - 1)?.startTime, journey.startTime, dateZone)?.let { date ->
+                    Text(date.format(dateFormatter),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = TripPlannerColors.secondaryContent,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp))
+                }
+                JourneyPreview(journey, streetUsUnits, onClick = { onSelectJourney(journey) },
+                    modifier = Modifier.padding(bottom = 8.dp))
+            }
         }
         if (planner.loading && journeys.isEmpty()) items(3, key = { "skeleton-$it" }) {
             Box(Modifier.padding(bottom = 8.dp)) { ConnectionSkeleton() }

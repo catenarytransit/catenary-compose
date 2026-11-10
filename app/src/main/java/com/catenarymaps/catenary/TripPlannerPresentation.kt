@@ -1,6 +1,8 @@
 package com.catenarymaps.catenary
 
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -72,4 +74,13 @@ internal fun connectionPageAtEdge(direction: Int, first: Int, last: Int, journey
     direction > 0 && first <= 2 -> ConnectionDirection.BEFORE
     direction < 0 && last >= journeyCount + 1 -> ConnectionDirection.AFTER
     else -> null
+}
+
+/** Use the same local midnight as the connection preview clocks. */
+internal fun connectionDateHeading(
+    previousDeparture: String?, departure: String, zone: ZoneId = ZoneId.systemDefault()
+): LocalDate? {
+    val previous = runCatching { Instant.parse(previousDeparture).atZone(zone).toLocalDate() }.getOrNull() ?: return null
+    val date = runCatching { Instant.parse(departure).atZone(zone).toLocalDate() }.getOrNull() ?: return null
+    return date.takeIf { it != previous }
 }
