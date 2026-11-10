@@ -1343,6 +1343,11 @@ class MainActivity : ComponentActivity() {
                         mutableStateOf<Pair<Double, Double>?>(null)
                     }
                     val currentLocationLabel = stringResource(R.string.directions_my_location)
+                    LaunchedEffect(currentLocation, directionsVisible) {
+                        if (directionsVisible) tripPlanner.resolveCurrentOrigin(currentLocation?.let { (lat, lon) ->
+                            DirectionsLocation(currentLocationLabel, lat, lon, isCurrentLocation = true)
+                        })
+                    }
                     val openDirections: (Boolean, DirectionsLocation) -> Unit = { origin, location ->
                         tripPlanner.chooseFromLocationAction(
                             origin,
@@ -4336,7 +4341,7 @@ class MainActivity : ComponentActivity() {
                                                         compact = isLandscape && configuration.screenHeightDp < 480 && configuration.smallestScreenWidthDp < 600,
                                                         collapseInputs = tripPlanner.searched && !tripPlanner.loading &&
                                                                 draggableState.requireOffset() < directionsHeaderHeight + directionsTopInset + with(density) { 16.dp.toPx() },
-                                                        collapseDetails = draggableState.requireOffset() < screenHeightPx * 0.3f ||
+                                                        collapseDetails = tripPlanner.detailsScrolled || draggableState.requireOffset() < screenHeightPx * 0.3f ||
                                                                 draggableState.requireOffset() > screenHeightPx * 0.75f,
                                                         onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) },
                                                         cardModifier = Modifier,
@@ -4509,6 +4514,14 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
+                                        val journeyMapDetailsVisible = directionsVisible && tripPlanner.usingMap &&
+                                                tripPlanner.details && tripPlanner.mapPicking == null
+                                        val layerButtonTopPadding = if (journeyMapDetailsVisible) {
+                                                with(density) { directionsDetailsHeight.toDp() } + 8.dp
+                                        } else if (contentWidthFraction == 1f) 64.dp else 16.dp
+                                        val compassTopPadding = layerButtonTopPadding +
+                                                if (contentWidthFraction == 1f) 46.dp else 48.dp
+
                                         AnimatedVisibility(
                                                 visible =
                                                         !(sheetIsExpanded &&
@@ -4522,12 +4535,7 @@ class MainActivity : ComponentActivity() {
                                                                         WindowInsets.safeDrawing
                                                                 )
                                                                 .padding(
-                                                                        top =
-                                                                                if (contentWidthFraction ==
-                                                                                        1.0f
-                                                                                )
-                                                                                        64.dp
-                                                                                else 16.dp,
+                                                                        top = layerButtonTopPadding,
                                                                         end = 16.dp
                                                                 )
                                                                 .zIndex(3f) // keep above map
@@ -4571,12 +4579,7 @@ class MainActivity : ComponentActivity() {
                                                                         WindowInsets.safeDrawing
                                                                 )
                                                                 .padding(
-                                                                        top =
-                                                                                if (contentWidthFraction ==
-                                                                                        1.0f
-                                                                                )
-                                                                                        110.dp
-                                                                                else 64.dp,
+                                                                        top = compassTopPadding,
                                                                         end = 16.dp
                                                                 )
                                                                 .zIndex(3f) // keep above map
@@ -4703,6 +4706,9 @@ class MainActivity : ComponentActivity() {
                                                 if (!directionsVisible) {
                                                     FloatingActionButton(
                                                         onClick = {
+                                                            tripPlanner.open(currentLocation?.let { (lat, lon) ->
+                                                                DirectionsLocation(currentLocationLabel, lat, lon, isCurrentLocation = true)
+                                                            })
                                                             catenaryStack = ArrayDeque(catenaryStack.filterNot { it is CatenaryStackEnum.DirectionsStack }).apply {
                                                                 addLast(CatenaryStackEnum.DirectionsStack)
                                                             }

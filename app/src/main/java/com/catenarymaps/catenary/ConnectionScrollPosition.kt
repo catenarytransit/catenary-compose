@@ -3,7 +3,7 @@ package com.catenarymaps.catenary
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.*
 
-/** Two fixed rows (status and earlier-page progress) precede the connections. */
+/** Two sentinel rows (status and earlier-page progress) precede the connections. */
 @Composable
 internal fun PreserveConnectionScrollPosition(state: LazyListState, identities: List<String>) {
     var previous by remember { mutableStateOf(identities) }

@@ -8,15 +8,15 @@ class TripPlannerTest {
     private val from = DirectionsLocation("Start", 34.0, -118.0)
     private val to = DirectionsLocation("Finish", 35.0, -117.0)
 
-    @Test fun locationActionsSetOppositeEndpointToNearbyCurrentLocation() {
+    @Test fun locationActionsPreserveTheOtherEndpointAndFocusIt() {
         val current = DirectionsLocation("Current location", 34.1, -118.1, isCurrentLocation = true)
         for (isOrigin in listOf(true, false)) {
             val planner = TripPlannerViewModel()
             planner.choose(!isOrigin, to)
             planner.chooseFromLocationAction(isOrigin, from, current)
             assertEquals(from, if (isOrigin) planner.origin else planner.destination)
-            assertEquals(current, if (isOrigin) planner.destination else planner.origin)
-            assertNull(planner.editing)
+            assertEquals(to, if (isOrigin) planner.destination else planner.origin)
+            assertEquals(!isOrigin, planner.editing)
         }
     }
 
@@ -32,6 +32,63 @@ class TripPlannerTest {
                 assertEquals(to, if (isOrigin) planner.destination else planner.origin)
             }
         }
+    }
+
+    @Test fun freshEntryUsesCurrentOriginAndFocusesDestination() {
+        val planner = TripPlannerViewModel()
+        val current = from.copy(isCurrentLocation = true)
+        planner.open(current)
+        assertEquals(current, planner.origin)
+        assertNull(planner.destination)
+        assertEquals(false, planner.editing)
+    }
+
+    @Test fun delayedCurrentLocationDoesNotOverwriteAnOriginTheUserEdited() {
+        val planner = TripPlannerViewModel()
+        planner.open(null)
+        planner.resolveCurrentOrigin(from.copy(isCurrentLocation = true))
+        assertEquals(from.copy(isCurrentLocation = true), planner.origin)
+        val edited = TripPlannerViewModel()
+        edited.open(null)
+        edited.edit(true, "My origin")
+        edited.resolveCurrentOrigin(from)
+        assertNull(edited.origin)
+        assertEquals("My origin", edited.originText)
+    }
+
+    @Test fun entryPreservesExistingEndpointsAndUnresolvedText() {
+        val planner = TripPlannerViewModel()
+        planner.edit(true, "Typed origin")
+        planner.open(from)
+        assertEquals("Typed origin", planner.originText)
+        assertNull(planner.origin)
+        planner.choose(true, from)
+        planner.choose(false, to)
+        planner.open(from.copy(isCurrentLocation = true))
+        assertEquals(from, planner.origin)
+        assertEquals(to, planner.destination)
+        assertNull(planner.editing)
+    }
+
+    @Test fun selectionFocusesTheOtherMissingEndpointAndClearRemovesCoordinates() {
+        val planner = TripPlannerViewModel()
+        planner.choose(true, from)
+        assertEquals(false, planner.editing)
+        planner.choose(false, to)
+        assertNull(planner.editing)
+        planner.edit(true, "")
+        assertNull(planner.origin)
+        assertEquals("", planner.originText)
+        assertEquals(to, planner.destination)
+        assertEquals(true, planner.editing)
+    }
+
+    @Test fun pagingStartsOnTheEdgeCardWithoutAnExtraSentinelSwipe() {
+        assertEquals(ConnectionDirection.BEFORE, connectionPageAtEdge(1, 2, 5, 10))
+        assertEquals(ConnectionDirection.AFTER, connectionPageAtEdge(-1, 8, 11, 10))
+        assertNull(connectionPageAtEdge(-1, 2, 5, 10))
+        assertNull(connectionPageAtEdge(0, 2, 11, 10))
+        assertNull(connectionPageAtEdge(1, 0, 0, 0))
     }
 
     @Test fun requestUsesExclusiveTimeAndSiUnits() {

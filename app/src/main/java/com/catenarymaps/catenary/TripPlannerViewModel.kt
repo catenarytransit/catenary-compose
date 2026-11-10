@@ -30,6 +30,8 @@ class TripPlannerViewModel : ViewModel() {
         private set
     var selected by mutableIntStateOf(0)
     var details by mutableStateOf(false)
+    var detailsScrolled by mutableStateOf(false)
+    private var awaitingCurrentOrigin = false
     var mapMode by mutableStateOf(false)
     val selectedJourney get() = itineraries.getOrNull(selected)
     val streetOnly get() = selectedJourney?.let { it.legs.isNotEmpty() && it.legs.all { leg -> leg.street } } == true
@@ -38,6 +40,7 @@ class TripPlannerViewModel : ViewModel() {
     fun selectJourney(journey: DirectionsItinerary) {
         selected = itineraries.indexOfFirst { it.identity() == journey.identity() }.coerceAtLeast(0)
         mapMode = false
+        detailsScrolled = false
         showTransfers = true
         details = true
         editing = null
@@ -124,6 +127,7 @@ class TripPlannerViewModel : ViewModel() {
     }
     fun edit(isOrigin: Boolean, text: String) {
         invalidate()
+        if (isOrigin) awaitingCurrentOrigin = false
         if (isOrigin) { origin = null; originText = text }
         else { destination = null; destinationText = text }
         editing = isOrigin
@@ -131,24 +135,38 @@ class TripPlannerViewModel : ViewModel() {
     fun choose(isOrigin: Boolean, location: DirectionsLocation) {
         if (!location.isValid()) return
         invalidate()
+        if (isOrigin) awaitingCurrentOrigin = false
         if (isOrigin) { origin = location; originText = location.name }
         else { destination = location; destinationText = location.name }
-        editing = null
+        editing = if (isOrigin && destination == null) false else if (!isOrigin && origin == null) true else null
         mapPicking = null
     }
-    /** Location-card shortcuts seed the opposite endpoint with a nearby user location. */
+    /** Prepare a fresh planner without replacing an existing endpoint or session. */
+    fun open(currentLocation: DirectionsLocation?) {
+        awaitingCurrentOrigin = origin == null && destination == null && originText.isBlank() && destinationText.isBlank()
+        resolveCurrentOrigin(currentLocation)
+        editing = when {
+            destination == null -> false
+            origin == null -> true
+            else -> null
+        }
+    }
+
+    /** A delayed location fix may complete the default origin until the user edits it. */
+    fun resolveCurrentOrigin(location: DirectionsLocation?) {
+        if (awaitingCurrentOrigin && location?.isValid() == true) choose(true, location)
+    }
+
+    /** Location-card shortcuts focus the opposite endpoint. */
     fun chooseFromLocationAction(
         isOrigin: Boolean,
         location: DirectionsLocation,
         currentLocation: DirectionsLocation?
     ) {
         if (!location.isValid()) return
+        awaitingCurrentOrigin = false
         choose(isOrigin, location)
-        if (currentLocation?.isValid() == true &&
-            haversineDistance(location.lat, location.lon, currentLocation.lat, currentLocation.lon) < 500_000.0
-        ) {
-            choose(!isOrigin, currentLocation)
-        }
+        editing = !isOrigin
     }
 
     fun swap() {
@@ -158,6 +176,7 @@ class TripPlannerViewModel : ViewModel() {
         editing = null
     }
     fun leave() {
+        awaitingCurrentOrigin = false
         mapPicking = null
         if (loading && itineraries.isEmpty()) searched = false
         cancelRequests()

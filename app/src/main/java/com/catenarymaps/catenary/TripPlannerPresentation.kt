@@ -1,6 +1,8 @@
 package com.catenarymaps.catenary
 
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -64,4 +66,21 @@ internal fun timelineWeights(legs: List<DirectionsLeg>, width: Float, minimum: F
         small.forEach { pixels[it] = floor; remaining.remove(it); available -= floor }
     }
     return pixels.map { it.coerceAtLeast(0.001f) }
+}
+
+/** Two sentinel rows precede the cards; load when the edge card enters view. */
+internal fun connectionPageAtEdge(direction: Int, first: Int, last: Int, journeyCount: Int): ConnectionDirection? = when {
+    journeyCount == 0 -> null
+    direction > 0 && first <= 2 -> ConnectionDirection.BEFORE
+    direction < 0 && last >= journeyCount + 1 -> ConnectionDirection.AFTER
+    else -> null
+}
+
+/** Use the same local midnight as the connection preview clocks. */
+internal fun connectionDateHeading(
+    previousDeparture: String?, departure: String, zone: ZoneId = ZoneId.systemDefault()
+): LocalDate? {
+    val previous = runCatching { Instant.parse(previousDeparture).atZone(zone).toLocalDate() }.getOrNull() ?: return null
+    val date = runCatching { Instant.parse(departure).atZone(zone).toLocalDate() }.getOrNull() ?: return null
+    return date.takeIf { it != previous }
 }
