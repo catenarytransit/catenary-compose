@@ -1932,10 +1932,11 @@ class MainActivity : ComponentActivity() {
                                                                 SheetSnapPoint.PartiallyExpanded,
                                                         anchors = anchors,
                                                         positionalThreshold = { distance ->
-                                                                distance * 0.35f
+                                                                distance * if (plannerVisible && tripPlanner.usingMap) 0.5f else 0.35f
                                                         },
                                                         velocityThreshold = {
-                                                                with(density) { 900.dp.toPx() }
+                                                                if (plannerVisible && tripPlanner.usingMap) Float.POSITIVE_INFINITY
+                                                                else with(density) { 900.dp.toPx() }
                                                         },
                                                         snapAnimationSpec = sheetSpringSpec,
                                                         decayAnimationSpec =
@@ -4329,7 +4330,12 @@ class MainActivity : ComponentActivity() {
                                                 JourneySummary(
                                                         planner = tripPlanner,
                                                         streetUsUnits = streetUsUnits,
-                                                        compact = tripPlanner.detailsScrolled,
+                                                        // Share the drawer's half-to-expanded travel and midpoint settling.
+                                                        collapseFraction =
+                                                                drawerSummaryCollapseFraction(
+                                                                        draggableState.requireOffset(),
+                                                                        maxOf(expandedAnchor, screenHeightPx / 2f - bottomInset),
+                                                                        expandedAnchor),
                                                         modifier = Modifier
                                                                 .align(Alignment.TopStart)
                                                                 .fillMaxWidth(contentWidthFraction)

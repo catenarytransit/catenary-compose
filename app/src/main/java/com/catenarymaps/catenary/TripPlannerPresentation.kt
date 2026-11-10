@@ -15,13 +15,13 @@ internal fun formatDistanceMeters(meters: Double, imperial: Boolean, locale: Loc
         else "${meters.roundToInt()} m"
     }
 
-internal data class PreviewTimeMarker(val time: String, val transit: Boolean)
+internal data class PreviewTimeMarker(val time: String, val endpoint: Boolean)
 internal data class PreviewTimeGroups(val departure: List<PreviewTimeMarker>, val arrival: List<PreviewTimeMarker>)
 
 /** Match the web preview: negligible access/egress uses only the endpoint time. */
 internal fun DirectionsItinerary.previewTimeGroups(): PreviewTimeGroups {
     val first = legs.indexOfFirst { !it.street }
-    if (first < 0) return PreviewTimeGroups(listOf(PreviewTimeMarker(startTime, false)), listOf(PreviewTimeMarker(endTime, false)))
+    if (first < 0) return PreviewTimeGroups(listOf(PreviewTimeMarker(startTime, true)), listOf(PreviewTimeMarker(endTime, true)))
     val last = legs.indexOfLast { !it.street }
     fun atStop(streetLegs: List<DirectionsLeg>): Boolean {
         var meters = 0.0
@@ -38,12 +38,12 @@ internal fun DirectionsItinerary.previewTimeGroups(): PreviewTimeGroups {
     val showAlighting = !destinationAtStop && instant(alighting) != null && instant(alighting) != instant(endTime)
     return PreviewTimeGroups(
         buildList {
-            add(PreviewTimeMarker(startTime, originAtStop || instant(boarding) == instant(startTime)))
-            if (showBoarding) add(PreviewTimeMarker(boarding!!, true))
+            add(PreviewTimeMarker(startTime, true))
+            if (showBoarding) add(PreviewTimeMarker(boarding!!, false))
         },
         buildList {
-            if (showAlighting) add(PreviewTimeMarker(alighting!!, true))
-            add(PreviewTimeMarker(endTime, destinationAtStop || instant(alighting) == instant(endTime)))
+            if (showAlighting) add(PreviewTimeMarker(alighting!!, false))
+            add(PreviewTimeMarker(endTime, true))
         }
     )
 }

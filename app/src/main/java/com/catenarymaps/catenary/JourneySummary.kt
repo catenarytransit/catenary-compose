@@ -1,7 +1,5 @@
 package com.catenarymaps.catenary
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,6 +11,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
-    compact: Boolean = planner.detailsScrolled, modifier: Modifier = Modifier
+    collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier
 ) {
     val journey = planner.selectedJourney ?: return
     val context = LocalContext.current.applicationContext
@@ -45,24 +45,28 @@ internal fun JourneySummary(
         finally { busy = false }
     }
     Column(modifier) {
-        FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp),
+        FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp).size(32.dp),
             shape = CircleShape, colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back))
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back), modifier = Modifier.size(18.dp))
         }
         // Buttons overlap the summary's lower edge while retaining full touch targets.
         Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 4.dp)) {
             Card(Modifier.fillMaxWidth().padding(bottom = 24.dp),
                 colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-                Column(Modifier.animateContentSize(tween(180)).padding(bottom = 12.dp)) {
-                    if (compact) Column(Modifier.padding(12.dp)) {
-                        Text("${planner.originText} →", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(planner.destinationText, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    } else {
-                        Text("${planner.originText} → ${planner.destinationText}",
-                            fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp))
+                Column(Modifier.padding(bottom = 12.dp)) {
+                    Text("${planner.originText} → ${planner.destinationText}",
+                        fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp))
+                    // Measure at full height, then reveal only the fraction controlled by the gesture.
+                    // No animation or content replacement: reversing a gesture reverses the height.
+                    Box(Modifier.clipToBounds().layout { measurable, constraints ->
+                        val preview = measurable.measure(constraints.copy(minHeight = 0))
+                        planner.detailsCollapseRangePx = preview.height.toFloat().coerceAtLeast(1f)
+                        val height = (preview.height * (1f - collapseFraction.coerceIn(0f, 1f))).toInt()
+                        layout(preview.width, height) { preview.placeRelative(0, 0) }
+                    }) {
                         JourneyPreviewContent(journey, streetUsUnits)
                     }
                 }
