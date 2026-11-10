@@ -653,7 +653,8 @@ internal fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: 
                                 if (trailingStreet) LegModeIcon(leg, preview = true)
                             }
                             if (leg.street) {
-                                Text(directionsDuration(leg.seconds) +
+                                val minutes = (leg.seconds / 60).roundToInt().coerceAtLeast(0)
+                                Text("$minutes'" +
                                     (directionsDistance(leg)?.let { " · ${plannerDistance(it, streetUsUnits)}" } ?: ""), fontSize = 10.sp,
                                     modifier = Modifier.padding(top = 2.dp, end = 4.dp),
                                     maxLines = 2, overflow = TextOverflow.Ellipsis)
