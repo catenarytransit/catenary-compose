@@ -4304,9 +4304,12 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
-                                        // Fit once per completed response, after restoring the middle drawer position.
-                                        LaunchedEffect(directionsVisible, tripPlanner.loading, tripPlanner.itineraries) {
-                                                if (directionsVisible && tripPlanner.searched && !tripPlanner.loading && tripPlanner.error == null) {
+                                        var directionsFitted by remember { mutableStateOf(false) }
+                                        // Fit the first visible snapshot; subsequent pages must not reset the camera or drawer.
+                                        LaunchedEffect(directionsVisible, tripPlanner.searched, tripPlanner.itineraries.isNotEmpty()) {
+                                                if (!directionsVisible || !tripPlanner.searched || tripPlanner.itineraries.isEmpty()) directionsFitted = false
+                                                if (directionsVisible && tripPlanner.searched && tripPlanner.itineraries.isNotEmpty() && !directionsFitted) {
+                                                        directionsFitted = true
                                                         tripPlanner.editing = null
                                                         draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
                                                         val positions = tripPlanner.itineraries.flatMap { journey -> journey.legs.flatMap { directionsCoordinates(it) } }
