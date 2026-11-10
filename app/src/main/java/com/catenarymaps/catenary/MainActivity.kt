@@ -4509,6 +4509,20 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
+                                        // The journey summary changes height as the sheet moves and text wraps.
+                                        // Insets are applied by the controls themselves; this height is content only.
+                                        val journeyMapDetailsVisible = directionsVisible && tripPlanner.usingMap &&
+                                                tripPlanner.details && tripPlanner.mapPicking == null
+                                        val layerButtonTopPadding = if (journeyMapDetailsVisible) {
+                                                with(density) { directionsDetailsHeight.toDp() } + 8.dp
+                                        } else if (contentWidthFraction == 1f) {
+                                                64.dp
+                                        } else {
+                                                16.dp
+                                        }
+                                        val compassTopPadding = layerButtonTopPadding +
+                                                if (contentWidthFraction == 1f) 46.dp else 48.dp
+
                                         AnimatedVisibility(
                                                 visible =
                                                         !(sheetIsExpanded &&
@@ -4522,12 +4536,7 @@ class MainActivity : ComponentActivity() {
                                                                         WindowInsets.safeDrawing
                                                                 )
                                                                 .padding(
-                                                                        top =
-                                                                                if (contentWidthFraction ==
-                                                                                        1.0f
-                                                                                )
-                                                                                        64.dp
-                                                                                else 16.dp,
+                                                                        top = layerButtonTopPadding,
                                                                         end = 16.dp
                                                                 )
                                                                 .zIndex(3f) // keep above map
@@ -4571,12 +4580,7 @@ class MainActivity : ComponentActivity() {
                                                                         WindowInsets.safeDrawing
                                                                 )
                                                                 .padding(
-                                                                        top =
-                                                                                if (contentWidthFraction ==
-                                                                                        1.0f
-                                                                                )
-                                                                                        110.dp
-                                                                                else 64.dp,
+                                                                        top = compassTopPadding,
                                                                         end = 16.dp
                                                                 )
                                                                 .zIndex(3f) // keep above map
