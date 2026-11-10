@@ -156,4 +156,10 @@
     <string name="route_category_tram">Tranvía</string>
     <string name="route_category_bus">Autobús</string>
     <string name="route_category_other">Otro</string>
+    <string name="directions_save_trip">Guardar viaje</string>
+    <string name="directions_unsave_trip">Eliminar viaje guardado</string>
+    <string name="directions_map_view">Mostrar mapa</string>
+    <string name="directions_list_view">Mostrar lista</string>
+    <string name="directions_save_error">No se pudo actualizar el viaje guardado. Inténtalo de nuevo.</string>
+    <string name="directions_retry">Volver a cargar conexiones</string>
 </resources>

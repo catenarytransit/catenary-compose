@@ -30,6 +30,19 @@ class TripPlannerViewModel : ViewModel() {
         private set
     var selected by mutableIntStateOf(0)
     var details by mutableStateOf(false)
+    var mapMode by mutableStateOf(false)
+    val selectedJourney get() = itineraries.getOrNull(selected)
+    val streetOnly get() = selectedJourney?.let { it.legs.isNotEmpty() && it.legs.all { leg -> leg.street } } == true
+    val usingMap get() = details && (mapMode || streetOnly)
+
+    fun selectJourney(journey: DirectionsItinerary) {
+        selected = itineraries.indexOfFirst { it.identity() == journey.identity() }.coerceAtLeast(0)
+        mapMode = false
+        showTransfers = true
+        details = true
+        editing = null
+    }
+
     var showTransfers by mutableStateOf(false)
     var loading by mutableStateOf(false)
         private set
@@ -67,15 +80,7 @@ class TripPlannerViewModel : ViewModel() {
     private fun publishPages() {
         val selectedId = itineraries.getOrNull(selected)?.identity()
         val merged = mergeDirectionsPages(earlierPages.values.toList() + listOfNotNull(initialPage) + laterPages.values)
-        if (earlierPages.isEmpty() && laterPages.isEmpty()) {
-            itineraries = merged
-        } else {
-            // Both page directions prepend new cards without reordering existing cards.
-            val byId = merged.associateBy { it.identity() }
-            val existingIds = itineraries.map { it.identity() }.toSet()
-            itineraries = merged.filter { it.identity() !in existingIds } +
-                itineraries.mapNotNull { byId[it.identity()] }
-        }
+        itineraries = merged
         selected = itineraries.indexOfFirst { it.identity() == selectedId }.coerceAtLeast(0)
         if (details && selectedId != null && itineraries.none { it.identity() == selectedId }) details = false
     }
@@ -91,6 +96,10 @@ class TripPlannerViewModel : ViewModel() {
         options = saved.options; arriveBy = saved.arriveBy; now = saved.now; time = saved.time
         itineraries = saved.itineraries; selected = saved.selected
         details = saved.details; showTransfers = saved.showTransfers
+        baseQuery = saved.requestQuery
+        initialPage = DirectionsPlan(itineraries = saved.itineraries)
+        previousPageCursor = saved.previousPageCursor
+        nextPageCursor = saved.nextPageCursor
         searched = true
         return true
     }
@@ -102,7 +111,8 @@ class TripPlannerViewModel : ViewModel() {
             origin = origin ?: return null, destination = destination ?: return null,
             options = options, arriveBy = arriveBy, now = now, time = time,
             itineraries = itineraries, selected = selected, details = details,
-            showTransfers = showTransfers
+            showTransfers = showTransfers,
+            requestQuery = baseQuery, previousPageCursor = previousPageCursor, nextPageCursor = nextPageCursor
         ).validated()
     }
 
@@ -110,7 +120,7 @@ class TripPlannerViewModel : ViewModel() {
         cancelRequests(); searched = false
         baseQuery = null; initialPage = null; earlierPages.clear(); laterPages.clear()
         previousPageCursor = null; nextPageCursor = null; earlierInsertedIds = emptySet()
-        error = null; itineraries = emptyList(); selected = 0; details = false; showTransfers = false
+        error = null; itineraries = emptyList(); selected = 0; details = false; mapMode = false; showTransfers = false
     }
     fun edit(isOrigin: Boolean, text: String) {
         invalidate()

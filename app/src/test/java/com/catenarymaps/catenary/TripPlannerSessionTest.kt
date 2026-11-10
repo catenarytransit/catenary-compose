@@ -47,6 +47,39 @@ class TripPlannerSessionTest {
         assertEquals(saved.itineraries, nextLaunch.itineraries)
     }
 
+    @Test fun completedSearchKeepsPagingAvailableAfterProcessRestart() {
+        val session = saved.copy(
+            requestQuery = directionsRequest(saved.origin, saved.destination, saved.time, saved.arriveBy, saved.options),
+            previousPageCursor = "before", nextPageCursor = "after"
+        )
+        val planner = TripPlannerViewModel()
+        planner.restoreSession(TripPlannerSessionCodec.decode(TripPlannerSessionCodec.encode(session)))
+        assertTrue(planner.canLoadEarlier)
+        assertTrue(planner.canLoadLater)
+        assertEquals(session, planner.session(true))
+    }
+
+    @Test fun transitOpensInListModeAndStreetOnlyConnectionsAlwaysUseTheMap() {
+        val planner = TripPlannerViewModel()
+        planner.restoreSession(saved)
+        planner.selectJourney(journey)
+        assertTrue(planner.details)
+        assertFalse(planner.usingMap)
+        planner.mapMode = true
+        assertTrue(planner.usingMap)
+        planner.mapMode = false
+        assertFalse(planner.usingMap)
+        val cycling = saved.itineraries[1]
+        planner.selectJourney(cycling)
+        assertTrue(planner.streetOnly)
+        assertTrue(planner.usingMap)
+        planner.selectJourney(journey)
+        assertFalse(planner.usingMap)
+        planner.mapMode = true
+        planner.details = false
+        assertFalse(planner.usingMap)
+    }
+
     @Test fun blankOrUnsubmittedPlannerHasNoSession() {
         val planner = TripPlannerViewModel()
         planner.restoreSession(null)

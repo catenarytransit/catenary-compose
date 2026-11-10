@@ -3,6 +3,7 @@ package com.catenarymaps.catenary
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import java.time.Instant
 
 /** One completed search, including the exact itinerary being viewed. */
@@ -18,7 +19,10 @@ internal data class TripPlannerSession(
     val itineraries: List<DirectionsItinerary>,
     val selected: Int = 0,
     val details: Boolean = false,
-    val showTransfers: Boolean = false
+    val showTransfers: Boolean = false,
+    val requestQuery: JsonObject? = null,
+    val previousPageCursor: String? = null,
+    val nextPageCursor: String? = null
 ) {
     fun validated(): TripPlannerSession? {
         if (version != 1 || !origin.isValid() || !destination.isValid() || itineraries.isEmpty()) return null

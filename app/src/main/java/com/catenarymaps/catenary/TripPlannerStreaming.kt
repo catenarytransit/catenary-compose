@@ -51,7 +51,7 @@ internal fun mergeDirectionsPages(pages: List<DirectionsPlan>): List<DirectionsI
     val transit = pages.flatMap { it.itineraries }.filter { valid(it) && seen.add(it.identity()) }
         .sortedWith(compareBy({ Instant.parse(it.startTime) }, { Instant.parse(it.endTime) }))
     val direct = pages.flatMap { it.direct }.filter { valid(it) && seen.add(it.identity()) }
-    return transit + direct
+    return (transit + direct).sortedWith(compareBy({ Instant.parse(it.startTime) }, { Instant.parse(it.endTime) }))
 }
 
 private class BackendRouteException(message: String) : Exception(message)
