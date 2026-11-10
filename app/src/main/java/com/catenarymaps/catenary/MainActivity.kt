@@ -140,6 +140,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.EncodeDefault
@@ -1197,6 +1198,10 @@ class MainActivity : ComponentActivity() {
                         }
                 }
 
+                // Read before constructing navigation so a cold launch opens the saved screen.
+                lifecycleScope.launch {
+                    val plannerSessionStore = TripPlannerSessionStore(File(noBackupFilesDir, "trip-planner-session.json"))
+                    val initialPlannerSession = withContext(Dispatchers.IO) { plannerSessionStore.read() }
                 setContent {
                         val context = LocalContext.current
                         val lifecycleOwner = LocalLifecycleOwner.current
@@ -1231,10 +1236,12 @@ class MainActivity : ComponentActivity() {
                         val scope = rememberCoroutineScope()
                         val snackbars = remember { SnackbarHostState() }
                         val tripPlanner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                        val plannerWasCreated = remember(tripPlanner) { tripPlanner.restoreSession(initialPlannerSession) }
+                        val restorePlanner = remember(tripPlanner) { tripPlanner.session(visible = true) != null }
                         val directionsSearch: SearchViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "directions-search")
 
                         val appUpdateManager = remember {
-                                AppUpdateManagerFactory.create(this.applicationContext)
+                                AppUpdateManagerFactory.create(this@MainActivity.applicationContext)
                         }
 
                         var stopsToHide by remember { mutableStateOf(emptySet<String>()) }
@@ -1291,7 +1298,13 @@ class MainActivity : ComponentActivity() {
                                                 } catch (e: Exception) {
                                                         emptyList()
                                                 }
-                                                ArrayDeque(list)
+                                                // A process-restored blank planner has no usable session.
+                                                // Ordinary configuration changes retain the ViewModel instead.
+                                                ArrayDeque(when {
+                                                        plannerWasCreated && restorePlanner -> listOf(CatenaryStackEnum.DirectionsStack)
+                                                        plannerWasCreated && list.lastOrNull() is CatenaryStackEnum.DirectionsStack -> emptyList()
+                                                        else -> list
+                                                })
                                         }
                                 )
 
@@ -1310,12 +1323,32 @@ class MainActivity : ComponentActivity() {
                                 )
 
                         var catenaryStack by rememberSaveable(saver = mutableStackSaver) {
-                                mutableStateOf(ArrayDeque<CatenaryStackEnum>())
+                                mutableStateOf(ArrayDeque<CatenaryStackEnum>().apply {
+                                        if (restorePlanner) addLast(CatenaryStackEnum.DirectionsStack)
+                                })
                         }
 
                     val directionsVisible = catenaryStack.lastOrNull() is CatenaryStackEnum.DirectionsStack
+                    val plannerVisible by rememberUpdatedState(directionsVisible)
+                    LaunchedEffect(tripPlanner, plannerSessionStore) {
+                        // Observe navigation and selection as well as results. Sequential atomic writes
+                        // keep an older result from overwriting a newer details/cleared state.
+                        snapshotFlow { tripPlanner.session(plannerVisible) }.collect { session ->
+                            withContext(Dispatchers.IO) { plannerSessionStore.write(session) }
+                        }
+                    }
+                    var currentLocation by remember {
+                        mutableStateOf<Pair<Double, Double>?>(null)
+                    }
+                    val currentLocationLabel = stringResource(R.string.directions_my_location)
                     val openDirections: (Boolean, DirectionsLocation) -> Unit = { origin, location ->
-                        tripPlanner.choose(origin, location)
+                        tripPlanner.chooseFromLocationAction(
+                            origin,
+                            location,
+                            currentLocation?.let { (lat, lon) ->
+                                DirectionsLocation(currentLocationLabel, lat, lon, isCurrentLocation = true)
+                            }
+                        )
                         catenaryStack = ArrayDeque(catenaryStack.filterNot { it is CatenaryStackEnum.DirectionsStack }).apply {
                             addLast(CatenaryStackEnum.DirectionsStack)
                         }
@@ -1423,7 +1456,7 @@ class MainActivity : ComponentActivity() {
 
                                 val optOut = !isChecked
                                 try {
-                                        GoogleAnalytics.getInstance(this).appOptOut = optOut
+                                        GoogleAnalytics.getInstance(this@MainActivity).appOptOut = optOut
 
                                         firebaseAnalytics.setConsent(
                                                 mapOf(
@@ -1645,16 +1678,13 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
 
-                        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+                        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
 
-                        var currentLocation by remember {
-                                mutableStateOf<Pair<Double, Double>?>(null)
-                        }
 
                         // Start live location updates and keep currentLocation in sync
                         val hasFinePermission =
                                 ContextCompat.checkSelfPermission(
-                                        this,
+                                        this@MainActivity,
                                         Manifest.permission.ACCESS_FINE_LOCATION
                                 ) == PackageManager.PERMISSION_GRANTED
 
@@ -4274,9 +4304,12 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
-                                        // Fit once per completed response, after restoring the middle drawer position.
-                                        LaunchedEffect(directionsVisible, tripPlanner.loading, tripPlanner.itineraries) {
-                                                if (directionsVisible && tripPlanner.searched && !tripPlanner.loading && tripPlanner.error == null) {
+                                        var directionsFitted by remember { mutableStateOf(false) }
+                                        // Fit the first visible snapshot; subsequent pages must not reset the camera or drawer.
+                                        LaunchedEffect(directionsVisible, tripPlanner.searched, tripPlanner.itineraries.isNotEmpty()) {
+                                                if (!directionsVisible || !tripPlanner.searched || tripPlanner.itineraries.isEmpty()) directionsFitted = false
+                                                if (directionsVisible && tripPlanner.searched && tripPlanner.itineraries.isNotEmpty() && !directionsFitted) {
+                                                        directionsFitted = true
                                                         tripPlanner.editing = null
                                                         draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
                                                         val positions = tripPlanner.itineraries.flatMap { journey -> journey.legs.flatMap { directionsCoordinates(it) } }
@@ -5861,6 +5894,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                 }
                         }
+                }
                 }
         }
 

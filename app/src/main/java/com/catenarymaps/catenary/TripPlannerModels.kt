@@ -32,9 +32,11 @@ data class DirectionsLeg(
     val from: DirectionsPoint? = null, val to: DirectionsPoint? = null,
     val fromPlatform: String? = null, val toPlatform: String? = null,
     val intermediateStops: List<DirectionsStop> = emptyList(),
-    val legGeometry: DirectionsGeometry? = null
+    val legGeometry: DirectionsGeometry? = null,
+    val headsign: String? = null
 ) {
-    val street get() = mode.uppercase() in setOf("WALK", "BIKE", "BICYCLE")
+    val walking get() = mode.uppercase() in setOf("WALK", "FOOT", "PEDESTRIAN")
+    val street get() = walking || mode.uppercase() in setOf("BIKE", "BICYCLE")
     val label get() = routeShortName ?: routeLongName ?: routeId ?: mode
     val seconds get() = duration ?: runCatching {
         java.time.Duration.between(java.time.Instant.parse(startTime), java.time.Instant.parse(endTime)).seconds.toDouble()
@@ -43,7 +45,7 @@ data class DirectionsLeg(
 @Serializable
 data class DirectionsItinerary(
     val startTime: String, val endTime: String, val duration: Double? = null,
-    val transfers: Int? = null, val legs: List<DirectionsLeg>
+    val transfers: Int? = null, val legs: List<DirectionsLeg>, val id: String? = null
 ) {
     val seconds get() = duration ?: runCatching {
         java.time.Duration.between(java.time.Instant.parse(startTime), java.time.Instant.parse(endTime)).seconds.toDouble()
@@ -52,9 +54,11 @@ data class DirectionsItinerary(
 @Serializable
 data class DirectionsPlan(
     val itineraries: List<DirectionsItinerary> = emptyList(),
-    val direct: List<DirectionsItinerary> = emptyList()
+    val direct: List<DirectionsItinerary> = emptyList(),
+    val previousPageCursor: String? = null, val nextPageCursor: String? = null
 )
 
+@Serializable
 data class DirectionsOptions(
     val cycling: Boolean = false, val walkingPace: Float = 840f, val cyclingKmh: Float = 16f,
     val accessSeconds: Float = 900f, val egressSeconds: Float = 900f, val directSeconds: Float = 1800f
@@ -82,6 +86,7 @@ fun directionsRequest(from: DirectionsLocation, to: DirectionsLocation, time: Lo
         put("maxPreTransitTime", budget(options.accessSeconds))
         put("maxPostTransitTime", budget(options.egressSeconds))
         put("maxDirectTime", budget(options.directSeconds)); put("detailed_legs", true)
+        put("timetable_view", true); put("timeout_seconds", 8)
     }
 }
 
@@ -119,8 +124,16 @@ private data class DirectionsShapeProjection(val index: Int, val fraction: Doubl
 
 /** Project and trim full GTFS shapes to boarding/alighting stops, including reversed shapes. */
 fun directionsCoordinates(leg: DirectionsLeg): List<Pair<Double, Double>> {
-    val geometry = leg.legGeometry ?: return emptyList()
-    val points = decodeDirectionsPolyline(geometry.points ?: return emptyList(), geometry.precision)
+    val geometry = leg.legGeometry
+    val points = geometry?.points?.let { decodeDirectionsPolyline(it, geometry.precision) }.orEmpty()
+    if (points.size < 2 && leg.walking) {
+        // Match the web: walking connectors remain visible when OSR has no detailed shape.
+        val endpoints = listOfNotNull(leg.from, leg.to)
+        if (endpoints.size == 2 && endpoints.all {
+            it.lat != null && it.lon != null && it.lat.isFinite() && it.lon.isFinite() &&
+                it.lat in -90.0..90.0 && it.lon in -180.0..180.0
+        }) return endpoints.map { it.lat!! to it.lon!! }
+    }
     val from = leg.from; val to = leg.to
     if (leg.street || points.size < 2 || from?.lat == null || from.lon == null || to?.lat == null || to.lon == null) return points
     if (haversineDistance(from.lat, from.lon, to.lat, to.lon) < 20) return points
@@ -156,6 +169,9 @@ fun directionsCoordinates(leg: DirectionsLeg): List<Pair<Double, Double>> {
 }
 
 fun directionsDistance(leg: DirectionsLeg): Double? {
+    // Map-only fallback connectors must not be mistaken for measured OSR walking distances.
+    val geometry = leg.legGeometry ?: return null
+    if (decodeDirectionsPolyline(geometry.points ?: return null, geometry.precision).size < 2) return null
     val points = directionsCoordinates(leg)
     if (points.size < 2) return null
     return points.zipWithNext().sumOf { (a, b) -> haversineDistance(a.first, a.second, b.first, b.second) }

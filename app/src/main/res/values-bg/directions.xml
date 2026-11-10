@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Упътвания</string>
+    <string name="directions_as_origin">Като начало</string>
+    <string name="directions_as_destination">Като дестинация</string>
+    <string name="directions_origin">Начало</string>
+    <string name="directions_destination">Дестинация</string>
+    <string name="directions_start_placeholder">От</string>
+    <string name="directions_destination_placeholder">До</string>
+    <string name="directions_swap">Размяна на начало и дестинация</string>
+    <string name="directions_my_location">Текущо местоположение</string>
+    <string name="directions_map_hint">Потърсете място, въведете координати или докоснете картата, за да зададете местоположението.</string>
+    <string name="directions_depart_at">Тръгване в</string>
+    <string name="directions_arrive_by">Пристигане до</string>
+    <string name="directions_speed_options">Настройки за скорост и разстояние при ходене/бягане/колоездене</string>
+    <string name="directions_search">Търсене на пътувания</string>
+    <string name="directions_no_journeys">Няма намерени пътувания. Опитайте друг час или увеличете ограниченията за ходене или колоездене.</string>
+    <string name="directions_walk">Ходене / Бягане</string>
+    <string name="directions_cycle">Колоездене</string>
+    <string name="directions_walk_pace">Темпо на ходене: %1$d:%2$02d мин/км (%3$.1f км/ч)</string>
+    <string name="directions_cycle_speed">Скорост на колоездене: %1$.1f км/ч</string>
+    <string name="directions_access_limit">Максимално време до транспорта: %1$s</string>
+    <string name="directions_egress_limit">Максимално време от транспорта: %1$s</string>
+    <string name="directions_direct_limit">Ограничение за пряко ходене/колоездене: %1$s</string>
+    <string name="directions_reset">Нулиране на настройките</string>
+    <string name="directions_all_journeys">Всички пътувания</string>
+    <string name="directions_show_details">Показване на подробности</string>
+    <string name="directions_stops_duration">%1$d спирки · %2$s</string>
+    <string name="directions_done">Готово</string>
+    <string name="directions_distance_unavailable">Разстоянието не е налично</string>
+    <string name="directions_show_stops">Показване на междинните спирки</string>
+    <string name="directions_hide_stops">Скриване на междинните спирки</string>
+    <string name="directions_departure">Тръгване</string>
+    <string name="directions_arrival">Пристигане</string>
+    <string name="directions_choose_on_map">Избор на картата</string>
+    <string name="directions_map_location">Място на картата</string>
+    <string name="directions_align_pin">Преместете картата, за да поставите маркера, и натиснете OK.</string>
+    <string name="nearby_departures_offline">Офлайн</string>
+    <string name="directions_error">Пътуването не може да бъде планирано. Опитайте отново.</string>
+    <string name="directions_minutes">%1$d мин</string>
+    <string name="directions_hours_minutes">%1$d ч %2$d мин</string>
+    <string name="directions_ferry">Ферибот</string>
+</resources>

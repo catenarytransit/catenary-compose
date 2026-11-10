@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Wegbeschreibung</string>
+    <string name="directions_as_origin">Als Start</string>
+    <string name="directions_as_destination">Als Ziel</string>
+    <string name="directions_origin">Start</string>
+    <string name="directions_destination">Ziel</string>
+    <string name="directions_start_placeholder">Von</string>
+    <string name="directions_destination_placeholder">Nach</string>
+    <string name="directions_swap">Start und Ziel tauschen</string>
+    <string name="directions_my_location">Aktueller Standort</string>
+    <string name="directions_map_hint">Suche einen Ort, gib Koordinaten ein oder tippe auf die Karte, um diesen Ort festzulegen.</string>
+    <string name="directions_depart_at">Abfahrt um</string>
+    <string name="directions_arrive_by">Ankunft bis</string>
+    <string name="directions_speed_options">Geschwindigkeit und Entfernung für Gehen/Laufen/Radfahren</string>
+    <string name="directions_search">Verbindungen suchen</string>
+    <string name="directions_no_journeys">Keine Verbindungen gefunden. Versuche eine andere Zeit oder erhöhe die Geh- oder Radfahrgrenzen.</string>
+    <string name="directions_walk">Gehen / Laufen</string>
+    <string name="directions_cycle">Radfahren</string>
+    <string name="directions_walk_pace">Gehtempo: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Radfahrgeschwindigkeit: %1$.1f km/h</string>
+    <string name="directions_access_limit">Maximale Zeit zum ÖPNV: %1$s</string>
+    <string name="directions_egress_limit">Maximale Zeit vom ÖPNV: %1$s</string>
+    <string name="directions_direct_limit">Zeitlimit für direktes Gehen/Radfahren: %1$s</string>
+    <string name="directions_reset">Optionen zurücksetzen</string>
+    <string name="directions_all_journeys">Alle Verbindungen</string>
+    <string name="directions_show_details">Details anzeigen</string>
+    <string name="directions_stops_duration">%1$d Haltestellen · %2$s</string>
+    <string name="directions_done">Fertig</string>
+    <string name="directions_distance_unavailable">Entfernung nicht verfügbar</string>
+    <string name="directions_show_stops">Zwischenhalte anzeigen</string>
+    <string name="directions_hide_stops">Zwischenhalte ausblenden</string>
+    <string name="directions_departure">Abfahrt</string>
+    <string name="directions_arrival">Ankunft</string>
+    <string name="directions_choose_on_map">Auf Karte wählen</string>
+    <string name="directions_map_location">Ort auf der Karte</string>
+    <string name="directions_align_pin">Verschiebe die Karte, um die Stecknadel zu platzieren, und drücke OK.</string>
+    <string name="nearby_departures_offline">Offline</string>
+    <string name="directions_error">Verbindung konnte nicht geplant werden. Bitte versuche es erneut.</string>
+    <string name="directions_minutes">%1$d Min.</string>
+    <string name="directions_hours_minutes">%1$d Std. %2$d Min.</string>
+    <string name="directions_ferry">Fähre</string>
+</resources>

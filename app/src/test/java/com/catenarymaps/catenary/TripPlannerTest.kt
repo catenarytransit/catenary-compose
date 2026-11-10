@@ -8,6 +8,32 @@ class TripPlannerTest {
     private val from = DirectionsLocation("Start", 34.0, -118.0)
     private val to = DirectionsLocation("Finish", 35.0, -117.0)
 
+    @Test fun locationActionsSetOppositeEndpointToNearbyCurrentLocation() {
+        val current = DirectionsLocation("Current location", 34.1, -118.1, isCurrentLocation = true)
+        for (isOrigin in listOf(true, false)) {
+            val planner = TripPlannerViewModel()
+            planner.choose(!isOrigin, to)
+            planner.chooseFromLocationAction(isOrigin, from, current)
+            assertEquals(from, if (isOrigin) planner.origin else planner.destination)
+            assertEquals(current, if (isOrigin) planner.destination else planner.origin)
+            assertNull(planner.editing)
+        }
+    }
+
+    @Test fun locationActionsPreserveOppositeEndpointWithoutNearbyCurrentLocation() {
+        val far = DirectionsLocation("Current location", 48.9, 2.3, isCurrentLocation = true)
+        val invalid = DirectionsLocation("Current location", Double.NaN, 0.0, isCurrentLocation = true)
+        for (current in listOf(far, invalid, null)) {
+            for (isOrigin in listOf(true, false)) {
+                val planner = TripPlannerViewModel()
+                planner.choose(!isOrigin, to)
+                planner.chooseFromLocationAction(isOrigin, from, current)
+                assertEquals(from, if (isOrigin) planner.origin else planner.destination)
+                assertEquals(to, if (isOrigin) planner.destination else planner.origin)
+            }
+        }
+    }
+
     @Test fun requestUsesExclusiveTimeAndSiUnits() {
         val depart = directionsRequest(from, to, 1793642246, false, DirectionsOptions())
         assertEquals(1793642246L, depart["departure_unix_seconds"]!!.jsonPrimitive.long)

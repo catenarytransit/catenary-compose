@@ -4,11 +4,9 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.ktor.client.HttpClient
-import io.ktor.client.request.*
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.*
 import kotlinx.coroutines.*
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import java.util.UUID
 import java.time.Instant
 
 class TripPlannerViewModel : ViewModel() {
@@ -37,14 +35,72 @@ class TripPlannerViewModel : ViewModel() {
         private set
     var searched by mutableStateOf(false)
         private set
-    var error by mutableStateOf<String?>(null)
+    var error by mutableStateOf<Int?>(null)
         private set
     private var request: Job? = null
     private var generation = 0
-    private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
+    var earlierLoading by mutableStateOf(false)
+        private set
+    var laterLoading by mutableStateOf(false)
+        private set
+    var previousPageCursor by mutableStateOf<String?>(null)
+        private set
+    var nextPageCursor by mutableStateOf<String?>(null)
+        private set
+    var earlierInsertedIds by mutableStateOf<Set<String>>(emptySet())
+        private set
+    private var pageRequest: Job? = null
+    private var baseQuery: JsonObject? = null
+    private var initialPage: DirectionsPlan? = null
+    private val earlierPages = linkedMapOf<String, DirectionsPlan>()
+    private val laterPages = linkedMapOf<String, DirectionsPlan>()
+    val canLoadEarlier get() = previousPageCursor != null && baseQuery != null &&
+        !earlierLoading && !laterLoading && (!loading || itineraries.isNotEmpty())
+    val canLoadLater get() = nextPageCursor != null && baseQuery != null &&
+        !earlierLoading && !laterLoading && !loading
+
+    private fun cancelRequests() {
+        generation++; request?.cancel(); pageRequest?.cancel()
+        loading = false; earlierLoading = false; laterLoading = false
+    }
+
+    private fun publishPages() {
+        val selectedId = itineraries.getOrNull(selected)?.identity()
+        itineraries = mergeDirectionsPages(earlierPages.values.toList() + listOfNotNull(initialPage) + laterPages.values)
+        selected = itineraries.indexOfFirst { it.identity() == selectedId }.coerceAtLeast(0)
+        if (details && selectedId != null && itineraries.none { it.identity() == selectedId }) details = false
+    }
+    private var sessionInitialized = false
+
+    /** A retained ViewModel already owns the latest state during Activity recreation. */
+    internal fun restoreSession(session: TripPlannerSession?): Boolean {
+        if (sessionInitialized) return false
+        sessionInitialized = true
+        val saved = session?.validated() ?: return true
+        origin = saved.origin; originText = saved.origin.name
+        destination = saved.destination; destinationText = saved.destination.name
+        options = saved.options; arriveBy = saved.arriveBy; now = saved.now; time = saved.time
+        itineraries = saved.itineraries; selected = saved.selected
+        details = saved.details; showTransfers = saved.showTransfers
+        searched = true
+        return true
+    }
+
+    /** Empty, invalidated and unfinished searches must never reopen an empty planner. */
+    internal fun session(visible: Boolean): TripPlannerSession? {
+        if (!visible || loading || earlierLoading || laterLoading || !searched || error != null || itineraries.isEmpty()) return null
+        return TripPlannerSession(
+            origin = origin ?: return null, destination = destination ?: return null,
+            options = options, arriveBy = arriveBy, now = now, time = time,
+            itineraries = itineraries, selected = selected, details = details,
+            showTransfers = showTransfers
+        ).validated()
+    }
 
     fun invalidate() {
-        generation++; request?.cancel(); loading = false; searched = false
+        cancelRequests(); searched = false
+        baseQuery = null; initialPage = null; earlierPages.clear(); laterPages.clear()
+        previousPageCursor = null; nextPageCursor = null; earlierInsertedIds = emptySet()
         error = null; itineraries = emptyList(); selected = 0; details = false; showTransfers = false
     }
     fun edit(isOrigin: Boolean, text: String) {
@@ -61,6 +117,21 @@ class TripPlannerViewModel : ViewModel() {
         editing = null
         mapPicking = null
     }
+    /** Location-card shortcuts seed the opposite endpoint with a nearby user location. */
+    fun chooseFromLocationAction(
+        isOrigin: Boolean,
+        location: DirectionsLocation,
+        currentLocation: DirectionsLocation?
+    ) {
+        if (!location.isValid()) return
+        choose(isOrigin, location)
+        if (currentLocation?.isValid() == true &&
+            haversineDistance(location.lat, location.lon, currentLocation.lat, currentLocation.lon) < 500_000.0
+        ) {
+            choose(!isOrigin, currentLocation)
+        }
+    }
+
     fun swap() {
         invalidate()
         val old = origin; origin = destination; destination = old
@@ -69,10 +140,8 @@ class TripPlannerViewModel : ViewModel() {
     }
     fun leave() {
         mapPicking = null
-        generation++
-        request?.cancel()
-        if (loading) searched = false
-        loading = false
+        if (loading && itineraries.isEmpty()) searched = false
+        cancelRequests()
         editing = null
     }
 
@@ -81,27 +150,70 @@ class TripPlannerViewModel : ViewModel() {
         val to = destination ?: return
         invalidate(); searched = true; loading = true; editing = null
         val token = generation
-        val payload = directionsRequest(from, to, if (now) Instant.now().epochSecond else time, arriveBy, options)
+        val base = directionsRequest(from, to, if (now) Instant.now().epochSecond else time, arriveBy, options)
+        baseQuery = base
         request = viewModelScope.launch {
             try {
-                val response = client.post("https://edelweiss.catenarymaps.org/v1/route") {
-                    contentType(ContentType.Application.Json); setBody(payload.toString())
-                }
-                val text = response.bodyAsText()
-                if (!response.status.isSuccess()) throw IllegalStateException("Edelweiss HTTP ${response.status.value}: ${text.take(1200)}")
-                val plan = withContext(Dispatchers.Default) { json.decodeFromString<DirectionsPlan>(text) }
-                if (token == generation) {
-                    // Preserve the backend's ranking, appending direct alternatives as the web does.
-                    itineraries = (plan.itineraries + plan.direct).filter {
-                        runCatching { Instant.parse(it.startTime); Instant.parse(it.endTime) }.isSuccess
+                DirectionsStreaming.load(client, directionsPageQuery(base,
+                    if (arriveBy) ConnectionDirection.BEFORE else ConnectionDirection.AFTER),
+                    "catenary-android-${UUID.randomUUID()}") { page ->
+                    if (token == generation) {
+                        initialPage = page
+                        if (earlierPages.isEmpty()) previousPageCursor = page.previousPageCursor?.takeIf { it.isNotBlank() }
+                        if (laterPages.isEmpty()) nextPageCursor = page.nextPageCursor?.takeIf { it.isNotBlank() }
+                        publishPages()
                     }
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                if (token == generation) error = e.message ?: "Unable to plan journey"
+                android.util.Log.e("TripPlanner", "Unable to plan journey", e)
+                if (token == generation) error = R.string.directions_error
             } finally {
                 if (token == generation) loading = false
+            }
+        }
+    }
+
+    fun loadConnections(client: HttpClient, earlier: Boolean) {
+        if (if (earlier) !canLoadEarlier else !canLoadLater) return
+        val cursor = (if (earlier) previousPageCursor else nextPageCursor) ?: return
+        val base = baseQuery ?: return
+        val token = generation
+        val id = "catenary-android-${UUID.randomUUID()}"
+        if (earlier) { earlierLoading = true; earlierInsertedIds = emptySet() } else laterLoading = true
+        error = null
+        pageRequest = viewModelScope.launch {
+            try {
+                var completed: DirectionsPlan? = null
+                DirectionsStreaming.load(client, directionsPageQuery(base,
+                    if (earlier) ConnectionDirection.BEFORE else ConnectionDirection.AFTER, cursor), id) { page ->
+                    if (token == generation) {
+                        if (earlier) completed = page // Publish the authoritative earlier page only after completion.
+                        else {
+                            laterPages[id] = page
+                            nextPageCursor = page.nextPageCursor?.takeIf { it.isNotBlank() && it != cursor }
+                            publishPages()
+                        }
+                    }
+                }
+                if (earlier && token == generation) {
+                    val page = checkNotNull(completed)
+                    val existing = itineraries.map { it.identity() }.toSet()
+                    earlierInsertedIds = page.itineraries.map { it.identity() }.filter { it !in existing }.toSet()
+                    earlierPages[id] = page
+                    previousPageCursor = page.previousPageCursor?.takeIf { it.isNotBlank() && it != cursor }
+                    publishPages()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.e("TripPlanner", "Unable to load connections", e)
+                if (token == generation) error = R.string.directions_error
+            } finally {
+                if (token == generation) {
+                    if (earlier) earlierLoading = false else laterLoading = false
+                }
             }
         }
     }

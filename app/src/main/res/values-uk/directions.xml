@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Маршрути</string>
+    <string name="directions_as_origin">Як початок</string>
+    <string name="directions_as_destination">Як призначення</string>
+    <string name="directions_origin">Початок</string>
+    <string name="directions_destination">Призначення</string>
+    <string name="directions_start_placeholder">Звідки</string>
+    <string name="directions_destination_placeholder">Куди</string>
+    <string name="directions_swap">Поміняти початок і призначення</string>
+    <string name="directions_my_location">Поточне місцеположення</string>
+    <string name="directions_map_hint">Знайдіть місце, введіть координати або торкніться карти, щоб задати місцеположення.</string>
+    <string name="directions_depart_at">Відправлення о</string>
+    <string name="directions_arrive_by">Прибуття до</string>
+    <string name="directions_speed_options">Параметри швидкості й відстані для ходьби/бігу/велосипеда</string>
+    <string name="directions_search">Знайти маршрути</string>
+    <string name="directions_no_journeys">Маршрутів не знайдено. Спробуйте інший час або збільште обмеження для ходьби чи велосипеда.</string>
+    <string name="directions_walk">Ходьба / Біг</string>
+    <string name="directions_cycle">Велосипед</string>
+    <string name="directions_walk_pace">Темп ходьби: %1$d:%2$02d хв/км (%3$.1f км/год)</string>
+    <string name="directions_cycle_speed">Швидкість велосипеда: %1$.1f км/год</string>
+    <string name="directions_access_limit">Максимальний час до транспорту: %1$s</string>
+    <string name="directions_egress_limit">Максимальний час від транспорту: %1$s</string>
+    <string name="directions_direct_limit">Обмеження прямого шляху пішки/велосипедом: %1$s</string>
+    <string name="directions_reset">Скинути параметри</string>
+    <string name="directions_all_journeys">Усі маршрути</string>
+    <string name="directions_show_details">Показати подробиці</string>
+    <string name="directions_stops_duration">Зупинок: %1$d · %2$s</string>
+    <string name="directions_done">Готово</string>
+    <string name="directions_distance_unavailable">Відстань недоступна</string>
+    <string name="directions_show_stops">Показати проміжні зупинки</string>
+    <string name="directions_hide_stops">Приховати проміжні зупинки</string>
+    <string name="directions_departure">Відправлення</string>
+    <string name="directions_arrival">Прибуття</string>
+    <string name="directions_choose_on_map">Вибрати на карті</string>
+    <string name="directions_map_location">Місце на карті</string>
+    <string name="directions_align_pin">Перемістіть карту, щоб установити позначку, і натисніть ОК.</string>
+    <string name="nearby_departures_offline">Немає з’єднання</string>
+    <string name="directions_error">Не вдалося спланувати подорож. Спробуйте ще раз.</string>
+    <string name="directions_minutes">%1$d хв</string>
+    <string name="directions_hours_minutes">%1$d год %2$d хв</string>
+    <string name="directions_ferry">Пором</string>
+</resources>

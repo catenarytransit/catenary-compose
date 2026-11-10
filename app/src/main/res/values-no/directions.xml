@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Veibeskrivelse</string>
+    <string name="directions_as_origin">Som start</string>
+    <string name="directions_as_destination">Som reisemål</string>
+    <string name="directions_origin">Start</string>
+    <string name="directions_destination">Reisemål</string>
+    <string name="directions_start_placeholder">Fra</string>
+    <string name="directions_destination_placeholder">Til</string>
+    <string name="directions_swap">Bytt start og reisemål</string>
+    <string name="directions_my_location">Nåværende posisjon</string>
+    <string name="directions_map_hint">Søk etter et sted, skriv inn koordinater eller trykk på kartet for å velge denne posisjonen.</string>
+    <string name="directions_depart_at">Avreise kl.</string>
+    <string name="directions_arrive_by">Ankomst innen</string>
+    <string name="directions_speed_options">Hastighets- og avstandsvalg for gange/løping/sykling</string>
+    <string name="directions_search">Finn reiser</string>
+    <string name="directions_no_journeys">Ingen reiser funnet. Prøv et annet tidspunkt eller øk grensene for gange eller sykling.</string>
+    <string name="directions_walk">Gå / Løp</string>
+    <string name="directions_cycle">Sykle</string>
+    <string name="directions_walk_pace">Gangtempo: %1$d:%2$02d min/km (%3$.1f km/t)</string>
+    <string name="directions_cycle_speed">Sykkelhastighet: %1$.1f km/t</string>
+    <string name="directions_access_limit">Maksimal tid til kollektivtransport: %1$s</string>
+    <string name="directions_egress_limit">Maksimal tid fra kollektivtransport: %1$s</string>
+    <string name="directions_direct_limit">Grense for direkte gange/sykling: %1$s</string>
+    <string name="directions_reset">Tilbakestill valg</string>
+    <string name="directions_all_journeys">Alle reiser</string>
+    <string name="directions_show_details">Vis detaljer</string>
+    <string name="directions_stops_duration">%1$d stopp · %2$s</string>
+    <string name="directions_done">Ferdig</string>
+    <string name="directions_distance_unavailable">Avstand utilgjengelig</string>
+    <string name="directions_show_stops">Vis mellomstopp</string>
+    <string name="directions_hide_stops">Skjul mellomstopp</string>
+    <string name="directions_departure">Avreise</string>
+    <string name="directions_arrival">Ankomst</string>
+    <string name="directions_choose_on_map">Velg på kartet</string>
+    <string name="directions_map_location">Posisjon på kartet</string>
+    <string name="directions_align_pin">Flytt kartet for å plassere nålen, og trykk deretter på OK.</string>
+    <string name="nearby_departures_offline">Frakoblet</string>
+    <string name="directions_error">Kunne ikke planlegge reisen. Prøv igjen.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d t %2$d min</string>
+    <string name="directions_ferry">Ferje</string>
+</resources>

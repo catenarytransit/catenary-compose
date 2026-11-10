@@ -48,6 +48,7 @@ import java.time.ZoneId
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -403,7 +404,9 @@ private suspend fun fetchNearby(
                                         }
                                 }
                         }
-                } catch (t: Throwable) {
+                } catch (e: CancellationException) {
+                        throw e
+                } catch (t: Exception) {
                         Log.e(
                                 NEARBY_TAG,
                                 "Network error on ${Thread.currentThread().name}: ${t.message}",
@@ -494,6 +497,7 @@ fun NearbyDepartures(
 
         var sortMode by remember { mutableStateOf(SortMode.DISTANCE) }
         var loading by remember { mutableStateOf(false) }
+        var offline by remember { mutableStateOf(false) }
         var firstAttemptSent by remember { mutableStateOf(false) }
         var firstLoadComplete by remember { mutableStateOf(false) }
         var serverMs by remember { mutableStateOf<Long?>(null) }
@@ -572,6 +576,7 @@ fun NearbyDepartures(
                                 firstAttemptSent = true
                                 println("Fetching nearby departures for $origin")
                                 val res = fetchNearby(origin.first, origin.second, departureTime)
+                                offline = res == null
 
                                 if (res != null) {
                                         stopsTableLongDistance = res.longDistance
@@ -706,26 +711,43 @@ fun NearbyDepartures(
                         // 3. Mixed list sorted by Pin (TODO: check pin logic) > Alpha/Distance
 
                         val finalList = mutableListOf<NearbyItem>()
+                        val hoistedItems = mutableListOf<NearbyItem>()
                         val mixedItems = mutableListOf<NearbyItem>()
 
                         // Check if the closest station is within the 1000m "hoist" threshold
-                        val shouldHoist =
+                        val shouldHoistStation =
                                 stationItems.isNotEmpty() &&
                                         stationItems.first().sortDistance < 1000.0
 
-                        if (shouldHoist) {
-                                // Hoist the closest station to the very top
-                                finalList.add(stationItems.first())
-                                // Add the rest of the stations to the pool to be mixed with local
-                                // routes
+                        if (shouldHoistStation) {
+                                hoistedItems.add(stationItems.first())
                                 mixedItems.addAll(stationItems.drop(1))
                         } else {
-                                // If no station is close enough, treat all stations as regular
-                                // items in the mixed list
                                 mixedItems.addAll(stationItems)
                         }
 
-                        mixedItems.addAll(localItems)
+                        // Hoist Metro (<500m) and Tram (<400m) if in distance sort mode
+                        if (sortMode == SortMode.DISTANCE) {
+                                localItems.forEach { item ->
+                                        val routeType = item.group.routeType
+                                        // Match route types used in your filter logic
+                                        val isMetro = routeType == 1 || routeType == 7 || routeType == 12 
+                                        val isTram = routeType == 0 || routeType == 900 || routeType == 5
+                                        
+                                        if (isMetro && item.sortDistance < 500.0) {
+                                                hoistedItems.add(item)
+                                        } else if (isTram && item.sortDistance < 400.0) {
+                                                hoistedItems.add(item)
+                                        } else {
+                                                mixedItems.add(item)
+                                        }
+                                }
+                        } else {
+                                mixedItems.addAll(localItems)
+                        }
+
+                        // Sort the hoisted items by distance so closer items (like OSM stations) can show above
+                        finalList.addAll(hoistedItems.sortedBy { it.sortDistance })
 
                         // Sort mixed
                         val sortedMixed =
@@ -866,7 +888,14 @@ fun NearbyDepartures(
                                                         )
                                                 ),
                         ) {
-                                if (sorted.isEmpty() && firstLoadComplete && !loading) {
+                                if (offline) {
+                                        item {
+                                                Text(stringResource(R.string.nearby_departures_offline),
+                                                        color = MaterialTheme.colorScheme.error,
+                                                        modifier = Modifier.padding(8.dp))
+                                        }
+                                }
+                                if (sorted.isEmpty() && firstLoadComplete && !loading && !offline) {
                                         item {
                                                 Spacer(Modifier.height(8.dp))
                                                 Text(

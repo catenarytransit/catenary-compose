@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Itinéraire</string>
+    <string name="directions_as_origin">Comme départ</string>
+    <string name="directions_as_destination">Comme destination</string>
+    <string name="directions_origin">Départ</string>
+    <string name="directions_destination">Destination</string>
+    <string name="directions_start_placeholder">De</string>
+    <string name="directions_destination_placeholder">À</string>
+    <string name="directions_swap">Inverser le départ et la destination</string>
+    <string name="directions_my_location">Position actuelle</string>
+    <string name="directions_map_hint">Recherchez un lieu, saisissez des coordonnées ou touchez la carte pour définir ce lieu.</string>
+    <string name="directions_depart_at">Partir à</string>
+    <string name="directions_arrive_by">Arriver avant</string>
+    <string name="directions_speed_options">Options de vitesse et de distance à pied/en course/à vélo</string>
+    <string name="directions_search">Rechercher des trajets</string>
+    <string name="directions_no_journeys">Aucun trajet trouvé. Essayez une autre heure ou augmentez les limites de marche ou de vélo.</string>
+    <string name="directions_walk">Marcher / Courir</string>
+    <string name="directions_cycle">Vélo</string>
+    <string name="directions_walk_pace">Allure de marche : %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Vitesse à vélo : %1$.1f km/h</string>
+    <string name="directions_access_limit">Durée maximale vers les transports : %1$s</string>
+    <string name="directions_egress_limit">Durée maximale depuis les transports : %1$s</string>
+    <string name="directions_direct_limit">Limite de marche/vélo direct : %1$s</string>
+    <string name="directions_reset">Réinitialiser les options</string>
+    <string name="directions_all_journeys">Tous les trajets</string>
+    <string name="directions_show_details">Afficher les détails</string>
+    <string name="directions_stops_duration">%1$d arrêts · %2$s</string>
+    <string name="directions_done">Terminé</string>
+    <string name="directions_distance_unavailable">Distance indisponible</string>
+    <string name="directions_show_stops">Afficher les arrêts intermédiaires</string>
+    <string name="directions_hide_stops">Masquer les arrêts intermédiaires</string>
+    <string name="directions_departure">Départ</string>
+    <string name="directions_arrival">Arrivée</string>
+    <string name="directions_choose_on_map">Choisir sur la carte</string>
+    <string name="directions_map_location">Lieu sur la carte</string>
+    <string name="directions_align_pin">Déplacez la carte pour positionner le repère, puis appuyez sur OK.</string>
+    <string name="nearby_departures_offline">Hors ligne</string>
+    <string name="directions_error">Impossible de calculer le trajet. Veuillez réessayer.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Ferry</string>
+</resources>

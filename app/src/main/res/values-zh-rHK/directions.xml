@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">路線規劃</string>
+    <string name="directions_as_origin">設為起點</string>
+    <string name="directions_as_destination">設為目的地</string>
+    <string name="directions_origin">起點</string>
+    <string name="directions_destination">目的地</string>
+    <string name="directions_start_placeholder">由</string>
+    <string name="directions_destination_placeholder">往</string>
+    <string name="directions_swap">交換起點和目的地</string>
+    <string name="directions_my_location">目前位置</string>
+    <string name="directions_map_hint">搜尋地點、輸入座標或點按地圖以設定此位置。</string>
+    <string name="directions_depart_at">出發時間</string>
+    <string name="directions_arrive_by">抵達時間</string>
+    <string name="directions_speed_options">步行/跑步/單車速度及距離選項</string>
+    <string name="directions_search">搜尋路線</string>
+    <string name="directions_no_journeys">找不到路線。請嘗試其他時間，或增加步行或單車限制。</string>
+    <string name="directions_walk">步行 / 跑步</string>
+    <string name="directions_cycle">單車</string>
+    <string name="directions_walk_pace">步行配速：%1$d:%2$02d 分鐘/公里（%3$.1f 公里/小時）</string>
+    <string name="directions_cycle_speed">單車速度：%1$.1f 公里/小時</string>
+    <string name="directions_access_limit">前往公共交通的最長時間：%1$s</string>
+    <string name="directions_egress_limit">離開公共交通的最長時間：%1$s</string>
+    <string name="directions_direct_limit">步行/單車直達限制：%1$s</string>
+    <string name="directions_reset">重設選項</string>
+    <string name="directions_all_journeys">所有路線</string>
+    <string name="directions_show_details">顯示詳情</string>
+    <string name="directions_stops_duration">%1$d 站 · %2$s</string>
+    <string name="directions_done">完成</string>
+    <string name="directions_distance_unavailable">無法取得距離</string>
+    <string name="directions_show_stops">顯示中途站</string>
+    <string name="directions_hide_stops">隱藏中途站</string>
+    <string name="directions_departure">出發</string>
+    <string name="directions_arrival">抵達</string>
+    <string name="directions_choose_on_map">在地圖上選擇</string>
+    <string name="directions_map_location">地圖位置</string>
+    <string name="directions_align_pin">移動地圖以放置圖釘，然後按確定。</string>
+    <string name="nearby_departures_offline">離線</string>
+    <string name="directions_error">無法規劃路線。請再試一次。</string>
+    <string name="directions_minutes">%1$d分鐘</string>
+    <string name="directions_hours_minutes">%1$d小時%2$d分鐘</string>
+    <string name="directions_ferry">渡輪</string>
+</resources>

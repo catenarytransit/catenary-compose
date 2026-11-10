@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Trasa</string>
+    <string name="directions_as_origin">Ako východiskový bod</string>
+    <string name="directions_as_destination">Ako cieľ</string>
+    <string name="directions_origin">Začiatok</string>
+    <string name="directions_destination">Cieľ</string>
+    <string name="directions_start_placeholder">Odkiaľ</string>
+    <string name="directions_destination_placeholder">Kam</string>
+    <string name="directions_swap">Vymeniť začiatok a cieľ</string>
+    <string name="directions_my_location">Aktuálna poloha</string>
+    <string name="directions_map_hint">Vyhľadajte miesto, zadajte súradnice alebo ťuknite na mapu a nastavte túto polohu.</string>
+    <string name="directions_depart_at">Odchod o</string>
+    <string name="directions_arrive_by">Príchod do</string>
+    <string name="directions_speed_options">Možnosti rýchlosti a vzdialenosti chôdze/behu/bicyklovania</string>
+    <string name="directions_search">Vyhľadať spojenia</string>
+    <string name="directions_no_journeys">Nenašli sa žiadne spojenia. Skúste iný čas alebo zvýšte limity chôdze či bicyklovania.</string>
+    <string name="directions_walk">Chôdza / Beh</string>
+    <string name="directions_cycle">Bicykel</string>
+    <string name="directions_walk_pace">Tempo chôdze: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Rýchlosť bicyklovania: %1$.1f km/h</string>
+    <string name="directions_access_limit">Maximálny čas k verejnej doprave: %1$s</string>
+    <string name="directions_egress_limit">Maximálny čas od verejnej dopravy: %1$s</string>
+    <string name="directions_direct_limit">Limit priamej chôdze/bicyklovania: %1$s</string>
+    <string name="directions_reset">Obnoviť možnosti</string>
+    <string name="directions_all_journeys">Všetky spojenia</string>
+    <string name="directions_show_details">Zobraziť podrobnosti</string>
+    <string name="directions_stops_duration">Zastávky: %1$d · %2$s</string>
+    <string name="directions_done">Hotovo</string>
+    <string name="directions_distance_unavailable">Vzdialenosť nie je dostupná</string>
+    <string name="directions_show_stops">Zobraziť medzizastávky</string>
+    <string name="directions_hide_stops">Skryť medzizastávky</string>
+    <string name="directions_departure">Odchod</string>
+    <string name="directions_arrival">Príchod</string>
+    <string name="directions_choose_on_map">Vybrať na mape</string>
+    <string name="directions_map_location">Miesto na mape</string>
+    <string name="directions_align_pin">Posuňte mapu na umiestnenie špendlíka a stlačte OK.</string>
+    <string name="nearby_departures_offline">Offline</string>
+    <string name="directions_error">Cestu sa nepodarilo naplánovať. Skúste to znova.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Trajekt</string>
+</resources>

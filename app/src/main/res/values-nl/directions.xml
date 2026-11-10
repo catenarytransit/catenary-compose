@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Routebeschrijving</string>
+    <string name="directions_as_origin">Als vertrekpunt</string>
+    <string name="directions_as_destination">Als bestemming</string>
+    <string name="directions_origin">Vertrekpunt</string>
+    <string name="directions_destination">Bestemming</string>
+    <string name="directions_start_placeholder">Van</string>
+    <string name="directions_destination_placeholder">Naar</string>
+    <string name="directions_swap">Vertrekpunt en bestemming omwisselen</string>
+    <string name="directions_my_location">Huidige locatie</string>
+    <string name="directions_map_hint">Zoek een plaats, voer coördinaten in of tik op de kaart om deze locatie in te stellen.</string>
+    <string name="directions_depart_at">Vertrekken om</string>
+    <string name="directions_arrive_by">Aankomen vóór</string>
+    <string name="directions_speed_options">Snelheids- en afstandsopties voor lopen/hardlopen/fietsen</string>
+    <string name="directions_search">Reizen zoeken</string>
+    <string name="directions_no_journeys">Geen reizen gevonden. Probeer een andere tijd of verhoog de loop- of fietslimieten.</string>
+    <string name="directions_walk">Lopen / Hardlopen</string>
+    <string name="directions_cycle">Fietsen</string>
+    <string name="directions_walk_pace">Looptempo: %1$d:%2$02d min/km (%3$.1f km/h)</string>
+    <string name="directions_cycle_speed">Fietssnelheid: %1$.1f km/h</string>
+    <string name="directions_access_limit">Maximale tijd naar openbaar vervoer: %1$s</string>
+    <string name="directions_egress_limit">Maximale tijd vanaf openbaar vervoer: %1$s</string>
+    <string name="directions_direct_limit">Limiet voor direct lopen/fietsen: %1$s</string>
+    <string name="directions_reset">Opties herstellen</string>
+    <string name="directions_all_journeys">Alle reizen</string>
+    <string name="directions_show_details">Details tonen</string>
+    <string name="directions_stops_duration">%1$d haltes · %2$s</string>
+    <string name="directions_done">Gereed</string>
+    <string name="directions_distance_unavailable">Afstand niet beschikbaar</string>
+    <string name="directions_show_stops">Tussenhaltes tonen</string>
+    <string name="directions_hide_stops">Tussenhaltes verbergen</string>
+    <string name="directions_departure">Vertrek</string>
+    <string name="directions_arrival">Aankomst</string>
+    <string name="directions_choose_on_map">Op kaart kiezen</string>
+    <string name="directions_map_location">Locatie op de kaart</string>
+    <string name="directions_align_pin">Verplaats de kaart om de speld te plaatsen en druk op OK.</string>
+    <string name="nearby_departures_offline">Offline</string>
+    <string name="directions_error">De reis kon niet worden gepland. Probeer het opnieuw.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d u %2$d min</string>
+    <string name="directions_ferry">Veerboot</string>
+</resources>

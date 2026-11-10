@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_title">Rutevejledning</string>
+    <string name="directions_as_origin">Som start</string>
+    <string name="directions_as_destination">Som destination</string>
+    <string name="directions_origin">Start</string>
+    <string name="directions_destination">Destination</string>
+    <string name="directions_start_placeholder">Fra</string>
+    <string name="directions_destination_placeholder">Til</string>
+    <string name="directions_swap">Byt start og destination</string>
+    <string name="directions_my_location">Aktuel placering</string>
+    <string name="directions_map_hint">Søg efter et sted, indtast koordinater, eller tryk på kortet for at vælge denne placering.</string>
+    <string name="directions_depart_at">Afgang kl.</string>
+    <string name="directions_arrive_by">Ankomst senest</string>
+    <string name="directions_speed_options">Hastigheds- og afstandsindstillinger for gang/løb/cykling</string>
+    <string name="directions_search">Find rejser</string>
+    <string name="directions_no_journeys">Ingen rejser fundet. Prøv et andet tidspunkt, eller øg grænserne for gang eller cykling.</string>
+    <string name="directions_walk">Gå / Løb</string>
+    <string name="directions_cycle">Cykl</string>
+    <string name="directions_walk_pace">Gangtempo: %1$d:%2$02d min/km (%3$.1f km/t)</string>
+    <string name="directions_cycle_speed">Cykelhastighed: %1$.1f km/t</string>
+    <string name="directions_access_limit">Maksimal tid til kollektiv trafik: %1$s</string>
+    <string name="directions_egress_limit">Maksimal tid fra kollektiv trafik: %1$s</string>
+    <string name="directions_direct_limit">Grænse for direkte gang/cykling: %1$s</string>
+    <string name="directions_reset">Nulstil indstillinger</string>
+    <string name="directions_all_journeys">Alle rejser</string>
+    <string name="directions_show_details">Vis detaljer</string>
+    <string name="directions_stops_duration">%1$d stop · %2$s</string>
+    <string name="directions_done">Færdig</string>
+    <string name="directions_distance_unavailable">Afstand ikke tilgængelig</string>
+    <string name="directions_show_stops">Vis mellemstop</string>
+    <string name="directions_hide_stops">Skjul mellemstop</string>
+    <string name="directions_departure">Afgang</string>
+    <string name="directions_arrival">Ankomst</string>
+    <string name="directions_choose_on_map">Vælg på kort</string>
+    <string name="directions_map_location">Placering på kortet</string>
+    <string name="directions_align_pin">Flyt kortet for at placere nålen, og tryk derefter på OK.</string>
+    <string name="nearby_departures_offline">Offline</string>
+    <string name="directions_error">Rejsen kunne ikke planlægges. Prøv igen.</string>
+    <string name="directions_minutes">%1$d min.</string>
+    <string name="directions_hours_minutes">%1$d t %2$d min.</string>
+    <string name="directions_ferry">Færge</string>
+</resources>

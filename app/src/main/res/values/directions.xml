@@ -35,4 +35,9 @@
     <string name="directions_choose_on_map">Choose on map</string>
     <string name="directions_map_location">Map location</string>
     <string name="directions_align_pin">Move the map to position the pin, then press OK.</string>
+    <string name="nearby_departures_offline">Offline</string>
+    <string name="directions_error">Unable to plan journey. Please try again.</string>
+    <string name="directions_minutes">%1$d min</string>
+    <string name="directions_hours_minutes">%1$d h %2$d min</string>
+    <string name="directions_ferry">Ferry</string>
 </resources>
