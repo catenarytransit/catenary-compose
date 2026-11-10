@@ -156,6 +156,7 @@
     <string name="route_category_tram">Trikk</string>
     <string name="route_category_bus">Buss</string>
     <string name="route_category_other">Annet</string>
+    <string name="directions_select_connection">Klikk på en forbindelse for å se detaljer</string>
     <string name="home_explore">Utforsk</string>
     <string name="home_trips">Reiser</string>
     <string name="saved_journeys_empty">Ingen lagrede reiser.</string>

@@ -156,6 +156,7 @@
     <string name="route_category_tram">Tram</string>
     <string name="route_category_bus">Bus</string>
     <string name="route_category_other">Overig</string>
+    <string name="directions_select_connection">Klik op een verbinding om de details te bekijken</string>
     <string name="home_explore">Verkennen</string>
     <string name="home_trips">Reizen</string>
     <string name="saved_journeys_empty">Geen reizen opgeslagen.</string>

@@ -156,6 +156,7 @@
     <string name="route_category_tram">Spårvagn</string>
     <string name="route_category_bus">Buss</string>
     <string name="route_category_other">Annat</string>
+    <string name="directions_select_connection">Klicka på en förbindelse för att se detaljer</string>
     <string name="home_explore">Utforska</string>
     <string name="home_trips">Resor</string>
     <string name="saved_journeys_empty">Inga sparade resor.</string>

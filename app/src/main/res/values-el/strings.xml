@@ -156,6 +156,7 @@
     <string name="route_category_tram">Τραμ</string>
     <string name="route_category_bus">Λεωφορείο</string>
     <string name="route_category_other">Άλλο</string>
+    <string name="directions_select_connection">Κάντε κλικ σε μια σύνδεση για να δείτε λεπτομέρειες</string>
     <string name="home_explore">Εξερεύνηση</string>
     <string name="home_trips">Ταξίδια</string>
     <string name="saved_journeys_empty">Δεν υπάρχουν αποθηκευμένα ταξίδια.</string>

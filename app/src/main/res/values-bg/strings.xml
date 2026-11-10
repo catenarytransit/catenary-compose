@@ -156,6 +156,7 @@
     <string name="route_category_tram">Трамвай</string>
     <string name="route_category_bus">Автобус</string>
     <string name="route_category_other">Други</string>
+    <string name="directions_select_connection">Щракнете върху връзка, за да видите подробности</string>
     <string name="home_explore">Разглеждане</string>
     <string name="home_trips">Пътувания</string>
     <string name="saved_journeys_empty">Няма запазени пътувания.</string>

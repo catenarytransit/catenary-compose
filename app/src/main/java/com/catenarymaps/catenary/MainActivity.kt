@@ -4338,7 +4338,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         if (directionsVisible && tripPlanner.mapPicking != null) {
                                                 TripPlannerMapPicker(camera, mapSize, tripPlanner,
-                                                    modifier = Modifier.fillMaxSize().zIndex(7f))
+                                                    modifier = Modifier.fillMaxSize().zIndex(7f), client = ktorHttpClient)
                                         }
                                         if (directionsVisible && tripPlanner.usingMap && tripPlanner.mapPicking == null) {
                                                 // Map mode needs only the summary, never the endpoint search overlay.
@@ -4387,9 +4387,16 @@ class MainActivity : ComponentActivity() {
                                                                                 VerticalDivider()
                                                                                 Column(Modifier.weight(1f).fillMaxHeight()) {
                                                                                         if (tripPlanner.details) {
-                                                                                                JourneySummary(tripPlanner, streetUsUnits)
+                                                                                                JourneySummary(tripPlanner, streetUsUnits, showBack = false)
                                                                                                 Box(Modifier.weight(1f)) {
                                                                                                         tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits) }
+                                                                                                }
+                                                                                        } else {
+                                                                                                Box(Modifier.fillMaxSize().background(TripPlannerColors.background).padding(24.dp),
+                                                                                                        contentAlignment = Alignment.Center) {
+                                                                                                        Text(stringResource(R.string.directions_select_connection),
+                                                                                                                color = TripPlannerColors.secondaryContent,
+                                                                                                                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                                                                                                 }
                                                                                         }
                                                                                 }

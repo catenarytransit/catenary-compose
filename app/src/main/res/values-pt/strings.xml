@@ -156,6 +156,7 @@
     <string name="route_category_tram">Elétrico</string>
     <string name="route_category_bus">Autocarro</string>
     <string name="route_category_other">Outro</string>
+    <string name="directions_select_connection">Clique numa ligação para ver os detalhes</string>
     <string name="home_explore">Explorar</string>
     <string name="home_trips">Viagens</string>
     <string name="saved_journeys_empty">Nenhuma viagem guardada.</string>

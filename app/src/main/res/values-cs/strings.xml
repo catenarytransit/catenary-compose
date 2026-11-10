@@ -158,6 +158,7 @@
     <string name="route_category_tram">Tramvaj</string>
     <string name="route_category_bus">Autobus</string>
     <string name="route_category_other">Ostatní</string>
+    <string name="directions_select_connection">Kliknutím na spojení zobrazíte podrobnosti</string>
     <string name="home_explore">Objevovat</string>
     <string name="home_trips">Cesty</string>
     <string name="saved_journeys_empty">Žádné uložené cesty.</string>

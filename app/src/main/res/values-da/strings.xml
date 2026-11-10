@@ -156,6 +156,7 @@
     <string name="route_category_tram">Sporvogn</string>
     <string name="route_category_bus">Bus</string>
     <string name="route_category_other">Andet</string>
+    <string name="directions_select_connection">Klik på en forbindelse for at se detaljer</string>
     <string name="home_explore">Udforsk</string>
     <string name="home_trips">Rejser</string>
     <string name="saved_journeys_empty">Ingen gemte rejser.</string>

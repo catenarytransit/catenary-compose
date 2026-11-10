@@ -156,6 +156,7 @@
     <string name="route_category_tram">Villamos</string>
     <string name="route_category_bus">Busz</string>
     <string name="route_category_other">Egyéb</string>
+    <string name="directions_select_connection">Kattintson egy utazási lehetőségre a részletek megtekintéséhez</string>
     <string name="home_explore">Felfedezés</string>
     <string name="home_trips">Utazások</string>
     <string name="saved_journeys_empty">Nincsenek mentett utazások.</string>

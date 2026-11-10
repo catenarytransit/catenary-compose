@@ -158,6 +158,7 @@
     <string name="route_category_tram">Električka</string>
     <string name="route_category_bus">Autobus</string>
     <string name="route_category_other">Iné</string>
+    <string name="directions_select_connection">Kliknutím na spojenie zobrazíte podrobnosti</string>
     <string name="home_explore">Objavovať</string>
     <string name="home_trips">Cesty</string>
     <string name="saved_journeys_empty">Žiadne uložené cesty.</string>

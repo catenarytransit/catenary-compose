@@ -153,6 +153,7 @@
     <string name="route_category_tram">Tram</string>
     <string name="route_category_bus">Bus</string>
     <string name="route_category_other">Other</string>
+    <string name="directions_select_connection">Click on a connection to view details</string>
     <string name="home_explore">Explore</string>
     <string name="home_trips">Trips</string>
     <string name="saved_journeys_empty">No journeys saved.</string>

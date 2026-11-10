@@ -164,6 +164,7 @@
     <string name="directions_list_view">Liste anzeigen</string>
     <string name="directions_save_error">Die gespeicherte Verbindung konnte nicht aktualisiert werden. Bitte erneut versuchen.</string>
     <string name="directions_retry">Verbindungen erneut laden</string>
+    <string name="directions_select_connection">Klicken Sie auf eine Verbindung, um Details anzuzeigen</string>
     <string name="home_explore">Entdecken</string>
     <string name="home_trips">Reisen</string>
     <string name="saved_journeys_empty">Keine Reisen gespeichert.</string>
