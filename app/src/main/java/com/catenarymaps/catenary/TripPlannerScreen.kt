@@ -332,10 +332,10 @@ fun TripPlannerHeader(
                     Box(Modifier.weight(1f)) {
                         Column {
                             EndpointInput(planner.originText, stringResource(R.string.directions_start_placeholder),
-                                stringResource(R.string.directions_origin), { planner.edit(true, it) }, { planner.editing = true }, originFocus, compact)
+                                stringResource(R.string.directions_origin), { planner.edit(true, it) }, { planner.beginEditing(true) }, originFocus, compact)
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                             EndpointInput(planner.destinationText, stringResource(R.string.directions_destination_placeholder),
-                                stringResource(R.string.directions_destination), { planner.edit(false, it) }, { planner.editing = false }, destinationFocus, compact)
+                                stringResource(R.string.directions_destination), { planner.edit(false, it) }, { planner.beginEditing(false) }, destinationFocus, compact)
                         }
                         Surface(modifier = Modifier.align(Alignment.CenterEnd), shape = CircleShape,
                             color = TripPlannerColors.card, contentColor = TripPlannerColors.content, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
@@ -357,14 +357,15 @@ fun TripPlannerHeader(
                             Text(stringResource(R.string.cancel))
                         }
                         if (query.isBlank()) {
+                            SearchResultRow(stringResource(R.string.directions_my_location), icon = Icons.Default.MyLocation,
+                                iconTint = Color(0xFF1976D2),
+                                enabled = currentLocation != null, onClick = {
+                                    currentLocation?.let { select(planner.editing ?: true,
+                                        DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second, isCurrentLocation = true), false) }
+                                })
                             SearchResultRow(stringResource(R.string.directions_choose_on_map), icon = Icons.Default.LocationOn,
                                 onClick = { planner.mapPicking = planner.editing; planner.editing = null; focus.clearFocus() })
                         }
-                        SearchResultRow(stringResource(R.string.directions_my_location), icon = Icons.Default.MyLocation,
-                            enabled = currentLocation != null, onClick = {
-                                currentLocation?.let { select(planner.editing ?: true,
-                                    DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second, isCurrentLocation = true), false) }
-                            })
                         parseDirectionsCoordinate(query)?.let { coordinate ->
                             val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
                             SearchResultRow(coordinate.name, icon = Icons.Default.GridOn,
@@ -412,13 +413,15 @@ fun TripPlannerHeader(
 @Composable
 private fun SearchResultRow(
     name: String, icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-    distance: String? = null, enabled: Boolean = true, onClick: () -> Unit
+    distance: String? = null, enabled: Boolean = true,
+    iconTint: Color = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color.LightGray else Color.DarkGray,
+    onClick: () -> Unit
 ) {
     Row(Modifier.fillMaxWidth().clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
         .heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         if (icon != null) Icon(icon, null, modifier = Modifier.size(24.dp),
-            tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f))
+            tint = iconTint.copy(alpha = if (enabled) 1f else 0.38f))
         Text(name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f))
         if (distance != null) Text(distance, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
