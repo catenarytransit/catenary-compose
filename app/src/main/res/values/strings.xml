@@ -163,4 +163,6 @@
     <string name="settings_imperial_transport">Use Imperial distance for transport</string>
     <string name="settings_imperial_street">Use Imperial distance for foot and cycling</string>
     <string name="reset_route_filters">Reset route filters</string>
+    <string name="directions_earlier_connections">Earlier connections</string>
+    <string name="directions_later_connections">Later connections</string>
 </resources>
