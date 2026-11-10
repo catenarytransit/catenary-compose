@@ -7,17 +7,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
 
-/** Keep results out of the map pane's hit-test bounds in split-screen map mode. */
+/** The connections list must leave composition in map mode; the normal drawer handles details. */
 @Composable
 internal fun BoxScope.JourneyPlannerResultsOverlay(
     usingMap: Boolean,
-    contentWidthFraction: Float,
     content: @Composable BoxScope.() -> Unit
 ) {
+    if (usingMap) return
     Box(
-        Modifier.align(Alignment.TopStart)
-            .fillMaxWidth(if (usingMap) contentWidthFraction else 1f)
-            .fillMaxHeight()
+        Modifier.align(Alignment.TopStart).fillMaxSize()
             .zIndex(5f)
             .background(TripPlannerColors.background),
         content = content

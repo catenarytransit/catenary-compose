@@ -3503,7 +3503,7 @@ class MainActivity : ComponentActivity() {
                                         val sheetModifier =
                                                 Modifier
                                                         .fillMaxWidth(contentWidthFraction)
-                                                        .align(if (directionsVisible && isWideLayout) Alignment.BottomEnd else Alignment.BottomStart)
+                                                        .align(Alignment.BottomStart)
                                                         // Landscape three-button navigation can occupy either side.
                                                         .windowInsetsPadding(
                                                                 WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
@@ -4307,9 +4307,9 @@ class MainActivity : ComponentActivity() {
                                                                         top = with(density) { (directionsDetailsHeight + directionsTopInset).toDp() } + 16.dp,
                                                                         bottom = with(density) { (screenHeightPx - draggableState.requireOffset()).toDp() } + 16.dp,
                                                                         start = 24.dp, end = 24.dp
-                                                                ) else PaddingValues(start = with(density) { (mapSize.width * contentWidthFraction).toDp() } + 24.dp,
-                                                                        top = with(density) { (directionsDetailsHeight + directionsTopInset).toDp() } + 16.dp,
-                                                                        end = 24.dp, bottom = with(density) { (screenHeightPx - draggableState.requireOffset()).toDp() } + 16.dp)
+                                                                ) else PaddingValues(
+                                                                        start = with(density) { (mapSize.width * contentWidthFraction).toDp() } + 24.dp,
+                                                                        top = 24.dp, end = 24.dp, bottom = 24.dp)
                                                                 camera.animateTo(boundingBox = org.maplibre.spatialk.geojson.BoundingBox(
                                                                         positions.minOf { it.second } - 0.001, positions.minOf { it.first } - 0.001,
                                                                         positions.maxOf { it.second } + 0.001, positions.maxOf { it.first } + 0.001), padding = fitPadding)
@@ -4331,7 +4331,7 @@ class MainActivity : ComponentActivity() {
                                                         streetUsUnits = streetUsUnits,
                                                         compact = tripPlanner.detailsScrolled,
                                                         modifier = Modifier
-                                                                .align(if (isWideLayout) Alignment.TopEnd else Alignment.TopStart)
+                                                                .align(Alignment.TopStart)
                                                                 .fillMaxWidth(contentWidthFraction)
                                                                 .windowInsetsPadding(WindowInsets.safeDrawing)
                                                                 .onSizeChanged { directionsDetailsHeight = it.height }
@@ -4339,10 +4339,9 @@ class MainActivity : ComponentActivity() {
                                                 )
                                         }
 
-                                        if (directionsVisible && (!tripPlanner.usingMap || isWideLayout) && tripPlanner.mapPicking == null) {
+                                        if (directionsVisible && tripPlanner.mapPicking == null) {
                                                 JourneyPlannerResultsOverlay(
-                                                        usingMap = tripPlanner.usingMap,
-                                                        contentWidthFraction = contentWidthFraction
+                                                        usingMap = tripPlanner.usingMap
                                                 ) {
                                                         val inputs: @Composable (Boolean) -> Unit = { forceInputs ->
                                                                 TripPlannerHeader(
