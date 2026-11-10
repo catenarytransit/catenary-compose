@@ -1901,6 +1901,10 @@ class MainActivity : ComponentActivity() {
                                         val collapsedAnchor =
                                                 screenHeightPx - collapsedHandleHeight - bottomInset
 
+                                        val directionsResultsState = androidx.compose.foundation.lazy.rememberLazyListState()
+                                        LaunchedEffect(tripPlanner.searched) {
+                                                if (!tripPlanner.searched) directionsResultsState.scrollToItem(0)
+                                        }
                                         var directionsHeaderHeight by remember { mutableIntStateOf(0) }
                                         var directionsDetailsHeight by remember { mutableIntStateOf(0) }
                                         val directionsTopInset = WindowInsets.safeDrawing.getTop(density)
@@ -3467,8 +3471,8 @@ class MainActivity : ComponentActivity() {
                                             // Fixed pin tied to the active map selection; no drag hitbox.
                                             SelectedLocationPinLayers(pin = selectedLocationPin)
                                             if (directionsVisible) {
-                                                TripPlannerMap(tripPlanner)
-                                                if (tripPlanner.mapPicking == null) TripPlannerEndpoints(tripPlanner)
+                                                if (tripPlanner.usingMap) TripPlannerMap(tripPlanner)
+                                                if (tripPlanner.usingMap || tripPlanner.mapPicking != null) TripPlannerEndpoints(tripPlanner)
                                             }
                                         }
 
@@ -3492,13 +3496,13 @@ class MainActivity : ComponentActivity() {
                                         val sheetModifier =
                                                 Modifier
                                                         .fillMaxWidth(contentWidthFraction)
-                                                        .align(Alignment.BottomStart)
+                                                        .align(if (directionsVisible && isWideLayout) Alignment.BottomEnd else Alignment.BottomStart)
                                                         // Landscape three-button navigation can occupy either side.
                                                         .windowInsetsPadding(
                                                                 WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
                                                         )
 
-                                        if (!directionsVisible || tripPlanner.mapPicking == null) Surface(
+                                        if (!directionsVisible || (tripPlanner.usingMap && tripPlanner.mapPicking == null)) Surface(
                                                 modifier =
                                                         sheetModifier
                                                                 .offset {
@@ -3724,20 +3728,6 @@ class MainActivity : ComponentActivity() {
                                                                                     detailsTopPadding = with(density) {
                                                                                         (directionsTopInset + directionsDetailsHeight - draggableState.requireOffset() - 24.dp.toPx())
                                                                                             .coerceAtLeast(0f).toDp()
-                                                                                    },
-                                                                                    onSelectJourney = { journey ->
-                                                                                        val positions = journey.legs.flatMap { directionsCoordinates(it) }
-                                                                                        if (positions.isNotEmpty()) scope.launch {
-                                                                                            geoLock.deactivate()
-                                                                                            camera.animateTo(
-                                                                                                boundingBox = org.maplibre.spatialk.geojson.BoundingBox(
-                                                                                                    positions.minOf { it.second } - 0.001,
-                                                                                                    positions.minOf { it.first } - 0.001,
-                                                                                                    positions.maxOf { it.second } + 0.001,
-                                                                                                    positions.maxOf { it.first } + 0.001
-                                                                                                ), padding = desiredPadding
-                                                                                            )
-                                                                                        }
                                                                                     }
                                                                                 )
                                                                             }
@@ -4297,30 +4287,22 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
-                                        // Start loading at the middle position so the input card stays open.
-                                        LaunchedEffect(directionsVisible, tripPlanner.loading) {
-                                                if (directionsVisible && tripPlanner.loading) {
-                                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
-                                                }
-                                        }
-
-                                        var directionsFitted by remember { mutableStateOf(false) }
-                                        // Fit the first visible snapshot; subsequent pages must not reset the camera or drawer.
-                                        LaunchedEffect(directionsVisible, tripPlanner.searched, tripPlanner.itineraries.isNotEmpty()) {
-                                                if (!directionsVisible || !tripPlanner.searched || tripPlanner.itineraries.isEmpty()) directionsFitted = false
-                                                if (directionsVisible && tripPlanner.searched && tripPlanner.itineraries.isNotEmpty() && !directionsFitted) {
-                                                        directionsFitted = true
-                                                        tripPlanner.editing = null
-                                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
-                                                        val positions = tripPlanner.itineraries.flatMap { journey -> journey.legs.flatMap { directionsCoordinates(it) } }
+                                        // Map mode is opt-in for transit. Enter at half height and fit only the
+                                        // selected journey; background streaming and paging never move the map.
+                                        LaunchedEffect(directionsVisible, tripPlanner.usingMap, tripPlanner.selectedJourney?.identity()) {
+                                                if (directionsVisible && tripPlanner.usingMap) {
+                                                        withFrameNanos { }
+                                                        draggableState.snapTo(SheetSnapPoint.PartiallyExpanded)
+                                                        val positions = tripPlanner.selectedJourney?.legs.orEmpty().flatMap { directionsCoordinates(it) }
                                                         if (positions.isNotEmpty()) {
                                                                 geoLock.deactivate()
                                                                 val fitPadding = if (contentWidthFraction == 1f) PaddingValues(
-                                                                        top = with(density) { (directionsHeaderHeight + directionsTopInset).toDp() } + 16.dp,
+                                                                        top = with(density) { (directionsDetailsHeight + directionsTopInset).toDp() } + 16.dp,
                                                                         bottom = with(density) { (screenHeightPx - draggableState.requireOffset()).toDp() } + 16.dp,
                                                                         start = 24.dp, end = 24.dp
                                                                 ) else PaddingValues(start = with(density) { (mapSize.width * contentWidthFraction).toDp() } + 24.dp,
-                                                                        top = 24.dp, end = 24.dp, bottom = 24.dp)
+                                                                        top = with(density) { (directionsDetailsHeight + directionsTopInset).toDp() } + 16.dp,
+                                                                        end = 24.dp, bottom = with(density) { (screenHeightPx - draggableState.requireOffset()).toDp() } + 16.dp)
                                                                 camera.animateTo(boundingBox = org.maplibre.spatialk.geojson.BoundingBox(
                                                                         positions.minOf { it.second } - 0.001, positions.minOf { it.first } - 0.001,
                                                                         positions.maxOf { it.second } + 0.001, positions.maxOf { it.first } + 0.001), padding = fitPadding)
@@ -4335,7 +4317,7 @@ class MainActivity : ComponentActivity() {
                                                 TripPlannerMapPicker(camera, mapSize, tripPlanner,
                                                     modifier = Modifier.fillMaxSize().zIndex(7f))
                                         }
-                                        if (directionsVisible && tripPlanner.mapPicking == null) {
+                                        if (directionsVisible && tripPlanner.usingMap && tripPlanner.mapPicking == null) {
                                                 TripPlannerHeader(
                                                         planner = tripPlanner,
                                                         search = directionsSearch,
@@ -4344,7 +4326,7 @@ class MainActivity : ComponentActivity() {
                                                         currentLocation = currentLocation,
                                                         mapCenter = camera.position.target,
                                                         modifier = Modifier
-                                                                .align(Alignment.TopStart)
+                                                                .align(if (isWideLayout) Alignment.TopEnd else Alignment.TopStart)
                                                                 .fillMaxWidth(contentWidthFraction)
                                                                 .then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier)
                                                                 .windowInsetsPadding(WindowInsets.safeDrawing)
@@ -4360,6 +4342,48 @@ class MainActivity : ComponentActivity() {
                                                         onDetailsHeight = { directionsDetailsHeight = it }
 
                                                 )
+                                        }
+
+                                        if (directionsVisible && (!tripPlanner.usingMap || isWideLayout) && tripPlanner.mapPicking == null) {
+                                                Box(Modifier.fillMaxSize().zIndex(5f).background(if (tripPlanner.usingMap) Color.Transparent else TripPlannerColors.background)) {
+                                                        val inputs: @Composable (Boolean) -> Unit = { forceInputs ->
+                                                                TripPlannerHeader(
+                                                                        planner = tripPlanner, search = directionsSearch,
+                                                                        currentLocation = currentLocation, mapCenter = camera.position.target,
+                                                                        stationHistory = stationHistory, streetUsUnits = streetUsUnits,
+                                                                        forceInputs = forceInputs,
+                                                                        compact = isLandscape && configuration.screenHeightDp < 480 && !isWideLayout,
+                                                                        modifier = Modifier.then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier),
+                                                                        onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) }
+                                                                )
+                                                        }
+                                                        if (isWideLayout) {
+                                                                Row(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
+                                                                        Column(Modifier.weight(1f).fillMaxHeight().background(TripPlannerColors.background)) {
+                                                                                inputs(true)
+                                                                                Box(Modifier.weight(1f)) {
+                                                                                        TripPlannerScreen(tripPlanner, ktorHttpClient, streetUsUnits, resultsOnly = true, resultsState = directionsResultsState)
+                                                                                }
+                                                                        }
+                                                                        VerticalDivider()
+                                                                        Column(Modifier.weight(1f).fillMaxHeight()) {
+                                                                                if (tripPlanner.details && !tripPlanner.usingMap) {
+                                                                                        JourneySummary(tripPlanner, streetUsUnits)
+                                                                                        Box(Modifier.weight(1f)) {
+                                                                                                tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits) }
+                                                                                        }
+                                                                                }
+                                                                        }
+                                                                }
+                                                        } else {
+                                                                Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
+                                                                        inputs(false)
+                                                                        Box(Modifier.weight(1f)) {
+                                                                                TripPlannerScreen(tripPlanner, ktorHttpClient, streetUsUnits, resultsState = directionsResultsState)
+                                                                        }
+                                                                }
+                                                        }
+                                                }
                                         }
 
                                         val layerButtonColor =

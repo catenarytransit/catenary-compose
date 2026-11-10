@@ -153,4 +153,10 @@
     <string name="route_category_other">Autre</string>
     <string name="directions_earlier_connections">Relations précédentes</string>
     <string name="directions_later_connections">Relations suivantes</string>
+    <string name="directions_save_trip">Enregistrer le trajet</string>
+    <string name="directions_unsave_trip">Supprimer le trajet enregistré</string>
+    <string name="directions_map_view">Afficher la carte</string>
+    <string name="directions_list_view">Afficher la liste</string>
+    <string name="directions_save_error">Impossible de mettre à jour le trajet enregistré. Veuillez réessayer.</string>
+    <string name="directions_retry">Réessayer de charger les relations</string>
 </resources>

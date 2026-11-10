@@ -24,7 +24,7 @@ class TripPlannerStreamingTest {
         assertEquals("opaque-after", later["page_cursor"]!!.jsonPrimitive.content)
     }
 
-    @Test fun snapshotsReplacePagesAndDeduplicateAcrossPagesWithDirectLast() {
+    @Test fun snapshotsReplacePagesAndKeepAllConnectionsChronological() {
         val earlier = journey("earlier", 10)
         val initial = journey("initial", 11)
         val later = journey("later", 12)
@@ -33,7 +33,7 @@ class TripPlannerStreamingTest {
         pages["next"] = DirectionsPlan(listOf(journey("discarded-snapshot", 13)))
         pages["next"] = DirectionsPlan(listOf(later, initial), listOf(direct))
         pages["before"] = DirectionsPlan(listOf(earlier, initial))
-        assertEquals(listOf("earlier", "initial", "later", "walk"), mergeDirectionsPages(pages.values.toList()).map { it.id })
+        assertEquals(listOf("earlier", "walk", "initial", "later"), mergeDirectionsPages(pages.values.toList()).map { it.id })
     }
 
     @Test fun streamIgnoresOtherRequestsAndOldSequencesAndAcceptsFinalPage() {

@@ -158,4 +158,10 @@
     <string name="layers_close_button_content_description">Ebenen schließen</string>
     <string name="directions_earlier_connections">Frühere Verbindungen</string>
     <string name="directions_later_connections">Spätere Verbindungen</string>
+    <string name="directions_save_trip">Verbindung speichern</string>
+    <string name="directions_unsave_trip">Gespeicherte Verbindung entfernen</string>
+    <string name="directions_map_view">Karte anzeigen</string>
+    <string name="directions_list_view">Liste anzeigen</string>
+    <string name="directions_save_error">Die gespeicherte Verbindung konnte nicht aktualisiert werden. Bitte erneut versuchen.</string>
+    <string name="directions_retry">Verbindungen erneut laden</string>
 </resources>

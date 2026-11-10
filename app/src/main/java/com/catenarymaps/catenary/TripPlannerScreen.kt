@@ -1,14 +1,9 @@
 package com.catenarymaps.catenary
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -21,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -29,13 +25,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
@@ -86,14 +85,16 @@ internal object TripPlannerColors {
         @Composable get() = if (dark) Color(0xFF5F6368) else Color(0xFF9AA0A6)
 }
 
+/** Fullscreen results and drawer details share rendering, but never share scroll state. */
 @Composable
 fun TripPlannerScreen(
     planner: TripPlannerViewModel, client: HttpClient, streetUsUnits: Boolean,
     detailsTopPadding: androidx.compose.ui.unit.Dp = 0.dp,
-    onSelectJourney: (DirectionsItinerary) -> Unit
+    resultsOnly: Boolean = false,
+    resultsState: LazyListState = rememberLazyListState(),
+    onSelectJourney: (DirectionsItinerary) -> Unit = {}
 ) {
     val focus = LocalFocusManager.current
-    val resultsListState = rememberLazyListState()
     // Match the web planner: resolve a new journey after choosing endpoints or changing options.
     LaunchedEffect(planner.origin, planner.destination, planner.time, planner.now, planner.arriveBy, planner.options) {
         if (planner.origin != null && planner.destination != null) {
@@ -102,87 +103,91 @@ fun TripPlannerScreen(
         }
     }
     androidx.activity.compose.BackHandler(enabled = planner.details) { planner.details = false }
-
-    Column(Modifier.fillMaxSize().background(TripPlannerColors.background)) {
-        if (planner.details) {
-            planner.itineraries.getOrNull(planner.selected)?.let { journey ->
-                LazyColumn(Modifier.weight(1f).padding(top = detailsTopPadding), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
-                    items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits) }
-                    item { JourneyEndpoint(planner.destination?.name.orEmpty(), false) }
-                }
-            }
-        } else {
-            LazyColumn(Modifier.weight(1f), state = resultsListState, contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                item(key = "results-status") {
-                    planner.error?.let {
-                        Text(stringResource(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
-                    }
-                    if (planner.searched && !planner.loading && planner.error == null && planner.itineraries.isEmpty()) {
-                        Text(stringResource(R.string.directions_no_journeys))
-                    }
-                }
-                if (planner.searched) item(key = "earlier") {
-                    ConnectionPageButton(planner, client, earlier = true)
-                }
-                items(planner.itineraries, key = { it.identity() }) { journey ->
-                    AnimatedJourneyPreview(
-                        journey = journey,
-                        streetUsUnits = streetUsUnits,
-                        onClick = {
-                            planner.selected = planner.itineraries.indexOfFirst { it.identity() == journey.identity() }.coerceAtLeast(0)
-                            planner.showTransfers = true; planner.details = true; planner.editing = null
-                            focus.clearFocus(); onSelectJourney(journey)
-                        }
-                    )
-                }
-                // Paging progress stays in the buttons so loading rows cannot move the viewport.
-                if (planner.loading && planner.itineraries.isEmpty()) {
-                    items(3, key = { "skeleton-$it" }) {
-                        ConnectionSkeleton()
-                    }
-                }
-                if (planner.searched) item(key = "later") {
-                    ConnectionPageButton(planner, client, earlier = false)
-                }
-            }
+    if (planner.details && !resultsOnly) {
+        planner.selectedJourney?.let { journey -> JourneyDetails(planner, journey, streetUsUnits, detailsTopPadding) }
+    } else {
+        ConnectionResults(planner, client, streetUsUnits, resultsState) { journey ->
+            planner.selectJourney(journey)
+            focus.clearFocus()
+            onSelectJourney(journey)
         }
     }
 }
 
 @Composable
-private fun AnimatedJourneyPreview(
-    journey: DirectionsItinerary,
-    streetUsUnits: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
+internal fun JourneyDetails(
+    planner: TripPlannerViewModel, journey: DirectionsItinerary, streetUsUnits: Boolean,
+    topPadding: androidx.compose.ui.unit.Dp = 0.dp
 ) {
-    val progress = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        progress.animateTo(1f, animationSpec = tween(120))
-    }
-    Box(modifier.graphicsLayer {
-        alpha = progress.value
-    }) {
-        JourneyPreview(journey, streetUsUnits, onClick = onClick)
+    key(journey.identity()) {
+        LazyColumn(Modifier.fillMaxSize().padding(top = topPadding), contentPadding = PaddingValues(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
+            items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits) }
+            item { JourneyEndpoint(planner.destination?.name.orEmpty(), false) }
+        }
     }
 }
 
 @Composable
-private fun ConnectionPageButton(planner: TripPlannerViewModel, client: HttpClient, earlier: Boolean) {
-    val busy = if (earlier) planner.earlierLoading else planner.laterLoading
-    FilledTonalButton(
-        onClick = { planner.loadConnections(client, earlier) },
-        enabled = if (earlier) planner.canLoadEarlier else planner.canLoadLater,
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = ButtonDefaults.filledTonalButtonColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)
-    ) {
-        if (busy) {
-            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-            Spacer(Modifier.width(8.dp))
+private fun ConnectionResults(
+    planner: TripPlannerViewModel, client: HttpClient, streetUsUnits: Boolean,
+    state: LazyListState,
+    onSelectJourney: (DirectionsItinerary) -> Unit
+) {
+    val journeys = planner.itineraries
+    LaunchedEffect(journeys.isNotEmpty()) {
+        if (journeys.isNotEmpty() && state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0) {
+            // Leave room to scroll upwards into the earlier-page sentinel.
+            state.scrollToItem(2)
         }
-        Text(stringResource(if (earlier) R.string.directions_earlier_connections else R.string.directions_later_connections))
+    }
+    PreserveConnectionScrollPosition(state, journeys.map { it.identity() })
+    val paging = remember(state, planner, client) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // Observe the user's gesture even when a short list cannot scroll yet.
+                // A stationary edge never loops requests or retries failed pages.
+                if (source == NestedScrollSource.UserInput && planner.error == null && planner.itineraries.isNotEmpty()) {
+                    val last = state.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                    if (available.y > 0 && state.firstVisibleItemIndex <= 2 && planner.canLoadEarlier) {
+                        planner.loadConnections(client, earlier = true)
+                    } else if (available.y < 0 && last >= planner.itineraries.size && planner.canLoadLater) {
+                        planner.loadConnections(client, earlier = false)
+                    }
+                }
+                return Offset.Zero
+            }
+        }
+    }
+    LazyColumn(Modifier.fillMaxSize().background(TripPlannerColors.background).nestedScroll(paging), state = state,
+        contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item(key = "results-status") {
+            planner.error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
+            if (planner.searched && !planner.loading && planner.error == null && journeys.isEmpty()) {
+                Text(stringResource(R.string.directions_no_journeys))
+            }
+        }
+        item(key = "earlier") { ConnectionLoadingEdge(planner, client, earlier = true) }
+        items(journeys, key = { it.identity() }) { journey ->
+            JourneyPreview(journey, streetUsUnits, onClick = { onSelectJourney(journey) })
+        }
+        if (planner.loading && journeys.isEmpty()) items(3, key = { "skeleton-$it" }) { ConnectionSkeleton() }
+        item(key = "later") { ConnectionLoadingEdge(planner, client, earlier = false) }
+    }
+}
+
+@Composable
+private fun ConnectionLoadingEdge(planner: TripPlannerViewModel, client: HttpClient, earlier: Boolean) {
+    val busy = if (earlier) planner.earlierLoading else planner.laterLoading
+    // A fixed-height slot prevents spinner appearance/disappearance from moving cards.
+    Box(Modifier.fillMaxWidth().height(48.dp), contentAlignment = Alignment.Center) {
+        if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+        else if (planner.error != null && (if (earlier) planner.canLoadEarlier else planner.canLoadLater)) {
+            IconButton(onClick = { planner.loadConnections(client, earlier) }) {
+                Icon(Icons.Default.Refresh, stringResource(R.string.directions_retry))
+            }
+        }
     }
 }
 
@@ -207,7 +212,8 @@ fun TripPlannerHeader(
     modifier: Modifier = Modifier, cardModifier: Modifier = Modifier,
     compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Boolean = false,
     onBack: () -> Unit = {}, onExpandedHeight: (Int) -> Unit = {},
-    onDetailsHeight: (Int) -> Unit = {}
+    onDetailsHeight: (Int) -> Unit = {},
+    forceInputs: Boolean = false
 ) {
     val focus = LocalFocusManager.current
     val rows by search.searchRows.collectAsState()
@@ -246,31 +252,9 @@ fun TripPlannerHeader(
     val collapsed = collapseInputs && !inputsExpanded && planner.editing == null
     val originName = planner.originText.ifBlank { stringResource(R.string.directions_origin) }
     val destinationName = planner.destinationText.ifBlank { stringResource(R.string.directions_destination) }
-    Column(modifier.imePadding().onSizeChanged { if (planner.details) onDetailsHeight(it.height) }) {
-        if (planner.details) {
-            FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp),
-                shape = CircleShape, colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back))
-            }
-            // Keep the surface in place; only its contents fade and its height changes.
-            Card(modifier = cardModifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-                AnimatedContent(
-                    modifier = Modifier.fillMaxWidth(),
-                    targetState = collapseDetails,
-                    transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(150)) },
-                    label = "journey summary contents"
-                ) { small ->
-                    if (small) Column(Modifier.padding(12.dp)) {
-                        Text("$originName →", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(destinationName, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    } else planner.itineraries.getOrNull(planner.selected)?.let { journey ->
-                        JourneyPreviewContent(journey, streetUsUnits)
-                    }
-                }
-            }
+    Column(modifier.imePadding().onSizeChanged { if (planner.details && !forceInputs) onDetailsHeight(it.height) }) {
+        if (planner.details && !forceInputs) {
+            JourneySummary(planner, streetUsUnits, collapseDetails, cardModifier)
         } else ElevatedCard(modifier = cardModifier.fillMaxWidth().padding(8.dp)
                 .then(Modifier.animateContentSize()),
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
@@ -563,7 +547,7 @@ private fun JourneyPreview(journey: DirectionsItinerary, streetUsUnits: Boolean,
 }
 
 @Composable
-private fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: Boolean) {
+internal fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: Boolean) {
     val visible = remember(journey) { journey.previewLegs() }
     val times = remember(journey) { journey.previewTimeGroups() }
     Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
