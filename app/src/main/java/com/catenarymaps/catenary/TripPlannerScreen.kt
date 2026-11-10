@@ -455,11 +455,11 @@ private fun StreetOptions(planner: TripPlannerViewModel) {
         Text(stringResource(R.string.directions_cycle_speed, options.cyclingKmh))
         Slider(value = options.cyclingKmh, onValueChange = { update(options.copy(cyclingKmh = it)) }, valueRange = 5f..40f)
         Text(stringResource(R.string.directions_access_limit, directionsDuration(options.accessSeconds.toDouble())))
-        Slider(value = options.accessSeconds, onValueChange = { update(options.copy(accessSeconds = it)) }, valueRange = 0f..7200f)
+        Slider(value = options.accessSeconds, onValueChange = { update(options.copy(accessSeconds = it)) }, valueRange = 60f..3600f)
         Text(stringResource(R.string.directions_egress_limit, directionsDuration(options.egressSeconds.toDouble())))
-        Slider(value = options.egressSeconds, onValueChange = { update(options.copy(egressSeconds = it)) }, valueRange = 0f..7200f)
+        Slider(value = options.egressSeconds, onValueChange = { update(options.copy(egressSeconds = it)) }, valueRange = 60f..3600f)
         Text(stringResource(R.string.directions_direct_limit, directionsDuration(options.directSeconds.toDouble())))
-        Slider(value = options.directSeconds, onValueChange = { update(options.copy(directSeconds = it)) }, valueRange = 0f..14400f)
+        Slider(value = options.directSeconds, onValueChange = { update(options.copy(directSeconds = it)) }, valueRange = 60f..3600f)
         TextButton(onClick = { update(DirectionsOptions()) }) { Text(stringResource(R.string.directions_reset)) }
     }
 }
