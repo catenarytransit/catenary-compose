@@ -1,6 +1,5 @@
 package com.catenarymaps.catenary
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -129,7 +128,7 @@ fun TripPlannerScreen(
                     LaunchedEffect(Unit) { visible = true }
                     val slide = with(LocalDensity.current) { 16.dp.roundToPx() }
                     Box(Modifier.animateItem()) {
-                        AnimatedVisibility(visible, enter = fadeIn(tween(240)) + slideInVertically(tween(240)) {
+                        androidx.compose.animation.AnimatedVisibility(visible, enter = fadeIn(tween(240)) + slideInVertically(tween(240)) {
                             if (journey.identity() in planner.earlierInsertedIds) -slide else slide
                         }) {
                             JourneyPreview(journey, streetUsUnits,
