@@ -66,7 +66,16 @@ class TripPlannerViewModel : ViewModel() {
 
     private fun publishPages() {
         val selectedId = itineraries.getOrNull(selected)?.identity()
-        itineraries = mergeDirectionsPages(earlierPages.values.toList() + listOfNotNull(initialPage) + laterPages.values)
+        val merged = mergeDirectionsPages(earlierPages.values.toList() + listOfNotNull(initialPage) + laterPages.values)
+        if (earlierPages.isEmpty() && laterPages.isEmpty()) {
+            itineraries = merged
+        } else {
+            // Both page directions prepend new cards without reordering existing cards.
+            val byId = merged.associateBy { it.identity() }
+            val existingIds = itineraries.map { it.identity() }.toSet()
+            itineraries = merged.filter { it.identity() !in existingIds } +
+                itineraries.mapNotNull { byId[it.identity()] }
+        }
         selected = itineraries.indexOfFirst { it.identity() == selectedId }.coerceAtLeast(0)
         if (details && selectedId != null && itineraries.none { it.identity() == selectedId }) details = false
     }
@@ -189,20 +198,20 @@ class TripPlannerViewModel : ViewModel() {
                 DirectionsStreaming.load(client, directionsPageQuery(base,
                     if (earlier) ConnectionDirection.BEFORE else ConnectionDirection.AFTER, cursor), id) { page ->
                     if (token == generation) {
-                        if (earlier) completed = page // Publish the authoritative earlier page only after completion.
-                        else {
-                            laterPages[id] = page
-                            nextPageCursor = page.nextPageCursor?.takeIf { it.isNotBlank() && it != cursor }
-                            publishPages()
-                        }
+                        completed = page // Publish either direction as one completed batch.
                     }
                 }
-                if (earlier && token == generation) {
+                if (token == generation) {
                     val page = checkNotNull(completed)
                     val existing = itineraries.map { it.identity() }.toSet()
-                    earlierInsertedIds = page.itineraries.map { it.identity() }.filter { it !in existing }.toSet()
-                    earlierPages[id] = page
-                    previousPageCursor = page.previousPageCursor?.takeIf { it.isNotBlank() && it != cursor }
+                    if (earlier) {
+                        earlierInsertedIds = page.itineraries.map { it.identity() }.filter { it !in existing }.toSet()
+                        earlierPages[id] = page
+                        previousPageCursor = page.previousPageCursor?.takeIf { it.isNotBlank() && it != cursor }
+                    } else {
+                        laterPages[id] = page
+                        nextPageCursor = page.nextPageCursor?.takeIf { it.isNotBlank() && it != cursor }
+                    }
                     publishPages()
                 }
             } catch (e: CancellationException) {
