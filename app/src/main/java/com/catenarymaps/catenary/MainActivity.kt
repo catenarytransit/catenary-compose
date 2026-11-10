@@ -4322,7 +4322,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         if (directionsVisible && tripPlanner.mapPicking != null) {
                                                 TripPlannerMapPicker(camera, mapSize, tripPlanner,
-                                                    modifier = Modifier.fillMaxSize().zIndex(7f))
+                                                    modifier = Modifier.fillMaxSize().zIndex(7f), client = ktorHttpClient)
                                         }
                                         if (directionsVisible && tripPlanner.usingMap && tripPlanner.mapPicking == null) {
                                                 // Map mode needs only the summary, never the endpoint search overlay.
