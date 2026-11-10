@@ -42,7 +42,7 @@ fun TripPlannerMapPicker(camera: CameraState, mapSize: IntSize, planner: TripPla
                     val point = with(density) { projection.positionFromScreenLocation(
                         DpOffset((mapSize.width / 2f).toDp(), (mapSize.height / 2f).toDp())) }
                     planner.choose(endpoint, DirectionsLocation(
-                        "$locationName (%.5f, %.5f)".format(Locale.ROOT, point.latitude, point.longitude), point.latitude, point.longitude))
+                        "$locationName (%.5f, %.5f)".format(Locale.ROOT, point.latitude, point.longitude), point.latitude, point.longitude, isMapLocation = true))
                 }) { Text(stringResource(android.R.string.ok)) }
             }
         }

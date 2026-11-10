@@ -125,6 +125,16 @@ class TripPlannerViewModel : ViewModel() {
         previousPageCursor = null; nextPageCursor = null; earlierInsertedIds = emptySet()
         error = null; itineraries = emptyList(); selected = 0; details = false; mapMode = false; showTransfers = false
     }
+    /** Coordinate-based selections become an empty search when the field is focused again. */
+    fun beginEditing(isOrigin: Boolean) {
+        val location = if (isOrigin) origin else destination
+        if (location?.isCurrentLocation == true || location?.isMapLocation == true) {
+            edit(isOrigin, "")
+        } else {
+            editing = isOrigin
+        }
+    }
+
     fun edit(isOrigin: Boolean, text: String) {
         invalidate()
         if (isOrigin) awaitingCurrentOrigin = false

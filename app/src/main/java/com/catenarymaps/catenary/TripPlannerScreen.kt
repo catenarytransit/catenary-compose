@@ -332,10 +332,10 @@ fun TripPlannerHeader(
                     Box(Modifier.weight(1f)) {
                         Column {
                             EndpointInput(planner.originText, stringResource(R.string.directions_start_placeholder),
-                                stringResource(R.string.directions_origin), { planner.edit(true, it) }, { planner.editing = true }, originFocus, compact)
+                                stringResource(R.string.directions_origin), { planner.edit(true, it) }, { planner.beginEditing(true) }, originFocus, compact)
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                             EndpointInput(planner.destinationText, stringResource(R.string.directions_destination_placeholder),
-                                stringResource(R.string.directions_destination), { planner.edit(false, it) }, { planner.editing = false }, destinationFocus, compact)
+                                stringResource(R.string.directions_destination), { planner.edit(false, it) }, { planner.beginEditing(false) }, destinationFocus, compact)
                         }
                         Surface(modifier = Modifier.align(Alignment.CenterEnd), shape = CircleShape,
                             color = TripPlannerColors.card, contentColor = TripPlannerColors.content, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
@@ -356,15 +356,15 @@ fun TripPlannerHeader(
                         TextButton(onClick = { planner.editing = null; focus.clearFocus() }) {
                             Text(stringResource(R.string.cancel))
                         }
-                        if (query.isBlank()) {
-                            SearchResultRow(stringResource(R.string.directions_choose_on_map), icon = Icons.Default.LocationOn,
-                                onClick = { planner.mapPicking = planner.editing; planner.editing = null; focus.clearFocus() })
-                        }
                         SearchResultRow(stringResource(R.string.directions_my_location), icon = Icons.Default.MyLocation,
                             enabled = currentLocation != null, onClick = {
                                 currentLocation?.let { select(planner.editing ?: true,
                                     DirectionsLocation(context.getString(R.string.directions_my_location), it.first, it.second, isCurrentLocation = true), false) }
                             })
+                        if (query.isBlank()) {
+                            SearchResultRow(stringResource(R.string.directions_choose_on_map), icon = Icons.Default.LocationOn,
+                                onClick = { planner.mapPicking = planner.editing; planner.editing = null; focus.clearFocus() })
+                        }
                         parseDirectionsCoordinate(query)?.let { coordinate ->
                             val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
                             SearchResultRow(coordinate.name, icon = Icons.Default.GridOn,
