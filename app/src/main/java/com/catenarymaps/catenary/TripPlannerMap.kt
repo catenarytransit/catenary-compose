@@ -20,7 +20,7 @@ import org.maplibre.spatialk.geojson.Position
 fun TripPlannerMap(planner: TripPlannerViewModel) {
     // A separate selected overlay always stays above alternatives, even after switching cards.
     planner.itineraries.forEachIndexed { index, journey ->
-        key(journey.identity()) { JourneyMapLines("alternative-$index", journey, false) }
+        key(index) { JourneyMapLines("alternative-$index", journey, false) }
     }
     planner.itineraries.getOrNull(planner.selected)?.let { journey ->
         JourneyMapLines("selected", journey, true)
@@ -52,14 +52,14 @@ private fun JourneyMapLines(id: String, journey: DirectionsItinerary, selected: 
             val source = rememberGeoJsonSource(GeoJsonData.Features(LineString(points)))
             val color = when {
                 !selected -> Color(0xFFA8ADB4)
-                leg.street -> TripPlannerColors.streetLine
+                leg.street -> Color(0xFF64748B)
                 else -> parseColor(leg.routeColor, Color(0xFF2563EB))
             }
             LineLayer(
                 id = "directions-$id-$index", source = source, color = const(color),
                 width = const(if (selected) 5.dp else 3.dp),
                 opacity = const(if (selected) 1f else 0.45f),
-                dasharray = if (leg.walking) const(listOf(2f, 2f)) else nil()
+                dasharray = if (leg.street) const(listOf(0.2f, 2f)) else nil()
             )
         }
     }

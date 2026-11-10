@@ -156,6 +156,4 @@
     <string name="settings_use_imperial_units">Meilen/Fuß statt des metrischen Systems verwenden</string>
     <string name="layers_toggle_button_content_description">Ebenen umschalten</string>
     <string name="layers_close_button_content_description">Ebenen schließen</string>
-    <string name="directions_earlier_connections">Frühere Verbindungen</string>
-    <string name="directions_later_connections">Spätere Verbindungen</string>
 </resources>
