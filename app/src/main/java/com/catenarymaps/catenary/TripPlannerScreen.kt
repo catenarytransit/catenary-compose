@@ -276,9 +276,9 @@ fun TripPlannerHeader(
                             val onClick = { select(planner.editing ?: true, location) }
                             when (row) {
                                 is SearchRow.CypressRow -> CypressResultItem(row.item, distance, onClick)
-                                is SearchRow.OsmStationRow -> OsmStationResultItem(row.result, distance, onClick)
+                                is SearchRow.OsmStationRow -> OsmStationResultItem(row.result, distance, onClick, false)
                                 is SearchRow.StopRow -> StopResultItem(row.stopInfo, row.ranking, row.routes,
-                                    row.agencyNames, distanceMetres = null, distance = distance, onClick = onClick)
+                                    row.agencyNames, distanceMetres = null, distance = distance, onClick = onClick, false)
                                 is SearchRow.RouteRow -> Unit
                             }
                             HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)

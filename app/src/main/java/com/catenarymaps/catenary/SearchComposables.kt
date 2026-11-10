@@ -112,7 +112,8 @@ fun SearchResultsOverlay(
                         is SearchRow.OsmStationRow -> {
                             OsmStationResultItem(
                                 result = row.result,
-                                onClick = { onOsmStationClick(row.result) }
+                                onClick = { onOsmStationClick(row.result) },
+                                listRoutes = true,
                             )
                         }
                         is SearchRow.RouteRow -> {
@@ -138,7 +139,8 @@ fun SearchResultsOverlay(
                                                 row.ranking,
                                                 row.stopInfo
                                         )
-                                    }
+                                    },
+                                    listRoutes = true
                             )
                         }
                     }
@@ -301,7 +303,8 @@ fun StopResultItem(
         agencyNames: List<String>,
         distanceMetres: Double?,
         distance: String? = null,
-        onClick: () -> Unit
+        onClick: () -> Unit,
+        listRoutes: Boolean = true,
 ) {
     val distanceText = distance ?: distanceMetres?.let {
         if (it > 1000) String.format("%.1f km", it / 1000) else String.format("%.0f m", it)
@@ -336,10 +339,12 @@ fun StopResultItem(
         }
 
         // Updated RouteBadge calls in StopResultItem
-        FlowRow(
+        if (listRoutes) {
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) { routes.forEach { route -> RouteBadge(route = route, chateauId = ranking.chateau) } }
+            ) { routes.forEach { route -> RouteBadge(route = route, chateauId = ranking.chateau) } }
+        }
     }
 }
 
@@ -402,7 +407,7 @@ fun RouteResultItem(routeInfo: RouteInfo, agency: Agency?, onClick: () -> Unit) 
 }
 
 @Composable
-fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = null, onClick: () -> Unit) {
+fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = null, onClick: () -> Unit, listRoutes: Boolean) {
     val hierarchy = result.adminHierarchy
     val subtitleParts =
         listOfNotNull(
@@ -432,7 +437,7 @@ fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = nul
             )
         }
 
-        if (result.routes.isNotEmpty()) {
+        if (result.routes.isNotEmpty() && listRoutes == true) {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
