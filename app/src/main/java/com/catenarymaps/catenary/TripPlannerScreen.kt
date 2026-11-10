@@ -126,11 +126,11 @@ internal fun JourneyDetails(
 ) {
     key(journey.identity()) {
         val state = rememberLazyListState()
-        LaunchedEffect(state) {
-            snapshotFlow { state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 0 }
-                .collect { planner.detailsScrolled = it }
+        val summaryScroll = remember(planner) {
+            JourneyDetailsScrollConnection { planner.detailsScrolled = it }
         }
-        LazyColumn(Modifier.fillMaxSize().padding(top = topPadding), state = state, contentPadding = PaddingValues(12.dp),
+        LazyColumn(Modifier.fillMaxSize().padding(top = topPadding).nestedScroll(summaryScroll),
+            state = state, contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
             items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits) }
@@ -257,7 +257,7 @@ fun TripPlannerHeader(
     currentLocation: Pair<Double, Double>?, mapCenter: Position, stationHistory: StationHistory,
     streetUsUnits: Boolean,
     modifier: Modifier = Modifier, cardModifier: Modifier = Modifier,
-    compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Boolean = false,
+    compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Boolean = planner.detailsScrolled,
     onBack: () -> Unit = {}, onExpandedHeight: (Int) -> Unit = {},
     onDetailsHeight: (Int) -> Unit = {},
     forceInputs: Boolean = false

@@ -4341,8 +4341,7 @@ class MainActivity : ComponentActivity() {
                                                         compact = isLandscape && configuration.screenHeightDp < 480 && configuration.smallestScreenWidthDp < 600,
                                                         collapseInputs = tripPlanner.searched && !tripPlanner.loading &&
                                                                 draggableState.requireOffset() < directionsHeaderHeight + directionsTopInset + with(density) { 16.dp.toPx() },
-                                                        collapseDetails = tripPlanner.detailsScrolled || draggableState.requireOffset() < screenHeightPx * 0.3f ||
-                                                                draggableState.requireOffset() > screenHeightPx * 0.75f,
+                                                        collapseDetails = tripPlanner.detailsScrolled,
                                                         onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) },
                                                         cardModifier = Modifier,
                                                         onExpandedHeight = { directionsHeaderHeight = it },
