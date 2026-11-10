@@ -1,6 +1,6 @@
 package com.catenarymaps.catenary
 
-import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -34,6 +34,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
@@ -150,8 +151,6 @@ fun TripPlannerScreen(
     }
 }
 
-// Keep the visibility animation outside layout receiver scopes so Kotlin cannot
-// select the ColumnScope or RowScope AnimatedVisibility extensions.
 @Composable
 private fun AnimatedJourneyPreview(
     journey: DirectionsItinerary,
@@ -160,18 +159,16 @@ private fun AnimatedJourneyPreview(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
-    val slide = with(LocalDensity.current) { 16.dp.roundToPx() }
-    Box(modifier) {
-        androidx.compose.animation.AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn(tween(240)) + slideInVertically(tween(240)) {
-                if (earlier) -slide else slide
-            }
-        ) {
-            JourneyPreview(journey, streetUsUnits, onClick = onClick)
-        }
+    val progress = remember { Animatable(0f) }
+    val slide = with(LocalDensity.current) { 16.dp.toPx() }
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, animationSpec = tween(240))
+    }
+    Box(modifier.graphicsLayer {
+        alpha = progress.value
+        translationY = (if (earlier) -slide else slide) * (1f - progress.value)
+    }) {
+        JourneyPreview(journey, streetUsUnits, onClick = onClick)
     }
 }
 
