@@ -15,13 +15,29 @@ internal fun formatDistanceMeters(meters: Double, imperial: Boolean, locale: Loc
         else "${meters.roundToInt()} m"
     }
 
-internal data class PreviewTimeMarker(val time: String, val endpoint: Boolean)
+/** Old cached responses may not include timezone metadata. */
+internal fun directionsZone(timezone: String?): ZoneId =
+    runCatching { ZoneId.of(timezone) }.getOrElse { ZoneId.systemDefault() }
+
+internal fun directionsTime(value: String?, timezone: String? = null): String = runCatching {
+    java.time.format.DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
+        .withZone(directionsZone(timezone)).format(Instant.parse(value))
+}.getOrDefault("")
+
+// Access/egress may start or finish away from a stop; summary clocks use the
+// first boarding and final alighting stop's zone as requested.
+internal val DirectionsItinerary.departureTimezone: String?
+    get() = legs.firstOrNull { !it.street }?.from?.timezone ?: legs.firstOrNull()?.from?.timezone
+internal val DirectionsItinerary.arrivalTimezone: String?
+    get() = legs.lastOrNull { !it.street }?.to?.timezone ?: legs.lastOrNull()?.to?.timezone
+
+internal data class PreviewTimeMarker(val time: String, val endpoint: Boolean, val timezone: String? = null)
 internal data class PreviewTimeGroups(val departure: List<PreviewTimeMarker>, val arrival: List<PreviewTimeMarker>)
 
 /** Match the web preview: negligible access/egress uses only the endpoint time. */
 internal fun DirectionsItinerary.previewTimeGroups(): PreviewTimeGroups {
     val first = legs.indexOfFirst { !it.street }
-    if (first < 0) return PreviewTimeGroups(listOf(PreviewTimeMarker(startTime, true)), listOf(PreviewTimeMarker(endTime, true)))
+    if (first < 0) return PreviewTimeGroups(listOf(PreviewTimeMarker(startTime, true, departureTimezone)), listOf(PreviewTimeMarker(endTime, true, arrivalTimezone)))
     val last = legs.indexOfLast { !it.street }
     fun atStop(streetLegs: List<DirectionsLeg>): Boolean {
         var meters = 0.0
@@ -38,12 +54,12 @@ internal fun DirectionsItinerary.previewTimeGroups(): PreviewTimeGroups {
     val showAlighting = !destinationAtStop && instant(alighting) != null && instant(alighting) != instant(endTime)
     return PreviewTimeGroups(
         buildList {
-            add(PreviewTimeMarker(startTime, true))
-            if (showBoarding) add(PreviewTimeMarker(boarding!!, false))
+            add(PreviewTimeMarker(startTime, true, departureTimezone))
+            if (showBoarding) add(PreviewTimeMarker(boarding!!, false, legs[first].from?.timezone))
         },
         buildList {
-            if (showAlighting) add(PreviewTimeMarker(alighting!!, false))
-            add(PreviewTimeMarker(endTime, true))
+            if (showAlighting) add(PreviewTimeMarker(alighting!!, false, legs[last].to?.timezone))
+            add(PreviewTimeMarker(endTime, true, arrivalTimezone))
         }
     )
 }
