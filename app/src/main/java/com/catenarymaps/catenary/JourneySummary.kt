@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
-    compact: Boolean = false, modifier: Modifier = Modifier
+    compact: Boolean = planner.detailsScrolled, modifier: Modifier = Modifier
 ) {
     val journey = planner.selectedJourney ?: return
     val context = LocalContext.current.applicationContext
