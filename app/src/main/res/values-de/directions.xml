@@ -40,4 +40,5 @@
     <string name="directions_minutes">%1$d Min.</string>
     <string name="directions_hours_minutes">%1$d Std. %2$d Min.</string>
     <string name="directions_ferry">Fähre</string>
+    <string name="directions_clear_endpoint">%1$s löschen</string>
 </resources>

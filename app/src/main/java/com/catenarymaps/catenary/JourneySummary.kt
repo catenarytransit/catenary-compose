@@ -1,5 +1,7 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -49,11 +51,11 @@ internal fun JourneySummary(
             Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back))
         }
         // Buttons overlap the summary's lower edge while retaining full touch targets.
-        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 8.dp)) {
-            Card(Modifier.fillMaxWidth().padding(bottom = 28.dp),
+        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 4.dp)) {
+            Card(Modifier.fillMaxWidth().padding(bottom = 24.dp),
                 colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-                Column(Modifier.padding(bottom = 24.dp)) {
+                Column(Modifier.animateContentSize(tween(180)).padding(bottom = 12.dp)) {
                     if (compact) Column(Modifier.padding(12.dp)) {
                         Text("${planner.originText} →", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(planner.destinationText, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -105,6 +107,6 @@ internal fun JourneySummary(
 private fun SummaryAction(enabled: Boolean = true, onClick: () -> Unit, content: @Composable () -> Unit) {
     Surface(shape = CircleShape, color = TripPlannerColors.card, contentColor = TripPlannerColors.content,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shadowElevation = 3.dp) {
-        IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(52.dp), content = content)
+        IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(44.dp), content = content)
     }
 }

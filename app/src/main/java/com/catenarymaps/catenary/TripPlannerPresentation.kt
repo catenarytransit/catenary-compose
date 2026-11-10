@@ -65,3 +65,11 @@ internal fun timelineWeights(legs: List<DirectionsLeg>, width: Float, minimum: F
     }
     return pixels.map { it.coerceAtLeast(0.001f) }
 }
+
+/** Two sentinel rows precede the cards; load when the edge card enters view. */
+internal fun connectionPageAtEdge(direction: Int, first: Int, last: Int, journeyCount: Int): ConnectionDirection? = when {
+    journeyCount == 0 -> null
+    direction > 0 && first <= 2 -> ConnectionDirection.BEFORE
+    direction < 0 && last >= journeyCount + 1 -> ConnectionDirection.AFTER
+    else -> null
+}

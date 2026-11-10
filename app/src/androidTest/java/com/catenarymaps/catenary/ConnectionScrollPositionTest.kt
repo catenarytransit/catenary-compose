@@ -19,6 +19,23 @@ class ConnectionScrollPositionTest {
     @Test fun prependAndAppendKeepTheVisibleCardAtTheSamePixel() = checkAnchor(5, 23)
     @Test fun prependKeepsCardsInPlaceWhenEarlierSpinnerIsVisible() = checkAnchor(1, 12)
 
+    @Test fun shortFirstPageHasNoGapAboveTheFirstCard() {
+        lateinit var state: LazyListState
+        compose.setContent {
+            state = rememberLazyListState()
+            LazyColumn(Modifier.width(300.dp).height(600.dp), state = state,
+                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp)) {
+                item(key = "status") { }
+                item(key = "earlier") { Spacer(Modifier.height(0.dp)) }
+                item(key = "connection") { Spacer(Modifier.height(100.dp)) }
+                item(key = "later") { Spacer(Modifier.height(0.dp)) }
+            }
+        }
+        compose.runOnIdle {
+            assertEquals(0, state.layoutInfo.visibleItemsInfo.first { it.key == "connection" }.offset)
+        }
+    }
+
     private fun checkAnchor(firstIndex: Int, scrollOffset: Int) {
         var identities by mutableStateOf((0..11).map { "connection-$it" })
         lateinit var state: LazyListState
