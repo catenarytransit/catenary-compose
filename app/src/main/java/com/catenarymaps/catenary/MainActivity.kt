@@ -1916,11 +1916,15 @@ class MainActivity : ComponentActivity() {
                                                 configuration.orientation ==
                                                         Configuration.ORIENTATION_LANDSCAPE
 
+                                        // The home bar already includes the bottom system inset.
+                                        // Sheet offsets are measured from the top of the space above it.
+                                        val sheetViewportHeightPx = screenHeightPx -
+                                                if (homeNavigationVisible) with(density) { homeNavigationHeight.toPx() } else 0f
                                         val bottomInset =
-                                                WindowInsets.safeDrawing.getBottom(density)
+                                                if (homeNavigationVisible) 0 else WindowInsets.safeDrawing.getBottom(density)
                                         val collapsedHandleHeight = with(density) { 64.dp.toPx() }
                                         val collapsedAnchor =
-                                                screenHeightPx - collapsedHandleHeight - bottomInset
+                                                (sheetViewportHeightPx - collapsedHandleHeight - bottomInset).coerceAtLeast(0f)
 
                                         val directionsResultsState = androidx.compose.foundation.lazy.rememberLazyListState()
                                         LaunchedEffect(tripPlanner.searched) {
@@ -1936,7 +1940,7 @@ class MainActivity : ComponentActivity() {
                                                 DraggableAnchors<SheetSnapPoint> {
                                                         SheetSnapPoint.Collapsed at collapsedAnchor
                                                         SheetSnapPoint.PartiallyExpanded at
-                                                                maxOf(expandedAnchor, screenHeightPx / 2f - bottomInset)
+                                                                maxOf(expandedAnchor, sheetViewportHeightPx / 2f - bottomInset)
                                                         SheetSnapPoint.Expanded at expandedAnchor
                                                 }
 
@@ -1966,11 +1970,11 @@ class MainActivity : ComponentActivity() {
                                         }
 
                                         val sheetNestedScrollConnection = remember(
-                                                draggableState, screenHeightPx, density
+                                                draggableState, sheetViewportHeightPx, density
                                         ) {
                                                 SheetContentNestedScrollConnection(
                                                         state = draggableState,
-                                                        viewportHeightPx = screenHeightPx,
+                                                        viewportHeightPx = sheetViewportHeightPx,
                                                         flingVelocityThresholdPx =
                                                                 with(density) { 900.dp.toPx() }
                                                 )
@@ -3580,10 +3584,7 @@ class MainActivity : ComponentActivity() {
                                                                                                                         LocalDensity
                                                                                                                                 .current
                                                                                                                 ) {
-                                                                                                                        maxHeight
-                                                                                                                                .times(
-                                                                                                                                        0.9f
-                                                                                                                                )
+                                                                                                                        sheetViewportHeightPx.toDp()
                                                                                                                 }
                                                                                                         )
                                                                                         }
@@ -4349,7 +4350,7 @@ class MainActivity : ComponentActivity() {
                                                         collapseFraction =
                                                                 drawerSummaryCollapseFraction(
                                                                         draggableState.requireOffset(),
-                                                                        maxOf(expandedAnchor, screenHeightPx / 2f - bottomInset),
+                                                                        maxOf(expandedAnchor, sheetViewportHeightPx / 2f - bottomInset),
                                                                         expandedAnchor),
                                                         modifier = Modifier
                                                                 .align(Alignment.TopStart)
