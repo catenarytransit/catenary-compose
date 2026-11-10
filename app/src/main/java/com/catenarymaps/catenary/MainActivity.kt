@@ -4325,33 +4325,25 @@ class MainActivity : ComponentActivity() {
                                                     modifier = Modifier.fillMaxSize().zIndex(7f))
                                         }
                                         if (directionsVisible && tripPlanner.usingMap && tripPlanner.mapPicking == null) {
-                                                TripPlannerHeader(
+                                                // Map mode needs only the summary, never the endpoint search overlay.
+                                                JourneySummary(
                                                         planner = tripPlanner,
-                                                        search = directionsSearch,
-                                                        stationHistory = stationHistory,
                                                         streetUsUnits = streetUsUnits,
-                                                        currentLocation = currentLocation,
-                                                        mapCenter = camera.position.target,
+                                                        compact = tripPlanner.detailsScrolled,
                                                         modifier = Modifier
                                                                 .align(if (isWideLayout) Alignment.TopEnd else Alignment.TopStart)
                                                                 .fillMaxWidth(contentWidthFraction)
-                                                                .then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier)
                                                                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                                                                .zIndex(6f),
-                                                        compact = isLandscape && configuration.screenHeightDp < 480 && configuration.smallestScreenWidthDp < 600,
-                                                        collapseInputs = tripPlanner.searched && !tripPlanner.loading &&
-                                                                draggableState.requireOffset() < directionsHeaderHeight + directionsTopInset + with(density) { 16.dp.toPx() },
-                                                        collapseDetails = tripPlanner.detailsScrolled,
-                                                        onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) },
-                                                        cardModifier = Modifier,
-                                                        onExpandedHeight = { directionsHeaderHeight = it },
-                                                        onDetailsHeight = { directionsDetailsHeight = it }
-
+                                                                .onSizeChanged { directionsDetailsHeight = it.height }
+                                                                .zIndex(6f)
                                                 )
                                         }
 
                                         if (directionsVisible && (!tripPlanner.usingMap || isWideLayout) && tripPlanner.mapPicking == null) {
-                                                Box(Modifier.fillMaxSize().zIndex(5f).background(if (tripPlanner.usingMap) Color.Transparent else TripPlannerColors.background)) {
+                                                JourneyPlannerResultsOverlay(
+                                                        usingMap = tripPlanner.usingMap,
+                                                        contentWidthFraction = contentWidthFraction
+                                                ) {
                                                         val inputs: @Composable (Boolean) -> Unit = { forceInputs ->
                                                                 TripPlannerHeader(
                                                                         planner = tripPlanner, search = directionsSearch,
@@ -4371,12 +4363,14 @@ class MainActivity : ComponentActivity() {
                                                                                         TripPlannerScreen(tripPlanner, ktorHttpClient, streetUsUnits, resultsOnly = true, resultsState = directionsResultsState)
                                                                                 }
                                                                         }
-                                                                        VerticalDivider()
-                                                                        Column(Modifier.weight(1f).fillMaxHeight()) {
-                                                                                if (tripPlanner.details && !tripPlanner.usingMap) {
-                                                                                        JourneySummary(tripPlanner, streetUsUnits)
-                                                                                        Box(Modifier.weight(1f)) {
-                                                                                                tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits) }
+                                                                        if (!tripPlanner.usingMap) {
+                                                                                VerticalDivider()
+                                                                                Column(Modifier.weight(1f).fillMaxHeight()) {
+                                                                                        if (tripPlanner.details) {
+                                                                                                JourneySummary(tripPlanner, streetUsUnits)
+                                                                                                Box(Modifier.weight(1f)) {
+                                                                                                        tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits) }
+                                                                                                }
                                                                                         }
                                                                                 }
                                                                         }
