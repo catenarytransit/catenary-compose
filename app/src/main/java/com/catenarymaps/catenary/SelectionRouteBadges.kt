@@ -14,12 +14,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -96,12 +108,18 @@ fun SelectionRouteBadges(
                                     contentDescription = info.name
                                 )
                             }
-                            Text(
-                                text = info.name,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = if (textSize == 10.sp && !compact) TextUnit.Unspecified else textSize,
-                                fontWeight = if (compact) FontWeight.Normal else FontWeight.SemiBold
-                            )
+                            if (compact) {
+                                FadingBadgeText(
+                                    text = info.name, style = MaterialTheme.typography.labelSmall,
+                                    fontSize = textSize, fontWeight = FontWeight.Normal
+                                )
+                            } else {
+                                Text(
+                                    text = info.name, style = MaterialTheme.typography.labelSmall,
+                                    fontSize = if (textSize == 10.sp) TextUnit.Unspecified else textSize,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                                 }
                         }
                 }
@@ -216,15 +234,53 @@ fun StandardRouteBadge(route: ResolvedRouteBadgeInfo, textSize: TextUnit = 10.sp
                             .background(parseColor(route.color, Color.Black))
                             .padding(horizontal = if (compact) 3.dp else 4.dp, vertical = if (compact) 1.dp else 2.dp)
         ) {
-                Text(
-                        text = route.shortName
-                                        ?: route.longName?.replace(" Line", "") ?: route.routeId,
-                        color = parseColor(route.textColor, Color.White),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = textSize,
-                        fontWeight = if (compact) FontWeight.Normal else null,
-                )
+                 val label = route.shortName ?: route.longName?.replace(" Line", "") ?: route.routeId
+                 if (compact) {
+                     FadingBadgeText(
+                         text = label, color = parseColor(route.textColor, Color.White),
+                         style = MaterialTheme.typography.labelSmall, fontSize = textSize,
+                         fontWeight = FontWeight.Normal
+                     )
+                 } else {
+                     Text(
+                         text = label, color = parseColor(route.textColor, Color.White),
+                         style = MaterialTheme.typography.labelSmall, fontSize = textSize
+                     )
+                 }
         }
+}
+
+/**
+ * Compact timeline badges must occupy exactly one line. Mask only clipped text so the
+ * route-color background stays solid while the label fades at its allocated right edge.
+ */
+@Composable
+internal fun FadingBadgeText(
+    text: String, fontSize: TextUnit, fontWeight: FontWeight? = null,
+    color: Color = LocalContentColor.current, style: TextStyle = LocalTextStyle.current
+) {
+    var isClipped by remember(text) { mutableStateOf(false) }
+    val fade = if (isClipped) Modifier
+        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            if (size.width > 0f) {
+                val fadeStart = (size.width - 12.dp.toPx()).coerceAtLeast(0f) / size.width
+                drawRect(
+                    brush = Brush.horizontalGradient(
+                        0f to Color.Black, fadeStart to Color.Black, 1f to Color.Transparent,
+                        startX = 0f, endX = size.width
+                    ),
+                    blendMode = BlendMode.DstIn
+                )
+            }
+        } else Modifier
+
+    Text(
+        text = text, modifier = fade, style = style, fontSize = fontSize,
+        fontWeight = fontWeight, color = color, maxLines = 1, softWrap = false,
+        overflow = TextOverflow.Clip, onTextLayout = { isClipped = it.didOverflowWidth }
+    )
 }
 
 @Composable
