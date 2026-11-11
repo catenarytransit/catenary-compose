@@ -3523,6 +3523,8 @@ class MainActivity : ComponentActivity() {
                                                 Modifier
                                                         .fillMaxWidth(contentWidthFraction)
                                                         .padding(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp)
+                                                        // The home bar also covers the system navigation inset.
+                                                        .consumeWindowInsets(PaddingValues(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp))
                                                         .align(Alignment.BottomStart)
                                                         // Landscape three-button navigation can occupy either side.
                                                         .windowInsetsPadding(
