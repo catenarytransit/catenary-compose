@@ -71,8 +71,7 @@ fun StationScreenTrainRow(
         val agencyId = routeInfo?.agency_id
         val agencyName = if (agencyId != null) agencies?.get(agencyId)?.agency_name else null
         val showRouteName =
-                event.chateau != "nationalrailuk" ||
-                        listOf("TW", "ME", "LO", "XR", "HX").contains(agencyId)
+                NationalRailUtils.showsRouteName(event.chateau, agencyId)
 
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
 
@@ -934,8 +933,7 @@ fun StationScreenTrainRowCompact(
         val agencyId = routeInfo?.agency_id
         val agencyName = if (agencyId != null) agencies?.get(agencyId)?.agency_name else null
         val showRouteName =
-                event.chateau != "nationalrailuk" ||
-                        listOf("TW", "ME", "LO", "XR", "HX").contains(agencyId)
+                NationalRailUtils.showsRouteName(event.chateau, agencyId)
         val isPast = (rtTime ?: schedTime ?: 0) < (currentTime - 60)
 
         Row(

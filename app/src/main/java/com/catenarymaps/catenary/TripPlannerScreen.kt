@@ -615,9 +615,17 @@ private fun LegModeIcon(leg: DirectionsLeg, preview: Boolean = false) {
 
 @Composable
 private fun LegBadge(leg: DirectionsLeg, preview: Boolean = false) {
-    val label = leg.routeShortName ?: leg.routeLongName ?: leg.routeId ?: legModeLabel(leg)
+    if (!NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId)) {
+        leg.tripShortName?.takeIf { it.isNotBlank() }?.let {
+            Text(it, fontSize = if (preview) 10.sp else 16.sp, fontWeight = FontWeight.Bold)
+        }
+        return
+    }
+    val shortName = leg.routeShortName?.let { if (preview) timelineRouteName(it) else it }
+    val longName = leg.routeLongName?.let { if (preview) timelineRouteName(it) else it }
+    val label = shortName ?: longName ?: leg.routeId ?: legModeLabel(leg)
     SelectionRouteBadges(routeIds = listOf(leg.routeId ?: label), textSize = if (preview) 10.sp else 12.sp, compact = preview, resolveRouteInfo = {
-        ResolvedRouteBadgeInfo(leg.routeId ?: label, leg.routeShortName ?: label.takeIf { leg.routeLongName == null && leg.routeId == null }, leg.routeLongName,
+        ResolvedRouteBadgeInfo(leg.routeId ?: label, shortName ?: label.takeIf { longName == null && leg.routeId == null }, longName,
             leg.routeColor ?: "2563EB", leg.routeTextColor ?: "FFFFFF", chateauId = leg.chateau)
     })
 }
@@ -794,14 +802,14 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         Box(Modifier.align(Alignment.CenterVertically)) { LegBadge(leg) }
-                        leg.tripShortName?.takeIf { it.isNotBlank() }?.let { tripShortName ->
+                        leg.tripShortName?.takeIf { it.isNotBlank() && NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId) }?.let { tripShortName ->
                             Text(tripShortName, modifier = Modifier.align(Alignment.CenterVertically),
                                 fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
                 val direction = leg.headsign?.takeIf { it.isNotBlank() }
-                    ?: leg.routeLongName?.takeIf { it.isNotBlank() }
+                    ?: leg.routeLongName?.takeIf { it.isNotBlank() && NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId) }
                 if (direction != null) ConnectionRow(rail) {
                     Text(direction, style = MaterialTheme.typography.bodyMedium)
                 }

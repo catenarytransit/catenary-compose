@@ -33,7 +33,7 @@ data class DirectionsLeg(
     val routeColor: String? = null, val routeTextColor: String? = null,
     val routeShortName: String? = null, val routeLongName: String? = null,
     val routeId: String? = null, val routeType: Int? = null, val chateau: String? = null,
-    val tripShortName: String? = null,
+    val tripShortName: String? = null, val agencyId: String? = null,
     val from: DirectionsPoint? = null, val to: DirectionsPoint? = null,
     val fromPlatform: String? = null, val toPlatform: String? = null,
     val intermediateStops: List<DirectionsStop> = emptyList(),
