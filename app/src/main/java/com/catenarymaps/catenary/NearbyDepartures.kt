@@ -449,6 +449,7 @@ fun NearbyDepartures(
         }
         val lockedOrigin = if (usePickedLocation) pickedLocation else gpsOrigin
 
+        var sorted by remember { mutableStateOf<List<NearbyItem>>(emptyList()) }
         var pollSession by remember { mutableStateOf(0) }
         fun restartPolling() {
                 pollSession++
@@ -468,6 +469,8 @@ fun NearbyDepartures(
                 routesMap = cached?.response?.routes.orEmpty()
                 stopsMap = cached?.response?.stops.orEmpty()
                 serverMs = cached?.response?.debug?.totalTimeMs
+                // Clear the previous location's sorted cards before the derived sort recomputes.
+                sorted = emptyList()
                 firstAttemptSent = cached != null
                 firstLoadComplete = cached != null
                 offline = false
@@ -572,8 +575,6 @@ fun NearbyDepartures(
                                 (allDisabled || filters.rail) && group.departures.isNotEmpty()
                         }
                 }
-
-        var sorted by remember { mutableStateOf<List<NearbyItem>>(emptyList()) }
 
         // Derive a reasonable timezone for the nearby view. Prefer the closest
         // long-distance station, then any stop, falling back to device TZ.
