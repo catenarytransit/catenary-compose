@@ -436,95 +436,87 @@ fun NearbyDepartures(
                 mutableStateOf<Map<String, Map<String, StopOutputV3>>>(emptyMap())
         }
 
-        // NEW: we "lock" the origin after the first fix so GPS drift won't restart fetches.
-        var lockedOrigin by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+        // Preserve the first GPS fix to avoid restarting nearby requests on minor GPS drift.
+        // Explicit recentering can update it through the My Location button.
+        var gpsOrigin by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+        LaunchedEffect(userLocation) {
+                if (gpsOrigin == null && userLocation != null) gpsOrigin = userLocation
+        }
+        val locationMode = if (usePickedLocation) {
+                NearbyDeparturesLocationMode.PINNED_LOCATION
+        } else {
+                NearbyDeparturesLocationMode.CURRENT_LOCATION
+        }
+        val lockedOrigin = if (usePickedLocation) pickedLocation else gpsOrigin
 
-        // NEW: bump this to cancel current polling and start a fresh session
+        var sorted by remember { mutableStateOf<List<NearbyItem>>(emptyList()) }
         var pollSession by remember { mutableStateOf(0) }
         fun restartPolling() {
-                println("Restart polling")
                 pollSession++
         }
 
-        // --- LOCK INITIAL ORIGIN ONCE (GPS MODE) ---
-        // When we first get a GPS fix and we're NOT using the pin, lock it once.
-        LaunchedEffect(userLocation, usePickedLocation) {
-                if (!usePickedLocation && lockedOrigin == null && userLocation != null) {
-                        lockedOrigin = userLocation
-                        restartPolling()
+        // When returning from Saved Trips, restore the correct location's data immediately.
+        // A changed pin or a different selected time must never display the old response.
+        // Use null for the moving 'now' clock so seconds ticking do not invalidate the cache.
+        val selectedDepartureTime = if (lockToNow) null else nowSec
+        LaunchedEffect(locationMode, lockedOrigin, selectedDepartureTime, pollSession, isAppInForeground) {
+                val origin = lockedOrigin
+                val cached = origin?.let {
+                        nearbyDeparturesMemoryCache.get(locationMode, it, selectedDepartureTime)
                 }
-        }
+                stopsTableLongDistance = cached?.response?.longDistance.orEmpty()
+                departureList = cached?.response?.local.orEmpty()
+                routesMap = cached?.response?.routes.orEmpty()
+                stopsMap = cached?.response?.stops.orEmpty()
+                serverMs = cached?.response?.debug?.totalTimeMs
+                // Clear the previous location's sorted cards before the derived sort recomputes.
+                sorted = emptyList()
+                firstAttemptSent = cached != null
+                firstLoadComplete = cached != null
+                offline = false
+                loading = false
 
-        // --- UPDATE LOCK WHEN SWITCHING MODES ---
-        // If user toggles into pin mode and we have a pin, lock to the pin and restart.
-        LaunchedEffect(usePickedLocation) {
-                if (usePickedLocation && pickedLocation != null) {
-                        if (lockedOrigin != pickedLocation) {
-                                lockedOrigin = pickedLocation
-                                restartPolling()
-                        }
-                } else if (!usePickedLocation && userLocation != null) {
-                        // Switching back to GPS: keep current lock unless the user explicitly
-                        // presses My
-                        // Location.
-                        // No action here to avoid auto updates past the first GPS fix.
-                }
-        }
+                if (!isAppInForeground || origin == null) return@LaunchedEffect
 
-        // --- PIN MOVES SHOULD CANCEL & REFETCH ---
-        // If the pin moves while we are in pin mode, cancel and restart with the new pin.
-        LaunchedEffect(pickedLocation) {
-                if (usePickedLocation && pickedLocation != null && pickedLocation != lockedOrigin) {
-                        lockedOrigin = pickedLocation
-                        restartPolling()
-                }
-        }
+                var progressive = cached == null
 
-        val currentUserLocation by rememberUpdatedState(userLocation)
-        val currentUsePickedLocation by rememberUpdatedState(usePickedLocation)
-        val currentNowSec by rememberUpdatedState(nowSec)
-        val currentLockToNow by rememberUpdatedState(lockToNow)
-
-        // --- POLLING LOOP: immediate fetch, then every 10s. Not tied to raw origin updates. ---
-        LaunchedEffect(pollSession, isAppInForeground) {
-                if (isAppInForeground) {
-                        var progressive = true
-                        // Function to perform the actual fetch
-                        suspend fun doFetch() {
-                                if (!currentUsePickedLocation && currentUserLocation != null) {
-                                        lockedOrigin = currentUserLocation
+                suspend fun doFetch() {
+                        loading = true
+                        firstAttemptSent = true
+                        var latestSnapshot: NearbyResponseV3? = null
+                        try {
+                                val completed = fetchNearby(
+                                        origin.first, origin.second, selectedDepartureTime, progressive
+                                ) { response ->
+                                        latestSnapshot = response
+                                        stopsTableLongDistance = response.longDistance
+                                        departureList = response.local
+                                        routesMap = response.routes
+                                        stopsMap = response.stops
+                                        serverMs = response.debug?.totalTimeMs
+                                        offline = false
                                 }
-                                val origin = lockedOrigin ?: return
-                                val departureTime = if (currentLockToNow) null else currentNowSec
-                                loading = true
-                                firstAttemptSent = true
-                                println("Fetching nearby departures for $origin")
-                                try {
-                                        val completed = fetchNearby(origin.first, origin.second,
-                                                departureTime, progressive) { res ->
-                                                stopsTableLongDistance = res.longDistance
-                                                departureList = res.local
-                                                routesMap = res.routes
-                                                stopsMap = res.stops
-                                                serverMs = res.debug?.totalTimeMs
-                                                offline = false
+                                if (completed) {
+                                        // Cache only completed refreshes, not a partial WebSocket phase.
+                                        latestSnapshot?.let {
+                                                nearbyDeparturesMemoryCache.put(
+                                                        locationMode, origin, selectedDepartureTime, it
+                                                )
                                         }
-                                        offline = !completed
-                                        if (completed) progressive = false
-                                } finally {
-                                        loading = false
+                                        progressive = false
                                 }
+                                offline = !completed && latestSnapshot == null && cached == null
+                        } finally {
+                                loading = false
                                 firstLoadComplete = true
                         }
+                }
 
-                        // 1. Initial fetch immediately
+                // Reuse a fresh snapshot on navigation; the normal poll will refresh it.
+                if (cached == null) doFetch()
+                while (isActive) {
+                        delay(10_000)
                         doFetch()
-
-                        // 2. Loop every 10s
-                        while (isActive) {
-                                delay(10_000)
-                                doFetch()
-                        }
                 }
         }
 
@@ -583,8 +575,6 @@ fun NearbyDepartures(
                                 (allDisabled || filters.rail) && group.departures.isNotEmpty()
                         }
                 }
-
-        var sorted by remember { mutableStateOf<List<NearbyItem>>(emptyList()) }
 
         // Derive a reasonable timezone for the nearby view. Prefer the closest
         // long-distance station, then any stop, falling back to device TZ.
@@ -727,7 +717,7 @@ fun NearbyDepartures(
                                 onMyLocation()
                                 // If we have a current GPS fix, take it and restart polling.
                                 userLocation?.let {
-                                        lockedOrigin = it
+                                        gpsOrigin = it
                                         restartPolling()
                                 }
                         },
