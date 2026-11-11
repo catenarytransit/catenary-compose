@@ -1461,8 +1461,10 @@ private fun RouteGroupCard(
 
                 // Headsigns (No flattening needed for V3)
                 route.headsigns.entries.sortedBy { it.key }.forEach { (headsign, trips) ->
+                        // Duplicate records can arrive from overlapping pages or refreshes.
+                        // Keep the most recent instance without removing distinct loop visits.
                         val visibleTrips =
-                                trips
+                                trips.distinctBy { it.stableDepartureKey() }
 
                         if (visibleTrips.isEmpty()) return@forEach
 
@@ -1556,7 +1558,7 @@ private fun RouteGroupCard(
                         ) {
                                 items(
                                         items = visibleTrips,
-                                        key = { it.tripId + it.departureSchedule }
+                                        key = { it.stableDepartureKey() }
                                 ) { trip ->
                                         TripPill(
                                                 trip = trip,

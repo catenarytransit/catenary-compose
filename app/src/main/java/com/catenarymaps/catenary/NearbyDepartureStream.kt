@@ -29,8 +29,7 @@ internal data class NearbyDepartureMessage(
     val message: String? = null
 )
 
-private fun LocalDepartureItem.identity() =
-    listOf(tripId, serviceDate, stopId, departureSchedule, arrivalSchedule)
+private fun LocalDepartureItem.identity() = stableDepartureKey()
 
 private fun DepartureItemV3.identity() =
     listOf(chateauId, routeId, tripId, serviceDate, stopId, scheduledDeparture, scheduledArrival)

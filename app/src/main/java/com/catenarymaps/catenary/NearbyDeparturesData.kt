@@ -66,6 +66,20 @@ data class RouteGroupV3(
         @SerialName("closest_distance") val closestDistance: Double
 )
 
+/**
+ * Stable identity for a scheduled visit to a stop. A trip can pass the same stop more
+ * than once, and different service days can reuse a trip ID. Realtime updates must not
+ * change the key while the list is being recomposed.
+ *
+ * Length-prefixed fields avoid collisions when IDs contain separators or are adjacent
+ * to numeric timestamps. A null timestamp is different from a non-null one.
+ */
+internal fun LocalDepartureItem.stableDepartureKey(): String =
+        listOf(tripId, serviceDate, stopId, departureSchedule, arrivalSchedule)
+                .joinToString(separator = "") { value ->
+                        value?.toString()?.let { "${it.length}:$it" } ?: "-1:"
+                }
+
 @Serializable
 data class LocalDepartureItem(
         @SerialName("trip_id") val tripId: String,
