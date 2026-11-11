@@ -96,8 +96,17 @@ internal fun SavedJourneysScreen(
                 snapshots = withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.readAll() } }
                 failed = false
                 val selected = snapshots.firstOrNull { it.journey.identity() == selectedIdentity }
-                if (selected == null) { selectedIdentity = null; planner.details = false }
-                else if (planner.selectedJourney?.identity() != selectedIdentity) planner.openSavedJourney(selected)
+                // Unstarring deletes the persisted snapshot, but the currently open
+                // journey is still a valid in-memory detail view until the user leaves.
+                if (!planner.details) {
+                    selectedIdentity = null
+                } else if (selected != null && planner.selectedJourney?.identity() != selectedIdentity) {
+                    planner.openSavedJourney(selected)
+                } else if (selected == null && planner.selectedJourney?.identity() != selectedIdentity) {
+                    // Only dismiss an invalid selection; keep an open, just-unsaved journey.
+                    selectedIdentity = null
+                    planner.details = false
+                }
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (_: Exception) { failed = true }
             loaded = true
