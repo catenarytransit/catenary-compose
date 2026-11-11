@@ -1,6 +1,9 @@
 package com.catenarymaps.catenary
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,17 +50,26 @@ internal fun HomeNavigation(
 
 @Composable
 private fun RowScope.HomeNavigationItem(selected: Boolean, onClick: () -> Unit, icon: ImageVector, label: String) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         Modifier.weight(1f).heightIn(min = 48.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-            .selectable(selected = selected, onClick = onClick, role = Role.Tab)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .selectable(
+                selected = selected, onClick = onClick, role = Role.Tab,
+                interactionSource = interactionSource, indication = null
+            )
+            .padding(horizontal = 8.dp, vertical = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically)
     ) {
         val color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = color)
+        Box(
+            Modifier.size(26.dp).clip(CircleShape)
+                .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+                .indication(interactionSource, ripple(bounded = true)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = color)
+        }
         Text(label, style = MaterialTheme.typography.labelSmall, color = color)
     }
 }

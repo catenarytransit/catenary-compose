@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -798,21 +797,11 @@ fun NearbyDepartures(
                         )
                 }
                 Box(Modifier.fillMaxSize()) {
+                        // The drawer owns the bottom inset, including the Explore/Trips bar.
                         LazyColumn(
                                 modifier =
                                         Modifier
-                                                .fillMaxSize()
-                                                .windowInsetsPadding(
-                                                        WindowInsets(
-                                                                bottom =
-                                                                        WindowInsets.safeDrawing
-                                                                                .getBottom(
-                                                                                        density =
-                                                                                                LocalDensity
-                                                                                                        .current
-                                                                                )
-                                                        )
-                                                ),
+                                                .fillMaxSize(),
                         ) {
                                 if (offline) {
                                         item {
