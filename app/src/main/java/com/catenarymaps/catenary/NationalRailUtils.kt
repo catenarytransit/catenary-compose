@@ -1,6 +1,11 @@
 package com.catenarymaps.catenary
 
 object NationalRailUtils {
+    private val routeNameAgencies = setOf("TW", "ME", "LO", "XR", "HX")
+
+    fun showsRouteName(chateau: String?, agencyId: String?): Boolean =
+        chateau != "nationalrailuk" || agencyId in routeNameAgencies
+
     data class AgencyInfo(val name: String, val icon: String?)
 
     private val AGENCY_MAP =
