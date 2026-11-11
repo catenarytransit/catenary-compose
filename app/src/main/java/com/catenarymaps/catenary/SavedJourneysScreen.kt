@@ -139,7 +139,7 @@ internal fun SavedJourneysScreen(
                             }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
                                 containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
                                 Text("${snapshot.origin?.name.orEmpty()} → ${snapshot.destination?.name.orEmpty()}",
-                                    fontWeight = FontWeight.Bold, modifier = Modifier.padding(12.dp))
+                                    fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp))
                                 JourneyPreviewContent(snapshot.journey, streetUsUnits)
                             }
                         }

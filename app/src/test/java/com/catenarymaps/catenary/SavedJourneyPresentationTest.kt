@@ -10,6 +10,17 @@ class SavedJourneyPresentationTest {
         DirectionsItinerary(start, start, legs = listOf(
             DirectionsLeg("BUS", from = DirectionsPoint(timezone = zone))), id = id), null, null)
 
+    @Test fun completedJourneysCannotBeSavedButUpcomingAndOngoingJourneysCan() {
+        val now = java.time.Instant.parse("2026-11-11T08:00:00Z")
+        val journey = snapshot("saveable", "2026-11-11T07:00:00Z").journey
+        assertFalse(journey.canBeSaved(now))
+        assertFalse(journey.copy(endTime = now.toString()).canBeSaved(now))
+        assertTrue(journey.copy(endTime = now.plusSeconds(1).toString()).canBeSaved(now))
+        assertTrue(journey.copy(startTime = now.plusSeconds(60).toString(),
+            endTime = now.plusSeconds(120).toString()).canBeSaved(now))
+        assertFalse(journey.copy(endTime = "invalid").canBeSaved(now))
+    }
+
     @Test fun groupsAllDatesAndSortsConnectionsUsingDepartureTimezone() {
         val first = snapshot("first", "2026-11-11T07:30:00Z") // Nov 10 in Los Angeles
         val second = snapshot("second", "2026-11-11T08:30:00Z")

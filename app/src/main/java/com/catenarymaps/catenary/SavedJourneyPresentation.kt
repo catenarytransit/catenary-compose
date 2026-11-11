@@ -15,6 +15,10 @@ internal fun List<SavedJourney>.groupedByDepartureDate(): Map<LocalDate?, List<S
         }
         .toSortedMap(nullsLast(naturalOrder<LocalDate>()))
 
+/** Completed journeys cannot be newly saved; journeys still in progress can be. */
+internal fun DirectionsItinerary.canBeSaved(now: Instant = Instant.now()): Boolean =
+    runCatching { Instant.parse(endTime).isAfter(now) }.getOrDefault(false)
+
 /** Resolve the captured endpoints, never the device's location at a later time. */
 internal suspend fun SavedJourney.withNamedCurrentLocations(
     reverseName: suspend (DirectionsLocation) -> String?
