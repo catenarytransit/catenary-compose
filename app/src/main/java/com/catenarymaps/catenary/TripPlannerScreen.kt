@@ -617,7 +617,8 @@ private fun LegModeIcon(leg: DirectionsLeg, preview: Boolean = false) {
 private fun LegBadge(leg: DirectionsLeg, preview: Boolean = false) {
     if (!NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId)) {
         leg.tripShortName?.takeIf { it.isNotBlank() }?.let {
-            Text(it, fontSize = if (preview) 10.sp else 16.sp, fontWeight = FontWeight.Bold)
+            if (preview) FadingBadgeText(it, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            else Text(it, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
         return
     }
@@ -648,7 +649,7 @@ internal fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: 
         PreviewTimeRow(times, directionsDuration(journey.seconds))
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             // Keep icons and their labels in the same segment column even on long journeys.
-            val timelineWidth = maxOf(maxWidth, (visible.size * 48).dp)
+            val timelineWidth = maxOf(maxWidth, timelineSegmentMinimums(visible).sum().dp)
             val weights = timelineWeights(visible, timelineWidth.value)
             Row(Modifier.horizontalScroll(rememberScrollState())) {
                 Row(Modifier.width(timelineWidth)) {
@@ -680,12 +681,11 @@ internal fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: 
                             }
                             if (leg.street) {
                                 val minutes = (leg.seconds / 60).roundToInt().coerceAtLeast(0)
-                                Text("$minutes'" +
-                                    (directionsDistance(leg)?.let { " · ${plannerDistance(it, streetUsUnits)}" } ?: ""), fontSize = 10.sp,
+                                Text("$minutes'", fontSize = 10.sp,
                                     modifier = Modifier.padding(top = 2.dp, end = 4.dp),
-                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    maxLines = 1, softWrap = false, overflow = TextOverflow.Clip)
                             } else {
-                                Box(Modifier.padding(top = 2.dp, end = 4.dp)) { LegBadge(leg, preview = true) }
+                                Box(Modifier.fillMaxWidth().padding(top = 2.dp, end = 4.dp)) { LegBadge(leg, preview = true) }
                             }
                         }
                     }
@@ -859,6 +859,6 @@ internal fun DirectionsItinerary.previewLegs(): List<DirectionsLeg> {
     return combined.filterIndexed { index, leg ->
         if (!leg.street) true
         else if (index == 0 || index == combined.lastIndex) directionsDistance(leg)?.let { it >= 25 } ?: true
-        else leg.seconds > 300
+        else leg.seconds > timelineTransferVisibilitySeconds(combined, index)
     }
 }
