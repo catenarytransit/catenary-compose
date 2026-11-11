@@ -111,6 +111,36 @@ class TripPlannerPresentationTest {
         assertEquals(listOf(PreviewTimeMarker(alight, true)), sameTimes.arrival)
     }
 
+    @Test fun transferWalkingSegmentsUseLessSpaceThanAccessOrRailSegments() {
+        val legs = listOf(
+            DirectionsLeg("RAIL", routeType = 2, duration = 3600.0),
+            DirectionsLeg("WALK", duration = 10.0),
+            DirectionsLeg("RAIL", routeType = 2, duration = 3600.0)
+        )
+        assertEquals(listOf(48f, 28f, 48f), timelineSegmentMinimums(legs))
+        val widths = timelineWeights(legs, 320f)
+        assertEquals(28f, widths[1], 0.01f)
+        assertEquals(320f, widths.sum(), 0.01f)
+        assertEquals(100f, timelineWeights(legs, 100f).sum(), 0.01f)
+
+        val access = listOf(DirectionsLeg("WALK", duration = 10.0), legs[0])
+        assertEquals(listOf(48f, 48f), timelineSegmentMinimums(access))
+        assertEquals(48f, timelineWeights(access, 320f)[0], 0.01f)
+    }
+
+    @Test fun trainToTrainTransferRequiresMoreWalkingToAppearInPreview() {
+        val train = DirectionsLeg("RAIL", routeType = 2, duration = 3600.0)
+        val metro = DirectionsLeg("SUBWAY", routeType = 1, duration = 3600.0)
+        val walk = DirectionsLeg("WALK", duration = 390.0)
+        val trainJourney = DirectionsItinerary(start, end, legs = listOf(train, walk, train))
+        assertEquals(420.0, timelineTransferVisibilitySeconds(trainJourney.legs, 1), 0.01)
+        assertEquals(2, trainJourney.previewLegs().size)
+        assertEquals(3, trainJourney.copy(legs = listOf(train, walk.copy(duration = 421.0), train)).previewLegs().size)
+        val mixedJourney = trainJourney.copy(legs = listOf(metro, walk, train))
+        assertEquals(300.0, timelineTransferVisibilitySeconds(mixedJourney.legs, 1), 0.01)
+        assertEquals(3, mixedJourney.previewLegs().size)
+    }
+
     @Test fun durationAllocationReservesAnIconForShortLegs() {
         val legs = listOf(DirectionsLeg("WALK", duration = 1.0), DirectionsLeg("RAIL", duration = 7200.0))
         val widths = timelineWeights(legs, 320f)
