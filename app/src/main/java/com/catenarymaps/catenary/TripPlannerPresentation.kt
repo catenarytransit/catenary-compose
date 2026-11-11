@@ -64,24 +64,48 @@ internal fun DirectionsItinerary.previewTimeGroups(): PreviewTimeGroups {
     )
 }
 
-/** Reserve room for every mode icon before distributing remaining width by duration. */
-internal fun timelineWeights(legs: List<DirectionsLeg>, width: Float, minimum: Float = 48f): List<Float> {
+/** A walking interchange is flanked by transit legs, unlike access and egress walks. */
+internal fun isTimelineWalkingTransfer(legs: List<DirectionsLeg>, index: Int): Boolean =
+    index > 0 && index < legs.lastIndex &&
+        legs[index].walking && !legs[index - 1].street && !legs[index + 1].street
+
+/** Train-to-train interchanges often contain internal station walking instructions. */
+internal fun timelineTransferVisibilitySeconds(legs: List<DirectionsLeg>, index: Int): Double =
+    if (isTimelineWalkingTransfer(legs, index) &&
+        legs[index - 1].routeType == 2 && legs[index + 1].routeType == 2) 420.0 else 300.0
+
+/** Keep a full icon for transit/access/egress, but make transfer walking more compact. */
+internal fun timelineSegmentMinimums(
+    legs: List<DirectionsLeg>, minimum: Float = 48f, transferWalkMinimum: Float = 28f
+): List<Float> = legs.indices.map { index ->
+    if (isTimelineWalkingTransfer(legs, index)) transferWalkMinimum else minimum
+}
+
+/** Reserve icon space, then distribute the remaining width proportionally by duration. */
+internal fun timelineWeights(
+    legs: List<DirectionsLeg>, width: Float, minimum: Float = 48f, transferWalkMinimum: Float = 28f
+): List<Float> {
     if (legs.isEmpty()) return emptyList()
     val weights = legs.map { it.seconds.takeIf { s -> s.isFinite() && s > 0 }?.toFloat() ?: 1f }
+    val minimums = timelineSegmentMinimums(legs, minimum, transferWalkMinimum)
+    val availableWidth = width.coerceAtLeast(1f)
+    val minimumSum = minimums.sum()
+    // Narrow screens may not fit every icon. Shrink minima proportionally in that case.
+    if (minimumSum > availableWidth) return minimums.map { it * availableWidth / minimumSum }
+
     val pixels = MutableList(legs.size) { 0f }
     val remaining = legs.indices.toMutableSet()
-    var available = width.coerceAtLeast(1f)
-    val floor = minimum.coerceAtMost(available / legs.size)
+    var available = availableWidth
     while (remaining.isNotEmpty()) {
         val total = remaining.sumOf { weights[it].toDouble() }.toFloat()
-        val small = remaining.filter { available * weights[it] / total < floor }
+        val small = remaining.filter { available * weights[it] / total < minimums[it] }
         if (small.isEmpty()) {
             remaining.forEach { pixels[it] = available * weights[it] / total }
             break
         }
-        small.forEach { pixels[it] = floor; remaining.remove(it); available -= floor }
+        small.forEach { pixels[it] = minimums[it]; remaining.remove(it); available -= minimums[it] }
     }
-    return pixels.map { it.coerceAtLeast(0.001f) }
+    return pixels
 }
 
 /** Two sentinel rows precede the cards; load when the edge card enters view. */

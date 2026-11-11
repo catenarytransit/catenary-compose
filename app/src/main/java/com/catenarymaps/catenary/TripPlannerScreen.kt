@@ -617,7 +617,8 @@ private fun LegModeIcon(leg: DirectionsLeg, preview: Boolean = false) {
 private fun LegBadge(leg: DirectionsLeg, preview: Boolean = false) {
     if (!NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId)) {
         leg.tripShortName?.takeIf { it.isNotBlank() }?.let {
-            Text(it, fontSize = if (preview) 10.sp else 16.sp, fontWeight = FontWeight.Bold)
+            if (preview) FadingBadgeText(it, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            else Text(it, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
         return
     }
@@ -648,7 +649,7 @@ internal fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: 
         PreviewTimeRow(times, directionsDuration(journey.seconds))
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             // Keep icons and their labels in the same segment column even on long journeys.
-            val timelineWidth = maxOf(maxWidth, (visible.size * 48).dp)
+            val timelineWidth = maxOf(maxWidth, timelineSegmentMinimums(visible).sum().dp)
             val weights = timelineWeights(visible, timelineWidth.value)
             Row(Modifier.horizontalScroll(rememberScrollState())) {
                 Row(Modifier.width(timelineWidth)) {
@@ -680,12 +681,11 @@ internal fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: 
                             }
                             if (leg.street) {
                                 val minutes = (leg.seconds / 60).roundToInt().coerceAtLeast(0)
-                                Text("$minutes'" +
-                                    (directionsDistance(leg)?.let { " · ${plannerDistance(it, streetUsUnits)}" } ?: ""), fontSize = 10.sp,
+                                Text("$minutes'", fontSize = 10.sp,
                                     modifier = Modifier.padding(top = 2.dp, end = 4.dp),
-                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    maxLines = 1, softWrap = false, overflow = TextOverflow.Clip)
                             } else {
-                                Box(Modifier.padding(top = 2.dp, end = 4.dp)) { LegBadge(leg, preview = true) }
+                                Box(Modifier.fillMaxWidth().padding(top = 2.dp, end = 4.dp)) { LegBadge(leg, preview = true) }
                             }
                         }
                     }
@@ -774,6 +774,12 @@ private fun ConnectionRow(
 @OptIn(ExperimentalLayoutApi::class)
 private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
     var expanded by remember(leg) { mutableStateOf(false) }
+    val shortenStationSuffix = remember(leg) {
+        shouldShortenTrainStationStops(
+            leg.routeType,
+            listOf(leg.from?.name) + leg.intermediateStops.map { it.name } + listOf(leg.to?.name)
+        )
+    }
     val surface = TripPlannerColors.card
     val rawRail = legColor(leg)
     // Keep near-white/black route colors visible against the current card surface.
@@ -792,7 +798,7 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
             } else {
                 ConnectionRow(rail, directionsTime(leg.startTime, leg.from?.timezone), leg.fromPlatform ?: leg.from?.platform ?: leg.from?.platformCode ?: "",
                     pearl = true, first = true) {
-                    Text(leg.from?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
+                    Text(displayTrainStationStopName(leg.from?.name.orEmpty(), shortenStationSuffix), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }
                 ConnectionRow(rail) {
                     LegModeIcon(leg)
@@ -826,12 +832,12 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
                 }
                 if (expanded) leg.intermediateStops.forEach { stop ->
                     ConnectionRow(rail, directionsTime(stop.departure ?: stop.arrival ?: stop.scheduledDeparture ?: stop.scheduledArrival, stop.timezone), pearl = true) {
-                        Text(stop.name, style = MaterialTheme.typography.bodyMedium)
+                        Text(displayTrainStationStopName(stop.name, shortenStationSuffix), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 ConnectionRow(rail, directionsTime(leg.endTime, leg.to?.timezone), leg.toPlatform ?: leg.to?.platform ?: leg.to?.platformCode ?: "",
                     pearl = true, last = true) {
-                    Text(leg.to?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
+                    Text(displayTrainStationStopName(leg.to?.name.orEmpty(), shortenStationSuffix), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }
             }
         }
@@ -853,6 +859,6 @@ internal fun DirectionsItinerary.previewLegs(): List<DirectionsLeg> {
     return combined.filterIndexed { index, leg ->
         if (!leg.street) true
         else if (index == 0 || index == combined.lastIndex) directionsDistance(leg)?.let { it >= 25 } ?: true
-        else leg.seconds > 300
+        else leg.seconds > timelineTransferVisibilitySeconds(combined, index)
     }
 }
