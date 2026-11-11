@@ -14,7 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import io.ktor.client.HttpClient
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,11 +31,12 @@ import kotlinx.coroutines.withContext
 internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
     collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier,
-    showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}
+    showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}, client: HttpClient
 ) {
     val journey = planner.selectedJourney ?: return
     val context = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
+    val language = LocalConfiguration.current.locales[0].language
     val identity = journey.identity()
     var saved by remember(identity) { mutableStateOf(false) }
     var busy by remember(identity) { mutableStateOf(true) }
@@ -82,9 +85,12 @@ internal fun JourneySummary(
                         val snapshot = SavedJourney(journey, planner.origin, planner.destination)
                         scope.launch {
                             try {
+                                val namedSnapshot = if (wasSaved) snapshot else snapshot.withNamedCurrentLocations { location ->
+                                    reverseMapLocationName(client, location.lat, location.lon, language)
+                                }
                                 withContext(Dispatchers.IO) {
                                     SavedJourneyStore(context).use { store ->
-                                        if (wasSaved) store.remove(identity) else store.save(snapshot)
+                                        if (wasSaved) store.remove(identity) else store.save(namedSnapshot)
                                     }
                                 }
                                 saved = !wasSaved

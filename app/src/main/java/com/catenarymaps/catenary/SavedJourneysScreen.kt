@@ -21,7 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import io.ktor.client.HttpClient
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -77,7 +81,7 @@ private fun RowScope.HomeNavigationItem(selected: Boolean, onClick: () -> Unit, 
 @Composable
 internal fun SavedJourneysScreen(
     streetUsUnits: Boolean, wide: Boolean, foreground: Boolean,
-    onExplore: () -> Unit, onPlan: () -> Unit, modifier: Modifier = Modifier
+    onExplore: () -> Unit, onPlan: () -> Unit, modifier: Modifier = Modifier, client: HttpClient
 ) {
     val context = LocalContext.current.applicationContext
     val planner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "saved-journey-details")
@@ -100,6 +104,9 @@ internal fun SavedJourneysScreen(
             delay(60_000)
         }
     }
+    val groups = snapshots.groupedByDepartureDate()
+    val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
+        .withLocale(LocalConfiguration.current.locales[0])
     BackHandler {
         if (planner.details) { planner.details = false; selectedIdentity = null } else onExplore()
     }
@@ -116,15 +123,25 @@ internal fun SavedJourneysScreen(
                         Spacer(Modifier.height(16.dp))
                         Text(stringResource(R.string.saved_journeys_description))
                     }
-                    items(snapshots, key = { it.journey.identity() }) { snapshot ->
-                        Card(onClick = {
-                            selectedIdentity = snapshot.journey.identity()
-                            planner.openSavedJourney(snapshot)
-                        }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-                            containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
-                            Text("${snapshot.origin?.name.orEmpty()} → ${snapshot.destination?.name.orEmpty()}",
-                                fontWeight = FontWeight.Bold, modifier = Modifier.padding(12.dp))
-                            JourneyPreviewContent(snapshot.journey, streetUsUnits)
+                    groups.forEach { (date, journeys) ->
+                        if (date != null) item(key = "date-$date") {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(date.format(dateFormatter), style = MaterialTheme.typography.titleSmall,
+                                    color = TripPlannerColors.secondaryContent)
+                                HorizontalDivider(Modifier.weight(1f))
+                            }
+                        }
+                        items(journeys, key = { it.journey.identity() }) { snapshot ->
+                            Card(onClick = {
+                                selectedIdentity = snapshot.journey.identity()
+                                planner.openSavedJourney(snapshot)
+                            }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
+                                containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
+                                Text("${snapshot.origin?.name.orEmpty()} → ${snapshot.destination?.name.orEmpty()}",
+                                    fontWeight = FontWeight.Bold, modifier = Modifier.padding(12.dp))
+                                JourneyPreviewContent(snapshot.journey, streetUsUnits)
+                            }
                         }
                     }
                 }
@@ -136,7 +153,7 @@ internal fun SavedJourneysScreen(
             if (wide || planner.details) Column(Modifier.weight(1f).fillMaxHeight()) {
                 if (planner.details) {
                     JourneySummary(planner, streetUsUnits, showBack = !wide, showMapAction = false,
-                        onSavedChanged = { refresh++ })
+                        onSavedChanged = { refresh++ }, client = client)
                     Box(Modifier.weight(1f)) {
                         planner.selectedJourney?.let { JourneyDetails(planner, it, streetUsUnits) }
                     }
