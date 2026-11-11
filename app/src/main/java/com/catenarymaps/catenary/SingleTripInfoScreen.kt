@@ -511,6 +511,9 @@ fun SingleTripInfoScreen(
         val currentAtStopIdx by viewModel.currentAtStopIdx.collectAsState()
 
         val tripRouteType = tripData?.route_type ?: tripSelected.route_type
+        val shortenStationSuffix = remember(tripRouteType, stopTimes) {
+                shouldShortenTrainStationStops(tripRouteType, stopTimes.map { it.raw.name })
+        }
 
         val tripShapeForLocation =
                 remember(tripData?.shape_polyline) {
@@ -813,7 +816,7 @@ fun SingleTripInfoScreen(
                         // This is your label_stops_on_map() logic
                         val stopFeatures =
                                 stopTimes.mapNotNull { stopTime ->
-                                        val stopName = contextStopName(stopTime)
+                                        val stopName = displayTrainStationStopName(contextStopName(stopTime), shortenStationSuffix)
                                         val labelPrefix = contextStopTimePrefix(stopTime, data.tz)
                                         val properties = buildJsonObject {
                                                 // Keep the regular stop name separate from the map
@@ -1550,6 +1553,7 @@ fun SingleTripInfoScreen(
                                                                 nearbyStopDistances.getOrNull(i),
                                                         usUnits = usUnits,
                                                         compactRows = tripRouteType == 3,
+                                                        shortenStationSuffix = shortenStationSuffix,
                                                         onStopClick = {
                                                                 onStopClick(
                                                                         CatenaryStackEnum.StopStack(
@@ -1882,6 +1886,7 @@ fun StopListItem(
         stopDistanceMeters: Double? = null,
         usUnits: Boolean = false,
         compactRows: Boolean = false,
+        shortenStationSuffix: Boolean = false,
 ) {
         val isDark = isSystemInDarkTheme()
         val neutralColor = if (isDark) Color(0xFFDDDDDD) else Color(0xFF333333)
@@ -2448,7 +2453,7 @@ fun StopListItem(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                         // Station Name
-                                        stopTime.raw.name?.let {
+                                        stopTime.raw.name?.let { displayTrainStationStopName(it, shortenStationSuffix) }?.let {
                                                 val stopNameColor =
                                                         if (isInactive) Color.Gray
                                                         else MaterialTheme.colorScheme.onSurface
