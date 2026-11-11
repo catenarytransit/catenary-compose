@@ -774,6 +774,12 @@ private fun ConnectionRow(
 @OptIn(ExperimentalLayoutApi::class)
 private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
     var expanded by remember(leg) { mutableStateOf(false) }
+    val shortenStationSuffix = remember(leg) {
+        shouldShortenTrainStationStops(
+            leg.routeType,
+            listOf(leg.from?.name) + leg.intermediateStops.map { it.name } + listOf(leg.to?.name)
+        )
+    }
     val surface = TripPlannerColors.card
     val rawRail = legColor(leg)
     // Keep near-white/black route colors visible against the current card surface.
@@ -792,7 +798,7 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
             } else {
                 ConnectionRow(rail, directionsTime(leg.startTime, leg.from?.timezone), leg.fromPlatform ?: leg.from?.platform ?: leg.from?.platformCode ?: "",
                     pearl = true, first = true) {
-                    Text(leg.from?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
+                    Text(displayTrainStationStopName(leg.from?.name.orEmpty(), shortenStationSuffix), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }
                 ConnectionRow(rail) {
                     LegModeIcon(leg)
@@ -826,12 +832,12 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
                 }
                 if (expanded) leg.intermediateStops.forEach { stop ->
                     ConnectionRow(rail, directionsTime(stop.departure ?: stop.arrival ?: stop.scheduledDeparture ?: stop.scheduledArrival, stop.timezone), pearl = true) {
-                        Text(stop.name, style = MaterialTheme.typography.bodyMedium)
+                        Text(displayTrainStationStopName(stop.name, shortenStationSuffix), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 ConnectionRow(rail, directionsTime(leg.endTime, leg.to?.timezone), leg.toPlatform ?: leg.to?.platform ?: leg.to?.platformCode ?: "",
                     pearl = true, last = true) {
-                    Text(leg.to?.name.orEmpty(), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
+                    Text(displayTrainStationStopName(leg.to?.name.orEmpty(), shortenStationSuffix), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }
             }
         }
