@@ -14,13 +14,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import io.ktor.client.HttpClient
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -29,15 +32,23 @@ import kotlinx.coroutines.withContext
 internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
     collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier,
-    showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}
+    showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}, client: HttpClient
 ) {
     val journey = planner.selectedJourney ?: return
     val context = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
+    val language = LocalConfiguration.current.locales[0].language
     val identity = journey.identity()
     var saved by remember(identity) { mutableStateOf(false) }
     var busy by remember(identity) { mutableStateOf(true) }
     var failed by remember(identity) { mutableStateOf(false) }
+    var saveable by remember(identity, journey.endTime) { mutableStateOf(journey.canBeSaved()) }
+    LaunchedEffect(identity, journey.endTime) {
+        while (true) {
+            saveable = journey.canBeSaved()
+            delay(1_000)
+        }
+    }
     LaunchedEffect(identity) {
         try {
             saved = withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.contains(identity) } }
@@ -75,18 +86,26 @@ internal fun JourneySummary(
             Row(Modifier.align(androidx.compose.ui.Alignment.BottomStart).padding(start = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SummaryAction(
-                    enabled = !busy,
+                    enabled = !busy && (saved || saveable),
                     onClick = {
+                        if (!saved && !journey.canBeSaved()) return@SummaryAction
                         busy = true; failed = false
                         val wasSaved = saved
                         val snapshot = SavedJourney(journey, planner.origin, planner.destination)
                         scope.launch {
                             try {
-                                withContext(Dispatchers.IO) {
-                                    SavedJourneyStore(context).use { store ->
-                                        if (wasSaved) store.remove(identity) else store.save(snapshot)
-                                    }
+                                val namedSnapshot = if (wasSaved) snapshot else snapshot.withNamedCurrentLocations { location ->
+                                    reverseMapLocationName(client, location.lat, location.lon, language)
                                 }
+                                val changed = withContext(Dispatchers.IO) {
+                                    // Geocoding may have crossed the journey's arrival time.
+                                    if (!wasSaved && !journey.canBeSaved()) return@withContext false
+                                    SavedJourneyStore(context).use { store ->
+                                        if (wasSaved) store.remove(identity) else store.save(namedSnapshot)
+                                    }
+                                    true
+                                }
+                                if (!changed) { saveable = false; return@launch }
                                 saved = !wasSaved
                                 onSavedChanged()
                             } catch (e: CancellationException) { throw e }

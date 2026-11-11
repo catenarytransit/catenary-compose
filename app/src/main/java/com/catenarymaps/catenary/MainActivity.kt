@@ -4346,6 +4346,7 @@ class MainActivity : ComponentActivity() {
                                         if (directionsVisible && tripPlanner.usingMap && tripPlanner.mapPicking == null) {
                                                 // Map mode needs only the summary, never the endpoint search overlay.
                                                 JourneySummary(
+                                                        client = ktorHttpClient,
                                                         planner = tripPlanner,
                                                         streetUsUnits = streetUsUnits,
                                                         // Share the drawer's half-to-expanded travel and midpoint settling.
@@ -4369,6 +4370,7 @@ class MainActivity : ComponentActivity() {
                                                 ) {
                                                         val inputs: @Composable (Boolean) -> Unit = { forceInputs ->
                                                                 TripPlannerHeader(
+                                                                        client = ktorHttpClient,
                                                                         planner = tripPlanner, search = directionsSearch,
                                                                         currentLocation = currentLocation, mapCenter = camera.position.target,
                                                                         stationHistory = stationHistory, streetUsUnits = streetUsUnits,
@@ -4390,7 +4392,7 @@ class MainActivity : ComponentActivity() {
                                                                                 VerticalDivider()
                                                                                 Column(Modifier.weight(1f).fillMaxHeight()) {
                                                                                         if (tripPlanner.details) {
-                                                                                                JourneySummary(tripPlanner, streetUsUnits, showBack = false)
+                                                                                                JourneySummary(tripPlanner, streetUsUnits, showBack = false, client = ktorHttpClient)
                                                                                                 Box(Modifier.weight(1f)) {
                                                                                                         tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits) }
                                                                                                 }
@@ -4418,6 +4420,7 @@ class MainActivity : ComponentActivity() {
 
                                         if (savedTripsVisible) {
                                             SavedJourneysScreen(
+                                                client = ktorHttpClient,
                                                 streetUsUnits = streetUsUnits,
                                                 wide = isWideLayout,
                                                 foreground = isAppInForeground,
