@@ -166,4 +166,5 @@
     <string name="saved_journeys_description">여행 중 연결편 정보와 운행 장애 알림을 받고 싶으신가요? 시간표 검색에서 별표 버튼을 눌러 여정을 저장하세요.</string>
     <string name="saved_journeys_plan">여정 계획</string>
     <string name="saved_journeys_select">여정을 선택하여 세부 정보를 확인하세요.</string>
+    <string name="nearby_departures_filters_no_matches">결과가 %1$d개 있지만 필터와 일치하는 결과가 없습니다. 주변 출발 정보를 보려면 필터를 해제하거나 선택 범위를 넓히세요.</string>
 </resources>

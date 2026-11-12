@@ -171,4 +171,5 @@
     <string name="saved_journeys_description">Möchten Sie während der Reise Informationen zu Ihrer Verbindung erhalten und über Störungen benachrichtigt werden? Speichern Sie Ihre Reise in der Fahrplansuche, indem Sie auf die Sterntaste tippen.</string>
     <string name="saved_journeys_plan">Reise planen</string>
     <string name="saved_journeys_select">Wählen Sie eine Reise, um Details anzuzeigen.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d Ergebnisse, aber keines entspricht den Filtern. Entfernen oder erweitern Sie die Filterauswahl, um Abfahrten in der Nähe anzuzeigen.</string>
 </resources>

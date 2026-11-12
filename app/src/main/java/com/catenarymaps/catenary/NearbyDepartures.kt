@@ -768,18 +768,21 @@ fun NearbyDepartures(
                                                         modifier = Modifier.padding(8.dp))
                                         }
                                 }
-                                val hasUnfilteredDepartures = departureList.any { it.headsigns.isNotEmpty() } ||
-                                        stopsTableLongDistance.any { it.departures.isNotEmpty() }
-                                if (sorted.isEmpty() && firstLoadComplete && !loading && !offline &&
-                                        !(filters.isActive && hasUnfilteredDepartures)) {
+                                // Count the route/station cards available before transport filtering.
+                                val unfilteredResultCount = departureList.count { it.headsigns.isNotEmpty() } +
+                                        stopsTableLongDistance.count { it.departures.isNotEmpty() }
+                                if (sorted.isEmpty() && firstLoadComplete && !loading && !offline) {
                                         item {
                                                 Spacer(Modifier.height(8.dp))
                                                 Text(
-                                                        stringResource(
-                                                                id =
-                                                                        R.string
-                                                                                .nearby_departures_no_departures
-                                                        ),
+                                                        if (filters.isActive && unfilteredResultCount > 0) {
+                                                                stringResource(
+                                                                        R.string.nearby_departures_filters_no_matches,
+                                                                        unfilteredResultCount
+                                                                )
+                                                        } else {
+                                                                stringResource(R.string.nearby_departures_no_departures)
+                                                        },
                                                         style = MaterialTheme.typography.bodyMedium
                                                 )
                                         }

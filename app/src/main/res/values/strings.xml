@@ -178,4 +178,5 @@
     <string name="saved_journeys_description">Would you like to receive information about your connection during journey and be notified of disruptions? Save your journey in the timetable search by pressing the star button.</string>
     <string name="saved_journeys_plan">Plan a journey</string>
     <string name="saved_journeys_select">Select a journey to view details.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d results but nothing matches the filters. Remove or expand the filter selection to show nearby departures.</string>
 </resources>

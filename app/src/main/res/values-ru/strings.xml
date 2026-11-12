@@ -165,4 +165,5 @@
     <string name="saved_journeys_description">Хотите получать информацию о своём маршруте во время поездки и уведомления о сбоях? Сохраните поездку в поиске расписаний, нажав кнопку со звездой.</string>
     <string name="saved_journeys_plan">Спланировать поездку</string>
     <string name="saved_journeys_select">Выберите поездку, чтобы посмотреть подробности.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d результатов, но ни один не соответствует фильтрам. Сбросьте фильтры или расширьте выбор, чтобы увидеть отправления поблизости.</string>
 </resources>

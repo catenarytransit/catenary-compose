@@ -165,4 +165,5 @@
     <string name="saved_journeys_description">Бажаєте отримувати інформацію про своє сполучення під час подорожі та сповіщення про збої? Збережіть подорож у пошуку розкладів, натиснувши кнопку із зіркою.</string>
     <string name="saved_journeys_plan">Спланувати подорож</string>
     <string name="saved_journeys_select">Виберіть подорож, щоб переглянути подробиці.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d результатів, але жоден не відповідає фільтрам. Скиньте фільтри або розширте вибір, щоб побачити відправлення поблизу.</string>
 </resources>

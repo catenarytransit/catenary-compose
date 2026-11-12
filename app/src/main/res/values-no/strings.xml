@@ -163,4 +163,5 @@
     <string name="saved_journeys_description">Vil du motta informasjon om forbindelsen din under reisen og bli varslet om driftsforstyrrelser? Lagre reisen i rutesøket ved å trykke på stjerneknappen.</string>
     <string name="saved_journeys_plan">Planlegg en reise</string>
     <string name="saved_journeys_select">Velg en reise for å se detaljer.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d resultater, men ingen samsvarer med filtrene. Fjern eller utvid filtervalget for å vise avganger i nærheten.</string>
 </resources>

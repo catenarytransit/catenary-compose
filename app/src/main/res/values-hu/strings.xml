@@ -163,4 +163,5 @@
     <string name="saved_journeys_description">Szeretne utazás közben információt kapni a járatáról és értesítést a fennakadásokról? Mentse el utazását a menetrendkeresőben a csillag gomb megnyomásával.</string>
     <string name="saved_journeys_plan">Utazás tervezése</string>
     <string name="saved_journeys_select">Válasszon egy utazást a részletek megtekintéséhez.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d találat, de egyik sem felel meg a szűrőknek. Törölje vagy bővítse a szűrők kiválasztását a közeli indulások megjelenítéséhez.</string>
 </resources>
