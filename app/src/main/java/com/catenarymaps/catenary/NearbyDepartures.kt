@@ -386,19 +386,6 @@ fun NearbyDepartures(
         var offline by remember { mutableStateOf(false) }
         var firstAttemptSent by remember { mutableStateOf(false) }
         var firstLoadComplete by remember { mutableStateOf(false) }
-        var serverMs by remember { mutableStateOf<Long?>(null) }
-
-        var stopsTableLongDistance by remember {
-                mutableStateOf<List<StationDepartureGroup>>(emptyList())
-        }
-        var departureList by remember { mutableStateOf<List<RouteGroupV3>>(emptyList()) }
-        var routesMap by remember {
-                mutableStateOf<Map<String, Map<String, RouteInfoExport>>>(emptyMap())
-        }
-        var stopsMap by remember {
-                mutableStateOf<Map<String, Map<String, StopOutputV3>>>(emptyMap())
-        }
-
         // Preserve the first GPS fix to avoid restarting nearby requests on minor GPS drift.
         // Explicit recentering can update it through the My Location button.
         var gpsOrigin by remember { mutableStateOf<Pair<Double, Double>?>(null) }
@@ -418,65 +405,65 @@ fun NearbyDepartures(
                 pollSession++
         }
 
-        // When returning from Saved Trips, restore the correct location's data immediately.
-        // A changed pin or a different selected time must never display the old response.
-        // Use null for the moving 'now' clock so seconds ticking do not invalidate the cache.
+        // A query owns its displayed snapshot independently of individual refresh jobs.
+        // Keep it across refreshes/foreground changes, but never reuse it for another pin or time.
         val selectedDepartureTime = if (lockToNow) null else nowSec
-        LaunchedEffect(locationMode, lockedOrigin, selectedDepartureTime, pollSession, isAppInForeground) {
-                val origin = lockedOrigin
-                val cached = origin?.let {
-                        nearbyDeparturesMemoryCache.get(locationMode, it, selectedDepartureTime)
-                }
-                stopsTableLongDistance = cached?.response?.longDistance.orEmpty()
-                departureList = cached?.response?.local.orEmpty()
-                routesMap = cached?.response?.routes.orEmpty()
-                stopsMap = cached?.response?.stops.orEmpty()
-                serverMs = cached?.response?.debug?.totalTimeMs
-                // Clear the previous location's sorted cards before the derived sort recomputes.
+        var displayedResponse by remember(locationMode, lockedOrigin, selectedDepartureTime) {
+                mutableStateOf(lockedOrigin?.let {
+                        nearbyDeparturesMemoryCache.get(locationMode, it, selectedDepartureTime)?.response
+                })
+        }
+        val stopsTableLongDistance = displayedResponse?.longDistance.orEmpty()
+        val departureList = displayedResponse?.local.orEmpty()
+        val routesMap = displayedResponse?.routes.orEmpty()
+        val stopsMap = displayedResponse?.stops.orEmpty()
+        val serverMs = displayedResponse?.debug?.totalTimeMs
+        var handledPollSession by remember { mutableStateOf(0) }
+
+        // Clear sorted cards only when the query changes. Clearing them during a same-query
+        // refresh can leave them empty forever when equal response data does not restart sorting.
+        LaunchedEffect(locationMode, lockedOrigin, selectedDepartureTime) {
                 sorted = emptyList()
-                firstAttemptSent = cached != null
-                firstLoadComplete = cached != null
+        }
+        LaunchedEffect(locationMode, lockedOrigin, selectedDepartureTime, pollSession, isAppInForeground) {
+                val explicitRefresh = pollSession != handledPollSession
+                handledPollSession = pollSession
+                val origin = lockedOrigin
+                firstAttemptSent = displayedResponse != null
+                firstLoadComplete = displayedResponse != null
                 offline = false
                 loading = false
 
                 if (!isAppInForeground || origin == null) return@LaunchedEffect
 
-                var progressive = cached == null
-
                 suspend fun doFetch() {
                         loading = true
                         firstAttemptSent = true
                         var latestSnapshot: NearbyResponseV3? = null
-                        try {
-                                val completed = fetchNearby(
-                                        origin.first, origin.second, selectedDepartureTime, progressive
-                                ) { response ->
-                                        latestSnapshot = response
-                                        stopsTableLongDistance = response.longDistance
-                                        departureList = response.local
-                                        routesMap = response.routes
-                                        stopsMap = response.stops
-                                        serverMs = response.debug?.totalTimeMs
-                                        offline = false
-                                }
-                                if (completed) {
-                                        // Cache only completed refreshes, not a partial WebSocket phase.
-                                        latestSnapshot?.let {
-                                                nearbyDeparturesMemoryCache.put(
-                                                        locationMode, origin, selectedDepartureTime, it
-                                                )
-                                        }
-                                        progressive = false
-                                }
-                                offline = !completed && latestSnapshot == null && cached == null
-                        } finally {
-                                loading = false
-                                firstLoadComplete = true
+                        val completed = fetchNearby(
+                                origin.first, origin.second, selectedDepartureTime,
+                                progressive = displayedResponse == null
+                        ) { response ->
+                                latestSnapshot = response
+                                displayedResponse = response
+                                offline = false
                         }
+                        if (completed) {
+                                // Cache only completed refreshes, not a partial WebSocket phase.
+                                latestSnapshot?.let {
+                                        nearbyDeparturesMemoryCache.put(
+                                                locationMode, origin, selectedDepartureTime, it
+                                        )
+                                }
+                        }
+                        offline = !completed && displayedResponse == null
+                        // Cancellation must not mark a replacement request as finished.
+                        loading = false
+                        firstLoadComplete = true
                 }
 
-                // Reuse a fresh snapshot on navigation; the normal poll will refresh it.
-                if (cached == null) doFetch()
+                // Navigation may reuse the cache; refresh buttons always fetch immediately.
+                if (displayedResponse == null || explicitRefresh) doFetch()
                 while (isActive) {
                         delay(10_000)
                         doFetch()
@@ -558,7 +545,7 @@ fun NearbyDepartures(
                 )
         }
 
-        LaunchedEffect(filteredLocal, filteredStations, sortMode, lockedOrigin) {
+        LaunchedEffect(filteredLocal, filteredStations, sortMode, locationMode, lockedOrigin, selectedDepartureTime) {
                 val origin = lockedOrigin
                 withContext(Dispatchers.Default) {
                         val localItems =
@@ -686,16 +673,12 @@ fun NearbyDepartures(
                         },
                         onPinDrop = {
                                 onPinDrop()
-                                // Parent will update pickedLocation; our
-                                // LaunchedEffect(pickedLocation)
-                                // will
-                                // handle restart.
+                                restartPolling()
                         },
                         onCenterPin = {
                                 onCenterPin()
-                                // No-op here; movement will be observed by pickedLocation change if
-                                // it
-                                // happens.
+                                // Refresh even when the map center has not moved.
+                                restartPolling()
                         },
                         serverMs = serverMs,
                         sortMode = sortMode,

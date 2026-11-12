@@ -81,7 +81,10 @@ internal fun mergeNearbyDepartures(
 }
 
 /** Each refresh has its own accumulator; a full frame replaces previous departures. */
-internal class NearbyDepartureStreamState(private val requestId: String) {
+internal class NearbyDepartureStreamState(
+    private val requestId: String,
+    private val publishPriority: Boolean = true
+) {
     private var priority: NearbyResponseV3? = null
     private var finished = false
 
@@ -100,7 +103,7 @@ internal class NearbyDepartureStreamState(private val requestId: String) {
                 if (priority != null) return false
                 check(!message.complete) { "Priority frame cannot finish the request" }
                 priority = data
-                onSnapshot(data)
+                if (publishPriority) onSnapshot(data)
             }
             "remaining" -> {
                 check(message.complete) { "Remaining frame must finish the request" }
@@ -128,7 +131,10 @@ internal fun nearbyDepartureSnapshots(
 ): Flow<NearbyResponseV3> = flow {
     val requestId = UUID.randomUUID().toString()
     val json = Json { ignoreUnknownKeys = true }
-    val state = NearbyDepartureStreamState(requestId)
+    // First load can render priority routes early. Refreshes keep the previous complete
+    // dataset visible until this request has assembled both phases, even if the server
+    // sends progressive frames despite progressive=false.
+    val state = NearbyDepartureStreamState(requestId, publishPriority = progressive)
     val frames = callbackFlow<String> {
         // A request-scoped socket keeps nearby refreshes independent of trip subscriptions.
         val socket = nearbySocketClient.newWebSocket(
