@@ -163,4 +163,5 @@
     <string name="saved_journeys_description">Gostaria de receber informações sobre a sua ligação durante a viagem e notificações de perturbações? Guarde a sua viagem na pesquisa de horários premindo o botão de estrela.</string>
     <string name="saved_journeys_plan">Planear uma viagem</string>
     <string name="saved_journeys_select">Selecione uma viagem para ver os detalhes.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d resultados, mas nenhum corresponde aos filtros. Remova ou amplie a seleção de filtros para mostrar as partidas nas proximidades.</string>
 </resources>

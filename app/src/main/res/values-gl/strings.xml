@@ -156,4 +156,5 @@
     <string name="saved_journeys_description">Quere recibir información sobre a súa conexión durante a viaxe e avisos de incidencias? Garde a viaxe na busca de horarios premendo o botón da estrela.</string>
     <string name="saved_journeys_plan">Planificar unha viaxe</string>
     <string name="saved_journeys_select">Seleccione unha viaxe para ver os detalles.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d resultados, pero ningún coincide cos filtros. Elimina ou amplía a selección de filtros para amosar as saídas próximas.</string>
 </resources>

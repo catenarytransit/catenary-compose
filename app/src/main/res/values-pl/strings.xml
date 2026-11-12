@@ -165,4 +165,5 @@
     <string name="saved_journeys_description">Czy chcesz otrzymywać informacje o swoim połączeniu podczas podróży i powiadomienia o zakłóceniach? Zapisz podróż w wyszukiwarce rozkładów jazdy, naciskając przycisk z gwiazdką.</string>
     <string name="saved_journeys_plan">Zaplanuj podróż</string>
     <string name="saved_journeys_select">Wybierz podróż, aby zobaczyć szczegóły.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d wyników, ale żaden nie pasuje do filtrów. Usuń filtry lub rozszerz ich wybór, aby wyświetlić odjazdy w pobliżu.</string>
 </resources>

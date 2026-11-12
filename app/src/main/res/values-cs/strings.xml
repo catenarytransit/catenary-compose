@@ -165,4 +165,5 @@
     <string name="saved_journeys_description">Chcete během cesty dostávat informace o svém spojení a upozornění na mimořádnosti? Uložte si cestu ve vyhledávání jízdních řádů stisknutím tlačítka s hvězdičkou.</string>
     <string name="saved_journeys_plan">Naplánovat cestu</string>
     <string name="saved_journeys_select">Vyberte cestu pro zobrazení podrobností.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d výsledků, ale žádný neodpovídá filtrům. Zrušte nebo rozšiřte výběr filtrů, aby se zobrazily odjezdy v okolí.</string>
 </resources>

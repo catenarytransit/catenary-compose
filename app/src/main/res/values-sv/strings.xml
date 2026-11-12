@@ -163,4 +163,5 @@
     <string name="saved_journeys_description">Vill du få information om din förbindelse under resan och meddelanden om trafikstörningar? Spara din resa i tidtabellssökningen genom att trycka på stjärnknappen.</string>
     <string name="saved_journeys_plan">Planera en resa</string>
     <string name="saved_journeys_select">Välj en resa för att visa detaljer.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d resultat, men inget matchar filtren. Ta bort eller utöka filtervalet för att visa avgångar i närheten.</string>
 </resources>

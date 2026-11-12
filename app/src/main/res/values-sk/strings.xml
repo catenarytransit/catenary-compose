@@ -165,4 +165,5 @@
     <string name="saved_journeys_description">Chcete počas cesty dostávať informácie o svojom spojení a upozornenia na mimoriadnosti? Uložte si cestu vo vyhľadávaní cestovných poriadkov stlačením tlačidla s hviezdičkou.</string>
     <string name="saved_journeys_plan">Naplánovať cestu</string>
     <string name="saved_journeys_select">Vyberte cestu na zobrazenie podrobností.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d výsledkov, ale žiadny nezodpovedá filtrom. Zrušte alebo rozšírte výber filtrov, aby sa zobrazili odchody v okolí.</string>
 </resources>

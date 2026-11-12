@@ -164,4 +164,5 @@
     <string name="saved_journeys_description">旅行中に乗り継ぎの情報や運行障害の通知を受け取りたいですか？時刻表検索で星ボタンを押して旅程を保存してください。</string>
     <string name="saved_journeys_plan">旅程を計画</string>
     <string name="saved_journeys_select">旅程を選択すると詳細が表示されます。</string>
+    <string name="nearby_departures_filters_no_matches">%1$d件の結果がありますが、フィルターに一致するものはありません。周辺の出発情報を表示するには、フィルターを解除するか、選択範囲を広げてください。</string>
 </resources>

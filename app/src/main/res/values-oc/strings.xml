@@ -158,4 +158,5 @@
     <string name="saved_journeys_description">Volètz recebre d’informacions sus vòstra correspondéncia pendent lo viatge e èsser avisat de las perturbacions ? Enregistratz vòstre viatge dins la recèrca d’oraris en quichant sul boton estela.</string>
     <string name="saved_journeys_plan">Planificar un viatge</string>
     <string name="saved_journeys_select">Seleccionatz un viatge per veire los detalhs.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d resultats, mas cap correspond pas als filtres. Suprimissètz o espandissètz la seleccion dels filtres per afichar las parténças a proximitat.</string>
 </resources>

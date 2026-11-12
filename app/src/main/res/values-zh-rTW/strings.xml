@@ -164,4 +164,5 @@
     <string name="saved_journeys_description">您想在旅途中接收轉乘資訊和營運中斷通知嗎？請在時刻表搜尋中點選星號按鈕儲存行程。</string>
     <string name="saved_journeys_plan">規劃行程</string>
     <string name="saved_journeys_select">選擇行程以查看詳細資訊。</string>
+    <string name="nearby_departures_filters_no_matches">有 %1$d 個結果，但沒有符合篩選條件的結果。請取消篩選或擴大篩選範圍，以顯示附近的發車資訊。</string>
 </resources>

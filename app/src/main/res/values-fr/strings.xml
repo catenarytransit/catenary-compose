@@ -166,4 +166,5 @@
     <string name="saved_journeys_description">Souhaitez-vous recevoir des informations sur votre trajet pendant le voyage et être informé des perturbations ? Enregistrez votre voyage dans la recherche d’horaires en appuyant sur le bouton étoile.</string>
     <string name="saved_journeys_plan">Planifier un voyage</string>
     <string name="saved_journeys_select">Sélectionnez un voyage pour afficher ses détails.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d résultats, mais aucun ne correspond aux filtres. Supprimez ou élargissez la sélection des filtres pour afficher les départs à proximité.</string>
 </resources>

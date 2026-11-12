@@ -164,4 +164,5 @@
     <string name="saved_journeys_description">Doriți să primiți informații despre conexiunea dumneavoastră în timpul călătoriei și notificări despre perturbări? Salvați călătoria în căutarea orarelor apăsând butonul cu stea.</string>
     <string name="saved_journeys_plan">Planifică o călătorie</string>
     <string name="saved_journeys_select">Selectați o călătorie pentru a vedea detaliile.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d rezultate, dar niciunul nu corespunde filtrelor. Eliminați sau extindeți selecția filtrelor pentru a afișa plecările din apropiere.</string>
 </resources>

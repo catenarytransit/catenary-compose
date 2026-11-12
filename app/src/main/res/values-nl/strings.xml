@@ -163,4 +163,5 @@
     <string name="saved_journeys_description">Wilt u tijdens uw reis informatie over uw verbinding ontvangen en meldingen krijgen over verstoringen? Sla uw reis op in de dienstregelingzoeker door op de sterknop te drukken.</string>
     <string name="saved_journeys_plan">Een reis plannen</string>
     <string name="saved_journeys_select">Selecteer een reis om details te bekijken.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d resultaten, maar geen enkele komt overeen met de filters. Verwijder of verruim de filterselectie om vertrekken in de buurt te tonen.</string>
 </resources>

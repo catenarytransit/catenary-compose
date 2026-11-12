@@ -163,4 +163,5 @@
     <string name="saved_journeys_description">Vuoi ricevere informazioni sul tuo collegamento durante il viaggio e notifiche sulle perturbazioni? Salva il viaggio nella ricerca degli orari premendo il pulsante a stella.</string>
     <string name="saved_journeys_plan">Pianifica un viaggio</string>
     <string name="saved_journeys_select">Seleziona un viaggio per visualizzare i dettagli.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d risultati, ma nessuno corrisponde ai filtri. Rimuovi o amplia la selezione dei filtri per mostrare le partenze nelle vicinanze.</string>
 </resources>

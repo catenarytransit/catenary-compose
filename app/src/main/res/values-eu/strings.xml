@@ -161,4 +161,5 @@
     <string name="saved_journeys_description">Bidaian zehar zure konexioari buruzko informazioa eta gorabeheren jakinarazpenak jaso nahi dituzu? Gorde bidaia ordutegien bilaketan izarraren botoia sakatuz.</string>
     <string name="saved_journeys_plan">Bidaia planifikatu</string>
     <string name="saved_journeys_select">Hautatu bidaia bat xehetasunak ikusteko.</string>
+    <string name="nearby_departures_filters_no_matches">%1$d emaitza, baina bat ere ez dator bat iragazkiekin. Kendu edo zabaldu iragazkien hautaketa inguruko irteerak erakusteko.</string>
 </resources>

@@ -164,4 +164,5 @@
     <string name="saved_journeys_description">您想在旅途中接收接续信息和运营中断通知吗？请在时刻表搜索中点击星标按钮保存行程。</string>
     <string name="saved_journeys_plan">规划行程</string>
     <string name="saved_journeys_select">选择行程以查看详情。</string>
+    <string name="nearby_departures_filters_no_matches">有 %1$d 个结果，但没有符合筛选条件的结果。请取消筛选或扩大筛选范围，以显示附近的发车信息。</string>
 </resources>
