@@ -95,17 +95,6 @@ private enum class SortMode {
         DISTANCE
 }
 
-private data class Filters(
-        val rail: Boolean = false,
-        val metro: Boolean = false,
-        val tram: Boolean = false,
-        val bus: Boolean = false,
-        val other: Boolean = false,
-        val funicular: Boolean = false,
-        val monorail: Boolean = false,
-        val cableTram: Boolean = false
-)
-
 private object FilterPreferences {
         private const val PREFS_NAME = "catenary_filter_prefs"
         private const val KEY_RAIL = "filter_rail"
@@ -117,7 +106,7 @@ private object FilterPreferences {
         private const val KEY_MONORAIL = "filter_monorail"
         private const val KEY_CABLE_TRAM = "filter_cable_tram"
 
-        fun saveFilters(context: Context, filters: Filters) {
+        fun saveFilters(context: Context, filters: NearbyDepartureFilters) {
                 val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 with(prefs.edit()) {
                         putBoolean(KEY_RAIL, filters.rail)
@@ -132,9 +121,9 @@ private object FilterPreferences {
                 }
         }
 
-        fun loadFilters(context: Context): Filters {
+        fun loadFilters(context: Context): NearbyDepartureFilters {
                 val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                return Filters(
+                return NearbyDepartureFilters(
                         rail = prefs.getBoolean(KEY_RAIL, false),
                         metro = prefs.getBoolean(KEY_METRO, false),
                         tram = prefs.getBoolean(KEY_TRAM, false),
@@ -144,32 +133,6 @@ private object FilterPreferences {
                         monorail = prefs.getBoolean(KEY_MONORAIL, false),
                         cableTram = prefs.getBoolean(KEY_CABLE_TRAM, false)
                 )
-        }
-}
-
-// Rough mapping mirroring the JS filter buckets
-private fun isAllowedByFilter(
-        routeType: Int,
-        f: Filters,
-        hasFunicular: Boolean,
-        hasMonorail: Boolean,
-        hasCableTram: Boolean
-): Boolean {
-        val allDisabled = !f.rail && !f.metro && !f.tram && !f.bus && !f.other &&
-                !(hasFunicular && f.funicular) &&
-                !(hasMonorail && f.monorail) &&
-                !(hasCableTram && f.cableTram)
-        if (allDisabled) return true
-        return when (routeType) {
-                3, 11, 700 -> f.bus
-                1 -> f.metro
-                0, 900 -> f.tram
-                5 -> if (hasCableTram) f.cableTram else f.tram
-                7 -> if (hasFunicular) f.funicular else f.metro
-                12 -> if (hasMonorail) f.monorail else f.metro
-                2, 106, 107, 101, 100, 102, 103 -> f.rail
-                4 -> f.other // ferries
-                else -> true
         }
 }
 
@@ -776,7 +739,7 @@ fun NearbyDepartures(
                         // Spacer(Modifier.height(8.dp))
                 }
 
-                if (hasNonBusDepartures) {
+                if (filters.shouldShowControls(hasNonBusDepartures)) {
                         FilterRow(
                                 filters = filters,
                                 hasFunicular = hasFunicular,
@@ -785,6 +748,11 @@ fun NearbyDepartures(
                                 darkMode = darkMode,
                                 onChange = { filters = it }
                         )
+                }
+                if (filters.isActive) {
+                        TextButton(onClick = { filters = NearbyDepartureFilters() }) {
+                                Text(stringResource(R.string.reset_route_filters))
+                        }
                 }
                 Box(Modifier.fillMaxSize()) {
                         // The drawer owns the bottom inset, including the Explore/Trips bar.
@@ -800,7 +768,10 @@ fun NearbyDepartures(
                                                         modifier = Modifier.padding(8.dp))
                                         }
                                 }
-                                if (sorted.isEmpty() && firstLoadComplete && !loading && !offline) {
+                                val hasUnfilteredDepartures = departureList.any { it.headsigns.isNotEmpty() } ||
+                                        stopsTableLongDistance.any { it.departures.isNotEmpty() }
+                                if (sorted.isEmpty() && firstLoadComplete && !loading && !offline &&
+                                        !(filters.isActive && hasUnfilteredDepartures)) {
                                         item {
                                                 Spacer(Modifier.height(8.dp))
                                                 Text(
@@ -1273,12 +1244,12 @@ private fun TopRow(
 
 @Composable
 private fun FilterRow(
-        filters: Filters,
+        filters: NearbyDepartureFilters,
         hasFunicular: Boolean,
         hasMonorail: Boolean,
         hasCableTram: Boolean,
         darkMode: Boolean,
-        onChange: (Filters) -> Unit
+        onChange: (NearbyDepartureFilters) -> Unit
 ) {
         Row(
                 modifier = Modifier
@@ -1299,17 +1270,17 @@ private fun FilterRow(
                 FilterChip(stringResource(R.string.heading_tram), filters.tram, darkMode) {
                         onChange(filters.copy(tram = !filters.tram))
                 }
-                if (hasCableTram) {
+                if (hasCableTram || filters.cableTram) {
                         FilterChip(stringResource(R.string.heading_cable_tram), filters.cableTram, darkMode) {
                                 onChange(filters.copy(cableTram = !filters.cableTram))
                         }
                 }
-                if (hasFunicular) {
+                if (hasFunicular || filters.funicular) {
                         FilterChip(stringResource(R.string.heading_funicular), filters.funicular, darkMode) {
                                 onChange(filters.copy(funicular = !filters.funicular))
                         }
                 }
-                if (hasMonorail) {
+                if (hasMonorail || filters.monorail) {
                         FilterChip(stringResource(R.string.heading_monorail), filters.monorail, darkMode) {
                                 onChange(filters.copy(monorail = !filters.monorail))
                         }
