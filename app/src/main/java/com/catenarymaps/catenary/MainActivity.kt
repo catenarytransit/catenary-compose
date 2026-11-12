@@ -5151,7 +5151,7 @@ class MainActivity : ComponentActivity() {
                                                 modifier =
                                                         Modifier
                                                                 .align(Alignment.BottomCenter)
-                                                                .zIndex(5f), // Ensure it's on top
+                                                                .zIndex(11f), // Above navigation and all other screen overlays.
                                                 enter = slideInVertically(initialOffsetY = { it }),
                                                 exit = slideOutVertically(targetOffsetY = { it })
                                         ) {
