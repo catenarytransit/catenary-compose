@@ -62,6 +62,56 @@ class NearbyDepartureStreamTest {
         assertTrue(snapshots.last().local.isEmpty())
     }
 
+    @Test fun refreshKeepsExistingDeparturesUntilBothPhasesAreReady() {
+        val old = NearbyResponseV3(local = listOf(route(headsigns = mapOf("Old" to listOf(departure())))))
+        val priority = NearbyResponseV3(local = listOf(route(headsigns = mapOf("North" to listOf(departure(200))))))
+        val remaining = NearbyResponseV3(local = listOf(route(headsigns = mapOf("South" to listOf(departure(300))))))
+        var displayed = old
+        val state = NearbyDepartureStreamState("request", publishPriority = false)
+        assertFalse(state.accept(frame("priority", priority)) { displayed = it })
+        assertSame(old, displayed)
+        assertTrue(state.accept(frame("remaining", remaining)) { displayed = it })
+        assertEquals(setOf("North", "South"), displayed.local.single().headsigns.keys)
+    }
+
+    @Test fun cancelledRefreshCannotLeakPriorityIntoItsReplacement() {
+        val old = NearbyResponseV3(local = listOf(route(headsigns = mapOf("Old" to listOf(departure())))))
+        var displayed = old
+        val cancelled = NearbyDepartureStreamState("cancelled", publishPriority = false)
+        cancelled.accept(frame("priority", NearbyResponseV3(), "cancelled")) { displayed = it }
+        // Repeated presses cancel the previous collector and create a fresh request accumulator.
+        val replacement = NearbyDepartureStreamState("request", publishPriority = false)
+        assertFalse(replacement.accept(frame("remaining", NearbyResponseV3(), "cancelled")) { displayed = it })
+        replacement.accept(frame("priority", NearbyResponseV3())) { displayed = it }
+        assertSame(old, displayed)
+        assertTrue(replacement.accept(frame("remaining", old)) { displayed = it })
+        assertEquals(old, displayed)
+    }
+
+    @Test fun failedRefreshDoesNotReplaceExistingDeparturesWithPartialOrEmptyData() {
+        val old = NearbyResponseV3(local = listOf(route(headsigns = mapOf("Old" to listOf(departure())))))
+        var displayed = old
+        val state = NearbyDepartureStreamState("request", publishPriority = false)
+        state.accept(frame("priority", NearbyResponseV3())) { displayed = it }
+        try {
+            state.accept(NearbyDepartureMessage("nearby_departures_error", "request", message = "Failed")) {
+                displayed = it
+            }
+            fail("Expected refresh failure")
+        } catch (_: IOException) {
+            assertSame(old, displayed)
+        }
+    }
+
+    @Test fun completedEmptyRefreshRemovesExpiredDepartures() {
+        val snapshots = mutableListOf<NearbyResponseV3>()
+        val state = NearbyDepartureStreamState("request", publishPriority = false)
+        state.accept(frame("priority", NearbyResponseV3()), snapshots::add)
+        assertTrue(snapshots.isEmpty())
+        assertTrue(state.accept(frame("remaining", NearbyResponseV3()), snapshots::add))
+        assertEquals(listOf(NearbyResponseV3()), snapshots)
+    }
+
     @Test fun wireFieldsMatchBackendAndEmptyRemainingStillCompletes() {
         val state = NearbyDepartureStreamState("request")
         val json = Json { ignoreUnknownKeys = true }
