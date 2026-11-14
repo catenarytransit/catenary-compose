@@ -167,4 +167,5 @@
     <string name="saved_journeys_plan">Planifier un voyage</string>
     <string name="saved_journeys_select">Sélectionnez un voyage pour afficher ses détails.</string>
     <string name="nearby_departures_filters_no_matches">%1$d résultats, mais aucun ne correspond aux filtres. Supprimez ou élargissez la sélection des filtres pour afficher les départs à proximité.</string>
+    <string name="directions_trip_info">Informations sur le trajet</string>
 </resources>

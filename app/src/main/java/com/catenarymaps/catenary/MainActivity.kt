@@ -1344,6 +1344,20 @@ class MainActivity : ComponentActivity() {
                             kotlinx.coroutines.delay(60_000)
                         }
                     }
+                    var returnToSavedTrips by rememberSaveable { mutableStateOf(false) }
+                    LaunchedEffect(catenaryStack.isEmpty()) {
+                        if (catenaryStack.isEmpty() && returnToSavedTrips) {
+                            returnToSavedTrips = false
+                            savedTripsVisible = true
+                        }
+                    }
+                    val openJourneyTrip: (CatenaryStackEnum.SingleTrip) -> Unit = { trip ->
+                        if (savedTripsVisible) {
+                            returnToSavedTrips = true
+                            savedTripsVisible = false
+                        }
+                        catenaryStack = ArrayDeque(catenaryStack).apply { addLast(trip) }
+                    }
                     val directionsVisible = catenaryStack.lastOrNull() is CatenaryStackEnum.DirectionsStack
                     val plannerVisible by rememberUpdatedState(directionsVisible)
                     LaunchedEffect(tripPlanner, plannerSessionStore) {
@@ -3731,6 +3745,7 @@ class MainActivity : ComponentActivity() {
                                                                 }
 
                                                                 val onHome: () -> Unit = {
+                                                                        returnToSavedTrips = false
                                                                         catenaryStack = ArrayDeque()
                                                                 }
                                                                 Column(
@@ -3747,6 +3762,7 @@ class MainActivity : ComponentActivity() {
                                                                             is CatenaryStackEnum.DirectionsStack -> {
                                                                                 TripPlannerScreen(
                                                                                     planner = tripPlanner,
+                                                                                    onTripInfo = openJourneyTrip,
                                                                                     client = ktorHttpClient,
                                                                                     streetUsUnits = streetUsUnits,
                                                                                     // The handle occupies 24.dp above the list. Reserve only
@@ -4385,7 +4401,7 @@ class MainActivity : ComponentActivity() {
                                                                         Column(Modifier.weight(1f).fillMaxHeight().background(TripPlannerColors.background)) {
                                                                                 inputs(true)
                                                                                 Box(Modifier.weight(1f)) {
-                                                                                        TripPlannerScreen(tripPlanner, ktorHttpClient, streetUsUnits, resultsOnly = true, resultsState = directionsResultsState)
+                                                                                        TripPlannerScreen(tripPlanner, ktorHttpClient, streetUsUnits, resultsOnly = true, resultsState = directionsResultsState, onTripInfo = openJourneyTrip)
                                                                                 }
                                                                         }
                                                                         if (!tripPlanner.usingMap) {
@@ -4394,7 +4410,7 @@ class MainActivity : ComponentActivity() {
                                                                                         if (tripPlanner.details) {
                                                                                                 JourneySummary(tripPlanner, streetUsUnits, showBack = false, client = ktorHttpClient)
                                                                                                 Box(Modifier.weight(1f)) {
-                                                                                                        tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits) }
+                                                                                                        tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits, onTripInfo = openJourneyTrip) }
                                                                                                 }
                                                                                         } else {
                                                                                                 Box(Modifier.fillMaxSize().background(TripPlannerColors.background).padding(24.dp),
@@ -4411,7 +4427,7 @@ class MainActivity : ComponentActivity() {
                                                                 Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
                                                                         inputs(false)
                                                                         Box(Modifier.weight(1f)) {
-                                                                                TripPlannerScreen(tripPlanner, ktorHttpClient, streetUsUnits, resultsState = directionsResultsState)
+                                                                                TripPlannerScreen(tripPlanner, ktorHttpClient, streetUsUnits, resultsState = directionsResultsState, onTripInfo = openJourneyTrip)
                                                                         }
                                                                 }
                                                         }
@@ -4420,6 +4436,7 @@ class MainActivity : ComponentActivity() {
 
                                         if (savedTripsVisible) {
                                             SavedJourneysScreen(
+                                                onTripInfo = openJourneyTrip,
                                                 client = ktorHttpClient,
                                                 streetUsUnits = streetUsUnits,
                                                 wide = isWideLayout,

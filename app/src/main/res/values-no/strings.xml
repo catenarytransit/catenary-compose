@@ -164,4 +164,5 @@
     <string name="saved_journeys_plan">Planlegg en reise</string>
     <string name="saved_journeys_select">Velg en reise for å se detaljer.</string>
     <string name="nearby_departures_filters_no_matches">%1$d resultater, men ingen samsvarer med filtrene. Fjern eller utvid filtervalget for å vise avganger i nærheten.</string>
+    <string name="directions_trip_info">Turinformasjon</string>
 </resources>

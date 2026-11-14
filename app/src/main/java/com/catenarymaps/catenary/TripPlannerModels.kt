@@ -16,7 +16,7 @@ data class DirectionsLocation(
 data class DirectionsPoint(
     val name: String = "", val lat: Double? = null, val lon: Double? = null,
     val platform: String? = null, val platformCode: String? = null,
-    val timezone: String? = null
+    val timezone: String? = null, val stopId: String? = null
 )
 @Serializable
 data class DirectionsStop(
@@ -38,7 +38,9 @@ data class DirectionsLeg(
     val fromPlatform: String? = null, val toPlatform: String? = null,
     val intermediateStops: List<DirectionsStop> = emptyList(),
     val legGeometry: DirectionsGeometry? = null,
-    val headsign: String? = null
+    val headsign: String? = null,
+    val tripId: String? = null, val tripStartDate: String? = null, val tripStartTime: String? = null,
+    val fromStopSequence: Int? = null, val toStopSequence: Int? = null
 ) {
     val walking get() = mode.uppercase() in setOf("WALK", "FOOT", "PEDESTRIAN")
     val street get() = walking || mode.uppercase() in setOf("BIKE", "BICYCLE")

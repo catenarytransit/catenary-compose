@@ -20,7 +20,8 @@ sealed interface CatenaryStackEnum {
             val start_time: String?,
             val start_date: String?,
             val vehicle_id: String?,
-            val route_type: Int?
+            val route_type: Int?,
+            val journeySegment: JourneyTripSegment? = null
     ) : CatenaryStackEnum
 
     @Serializable
