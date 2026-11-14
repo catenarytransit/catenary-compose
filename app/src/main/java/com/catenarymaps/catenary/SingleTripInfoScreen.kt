@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalConfiguration
@@ -480,6 +481,9 @@ fun SingleTripInfoScreen(
         val error by viewModel.error.collectAsState()
         val tripData by viewModel.tripData.collectAsState()
         val stopTimes by viewModel.stopTimes.collectAsState()
+        val journeyRange = remember(stopTimes, tripSelected.journeySegment) {
+                resolveJourneyTripRange(stopTimes.map { it.raw }, tripSelected.journeySegment)
+        }
         // val showPreviousStops by viewModel.showPreviousStops.collectAsState() // Removed
         val lastInactiveStopIdx by viewModel.lastInactiveStopIdx.collectAsState()
 
@@ -1467,6 +1471,7 @@ fun SingleTripInfoScreen(
                                 LaunchedEffect(
                                         stopTimes,
                                         lastInactiveStopIdx,
+                                        journeyRange,
                                         tripData,
                                         isLoading
                                 ) {
@@ -1476,7 +1481,7 @@ fun SingleTripInfoScreen(
                                         ) {
                                                 delay(100)
                                                 val targetStopIndex =
-                                                        (lastInactiveStopIdx + 1).coerceIn(
+                                                        journeyRange?.from ?: (lastInactiveStopIdx + 1).coerceIn(
                                                                 0,
                                                                 stopTimes.indices.last
                                                         )
@@ -1527,6 +1532,7 @@ fun SingleTripInfoScreen(
 
                                                 StopListItem(
                                                         stopTime = stopTime,
+                                                        journeyStop = journeyRange?.stop(i),
                                                         tripColorStr = data.color ?: "#808080",
                                                         isFirst = i == 0,
                                                         isLast = i == stopTimes.lastIndex,
@@ -1887,9 +1893,15 @@ fun StopListItem(
         usUnits: Boolean = false,
         compactRows: Boolean = false,
         shortenStationSuffix: Boolean = false,
+        journeyStop: JourneyStopPresentation? = null,
 ) {
-        val isDark = isSystemInDarkTheme()
+        val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
         val neutralColor = if (isDark) Color(0xFFDDDDDD) else Color(0xFF333333)
+        val fullContrast = if (isDark) Color.White else Color.Black
+        val mutedColor = if (isDark) Color(0xFF9CA3AF) else Color(0xFF6B7280)
+        val journeyTextColor = journeyStop?.let { if (it.active) fullContrast else mutedColor }
+        val incomingColor = journeyStop?.let { if (it.incomingActive) fullContrast else mutedColor }
+        val outgoingColor = journeyStop?.let { if (it.outgoingActive) fullContrast else mutedColor }
         val cancellationColor = if (isDark) Color(0xFFEF4444) else Color(0xFFDC2626)
         val tripColor =
                 try {
@@ -1924,7 +1936,9 @@ fun StopListItem(
                         isDoubleTime,
                         showSeconds,
                         showOriginalTimetable,
-                        showCountdown
+                        showCountdown,
+                        isInactive,
+                        journeyTextColor
                 ) {
                         val list = mutableListOf<@Composable () -> Unit>()
 
@@ -1949,7 +1963,7 @@ fun StopListItem(
                                                                         timezone = tz,
                                                                         timeSeconds = schedArr,
                                                                         showSeconds = false,
-                                                                        color = Color.Gray,
+                                                                        color = journeyTextColor ?: Color.Gray,
                                                                         style =
                                                                                 MaterialTheme
                                                                                         .typography
@@ -1981,7 +1995,7 @@ fun StopListItem(
                                                                         timeSeconds = arrTime,
                                                                         showSeconds = showSeconds,
                                                                         color =
-                                                                                if (isInactive)
+                                                                                journeyTextColor ?: if (isInactive)
                                                                                         Color.Gray
                                                                                 else
                                                                                         MaterialTheme
@@ -2036,7 +2050,9 @@ fun StopListItem(
                         isDoubleTime,
                         showSeconds,
                         showOriginalTimetable,
-                        showCountdown
+                        showCountdown,
+                        isInactive,
+                        journeyTextColor
                 ) {
                         val headerHeightLocal = if (isDoubleTime) 20.dp else 24.dp
                         if (isDoubleTime) {
@@ -2063,7 +2079,7 @@ fun StopListItem(
                                                                         timezone = tz,
                                                                         timeSeconds = schedDep,
                                                                         showSeconds = false,
-                                                                        color = Color.Gray,
+                                                                        color = journeyTextColor ?: Color.Gray,
                                                                         style =
                                                                                 MaterialTheme
                                                                                         .typography
@@ -2098,7 +2114,7 @@ fun StopListItem(
                                                                         timeSeconds = depTime,
                                                                         showSeconds = showSeconds,
                                                                         color =
-                                                                                if (isInactive)
+                                                                                journeyTextColor ?: if (isInactive)
                                                                                         Color.Gray
                                                                                 else
                                                                                         MaterialTheme
@@ -2198,7 +2214,7 @@ fun StopListItem(
                                                                                 timeSeconds =
                                                                                         unifiedSched,
                                                                                 showSeconds = false,
-                                                                                color = Color.Gray,
+                                                                                color = journeyTextColor ?: Color.Gray,
                                                                                 style =
                                                                                         MaterialTheme
                                                                                                 .typography
@@ -2236,7 +2252,7 @@ fun StopListItem(
                                                                                 showSeconds =
                                                                                         showSeconds,
                                                                                 color =
-                                                                                        if (isInactive
+                                                                                        journeyTextColor ?: if (isInactive
                                                                                         )
                                                                                                 Color.Gray
                                                                                         else
@@ -2366,10 +2382,10 @@ fun StopListItem(
                                         .fillMaxHeight()) {
                                         if (!isFirst) {
                                                 TimelineLine(
-                                                        color = neutralColor,
-                                                        isPast = isInactive,
+                                                        color = incomingColor ?: neutralColor,
+                                                        isPast = journeyStop == null && isInactive,
                                                         isDashed = isTopDashed,
-                                                        cancellationColor = cancellationColor,
+                                                        cancellationColor = incomingColor ?: cancellationColor,
                                                         modifier = Modifier.fillMaxSize()
                                                 )
                                         }
@@ -2413,6 +2429,10 @@ fun StopListItem(
                                 TripProgressIndicator(
                                         color = tripColor,
                                         neutralColor = neutralColor,
+                                        topLineColor = incomingColor,
+                                        bottomLineColor = outgoingColor,
+                                        dotColor = journeyTextColor,
+                                        filledDot = journeyStop?.endpoint == true,
                                         isFirst = isFirst, // Standard Dot Logic
                                         isLast = isLast,
                                         isTopPast = isInactive,
@@ -2455,7 +2475,7 @@ fun StopListItem(
                                         // Station Name
                                         stopTime.raw.name?.let { displayTrainStationStopName(it, shortenStationSuffix) }?.let {
                                                 val stopNameColor =
-                                                        if (isInactive) Color.Gray
+                                                        journeyTextColor ?: if (isInactive) Color.Gray
                                                         else MaterialTheme.colorScheme.onSurface
                                                 val stopLabel = buildAnnotatedString {
                                                         withStyle(
@@ -2494,7 +2514,7 @@ fun StopListItem(
                                                         text = stopLabel,
                                                         style = MaterialTheme.typography.bodyLarge,
                                                         color = stopNameColor,
-                                                        fontWeight = FontWeight.Normal,
+                                                        fontWeight = if (journeyStop?.endpoint == true) FontWeight.Bold else FontWeight.Normal,
                                                         modifier =
                                                                 Modifier
                                                                         .clickable(
@@ -2602,10 +2622,10 @@ fun StopListItem(
                                         .width(16.dp)
                                         .fillMaxHeight()) {
                                         TimelineLine(
-                                                color = neutralColor,
-                                                isPast = isBottomSegmentPast,
+                                                color = outgoingColor ?: neutralColor,
+                                                isPast = journeyStop == null && isBottomSegmentPast,
                                                 isDashed = isBottomDashed,
-                                                cancellationColor = cancellationColor,
+                                                cancellationColor = outgoingColor ?: cancellationColor,
                                                 modifier = Modifier.fillMaxSize()
                                         )
                                 }
@@ -2671,9 +2691,13 @@ fun TripProgressIndicator(
         modifier: Modifier = Modifier,
         dotOffset: androidx.compose.ui.unit.Dp? = null,
         isAtStop: Boolean = false,
-        movingDotProgress: Float? = null
+        movingDotProgress: Float? = null,
+        topLineColor: Color? = null,
+        bottomLineColor: Color? = null,
+        dotColor: Color? = null,
+        filledDot: Boolean = false
 ) {
-        val isDark = isSystemInDarkTheme()
+        val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
         Canvas(modifier = modifier) {
                 val canvasWidth = size.width
                 val canvasHeight = size.height
@@ -2687,21 +2711,21 @@ fun TripProgressIndicator(
 
                 if (!isFirst) {
                         drawPearlSegment(
-                                lineColor = (if (isTopDashed) cancellationColor else neutralColor)
+                                lineColor = topLineColor ?: (if (isTopDashed) cancellationColor else neutralColor)
                                         .copy(alpha = if (isTopPast) 0.5f else 1f),
                                 startY = 0f,
                                 endY = hCenter,
-                                width = (if (isTopDashed || !isTopPast) 2.dp else 1.dp).toPx(),
+                                width = (if (topLineColor != null || isTopDashed || !isTopPast) 2.dp else 1.dp).toPx(),
                                 dashed = isTopDashed
                         )
                 }
                 if (!isLast) {
                         drawPearlSegment(
-                                lineColor = (if (isBottomDashed) cancellationColor else neutralColor)
+                                lineColor = bottomLineColor ?: (if (isBottomDashed) cancellationColor else neutralColor)
                                         .copy(alpha = if (isBottomPast) 0.5f else 1f),
                                 startY = hCenter,
                                 endY = canvasHeight,
-                                width = (if (isBottomDashed || !isBottomPast) 2.dp else 1.dp).toPx(),
+                                width = (if (bottomLineColor != null || isBottomDashed || !isBottomPast) 2.dp else 1.dp).toPx(),
                                 dashed = isBottomDashed
                         )
                 }
@@ -2710,7 +2734,7 @@ fun TripProgressIndicator(
                 val dotRadius = 4.dp.toPx()
                 val center = Offset(wCenter, hCenter)
                 val dotNeutralColor =
-                        if (isCancelledStop) cancellationColor
+                        dotColor ?: if (isCancelledStop) cancellationColor
                         else if (isTopPast) neutralColor.copy(alpha = 0.5f) else neutralColor
 
                 // Always Neutral Circle
@@ -2757,8 +2781,10 @@ fun TripProgressIndicator(
                         )
                 }
 
-                // Pulsing logic for "At Stop"
-                if (isAtStop) {
+                if (filledDot) drawCircle(color = dotNeutralColor, radius = dotRadius, center = center)
+
+                // Keep journey endpoints in full contrast when a vehicle is at the stop.
+                if (isAtStop && dotColor == null) {
                         drawCircle(color = color, radius = dotRadius * 0.8f, center = center)
                 }
 

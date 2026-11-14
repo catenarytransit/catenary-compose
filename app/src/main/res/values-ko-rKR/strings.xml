@@ -167,4 +167,5 @@
     <string name="saved_journeys_plan">여정 계획</string>
     <string name="saved_journeys_select">여정을 선택하여 세부 정보를 확인하세요.</string>
     <string name="nearby_departures_filters_no_matches">결과가 %1$d개 있지만 필터와 일치하는 결과가 없습니다. 주변 출발 정보를 보려면 필터를 해제하거나 선택 범위를 넓히세요.</string>
+    <string name="directions_trip_info">운행 정보</string>
 </resources>
