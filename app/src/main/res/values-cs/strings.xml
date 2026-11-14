@@ -166,4 +166,5 @@
     <string name="saved_journeys_plan">Naplánovat cestu</string>
     <string name="saved_journeys_select">Vyberte cestu pro zobrazení podrobností.</string>
     <string name="nearby_departures_filters_no_matches">%1$d výsledků, ale žádný neodpovídá filtrům. Zrušte nebo rozšiřte výběr filtrů, aby se zobrazily odjezdy v okolí.</string>
+    <string name="directions_trip_info">Informace o spoji</string>
 </resources>

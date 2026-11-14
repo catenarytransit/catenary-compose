@@ -99,6 +99,7 @@ fun TripPlannerScreen(
     detailsTopPadding: androidx.compose.ui.unit.Dp = 0.dp,
     resultsOnly: Boolean = false,
     resultsState: LazyListState = rememberLazyListState(),
+    onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null,
     onSelectJourney: (DirectionsItinerary) -> Unit = {}
 ) {
     val focus = LocalFocusManager.current
@@ -111,7 +112,7 @@ fun TripPlannerScreen(
     }
     androidx.activity.compose.BackHandler(enabled = planner.details) { planner.details = false }
     if (planner.details && !resultsOnly) {
-        planner.selectedJourney?.let { journey -> JourneyDetails(planner, journey, streetUsUnits, detailsTopPadding) }
+        planner.selectedJourney?.let { journey -> JourneyDetails(planner, journey, streetUsUnits, detailsTopPadding, onTripInfo) }
     } else {
         ConnectionResults(planner, client, streetUsUnits, resultsState) { journey ->
             planner.selectJourney(journey)
@@ -124,7 +125,8 @@ fun TripPlannerScreen(
 @Composable
 internal fun JourneyDetails(
     planner: TripPlannerViewModel, journey: DirectionsItinerary, streetUsUnits: Boolean,
-    topPadding: androidx.compose.ui.unit.Dp = 0.dp
+    topPadding: androidx.compose.ui.unit.Dp = 0.dp,
+    onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null
 ) {
     key(journey.identity()) {
         val state = rememberLazyListState()
@@ -152,7 +154,7 @@ internal fun JourneyDetails(
             state = state, contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
-            items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits) }
+            items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits, onTripInfo) }
             item { JourneyEndpoint(planner.destination?.name.orEmpty(), false) }
         }
     }
@@ -772,7 +774,7 @@ private fun ConnectionRow(
 
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
-private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
+private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean, onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)?) {
     var expanded by remember(leg) { mutableStateOf(false) }
     val shortenStationSuffix = remember(leg) {
         shouldShortenTrainStationStops(
@@ -818,6 +820,15 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean) {
                     ?: leg.routeLongName?.takeIf { it.isNotBlank() && NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId) }
                 if (direction != null) ConnectionRow(rail) {
                     Text(direction, style = MaterialTheme.typography.bodyMedium)
+                }
+                val tripInfo = remember(leg) { leg.singleTripInfo() }
+                if (tripInfo != null && onTripInfo != null) ConnectionRow(rail) {
+                    val linkColor = if (surface.luminance() < 0.5f) Color(0xFF93C5FD) else Color(0xFF1D4ED8)
+                    TextButton(onClick = { onTripInfo(tripInfo) }, contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.textButtonColors(contentColor = linkColor)) {
+                        Text(stringResource(R.string.directions_trip_info))
+                        Icon(Icons.Default.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp))
+                    }
                 }
                 ConnectionRow(rail) {
                     val stopsDuration = stringResource(R.string.directions_stops_duration,

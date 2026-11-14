@@ -81,7 +81,8 @@ private fun RowScope.HomeNavigationItem(selected: Boolean, onClick: () -> Unit, 
 @Composable
 internal fun SavedJourneysScreen(
     streetUsUnits: Boolean, wide: Boolean, foreground: Boolean,
-    onExplore: () -> Unit, onPlan: () -> Unit, modifier: Modifier = Modifier, client: HttpClient
+    onExplore: () -> Unit, onPlan: () -> Unit, modifier: Modifier = Modifier, client: HttpClient,
+    onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null
 ) {
     val context = LocalContext.current.applicationContext
     val planner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "saved-journey-details")
@@ -89,7 +90,7 @@ internal fun SavedJourneysScreen(
     var loaded by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
     var refresh by remember { mutableIntStateOf(0) }
-    var selectedIdentity by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedIdentity by rememberSaveable { mutableStateOf<String?>(planner.selectedJourney?.identity()) }
     LaunchedEffect(refresh, foreground) {
         if (foreground) while (true) {
             try {
@@ -164,7 +165,7 @@ internal fun SavedJourneysScreen(
                     JourneySummary(planner, streetUsUnits, showBack = !wide, showMapAction = false,
                         onSavedChanged = { refresh++ }, client = client)
                     Box(Modifier.weight(1f)) {
-                        planner.selectedJourney?.let { JourneyDetails(planner, it, streetUsUnits) }
+                        planner.selectedJourney?.let { JourneyDetails(planner, it, streetUsUnits, onTripInfo = onTripInfo) }
                     }
                 } else Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                     Text(stringResource(R.string.saved_journeys_select), modifier = Modifier.padding(24.dp))
