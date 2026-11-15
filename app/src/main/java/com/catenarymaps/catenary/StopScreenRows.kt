@@ -1100,7 +1100,7 @@ fun StationScreenTrainRowCompact(
                                                         fontSize = 10.sp
                                                 )
                                 )
-                        } else {
+                        }
                                 if (rtTime != null && schedTime != null && rtTime != schedTime) {
                                         // Sched (crossed)
                                         FormattedTimeText(
@@ -1190,7 +1190,7 @@ fun StationScreenTrainRowCompact(
                                                 )
                                         }
                                 }
-                        }
+
                         // TimeDiff (Countdown)
                         val diff = (rtTime ?: schedTime ?: 0) - currentTime
                         if (showTimeDiff && showCountdownsUnder1h && kotlin.math.abs(diff) < 3600 && (rtTime ?: schedTime) != null) {
@@ -1705,7 +1705,7 @@ fun StopScreenRowV2(
                                                                 MaterialTheme.typography.labelSmall
                                                                         .copy(fontSize = 10.sp)
                                                 )
-                                        } else {
+                                        }
                                                 if (rtTime != null &&
                                                                 schedTime != null &&
                                                                 rtTime != schedTime
@@ -1825,7 +1825,7 @@ fun StopScreenRowV2(
                                                                 )
                                                         }
                                                 }
-                                        }
+
                                         // TimeDiff (Countdown)
                                         val diff = (rtTime ?: schedTime ?: 0) - currentTime
                                         if (showLocalTransitCountdowns && diff < 3600 && (rtTime ?: schedTime) != null) {
