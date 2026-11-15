@@ -161,11 +161,14 @@ fun SearchResultsOverlay(
 
 @Composable
 fun RecentStationResultItem(recent: RecentStation, onClick: () -> Unit) {
-    Column(
+    Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        SearchTypeIcon(SearchTypeIcons.Recent)
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(
             text = recent.name,
             fontSize = 16.sp,
@@ -189,13 +192,14 @@ fun RecentStationResultItem(recent: RecentStation, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1
         )
+        }
     }
 }
 
 /** Shared location result layout; the planner supplies a distance in the user's units. */
 @Composable
 private fun LocationResultItem(
-    icon: ImageVector,
+    icon: String,
     distance: String?,
     onClick: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
@@ -206,8 +210,7 @@ private fun LocationResultItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        SearchTypeIcon(icon)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp),
             content = content)
         if (distance != null) {
@@ -217,24 +220,6 @@ private fun LocationResultItem(
     }
 }
 
-private fun locationTypeIcon(type: String): ImageVector = when (type.lowercase()) {
-    "bus", "bus_stop", "bus_station" -> Icons.Default.DirectionsBus
-    "tram", "light_rail" -> Icons.Default.Tram
-    "subway", "metro" -> Icons.Default.Subway
-    "rail", "train", "railway", "station" -> Icons.Default.Train
-    "ferry", "ferry_terminal" -> Icons.Default.DirectionsBoat
-    "airport", "aerodrome" -> Icons.Default.Flight
-    "restaurant", "cafe", "fast_food", "food" -> Icons.Default.Restaurant
-    "school", "university", "college", "education" -> Icons.Default.School
-    "hospital", "clinic", "healthcare" -> Icons.Default.LocalHospital
-    "hotel", "motel", "accommodation" -> Icons.Default.Hotel
-    "shop", "supermarket", "retail" -> Icons.Default.ShoppingCart
-    "park", "garden", "recreation" -> Icons.Default.Park
-    "address", "building" -> Icons.Default.Home
-    "street", "road" -> Icons.Default.Signpost
-    "country", "region", "county", "locality", "neighbourhood" -> Icons.Default.Public
-    else -> Icons.Default.Place
-}
 
 @Composable
 fun CypressResultItem(item: CypressFeature, distance: String? = null, onClick: () -> Unit) {
@@ -261,8 +246,7 @@ fun CypressResultItem(item: CypressFeature, distance: String? = null, onClick: (
                 props.layer.replaceFirstChar { it.uppercase() }
             }
 
-    val type = props.categories.firstOrNull()?.substringAfter(':') ?: props.layer
-    LocationResultItem(icon = locationTypeIcon(type), distance = distance, onClick = onClick) {
+    LocationResultItem(icon = SearchTypeIcons.place(props.categories, props.layer), distance = distance, onClick = onClick) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                     text = title,
@@ -309,14 +293,7 @@ fun StopResultItem(
     val distanceText = distance ?: distanceMetres?.let {
         if (it > 1000) String.format("%.1f km", it / 1000) else String.format("%.0f m", it)
     }
-    val icon = when (routes.firstOrNull()?.routeType) {
-        0 -> Icons.Default.Tram
-        1 -> Icons.Default.Subway
-        2 -> Icons.Default.Train
-        3 -> Icons.Default.DirectionsBus
-        4 -> Icons.Default.DirectionsBoat
-        else -> Icons.Default.Place
-    }
+    val icon = routes.firstOrNull()?.routeType?.let(SearchTypeIcons::route) ?: SearchTypeIcons.Location
     LocationResultItem(icon = icon, distance = distanceText, onClick = onClick) {
         Text(
             text = stopInfo.name,
@@ -338,70 +315,30 @@ fun StopResultItem(
             )
         }
 
-        // Updated RouteBadge calls in StopResultItem
-        if (listRoutes) {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) { routes.forEach { route -> RouteBadge(route = route, chateauId = ranking.chateau) } }
-        }
+
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RouteResultItem(routeInfo: RouteInfo, agency: Agency?, onClick: () -> Unit) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable { onClick() }
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RouteBadge(route = routeInfo, chateauId = routeInfo.chateau)
-
-                Column(modifier = Modifier.padding(start = 8.dp)) {
-                    Text(
-                        text =
-                            routeInfo.shortName
-                                ?: routeInfo.longName
-                                ?: routeInfo.routeId,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    if (!routeInfo.longName.isNullOrBlank()) {
-                        Text(
-                            text = routeInfo.longName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-
-            if (agency != null) {
-                Text(
-                    text = agency.agencyName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.End,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+    LocationResultItem(icon = SearchTypeIcons.route(routeInfo.routeType), distance = null, onClick = onClick) {
+        Text(
+            text = routeInfo.shortName ?: routeInfo.longName ?: routeInfo.routeId,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        if (!routeInfo.longName.isNullOrBlank()) {
+            Text(routeInfo.longName, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        if (agency != null) {
+            Text(agency.agencyName, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -417,7 +354,7 @@ fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = nul
         )
     val subtitle = subtitleParts.joinToString(", ")
 
-    LocationResultItem(icon = locationTypeIcon(result.modeType), distance = distance, onClick = onClick) {
+    LocationResultItem(icon = SearchTypeIcons.mode(result.modeType), distance = distance, onClick = onClick) {
         Text(
             text = result.name ?: "Unknown station",
             fontWeight = FontWeight.Medium,
@@ -437,18 +374,7 @@ fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = nul
             )
         }
 
-        if (result.routes.isNotEmpty() && listRoutes == true) {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                result.routes.forEach { route ->
-                    // For OSM station chips we may not always know the chateau; fall back to
-                    // route.chateau when present, else an empty string.
-                    RouteBadge(route = route, chateauId = route.chateau)
-                }
-            }
-        }
+
     }
 }
 
