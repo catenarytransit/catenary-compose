@@ -74,11 +74,16 @@ data class RouteGroupV3(
  * Length-prefixed fields avoid collisions when IDs contain separators or are adjacent
  * to numeric timestamps. A null timestamp is different from a non-null one.
  */
-internal fun LocalDepartureItem.stableDepartureKey(): String =
-        listOf(tripId, serviceDate, stopId, departureSchedule, arrivalSchedule)
+internal fun LocalDepartureItem.stableDepartureKey(): String {
+        val hasSchedule = departureSchedule != null || arrivalSchedule != null
+        val t1 = if (hasSchedule) departureSchedule else departureRealtime
+        val t2 = if (hasSchedule) arrivalSchedule else arrivalRealtime
+
+        return listOf(tripId, serviceDate, stopId, t1, t2)
                 .joinToString(separator = "") { value ->
                         value?.toString()?.let { "${it.length}:$it" } ?: "-1:"
                 }
+}
 
 @Serializable
 data class LocalDepartureItem(
@@ -94,6 +99,15 @@ data class LocalDepartureItem(
         @SerialName("last_stop") val lastStop: Boolean,
         @SerialName("service_date") val serviceDate: String
 )
+
+internal fun LocalDepartureItem.effectiveRealtimeDepartureSec(): Long? =
+        departureRealtime
+                ?: arrivalRealtime?.takeIf {
+                        departureSchedule == null || it > departureSchedule
+                }
+
+internal fun LocalDepartureItem.effectiveDepartureSec(): Long? =
+        effectiveRealtimeDepartureSec() ?: departureSchedule
 
 @Serializable
 data class RouteInfoExport(

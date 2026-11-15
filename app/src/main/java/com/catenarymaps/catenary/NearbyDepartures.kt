@@ -1421,7 +1421,13 @@ private fun RouteGroupCard(
                         // Duplicate records can arrive from overlapping pages or refreshes.
                         // Keep the most recent instance without removing distinct loop visits.
                         val visibleTrips =
-                                trips.distinctBy { it.stableDepartureKey() }
+                                trips
+                                        .filter {
+                                                it.departureRealtime != null ||
+                                                        it.arrivalRealtime != null ||
+                                                        it.departureSchedule != null
+                                        }
+                                        .distinctBy { it.stableDepartureKey() }
 
                         if (visibleTrips.isEmpty()) return@forEach
 
@@ -1532,7 +1538,6 @@ private fun RouteGroupCard(
                 }
         }
 }
-
 @Composable
 private fun TripPill(
         trip: LocalDepartureItem,
@@ -1544,15 +1549,23 @@ private fun TripPill(
         onTripClick: (TripClickResponse) -> Unit,
         realtimeNowSec: Long
 ) {
-        val dep = trip.departureRealtime ?: trip.departureSchedule ?: 0L
+        // Mirror Svelte's getEffectiveDepartureTime: check departureRealtime,
+        // then arrivalRealtime (if schedule is null or arrivalRealtime > schedule),
+        // then fall back to departureSchedule.
+        val effectiveArrivalRt =
+                trip.arrivalRealtime?.takeIf {
+                        trip.departureSchedule == null || it > trip.departureSchedule!!
+                }
+        val dep = trip.departureRealtime ?: effectiveArrivalRt ?: trip.departureSchedule ?: return
+
         val secondsLeft = dep - realtimeNowSec
         val isPast = secondsLeft < 0
-
         val contentAlpha = if (isPast) 0.7f else 1.0f
 
-        val hasRealtime = trip.departureRealtime != null
-        val baseColor = if (hasRealtime) Color(0x00AB9B) else LocalContentColor.current
-
+        val hasRealtime = trip.departureRealtime != null || effectiveArrivalRt != null
+        // Note: Color(0x00AB9B) had 00 alpha (fully transparent) unless intended;
+        // use 0xFF00AB9B if it should be visible teal!
+        val baseColor = if (hasRealtime) Color(0xFF00AB9B) else LocalContentColor.current
         val contentColor = baseColor.copy(alpha = contentAlpha)
 
         Surface(
@@ -1581,7 +1594,7 @@ private fun TripPill(
                 ) {
                         // “in 5 min” / “now”
                         CompositionLocalProvider(LocalContentColor provides contentColor) {
-                                Row() {
+                                Row {
                                         SelfUpdatingDiffTimer(
                                                 targetTimeSeconds = dep,
                                                 showBrackets = false,
@@ -1592,10 +1605,7 @@ private fun TripPill(
                                                 unitSize = 14.sp,
                                                 numberFontWeight = FontWeight.Medium,
                                                 unitFontWeight = FontWeight.Medium,
-                                                color =
-                                                        contentColor.copy(
-                                                                alpha = contentColor.alpha
-                                                        )
+                                                color = contentColor
                                         )
                                 }
                         }
@@ -1619,9 +1629,9 @@ private fun TripPill(
                                 )
                         }
 
-                        // If both schedule & realtime are available, show +/- delay
+                        // Only show +/- delay when BOTH schedule & realtime are available
                         val sched = trip.departureSchedule
-                        val rt = trip.departureRealtime
+                        val rt = trip.departureRealtime ?: effectiveArrivalRt
                         if (sched != null && rt != null) {
                                 val diff = rt - sched // seconds
                                 if (diff != 0L) {
@@ -1638,8 +1648,8 @@ private fun TripPill(
                         trip.platform?.let {
                                 Text(
                                         "${stringResource(R.string.platform)} ${
-                        it.replace("Track", "").trim()
-                    }",
+                                                it.replace("Track", "").trim()
+                                        }",
                                         style = MaterialTheme.typography.labelSmall
                                 )
                         }
