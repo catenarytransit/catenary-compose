@@ -293,7 +293,7 @@ fun StopResultItem(
     val distanceText = distance ?: distanceMetres?.let {
         if (it > 1000) String.format("%.1f km", it / 1000) else String.format("%.0f m", it)
     }
-    val icon = routes.firstOrNull()?.routeType?.let(SearchTypeIcons::route) ?: SearchTypeIcons.Location
+    val icon = SearchTypeIcons.stop(routes.map { it.routeType })
     LocationResultItem(icon = icon, distance = distanceText, onClick = onClick) {
         Text(
             text = stopInfo.name,
@@ -354,7 +354,7 @@ fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = nul
         )
     val subtitle = subtitleParts.joinToString(", ")
 
-    LocationResultItem(icon = SearchTypeIcons.mode(result.modeType), distance = distance, onClick = onClick) {
+    LocationResultItem(icon = SearchTypeIcons.station(result.modeType, result.routes.map { it.routeType }), distance = distance, onClick = onClick) {
         Text(
             text = result.name ?: "Unknown station",
             fontWeight = FontWeight.Medium,
