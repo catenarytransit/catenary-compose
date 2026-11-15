@@ -33,6 +33,27 @@ class TripPlannerSessionTest {
         assertEquals("Station", planner.destinationText)
     }
 
+    @Test fun tripInfoRoundTripPreservesSelectedDetailsResultsAndPaging() {
+        val session = saved.copy(
+            requestQuery = directionsRequest(saved.origin, saved.destination, saved.time, saved.arriveBy, saved.options),
+            previousPageCursor = "before", nextPageCursor = "after"
+        )
+        val planner = TripPlannerViewModel()
+        planner.restoreSession(session)
+        // Opening Trip info leaves the planner UI, but keeps DirectionsStack beneath it.
+        planner.leave()
+        assertEquals(session, planner.session(true))
+        assertEquals(saved.itineraries[1], planner.selectedJourney)
+        assertTrue(planner.details)
+        assertTrue(planner.canLoadEarlier)
+        assertTrue(planner.canLoadLater)
+        // The saved state can also restore after the process ends while Trip info is open.
+        val restored = TripPlannerViewModel()
+        restored.restoreSession(planner.session(true))
+        assertEquals(session, restored.session(true))
+        assertNull(planner.session(false))
+    }
+
     @Test fun resultsListRestoresAndDetailsBackKeepsResults() {
         val planner = TripPlannerViewModel()
         planner.restoreSession(saved.copy(details = false))
