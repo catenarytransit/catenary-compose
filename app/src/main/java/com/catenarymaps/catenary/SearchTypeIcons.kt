@@ -47,6 +47,17 @@ internal object SearchTypeIcons {
         }
     }
 
+    /** Birch's stops-section route lookup supplies these types; use bus for missing metadata. */
+    fun stop(routeTypes: List<Int>): String =
+        routeTypes.asSequence().map(::route).firstOrNull { it != Location } ?: Bus
+
+    /** Respect an OSM station's mode, then its associated route lookup when available. */
+    fun station(modeType: String?, routeTypes: List<Int>): String {
+        val byMode = mode(modeType)
+        return if (byMode != Location) byMode
+        else routeTypes.asSequence().map(::route).firstOrNull { it != Location } ?: Location
+    }
+
     fun place(categories: List<String>, layer: String? = null, type: String? = null): String {
         val terms = (categories + listOfNotNull(layer, type)).map { it.lowercase() }
         fun has(regex: Regex) = terms.any { regex.containsMatchIn(it) }

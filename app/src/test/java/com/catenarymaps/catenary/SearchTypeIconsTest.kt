@@ -32,6 +32,19 @@ class SearchTypeIconsTest {
         }
     }
 
+    @Test fun birchStopsUseRouteTypesWithBusFallback() {
+        assertEquals(SearchTypeIcons.Train, SearchTypeIcons.stop(listOf(2)))
+        assertEquals(SearchTypeIcons.Metro, SearchTypeIcons.stop(listOf(1)))
+        assertEquals(SearchTypeIcons.Bus, SearchTypeIcons.stop(emptyList()))
+        assertEquals(SearchTypeIcons.Bus, SearchTypeIcons.stop(listOf(4)))
+    }
+
+    @Test fun stationsUseModeThenAssociatedRoutes() {
+        assertEquals(SearchTypeIcons.Train, SearchTypeIcons.station("station", listOf(3)))
+        assertEquals(SearchTypeIcons.Bus, SearchTypeIcons.station("unknown", listOf(3)))
+        assertEquals(SearchTypeIcons.Location, SearchTypeIcons.station("unknown", emptyList()))
+    }
+
     @Test fun unknownPlacesFallBackToLocationPin() {
         assertEquals(SearchTypeIcons.Location, SearchTypeIcons.place(listOf("amenity:library")))
         assertEquals(SearchTypeIcons.Location, SearchTypeIcons.place(emptyList(), "address"))

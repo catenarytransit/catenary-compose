@@ -1968,10 +1968,10 @@ class MainActivity : ComponentActivity() {
                                                                 SheetSnapPoint.PartiallyExpanded,
                                                         anchors = anchors,
                                                         positionalThreshold = { distance ->
-                                                                distance * if (plannerVisible && tripPlanner.usingMap) 0.5f else 0.35f
+                                                                distance * if (directionsVisible && tripPlanner.usingMap) 0.5f else 0.35f
                                                         },
                                                         velocityThreshold = {
-                                                                if (plannerVisible && tripPlanner.usingMap) Float.POSITIVE_INFINITY
+                                                                if (directionsVisible && tripPlanner.usingMap) Float.POSITIVE_INFINITY
                                                                 else with(density) { 900.dp.toPx() }
                                                         },
                                                         snapAnimationSpec = sheetSpringSpec,
