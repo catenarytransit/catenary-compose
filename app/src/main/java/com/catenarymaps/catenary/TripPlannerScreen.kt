@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -402,12 +403,12 @@ fun TripPlannerHeader(
                     if (query.isBlank()) {
                         val suggestions = (recent + history).distinctBy { Triple(it.name, it.lat, it.lon) }
                         items(suggestions.take(12)) { location ->
-                            SearchResultRow(location.name, icon = Icons.Default.History,
+                            SearchResultRow(location.name, assetIcon = SearchTypeIcons.Recent,
                                 distance = plannerDistance(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits),
                                 onClick = { select(planner.editing ?: true, location) })
                         }
                     } else {
-                        // Retain the source row so addresses, location types and route badges are shared with regular search.
+                        // Retain the source row so addresses and location type icons match regular search.
                         val suggestions = rows.mapNotNull { row -> row.directionsLocation()?.let { row to it } }
                             .distinctBy { (_, location) -> Triple(location.name, location.lat, location.lon) }
                         items(suggestions.take(12)) { (row, location) ->
@@ -433,6 +434,7 @@ fun TripPlannerHeader(
 @Composable
 private fun SearchResultRow(
     name: String, icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    assetIcon: String? = null,
     distance: String? = null, enabled: Boolean = true,
     iconTint: Color = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color.LightGray else Color.DarkGray,
     onClick: () -> Unit
@@ -440,7 +442,8 @@ private fun SearchResultRow(
     Row(Modifier.fillMaxWidth().clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
         .heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (icon != null) Icon(icon, null, modifier = Modifier.size(24.dp),
+        if (assetIcon != null) SearchTypeIcon(assetIcon, Modifier.then(if (enabled) Modifier else Modifier.alpha(0.38f)))
+        else if (icon != null) Icon(icon, null, modifier = Modifier.size(24.dp),
             tint = iconTint.copy(alpha = if (enabled) 1f else 0.38f))
         Text(name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f))
