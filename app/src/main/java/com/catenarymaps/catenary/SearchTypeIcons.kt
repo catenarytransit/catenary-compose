@@ -28,15 +28,11 @@ internal object SearchTypeIcons {
     const val Recent = "arrow-circle-time-small"
     const val Location = "location-pin-small"
 
-    fun route(type: Int?): String = when (type) {
-        0 -> Tram
-        1 -> Metro
-        2 -> Train
-        3 -> Bus
-        in 100..399 -> Train
-        in 400..699 -> Metro
-        in 700..899 -> Bus
-        in 900..999 -> Tram
+    fun route(type: Int?): String = when {
+        type == 0 || type != null && type in 900..999 -> Tram
+        type == 1 || type != null && type in 400..699 -> Metro
+        type == 2 || type != null && type in 100..399 -> Train
+        type == 3 || type != null && type in 700..899 -> Bus
         else -> Location
     }
 
