@@ -1359,11 +1359,15 @@ class MainActivity : ComponentActivity() {
                         catenaryStack = ArrayDeque(catenaryStack).apply { addLast(trip) }
                     }
                     val directionsVisible = catenaryStack.lastOrNull() is CatenaryStackEnum.DirectionsStack
-                    val plannerVisible by rememberUpdatedState(directionsVisible)
+                    // Trip info covers the planner without removing its navigation entry.
+                    // Keep its saved results/details available while that entry remains below it.
+                    val plannerInBackStack by rememberUpdatedState(
+                        catenaryStack.any { it is CatenaryStackEnum.DirectionsStack }
+                    )
                     LaunchedEffect(tripPlanner, plannerSessionStore) {
                         // Observe navigation and selection as well as results. Sequential atomic writes
                         // keep an older result from overwriting a newer details/cleared state.
-                        snapshotFlow { tripPlanner.session(plannerVisible) }.collect { session ->
+                        snapshotFlow { tripPlanner.session(plannerInBackStack) }.collect { session ->
                             withContext(Dispatchers.IO) { plannerSessionStore.write(session) }
                         }
                     }
