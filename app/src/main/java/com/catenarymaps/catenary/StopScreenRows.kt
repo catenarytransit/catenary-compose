@@ -221,7 +221,8 @@ fun StationScreenTrainRow(
                                         color = MaterialTheme.colorScheme.error,
                                         style = MaterialTheme.typography.labelSmall
                                 )
-                        } else {
+                        }
+
                                 if (rtTime != null) {
                                         // Vertical Mode
                                         if (schedTime != null && rtTime != schedTime) {
@@ -316,7 +317,7 @@ fun StationScreenTrainRow(
                                                 )
                                         }
                                 }
-                        }
+
                 }
 
                 if (eurostyle && !swiss) {
@@ -571,7 +572,8 @@ fun StopScreenRow(
                                         )
                                 }
                         }
-                } else {
+                }
+
                         // Main Row
                         Row(
                                 Modifier.fillMaxWidth(),
@@ -902,7 +904,7 @@ fun StopScreenRow(
                                         )
                                 }
                         }
-                }
+
         }
 }
 
