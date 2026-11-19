@@ -338,6 +338,16 @@ fun TripPlannerHeader(
     }
     LaunchedEffect(planner.editing) { if (planner.editing == null) focus.clearFocus() }
     val query = when (planner.editing) { true -> planner.originText; false -> planner.destinationText; null -> "" }
+    val rankedRecent = recent + stationHistory.topHistory(100).mapNotNull { entry ->
+        val latitude = entry.latitude
+        val longitude = entry.longitude
+        if (latitude != null && longitude != null) {
+            DirectionsLocation(entry.name, latitude, longitude).takeIf { it.isValid() }
+        } else null
+    }
+    val matchingRecent = matchingRecentDirections(
+        query, recent, stationHistory.topHistory(100)
+    )
     LaunchedEffect(query, planner.editing) {
         search.onSearchQueryChanged(if (planner.editing == null) "" else query, currentLocation, mapCenter)
     }
@@ -408,30 +418,44 @@ fun TripPlannerHeader(
                             SearchResultRow(stringResource(R.string.directions_choose_on_map), icon = Icons.Default.LocationOn,
                                 onClick = { planner.mapPicking = planner.editing; planner.editing = null; focus.clearFocus() })
                         }
-                        parseDirectionsCoordinate(query)?.let { coordinate ->
-                            val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
-                            SearchResultRow(coordinate.name, icon = Icons.Default.GridOn,
-                                distance = plannerDistance(haversineDistance(reference.first, reference.second, coordinate.lat, coordinate.lon), streetUsUnits),
-                                onClick = { select(planner.editing ?: true, coordinate) })
-                        }
-                        if (searchLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
-                    }
-                    val history = stationHistory.entries.mapNotNull { item ->
-                        val latitude = item.latitude; val longitude = item.longitude
-                        if (latitude != null && longitude != null) DirectionsLocation(item.name, latitude, longitude).takeIf { it.isValid() } else null
                     }
                     val reference = currentLocation ?: (mapCenter.latitude to mapCenter.longitude)
+                    if (query.isNotBlank()) {
+                        // These rows do not depend on the search request and appear while typing.
+                        items(matchingRecent, key = {
+                            "recent:${it.name}:${it.lat}:${it.lon}"
+                        }) { location ->
+                            SearchResultRow(
+                                location.name,
+                                icon = Icons.Default.AccessTime,
+                                distance = plannerDistance(
+                                    haversineDistance(reference.first, reference.second, location.lat, location.lon),
+                                    streetUsUnits
+                                ),
+                                onClick = { select(planner.editing ?: true, location) }
+                            )
+                        }
+                        item {
+                            parseDirectionsCoordinate(query)?.let { coordinate ->
+                                SearchResultRow(coordinate.name, icon = Icons.Default.GridOn,
+                                    distance = plannerDistance(haversineDistance(reference.first, reference.second, coordinate.lat, coordinate.lon), streetUsUnits),
+                                    onClick = { select(planner.editing ?: true, coordinate) })
+                            }
+                            if (searchLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                        }
+                    }
                     if (query.isBlank()) {
-                        val suggestions = (recent + history).distinctBy { Triple(it.name, it.lat, it.lon) }
+                        val suggestions = rankedRecent.distinctBy { Triple(it.name, it.lat, it.lon) }
                         items(suggestions.take(12)) { location ->
-                            SearchResultRow(location.name, assetIcon = SearchTypeIcons.Recent,
+                            SearchResultRow(location.name, icon = Icons.Default.AccessTime,
                                 distance = plannerDistance(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits),
                                 onClick = { select(planner.editing ?: true, location) })
                         }
                     } else {
                         // Retain the source row so addresses and location type icons match regular search.
-                        val suggestions = filterRoutingSearchRows(rows)
-                            .mapNotNull { row -> row.directionsLocation()?.let { row to it } }
+                        val suggestions = withoutMatchingDirectionsResults(
+                            filterRoutingSearchRows(rows), matchingRecent
+                        ).mapNotNull { row -> row.directionsLocation()?.let { row to it } }
                             .distinctBy { (_, location) -> Triple(location.name, location.lat, location.lon) }
                         items(suggestions.take(12)) { (row, location) ->
                             val distance = plannerDistance(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits)
