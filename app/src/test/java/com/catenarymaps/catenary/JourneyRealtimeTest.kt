@@ -106,7 +106,7 @@ class JourneyRealtimeTest {
         // Metrolink 612 / 200090682: realtime time equals schedule, delay field is null.
         val board = 1795113600L
         val scheduled = TripStoptime(
-            stop_id = "107",
+            stop_id = "107", longitude = -118.233513, latitude = 34.055729,
             gtfs_stop_sequence = 1,
             scheduled_departure_time_unix_seconds = board,
             rt_departure = RtTime(time = board) // backend's "delay": null is ignored by Android's time-only model
@@ -119,6 +119,7 @@ class JourneyRealtimeTest {
             mapOf(leg().ramondaIdentity()!! to RamondaTripSnapshot(
                 initial = TripDataResponse(
                     trip_id = "shared-trip", chateau = chateau,
+                    is_cancelled = false, deleted = false,
                     stoptimes = listOf(scheduled.copy(
                         stop_id = "origin",
                         scheduled_departure_time_unix_seconds = Instant.parse(depart).epochSecond,
