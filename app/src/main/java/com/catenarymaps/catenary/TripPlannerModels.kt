@@ -12,17 +12,37 @@ data class DirectionsLocation(
     fun isValid() = lat.isFinite() && lon.isFinite() && lat in -90.0..90.0 && lon in -180.0..180.0
 }
 
+/** OJP-style trip event; a verified observation is distinct from a prediction. */
+@Serializable
+data class DirectionsEventTime(
+    @kotlinx.serialization.SerialName("TimetabledTime") val timetabledTime: String? = null,
+    @kotlinx.serialization.SerialName("EstimatedTime") val estimatedTime: String? = null,
+    @kotlinx.serialization.SerialName("RecordedAtTime") val recordedAtTime: String? = null
+) {
+    val effectiveTime get() = recordedAtTime ?: estimatedTime ?: timetabledTime
+}
+
 @Serializable
 data class DirectionsPoint(
     val name: String = "", val lat: Double? = null, val lon: Double? = null,
     val platform: String? = null, val platformCode: String? = null,
-    val timezone: String? = null, val stopId: String? = null
+    val timezone: String? = null, val stopId: String? = null,
+    @kotlinx.serialization.SerialName("PlannedQuay") val plannedQuay: String? = null,
+    @kotlinx.serialization.SerialName("EstimatedQuay") val estimatedQuay: String? = null,
+    @kotlinx.serialization.SerialName("ServiceDeparture") val serviceDeparture: DirectionsEventTime? = null,
+    @kotlinx.serialization.SerialName("ServiceArrival") val serviceArrival: DirectionsEventTime? = null,
+    @kotlinx.serialization.SerialName("NotServicedStop") val notServicedStop: Boolean = false
 )
 @Serializable
 data class DirectionsStop(
     val name: String = "", val arrival: String? = null, val departure: String? = null,
     val scheduledArrival: String? = null, val scheduledDeparture: String? = null,
-    val timezone: String? = null
+    val timezone: String? = null, val stopId: String? = null,
+    @kotlinx.serialization.SerialName("ServiceDeparture") val serviceDeparture: DirectionsEventTime? = null,
+    @kotlinx.serialization.SerialName("ServiceArrival") val serviceArrival: DirectionsEventTime? = null,
+    @kotlinx.serialization.SerialName("PlannedQuay") val plannedQuay: String? = null,
+    @kotlinx.serialization.SerialName("EstimatedQuay") val estimatedQuay: String? = null,
+    @kotlinx.serialization.SerialName("NotServicedStop") val notServicedStop: Boolean = false
 )
 @Serializable
 data class DirectionsGeometry(val points: String? = null, val precision: Int = 6)
@@ -40,8 +60,16 @@ data class DirectionsLeg(
     val legGeometry: DirectionsGeometry? = null,
     val headsign: String? = null,
     val tripId: String? = null, val tripStartDate: String? = null, val tripStartTime: String? = null,
-    val fromStopSequence: Int? = null, val toStopSequence: Int? = null
+    val fromStopSequence: Int? = null, val toStopSequence: Int? = null,
+    val scheduledStartTime: String? = null, val scheduledEndTime: String? = null,
+    @kotlinx.serialization.SerialName("ServiceDeparture") val serviceDeparture: DirectionsEventTime? = null,
+    @kotlinx.serialization.SerialName("ServiceArrival") val serviceArrival: DirectionsEventTime? = null,
+    val cancelled: Boolean = false
 ) {
+    val departureScheduled get() = serviceDeparture?.timetabledTime ?: scheduledStartTime
+    val arrivalScheduled get() = serviceArrival?.timetabledTime ?: scheduledEndTime
+    val departureCurrent get() = serviceDeparture?.effectiveTime ?: startTime
+    val arrivalCurrent get() = serviceArrival?.effectiveTime ?: endTime
     val walking get() = mode.uppercase() in setOf("WALK", "FOOT", "PEDESTRIAN")
     val street get() = walking || mode.uppercase() in setOf("BIKE", "BICYCLE")
     val label get() = routeShortName ?: routeLongName ?: routeId ?: mode
