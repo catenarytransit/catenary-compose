@@ -112,12 +112,21 @@ internal fun timelineWeights(
     return pixels
 }
 
-/** Two sentinel rows precede the cards; load when the edge card enters view. */
-internal fun connectionPageAtEdge(direction: Int, first: Int, last: Int, journeyCount: Int): ConnectionDirection? = when {
-    journeyCount == 0 -> null
-    direction > 0 && first <= 2 -> ConnectionDirection.BEFORE
-    direction < 0 && last >= journeyCount + 1 -> ConnectionDirection.AFTER
-    else -> null
+/**
+ * The two leading sentinel rows are followed by journey rows indexed from 2.
+ * Request the next page before the edge is visible, giving a fling up to one
+ * viewport of headroom for streaming without loading pages while idle.
+ */
+internal fun connectionPageAtEdge(
+    direction: Int, first: Int, last: Int, journeyCount: Int, prefetchItems: Int = 3
+): ConnectionDirection? {
+    if (journeyCount == 0 || direction == 0) return null
+    val ahead = prefetchItems.coerceAtLeast(0)
+    return when {
+        direction > 0 && first <= 2 + ahead -> ConnectionDirection.BEFORE
+        direction < 0 && last >= journeyCount + 1 - ahead -> ConnectionDirection.AFTER
+        else -> null
+    }
 }
 
 /** Use the same local midnight as the connection preview clocks. */
