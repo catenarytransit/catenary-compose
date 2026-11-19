@@ -1949,7 +1949,7 @@ fun StopListItem(
                                         if (rtArrival != null && schedArr != null)
                                                 rtArrival - schedArr
                                         else 0L
-                                val arrHasDelay = arrDelay != 0L
+                                val arrHasDelay = rtArrival != null && schedArr != null
 
                                 list.add {
                                         Row(verticalAlignment = Alignment.Top) {
@@ -2062,7 +2062,7 @@ fun StopListItem(
                                         if (rtDeparture != null && schedDep != null)
                                                 rtDeparture - schedDep
                                         else 0L
-                                val depHasDelay = depDelay != 0L
+                                val depHasDelay = rtDeparture != null && schedDep != null
 
                                 val content: @Composable () -> Unit = {
                                         Row(verticalAlignment = Alignment.Top) {
@@ -2193,7 +2193,7 @@ fun StopListItem(
                                         if (unifiedRt != null && unifiedSched != null)
                                                 unifiedRt - unifiedSched
                                         else 0L
-                                val hasDelay = delay != 0L
+                                val hasDelay = unifiedRt != null && unifiedSched != null
 
                                 if (timeToShow != null) {
                                         val content: @Composable () -> Unit = {
@@ -2955,11 +2955,8 @@ fun SbbTimeBlock(
                 } else {
                         null
                 }
-        val hasDelay = delayedTimes != null
-        val diff =
-                delayedTimes?.let { (realtime, scheduledTime) ->
-                        realtime - scheduledTime
-                } ?: 0L
+        val hasDelay = rt != null && scheduled != null
+        val diff = knownRealtimeDelaySeconds(rt, scheduled) ?: 0L
 
         Column(horizontalAlignment = Alignment.End) {
                 delayedTimes?.let { (_, scheduledTime) ->
