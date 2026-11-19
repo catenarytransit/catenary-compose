@@ -25,12 +25,13 @@ fun DelayDiff(
     fontSizeOfPolarity: TextUnit = 12.sp,
     use_symbol_sign: Boolean = false,
     hide_min_units: Boolean = false,
+    apostrophe_minutes: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val isDark = isSystemInDarkTheme()
 
     val textColor by
-    remember(diff) {
+    remember(diff, isDark) {
         mutableStateOf(
             if (isDark) {
                 when {
@@ -136,7 +137,7 @@ fun DelayDiff(
                 )
                 if (!hide_min_units) {
                     Text(
-                        text = locale_min_marking(show_seconds),
+                        text = if (apostrophe_minutes) "'" else locale_min_marking(show_seconds),
                         fontSize = 10.sp,
                         color = textColor,
                         modifier = Modifier.alignByBaseline()
