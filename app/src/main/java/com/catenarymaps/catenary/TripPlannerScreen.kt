@@ -104,6 +104,10 @@ fun TripPlannerScreen(
     onSelectJourney: (DirectionsItinerary) -> Unit = {}
 ) {
     val focus = LocalFocusManager.current
+    DisposableEffect(planner) {
+        planner.connectRouting()
+        onDispose { planner.disconnectRouting() }
+    }
     // Match the web planner: resolve a new journey after choosing endpoints or changing options.
     LaunchedEffect(planner.origin, planner.destination, planner.time, planner.now, planner.arriveBy, planner.options) {
         if (planner.origin != null && planner.destination != null) {
