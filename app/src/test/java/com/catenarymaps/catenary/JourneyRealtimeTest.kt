@@ -84,6 +84,24 @@ class JourneyRealtimeTest {
         assertNull(directionsDelaySeconds("broken", depart))
     }
 
+    @Test fun sharingTripAcrossTwoScreensKeepsSubscriptionUntilBothRelease() {
+        val registry = RamondaSubscriptionRegistry()
+        val first = leg().ramondaIdentity()!!
+        val second = leg("20261120").ramondaIdentity()!!
+        assertTrue(registry.acquire(first))
+        assertFalse(registry.acquire(first))
+        assertTrue(registry.acquire(second))
+        assertEquals(setOf(first, second), registry.active())
+        assertFalse(registry.release(first))
+        assertTrue(registry.contains(first))
+        assertTrue(registry.release(second))
+        assertEquals(setOf(first), registry.active())
+        assertTrue(registry.release(first))
+        assertTrue(registry.active().isEmpty())
+        assertFalse(registry.release(first))
+        assertTrue(registry.acquire(first))
+    }
+
     @Test fun subscriptionPayloadRoundTripsWithCompleteIdentity() {
         val id = leg().ramondaIdentity()!!
         val subscribe = id.subscribe()
