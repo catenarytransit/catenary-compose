@@ -10,6 +10,17 @@ import java.util.UUID
 import java.time.Instant
 
 class TripPlannerViewModel : ViewModel() {
+    private val routingSession = DirectionsSocketSession()
+
+    /** The screen owns the connection; requests only own their response streams. */
+    fun connectRouting() = routingSession.acquire()
+    fun disconnectRouting() = routingSession.release()
+
+    override fun onCleared() {
+        routingSession.close()
+        super.onCleared()
+    }
+
     var origin by mutableStateOf<DirectionsLocation?>(null)
         private set
     var destination by mutableStateOf<DirectionsLocation?>(null)
@@ -211,7 +222,7 @@ class TripPlannerViewModel : ViewModel() {
         baseQuery = base
         request = viewModelScope.launch {
             try {
-                DirectionsStreaming.load(client, directionsPageQuery(base,
+                DirectionsStreaming.load(client, routingSession, directionsPageQuery(base,
                     if (arriveBy) ConnectionDirection.BEFORE else ConnectionDirection.AFTER),
                     "catenary-android-${UUID.randomUUID()}") { page ->
                     if (token == generation) {
@@ -243,7 +254,7 @@ class TripPlannerViewModel : ViewModel() {
         pageRequest = viewModelScope.launch {
             try {
                 var completed: DirectionsPlan? = null
-                DirectionsStreaming.load(client, directionsPageQuery(base,
+                DirectionsStreaming.load(client, routingSession, directionsPageQuery(base,
                     if (earlier) ConnectionDirection.BEFORE else ConnectionDirection.AFTER, cursor), id) { page ->
                     if (token == generation) {
                         completed = page // Publish either direction as one completed batch.
