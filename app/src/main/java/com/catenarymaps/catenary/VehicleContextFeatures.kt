@@ -60,7 +60,7 @@ private fun vehicleDisplayLabel(label: String?, id: String?): String? =
 
 private fun makeVehicleContextDelayLabel(delaySeconds: Int?): String {
     val delay = delaySeconds ?: return ""
-    if (delay == 0) return ""
+    if (delay == 0) return "+0m"
 
     val sign = if (delay > 0) "+" else "-"
     val absSeconds = abs(delay)
