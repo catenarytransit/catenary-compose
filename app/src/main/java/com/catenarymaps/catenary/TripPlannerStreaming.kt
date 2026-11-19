@@ -5,7 +5,9 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
@@ -76,17 +78,135 @@ internal class DirectionsStreamState(private val requestId: String) {
     }
 }
 
-/** One cancellable, short-lived socket per stateless page; HTTP uses the identical query/ID. */
+/** One WebSocket per visible planner, multiplexed by requestId. */
+internal class DirectionsSocketSession {
+    private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
+    private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).build()
+    private val lock = Any()
+    private val pending = mutableMapOf<String, Channel<String>>()
+    private var socket: WebSocket? = null
+    private var ready: CompletableDeferred<Unit>? = null
+    private var owners = 0
+
+    fun acquire() {
+        synchronized(lock) {
+            owners++
+            connectLocked()
+        }
+    }
+
+    fun release() {
+        synchronized(lock) {
+            if (owners == 0) return
+            owners--
+            if (owners == 0) closeLocked()
+        }
+    }
+
+    fun close() = synchronized(lock) {
+        owners = 0
+        closeLocked()
+    }
+
+    private fun closeLocked() {
+        val old = socket
+        socket = null
+        ready?.cancel()
+        ready = null
+        pending.values.forEach { it.close() }
+        pending.clear()
+        old?.close(1000, "Planner closed")
+    }
+
+    private fun connectLocked() {
+        if (socket != null) return
+        val signal = CompletableDeferred<Unit>()
+        ready = signal
+        socket = client.newWebSocket(
+            Request.Builder().url("wss://edelweiss.catenarymaps.org/v2/route/ws").build(),
+            object : WebSocketListener() {
+                override fun onOpen(webSocket: WebSocket, response: Response) {
+                    synchronized(lock) {
+                        if (socket === webSocket) signal.complete(Unit)
+                        else webSocket.close(1000, "Stale connection")
+                    }
+                }
+
+                override fun onMessage(webSocket: WebSocket, text: String) {
+                    val requestId = runCatching {
+                        json.parseToJsonElement(text).jsonObject["requestId"]?.jsonPrimitive?.content
+                    }.getOrNull() ?: return
+                    synchronized(lock) {
+                        if (socket === webSocket) pending[requestId]?.trySend(text)
+                    }
+                }
+
+                override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                    fail(webSocket, t)
+                }
+
+                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                    fail(webSocket, IllegalStateException("Routing WebSocket closed: $code $reason"))
+                }
+            }
+        )
+    }
+
+    private fun fail(webSocket: WebSocket, cause: Throwable) {
+        synchronized(lock) {
+            if (socket !== webSocket) return
+            socket = null
+            ready?.completeExceptionally(cause)
+            ready = null
+            pending.values.forEach { it.close(cause) }
+            pending.clear()
+        }
+    }
+
+    suspend fun route(query: JsonObject, requestId: String, onPage: (DirectionsPlan) -> Unit) {
+        val messages = Channel<String>(Channel.UNLIMITED)
+        val connection: WebSocket
+        val opened: CompletableDeferred<Unit>
+        synchronized(lock) {
+            connectLocked()
+            check(pending.put(requestId, messages) == null) { "Duplicate routing requestId" }
+            connection = checkNotNull(socket)
+            opened = checkNotNull(ready)
+        }
+        try {
+            withTimeout(10_000) { opened.await() }
+            check(connection.send(buildJsonObject {
+                put("type", "route"); put("requestId", requestId); put("query", query)
+            }.toString())) { "Unable to send Edelweiss route request" }
+            val stream = DirectionsStreamState(requestId)
+            val completed = withTimeoutOrNull(45_000) {
+                for (text in messages) {
+                    val message = json.decodeFromString<DirectionsStreamMessage>(text)
+                    if (stream.accept(message, onPage)) return@withTimeoutOrNull true
+                }
+                error("Routing WebSocket closed before completion")
+            }
+            check(completed == true) { "Routing WebSocket timed out" }
+        } finally {
+            synchronized(lock) { pending.remove(requestId, messages) }
+            messages.cancel()
+        }
+    }
+}
+
+/** Try the retained WebSocket first, preserving the existing HTTP fallback. */
 internal object DirectionsStreaming {
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
-    private val sockets = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).build()
 
-    suspend fun load(client: HttpClient, query: JsonObject, requestId: String, onPage: (DirectionsPlan) -> Unit) {
+    suspend fun load(
+        client: HttpClient, session: DirectionsSocketSession, query: JsonObject,
+        requestId: String, onPage: (DirectionsPlan) -> Unit
+    ) {
         val identified = buildJsonObject {
             query.forEach { (key, value) -> put(key, value) }; put("request_id", requestId)
         }
         try {
-            socketPage(identified, requestId, onPage)
+            session.route(identified, requestId, onPage)
         } catch (e: CancellationException) {
             throw e
         } catch (e: BackendRouteException) {
@@ -97,39 +217,6 @@ internal object DirectionsStreaming {
             }
             check(response.status.isSuccess()) { "Edelweiss HTTP ${response.status.value}" }
             onPage(json.decodeFromString<DirectionsPlan>(response.bodyAsText()))
-        }
-    }
-
-    private suspend fun socketPage(query: JsonObject, requestId: String, onPage: (DirectionsPlan) -> Unit) {
-        // Replacement snapshots are consumed on the caller's dispatcher, never OkHttp's thread.
-        val messages = Channel<String>(Channel.UNLIMITED)
-        val socket = sockets.newWebSocket(Request.Builder()
-            .url("wss://edelweiss.catenarymaps.org/v2/route/ws").build(), object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                webSocket.send(buildJsonObject {
-                    put("type", "route"); put("requestId", requestId); put("query", query)
-                }.toString())
-            }
-            override fun onMessage(webSocket: WebSocket, text: String) { messages.trySend(text) }
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) { messages.close(t) }
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) { messages.close() }
-            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                webSocket.close(code, reason); messages.close()
-            }
-        })
-        try {
-            val stream = DirectionsStreamState(requestId)
-            // Bound a stalled connection, including one that never sends a complete frame.
-            val completed = withTimeoutOrNull(45_000) {
-                for (text in messages) {
-                    val message = json.decodeFromString<DirectionsStreamMessage>(text)
-                    if (stream.accept(message, onPage)) return@withTimeoutOrNull true
-                }
-                error("Routing WebSocket closed before completion")
-            }
-            check(completed == true) { "Routing WebSocket timed out" }
-        } finally {
-            socket.cancel(); messages.cancel()
         }
     }
 }
