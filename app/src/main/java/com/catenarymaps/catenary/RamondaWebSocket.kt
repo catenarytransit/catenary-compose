@@ -228,7 +228,7 @@ object RamondaWebSocket {
                 val replacement = when (frame.type) {
                     "initial_trip" -> {
                         val initial = json.decodeFromJsonElement(TripDataResponse.serializer(), body)
-                        if (initial.trip_id != identity.trip_id ||
+                        if ((initial.trip_id != null && initial.trip_id != identity.trip_id) ||
                             (initial.chateau != null && initial.chateau != identity.chateau)) return
                         existing.copy(initial = initial, lastError = null)
                     }
