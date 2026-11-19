@@ -109,7 +109,7 @@ class JourneyRealtimeTest {
             stop_id = "107",
             gtfs_stop_sequence = 1,
             scheduled_departure_time_unix_seconds = board,
-            rt_departure = RtTime(time = board, delay = null)
+            rt_departure = RtTime(time = board) // backend's "delay": null is ignored by Android's time-only model
         )
         assertEquals(0L, knownRealtimeDelaySeconds(
             scheduled.rt_departure?.time, scheduled.scheduled_departure_time_unix_seconds))
