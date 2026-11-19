@@ -130,6 +130,7 @@ internal fun JourneyDetails(
     onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null
 ) {
     key(journey.identity()) {
+        val liveJourney = rememberLiveJourney(journey)
         val state = rememberLazyListState()
         val thresholdPx = with(LocalDensity.current) { 24.dp.toPx() }
         val summaryScroll = remember(planner, state, thresholdPx) {
@@ -155,7 +156,7 @@ internal fun JourneyDetails(
             state = state, contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
-            items(journey.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits, onTripInfo) }
+            items(liveJourney.detailLegs()) { leg -> JourneyLegDetails(leg, streetUsUnits, onTripInfo) }
             item { JourneyEndpoint(planner.destination?.name.orEmpty(), false) }
         }
     }
@@ -709,7 +710,10 @@ private fun PreviewTimeRow(times: PreviewTimeGroups, duration: String) {
         measurer.measure(directionsTime(marker.time, marker.timezone), style.copy(
             fontSize = if (marker.endpoint) 16.sp else 14.sp,
             fontWeight = if (marker.endpoint) FontWeight.Bold else FontWeight.Normal), maxLines = 1).size.width
-    } + with(density) { (8.dp * (markers.size - 1).coerceAtLeast(0)).roundToPx() }
+    } + with(density) {
+        ((8.dp * (markers.size - 1).coerceAtLeast(0)) +
+            (44.dp * markers.count { it.delaySeconds != null })).roundToPx()
+    }
     val sides = maxOf(groupWidth(times.departure), groupWidth(times.arrival))
     val durationWidth = measurer.measure(duration, style.copy(fontSize = 14.sp), maxLines = 1).size.width
     val requiredWidth = with(density) { (sides * 2 + durationWidth).toDp() } + 16.dp
@@ -732,6 +736,10 @@ private fun PreviewTimes(markers: List<PreviewTimeMarker>) {
         markers.forEach { marker ->
             Text(directionsTime(marker.time, marker.timezone), fontWeight = if (marker.endpoint) FontWeight.Bold else FontWeight.Normal,
                 fontSize = if (marker.endpoint) 16.sp else 14.sp, maxLines = 1)
+            marker.delaySeconds?.let { delay ->
+                DelayDiff(diff = delay, use_symbol_sign = true,
+                    apostrophe_minutes = true, fontSizeOfPolarity = 12.sp)
+            }
         }
     }
 }
@@ -750,13 +758,20 @@ private fun JourneyEndpoint(name: String, first: Boolean) {
 /** Each row owns a stretching rail, so wrapped names and expanded stops cannot leave gaps. */
 @Composable
 private fun ConnectionRow(
-    rail: Color, time: String = "", platform: String = "", pearl: Boolean = false,
+    rail: Color, time: String = "", platform: String = "", delaySeconds: Long? = null,
+    pearl: Boolean = false,
     first: Boolean = false, last: Boolean = false, dotted: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
-        Text(time, modifier = Modifier.width(60.dp), fontSize = 14.sp, fontWeight = FontWeight.Bold,
-            textAlign = androidx.compose.ui.text.style.TextAlign.End)
+        Column(Modifier.width(68.dp), horizontalAlignment = Alignment.End) {
+            Text(time, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End)
+            delaySeconds?.let { diff ->
+                DelayDiff(diff = diff, use_symbol_sign = true, apostrophe_minutes = true,
+                    fontSizeOfPolarity = 11.sp)
+            }
+        }
         Spacer(Modifier.width(8.dp))
         Box(Modifier.width(20.dp).fillMaxHeight()) {
             Canvas(Modifier.matchParentSize()) {
@@ -801,7 +816,10 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean, onTrip
                         ?: stringResource(R.string.directions_distance_unavailable), style = MaterialTheme.typography.bodyLarge)
                 }
             } else {
-                ConnectionRow(rail, directionsTime(leg.startTime, leg.from?.timezone), leg.fromPlatform ?: leg.from?.platform ?: leg.from?.platformCode ?: "",
+                ConnectionRow(rail, directionsTime(leg.departureCurrent, leg.from?.timezone),
+                    leg.from?.estimatedQuay ?: leg.fromPlatform ?: leg.from?.plannedQuay ?:
+                    leg.from?.platform ?: leg.from?.platformCode ?: "",
+                    delaySeconds = leg.departureDelaySeconds,
                     pearl = true, first = true) {
                     Text(displayTrainStationStopName(leg.from?.name.orEmpty(), shortenStationSuffix), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }
@@ -845,11 +863,22 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean, onTrip
                     }
                 }
                 if (expanded) leg.intermediateStops.forEach { stop ->
-                    ConnectionRow(rail, directionsTime(stop.departure ?: stop.arrival ?: stop.scheduledDeparture ?: stop.scheduledArrival, stop.timezone), pearl = true) {
+                    ConnectionRow(rail, directionsTime(
+                        stop.serviceDeparture?.effectiveTime ?: stop.serviceArrival?.effectiveTime ?:
+                            stop.departure ?: stop.arrival ?: stop.scheduledDeparture ?: stop.scheduledArrival,
+                        stop.timezone),
+                        platform = stop.estimatedQuay ?: stop.plannedQuay ?: "",
+                        delaySeconds = directionsDelaySeconds(
+                            stop.serviceDeparture?.effectiveTime ?: stop.serviceArrival?.effectiveTime,
+                            stop.serviceDeparture?.timetabledTime ?: stop.serviceArrival?.timetabledTime
+                        ), pearl = true) {
                         Text(displayTrainStationStopName(stop.name, shortenStationSuffix), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-                ConnectionRow(rail, directionsTime(leg.endTime, leg.to?.timezone), leg.toPlatform ?: leg.to?.platform ?: leg.to?.platformCode ?: "",
+                ConnectionRow(rail, directionsTime(leg.arrivalCurrent, leg.to?.timezone),
+                    leg.to?.estimatedQuay ?: leg.toPlatform ?: leg.to?.plannedQuay ?:
+                    leg.to?.platform ?: leg.to?.platformCode ?: "",
+                    delaySeconds = leg.arrivalDelaySeconds,
                     pearl = true, last = true) {
                     Text(displayTrainStationStopName(leg.to?.name.orEmpty(), shortenStationSuffix), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
                 }

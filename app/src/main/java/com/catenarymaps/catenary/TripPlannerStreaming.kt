@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 internal enum class ConnectionDirection { BEFORE, AFTER }
 
-/** Wire envelope shared with catenary-web and Edelweiss /v1/route/ws. */
+/** Wire envelope shared with catenary-web and Edelweiss /v2/route/ws. */
 @Serializable
 internal data class DirectionsStreamMessage(
     val type: String, val requestId: String? = null, val sequence: Long? = null,
@@ -92,7 +92,7 @@ internal object DirectionsStreaming {
         } catch (e: BackendRouteException) {
             throw e
         } catch (_: Exception) {
-            val response = client.post("https://edelweiss.catenarymaps.org/v1/route") {
+            val response = client.post("https://edelweiss.catenarymaps.org/v2/route") {
                 contentType(ContentType.Application.Json); setBody(identified.toString())
             }
             check(response.status.isSuccess()) { "Edelweiss HTTP ${response.status.value}" }
@@ -104,7 +104,7 @@ internal object DirectionsStreaming {
         // Replacement snapshots are consumed on the caller's dispatcher, never OkHttp's thread.
         val messages = Channel<String>(Channel.UNLIMITED)
         val socket = sockets.newWebSocket(Request.Builder()
-            .url("wss://edelweiss.catenarymaps.org/v1/route/ws").build(), object : WebSocketListener() {
+            .url("wss://edelweiss.catenarymaps.org/v2/route/ws").build(), object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 webSocket.send(buildJsonObject {
                     put("type", "route"); put("requestId", requestId); put("query", query)

@@ -35,6 +35,7 @@ internal fun JourneySummary(
     showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}, client: HttpClient
 ) {
     val journey = planner.selectedJourney ?: return
+    val visibleJourney = rememberLiveJourney(journey)
     val context = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
     val language = LocalConfiguration.current.locales[0].language
@@ -79,7 +80,7 @@ internal fun JourneySummary(
                         val height = (preview.height * (1f - collapseFraction.coerceIn(0f, 1f))).toInt()
                         layout(preview.width, height) { preview.placeRelative(0, 0) }
                     }) {
-                        JourneyPreviewContent(journey, streetUsUnits)
+                        JourneyPreviewContent(visibleJourney, streetUsUnits)
                     }
                 }
             }

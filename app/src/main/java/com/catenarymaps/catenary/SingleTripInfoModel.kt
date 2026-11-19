@@ -73,61 +73,46 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    init {
-        RamondaWebSocket.subscribeTrip(
-            chateau = tripSelected.chateau_id,
-            tripId = tripSelected.trip_id ?: "",
-            startDate = tripSelected.start_date,
-            startTime = tripSelected.start_time
+    private val subscription = tripSelected.trip_id?.takeIf { it.isNotBlank() }?.let { tripId ->
+        RamondaTripIdentity(
+            tripSelected.chateau_id, tripId, tripSelected.route_id,
+            tripSelected.start_date, tripSelected.start_time
         )
+    }
+
+    init {
+        subscription?.let(RamondaWebSocket::subscribe)
         observeWebSocketData()
         startTimers()
     }
 
     private fun observeWebSocketData() {
+        val identity = subscription ?: return
         viewModelScope.launch {
-            RamondaWebSocket.ramondaTripData.collect { element ->
-                if (element != null) {
-                    try {
-                        val data =
-                            json.decodeFromJsonElement(TripDataResponse.serializer(), element)
-                        // Filter by trip_id to ensure we only update for THIS trip
-                        if (data.trip_id == tripSelected.trip_id) {
-                            handleInitialTripData(data)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("SingleTripViewModel", "Error parsing initial trip data", e)
-                        // Only set error if we don't have data yet? Or maybe logging is enough if
-                        // it's not our trip?
-                        // If parsing fails we don't know the trip_id, so we can't filter safely.
-                        // But if it fails it might be a general error.
+            RamondaWebSocket.tripSnapshots.collect { snapshots ->
+                val snapshot = snapshots[identity] ?: return@collect
+                snapshot.initial?.let { data ->
+                    if (data.trip_id == identity.trip_id && data !== _tripData.value) {
+                        handleInitialTripData(data)
+                        // If an update arrived before initial_trip, reapply it to
+                        // the newly hydrated scheduled stop-time list.
+                        lastAppliedUpdate = null
                     }
                 }
-            }
-        }
-
-        viewModelScope.launch {
-            RamondaWebSocket.ramondaUpdateData.collect { element ->
-                if (element != null) {
-                    try {
-                        val data =
-                            json.decodeFromJsonElement(TripRtUpdateData.serializer(), element)
-                        // Filter by trip_id
-                        if (data.trip_id == tripSelected.trip_id || data.trip_id == null) {
-                            // If trip_id is missing in update, assume it might be ours?
-                            // But GtfsRtRefreshData in Rust has Option<String> for trip_id. It
-                            // should be there.
-                            if (data.trip_id == tripSelected.trip_id) {
-                                handleRealtimeUpdate(data)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("SingleTripViewModel", "Error parsing trip update data", e)
+                snapshot.latestUpdate?.let { data ->
+                    if (data !== lastAppliedUpdate &&
+                        (data.trip_id == null || data.trip_id == identity.trip_id) &&
+                        (data.chateau == null || data.chateau == identity.chateau)
+                    ) {
+                        lastAppliedUpdate = data
+                        handleRealtimeUpdate(data)
                     }
                 }
             }
         }
     }
+
+    private var lastAppliedUpdate: TripRtUpdateData? = null
 
     private fun handleInitialTripData(data: TripDataResponse) {
         _tripData.value = data
@@ -202,7 +187,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     override fun onCleared() {
         super.onCleared()
-        RamondaWebSocket.unsubscribeTrip(tripSelected.chateau_id)
+        subscription?.let(RamondaWebSocket::unsubscribe)
     }
 
     // --- Logic ported from Svelte ---
