@@ -84,6 +84,8 @@ data class StopInfo(
         val point: StopPoint,
         val routes: List<String>,
         @SerialName("parent_station") val parentStation: String? = null,
+        // Birch supplies this as a string; match it against the returned OSM station ID.
+        @SerialName("osm_station_id") val osmStationId: String? = null,
 )
 
 @Serializable
