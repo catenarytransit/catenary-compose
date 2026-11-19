@@ -783,9 +783,13 @@ private fun ConnectionRow(
     first: Boolean = false, last: Boolean = false, dotted: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
+    // Anchor the pearl to the clock's first line, not the combined clock + delay stack.
+    // Untimed rows continue to center their rails and other content as before.
+    val alignClock = pearl && time.isNotBlank()
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        verticalAlignment = if (alignClock) Alignment.Top else Alignment.CenterVertically) {
         Column(Modifier.width(68.dp), horizontalAlignment = Alignment.End) {
-            Text(time, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+            Text(time, fontSize = 14.sp, fontWeight = FontWeight.Bold, lineHeight = 20.sp,
                 textAlign = androidx.compose.ui.text.style.TextAlign.End)
             delaySeconds?.let { diff ->
                 DelayDiff(diff = diff, use_symbol_sign = true, apostrophe_minutes = true,
@@ -796,15 +800,20 @@ private fun ConnectionRow(
         Box(Modifier.width(20.dp).fillMaxHeight()) {
             Canvas(Modifier.matchParentSize()) {
                 val x = size.width / 2
-                drawLine(rail, androidx.compose.ui.geometry.Offset(x, if (first) size.height / 2 else 0f),
-                    androidx.compose.ui.geometry.Offset(x, if (last) size.height / 2 else size.height), 2.dp.toPx(),
+                // 20sp clock line height: its visual center is 10sp from the row's top.
+                // This stays fixed when a realtime delay appears underneath the clock.
+                val dotY = if (alignClock) 10.sp.toPx().coerceAtMost(size.height) else size.height / 2
+                drawLine(rail, androidx.compose.ui.geometry.Offset(x, if (first) dotY else 0f),
+                    androidx.compose.ui.geometry.Offset(x, if (last) dotY else size.height), 2.dp.toPx(),
                     pathEffect = if (dotted) PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 4.dp.toPx())) else null)
-                if (pearl) drawCircle(rail, 4.dp.toPx(), androidx.compose.ui.geometry.Offset(x, size.height / 2))
+                if (pearl) drawCircle(rail, 4.dp.toPx(), androidx.compose.ui.geometry.Offset(x, dotY))
             }
         }
         Spacer(Modifier.width(8.dp))
-        Row(Modifier.weight(1f).heightIn(min = 28.dp).padding(vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp), content = content)
+        Row(Modifier.weight(1f).heightIn(min = 28.dp)
+                .padding(vertical = if (alignClock) 0.dp else 2.dp),
+            verticalAlignment = if (alignClock) Alignment.Top else Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp), content = content)
         if (platform.isNotBlank()) Text(platform, modifier = Modifier.widthIn(max = 48.dp).padding(start = 8.dp),
             style = MaterialTheme.typography.labelMedium, textAlign = androidx.compose.ui.text.style.TextAlign.End)
     }
