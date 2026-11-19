@@ -1633,7 +1633,7 @@ private fun TripPill(
                         val sched = trip.departureSchedule
                         val rt = trip.departureRealtime ?: effectiveArrivalRt
                         if (sched != null && rt != null) {
-                                val diff = rt - sched // seconds
+                                val diff = knownRealtimeDelaySeconds(rt, sched) ?: 0L // both are present
                                 // Realtime equal to schedule is a valid +0 observation.
                                 DelayDiff(
                                         diff = diff,
