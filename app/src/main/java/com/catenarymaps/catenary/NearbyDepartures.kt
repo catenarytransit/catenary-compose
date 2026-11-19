@@ -1549,20 +1549,24 @@ private fun TripPill(
         onTripClick: (TripClickResponse) -> Unit,
         realtimeNowSec: Long
 ) {
-        // Mirror Svelte's getEffectiveDepartureTime: check departureRealtime,
-        // then arrivalRealtime (if schedule is null or arrivalRealtime > schedule),
-        // then fall back to departureSchedule.
+        // At a terminal stop, compare arrival to arrival, including on-time +0.
+        // For other stops, retain the existing departure-first fallback behavior.
         val effectiveArrivalRt =
                 trip.arrivalRealtime?.takeIf {
-                        trip.departureSchedule == null || it > trip.departureSchedule!!
+                        trip.lastStop || trip.departureSchedule == null ||
+                                it > trip.departureSchedule!!
                 }
-        val dep = trip.departureRealtime ?: effectiveArrivalRt ?: trip.departureSchedule ?: return
+        val realtime = if (trip.lastStop) trip.arrivalRealtime ?: trip.departureRealtime
+                else trip.departureRealtime ?: effectiveArrivalRt
+        val schedule = if (trip.lastStop) trip.arrivalSchedule ?: trip.departureSchedule
+                else trip.departureSchedule
+        val dep = realtime ?: schedule ?: return
 
         val secondsLeft = dep - realtimeNowSec
         val isPast = secondsLeft < 0
         val contentAlpha = if (isPast) 0.7f else 1.0f
 
-        val hasRealtime = trip.departureRealtime != null || effectiveArrivalRt != null
+        val hasRealtime = realtime != null
         // Note: Color(0x00AB9B) had 00 alpha (fully transparent) unless intended;
         // use 0xFF00AB9B if it should be visible teal!
         val baseColor = if (hasRealtime) Color(0xFF00AB9B) else LocalContentColor.current
@@ -1630,18 +1634,15 @@ private fun TripPill(
                         }
 
                         // Only show +/- delay when BOTH schedule & realtime are available
-                        val sched = trip.departureSchedule
-                        val rt = trip.departureRealtime ?: effectiveArrivalRt
-                        if (sched != null && rt != null) {
-                                val diff = rt - sched // seconds
-                                if (diff != 0L) {
-                                        DelayDiff(
-                                                diff = diff,
-                                                fontSizeOfPolarity = 12.sp,
-                                                use_symbol_sign = true,
-                                                hide_min_units = true,
-                                        )
-                                }
+                        if (schedule != null && realtime != null) {
+                                val diff = knownRealtimeDelaySeconds(realtime, schedule) ?: 0L
+                                // Realtime equal to schedule is a valid +0 observation.
+                                DelayDiff(
+                                        diff = diff,
+                                        fontSizeOfPolarity = 12.sp,
+                                        use_symbol_sign = true,
+                                        hide_min_units = true,
+                                )
                         }
 
                         // Platform/Track

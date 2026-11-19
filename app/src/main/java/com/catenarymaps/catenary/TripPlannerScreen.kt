@@ -869,7 +869,8 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean, onTrip
                         stop.timezone),
                         platform = stop.estimatedQuay ?: stop.plannedQuay ?: "",
                         delaySeconds = directionsDelaySeconds(
-                            stop.serviceDeparture?.effectiveTime ?: stop.serviceArrival?.effectiveTime,
+                            stop.serviceDeparture?.recordedAtTime ?: stop.serviceDeparture?.estimatedTime
+                                ?: stop.serviceArrival?.recordedAtTime ?: stop.serviceArrival?.estimatedTime,
                             stop.serviceDeparture?.timetabledTime ?: stop.serviceArrival?.timetabledTime
                         ), pearl = true) {
                         Text(displayTrainStationStopName(stop.name, shortenStationSuffix), style = MaterialTheme.typography.bodyMedium)

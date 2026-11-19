@@ -35,13 +35,20 @@ internal fun rememberLiveJourney(journey: DirectionsItinerary): DirectionsItiner
 internal fun directionsDelaySeconds(current: String?, scheduled: String?): Long? {
     val baseline = runCatching { Instant.parse(scheduled).epochSecond }.getOrNull() ?: return null
     val actual = runCatching { Instant.parse(current).epochSecond }.getOrNull() ?: return null
-    return (actual - baseline).takeIf { it != 0L }
+    return knownRealtimeDelaySeconds(actual, baseline)
 }
 
+// Only an explicit OJP estimate/recorded time confirms realtime on-time.
 internal val DirectionsLeg.departureDelaySeconds: Long?
-    get() = directionsDelaySeconds(departureCurrent, departureScheduled)
+    get() = directionsDelaySeconds(
+        serviceDeparture?.recordedAtTime ?: serviceDeparture?.estimatedTime,
+        departureScheduled
+    )
 internal val DirectionsLeg.arrivalDelaySeconds: Long?
-    get() = directionsDelaySeconds(arrivalCurrent, arrivalScheduled)
+    get() = directionsDelaySeconds(
+        serviceArrival?.recordedAtTime ?: serviceArrival?.estimatedTime,
+        arrivalScheduled
+    )
 
 internal fun instantString(seconds: Long?): String? =
     seconds?.let { runCatching { Instant.ofEpochSecond(it).toString() }.getOrNull() }

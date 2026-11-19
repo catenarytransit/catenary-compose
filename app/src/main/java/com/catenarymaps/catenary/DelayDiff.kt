@@ -165,6 +165,14 @@ fun DelayDiff(
                 color = textColor,
                 modifier = Modifier.alignByBaseline()
             )
+            if (!hide_min_units) {
+                Text(
+                    text = if (apostrophe_minutes) "'" else locale_min_marking(show_seconds),
+                    fontSize = 10.sp,
+                    color = textColor,
+                    modifier = Modifier.alignByBaseline()
+                )
+            }
         }
     }
 }
