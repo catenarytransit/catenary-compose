@@ -67,6 +67,7 @@ data class TripDataResponse(
         val block_id: String? = null,
         val service_date: String? = null,
         val trip_id: String? = null,
+        val chateau: String? = null,
         val shape_polyline: String? = null,
         val old_shape_polyline: String? = null,
         val rt_shape: Boolean? = null,
