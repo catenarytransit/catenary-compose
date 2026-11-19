@@ -186,20 +186,28 @@ private fun ConnectionResults(
     var scrollDirection by remember { mutableIntStateOf(0) }
     fun loadAtEdge(direction: Int) {
         if (planner.error != null || planner.itineraries.isEmpty()) return
-        val page = connectionPageAtEdge(direction, state.firstVisibleItemIndex,
-            state.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1, planner.itineraries.size)
+        val visible = state.layoutInfo.visibleItemsInfo
+        if (visible.isEmpty()) return
+        // Prefetch roughly one viewport ahead. This also works for fast flings that
+        // cross multiple rows between frames, before the spinner enters view.
+        val page = connectionPageAtEdge(
+            direction, visible.first().index, visible.last().index,
+            planner.itineraries.size, prefetchItems = visible.size.coerceAtLeast(3)
+        )
         if (page == ConnectionDirection.BEFORE && planner.canLoadEarlier) {
             planner.loadConnections(client, earlier = true)
         } else if (page == ConnectionDirection.AFTER && planner.canLoadLater) {
             planner.loadConnections(client, earlier = false)
         }
     }
-    // Observe layout after scrolling, including fling movement and cursor availability.
+    // Observe layout throughout the drag and fling, including when a new page cursor
+    // becomes available. Do not start another page on a stationary idle list.
     LaunchedEffect(state, planner, client) {
         snapshotFlow {
             listOf(state.isScrollInProgress, state.firstVisibleItemIndex,
                 state.layoutInfo.visibleItemsInfo.lastOrNull()?.index,
-                scrollDirection, planner.canLoadEarlier, planner.canLoadLater, planner.error)
+                scrollDirection, planner.canLoadEarlier, planner.canLoadLater, planner.error,
+                planner.previousPageCursor, planner.nextPageCursor)
         }.collect { if (state.isScrollInProgress) loadAtEdge(scrollDirection) }
     }
     val paging = remember(state, planner, client) {
@@ -211,6 +219,9 @@ private fun ConnectionResults(
                 return Offset.Zero
             }
             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                // A fling continues after the user's finger leaves the screen.
+                // Keep its last direction so crossing the placeholder still loads.
+                if (consumed.y != 0f) scrollDirection = if (consumed.y > 0f) 1 else -1
                 loadAtEdge(scrollDirection)
                 return Offset.Zero
             }
@@ -253,8 +264,13 @@ private fun ConnectionResults(
 private fun ConnectionLoadingEdge(planner: TripPlannerViewModel, client: HttpClient, earlier: Boolean) {
     val busy = if (earlier) planner.earlierLoading else planner.laterLoading
     val retry = planner.error != null && (if (earlier) planner.canLoadEarlier else planner.canLoadLater)
-    // Idle sentinels have no height, so even a short first page starts beneath the inputs.
-    Box(Modifier.fillMaxWidth().height(if (busy || retry) 48.dp else 0.dp), contentAlignment = Alignment.Center) {
+    // Keep the indicator inside the keyed LazyColumn row. The idle row collapses
+    // completely, while loading/retry keeps a touch-sized area in the list.
+    Box(
+        Modifier.fillMaxWidth().animateContentSize()
+            .height(if (busy || retry) 48.dp else 0.dp),
+        contentAlignment = Alignment.Center
+    ) {
         if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
         else if (retry) {
             IconButton(onClick = { planner.loadConnections(client, earlier) }) {

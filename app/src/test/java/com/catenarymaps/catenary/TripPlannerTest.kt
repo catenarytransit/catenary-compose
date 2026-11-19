@@ -89,6 +89,15 @@ class TripPlannerTest {
         assertNull(connectionPageAtEdge(-1, 2, 5, 10))
         assertNull(connectionPageAtEdge(0, 2, 11, 10))
         assertNull(connectionPageAtEdge(1, 0, 0, 0))
+        // Prefetch when the user is still one screen from the earliest/latest row.
+        assertEquals(ConnectionDirection.BEFORE, connectionPageAtEdge(1, 6, 10, 20, prefetchItems = 4))
+        assertEquals(ConnectionDirection.AFTER, connectionPageAtEdge(-1, 11, 17, 20, prefetchItems = 4))
+        assertNull(connectionPageAtEdge(1, 8, 12, 20, prefetchItems = 4))
+        assertNull(connectionPageAtEdge(-1, 8, 14, 20, prefetchItems = 4))
+        // Idle lists and gestures in the opposite direction never request pages.
+        assertNull(connectionPageAtEdge(0, 2, 21, 20, prefetchItems = 8))
+        assertNull(connectionPageAtEdge(-1, 2, 6, 20, prefetchItems = 4))
+        assertNull(connectionPageAtEdge(1, 15, 21, 20, prefetchItems = 4))
     }
 
     @Test fun requestUsesExclusiveTimeAndSiUnits() {
