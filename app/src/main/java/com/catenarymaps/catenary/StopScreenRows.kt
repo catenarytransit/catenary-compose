@@ -302,6 +302,16 @@ fun StationScreenTrainRow(
                                         )
                                 }
 
+                                // Reported on-time data is +0; scheduled-only has no delay badge.
+                                if (rtTime != null && schedTime != null && rtTime == schedTime) {
+                                        DelayDiff(
+                                                diff = 0L,
+                                                show_seconds = effectiveShowSeconds,
+                                                use_symbol_sign = useSymbolSign,
+                                                hide_min_units = !effectiveShowSeconds
+                                        )
+                                }
+
                                 // Countdown
                                 val target = rtTime ?: schedTime
                                 if (target != null) {
@@ -817,10 +827,7 @@ fun StopScreenRow(
                                         }
 
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                                if (rtTime != null &&
-                                                                schedTime != null &&
-                                                                rtTime != schedTime
-                                                ) {
+                                                if (rtTime != null && schedTime != null) {
                                                         // Delay
                                                         DelayDiff(
                                                                 diff = rtTime - schedTime,
@@ -1190,6 +1197,15 @@ fun StationScreenTrainRowCompact(
                                                 )
                                         }
                                 }
+
+                        if (rtTime != null && schedTime != null && rtTime == schedTime) {
+                                DelayDiff(
+                                        diff = 0L,
+                                        show_seconds = effectiveShowSeconds,
+                                        use_symbol_sign = useSymbolSign,
+                                        hide_min_units = !effectiveShowSeconds
+                                )
+                        }
 
                         // TimeDiff (Countdown)
                         val diff = (rtTime ?: schedTime ?: 0) - currentTime
@@ -1825,6 +1841,15 @@ fun StopScreenRowV2(
                                                                 )
                                                         }
                                                 }
+
+                                        if (rtTime != null && schedTime != null && rtTime == schedTime) {
+                                                DelayDiff(
+                                                        diff = 0L,
+                                                        show_seconds = effectiveShowSeconds,
+                                                        use_symbol_sign = useSymbolSign,
+                                                        hide_min_units = !effectiveShowSeconds
+                                                )
+                                        }
 
                                         // TimeDiff (Countdown)
                                         val diff = (rtTime ?: schedTime ?: 0) - currentTime
