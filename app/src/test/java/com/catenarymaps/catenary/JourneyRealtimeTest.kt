@@ -75,13 +75,59 @@ class JourneyRealtimeTest {
         assertEquals(60L, result.legs[0].arrivalDelaySeconds)
     }
 
-    @Test fun zeroDelayNotShownAndSignedMinutesRemainCorrect() {
-        assertNull(directionsDelaySeconds(depart, depart))
+    @Test fun zeroRealtimeDelayIsReportedRatherThanDiscarded() {
+        assertEquals(0L, directionsDelaySeconds(depart, depart))
         assertEquals(-120L, directionsDelaySeconds(
             "2026-11-19T11:58:00Z", depart))
         assertEquals(60L, directionsDelaySeconds(
             "2026-11-19T12:01:00Z", depart))
         assertNull(directionsDelaySeconds("broken", depart))
+    }
+
+    @Test fun scheduledOnlyLegDoesNotClaimToHaveRealtime() {
+        val scheduledOnly = leg()
+        assertNull(scheduledOnly.departureDelaySeconds)
+        assertNull(scheduledOnly.arrivalDelaySeconds)
+        assertNull(DirectionsItinerary(depart, arrive, legs = listOf(scheduledOnly))
+            .previewTimeGroups().departure.first().delaySeconds)
+
+        // OJP EstimatedTime equal to TimetabledTime is an explicit on-time prediction.
+        val estimatedOnTime = leg().copy(
+            serviceDeparture = DirectionsEventTime(timetabledTime = depart, estimatedTime = depart),
+            serviceArrival = DirectionsEventTime(timetabledTime = arrive, estimatedTime = arrive)
+        )
+        assertEquals(0L, estimatedOnTime.departureDelaySeconds)
+        assertEquals(0L, estimatedOnTime.arrivalDelaySeconds)
+        assertEquals(0L, DirectionsItinerary(depart, arrive, legs = listOf(estimatedOnTime))
+            .previewTimeGroups().departure.first().delaySeconds)
+    }
+
+    @Test fun ramondaOnTimeTimestampWithNullDelayProducesZeroMinutes() {
+        // Metrolink 612 / 200090682: realtime time equals schedule, delay field is null.
+        val board = 1795113600L
+        val scheduled = TripStoptime(
+            stop_id = "107",
+            gtfs_stop_sequence = 1,
+            scheduled_departure_time_unix_seconds = board,
+            rt_departure = RtTime(time = board, delay = null)
+        )
+        assertEquals(0L, knownRealtimeDelaySeconds(
+            scheduled.rt_departure?.time, scheduled.scheduled_departure_time_unix_seconds))
+        assertNull(knownRealtimeDelaySeconds(null, board))
+
+        val live = DirectionsItinerary(depart, arrive, legs = listOf(leg())).withRamonda(
+            mapOf(leg().ramondaIdentity()!! to RamondaTripSnapshot(
+                initial = TripDataResponse(
+                    trip_id = "shared-trip", chateau = chateau,
+                    stoptimes = listOf(scheduled.copy(
+                        stop_id = "origin",
+                        scheduled_departure_time_unix_seconds = Instant.parse(depart).epochSecond,
+                        rt_departure = RtTime(Instant.parse(depart).epochSecond)
+                    ))
+                )
+            ))
+        )
+        assertEquals(0L, live.legs.single().departureDelaySeconds)
     }
 
     @Test fun sharingTripAcrossTwoScreensKeepsSubscriptionUntilBothRelease() {
