@@ -76,6 +76,31 @@ data class RamondaTripSnapshot(
 )
 
 /**
+ * Counts viewers, not sockets. Pure registry permits deterministic regression
+ * tests for overlapping screens and independent unsubscribe operations.
+ */
+internal class RamondaSubscriptionRegistry {
+    private val counts = linkedMapOf<RamondaTripIdentity, Int>()
+    fun acquire(identity: RamondaTripIdentity): Boolean {
+        val count = counts[identity] ?: 0
+        counts[identity] = count + 1
+        return count == 0
+    }
+    fun release(identity: RamondaTripIdentity): Boolean {
+        val count = counts[identity] ?: return false
+        if (count > 1) {
+            counts[identity] = count - 1
+            return false
+        }
+        counts.remove(identity)
+        return true
+    }
+    fun contains(identity: RamondaTripIdentity) = counts.containsKey(identity)
+    fun active(): Set<RamondaTripIdentity> = counts.keys.toSet()
+    fun isNotEmpty() = counts.isNotEmpty()
+}
+
+/**
  * One socket, independently tracked subscriptions, no global "current trip".
  * Every frame is routed by its server-supplied complete subscription identity.
  *
@@ -96,9 +121,7 @@ object RamondaWebSocket {
     private var socketGeneration = 0L
     private var reconnectJob: Job? = null
     private var pingJob: Job? = null
-    private val leases = mutableMapOf<RamondaTripIdentity, Int>()
-    private val generations = mutableMapOf<RamondaTripIdentity, Long>()
-    private var nextGeneration = 0L
+    private val subscriptions = RamondaSubscriptionRegistry()
     private val _tripSnapshots = MutableStateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>>(emptyMap())
     val tripSnapshots: StateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>> = _tripSnapshots.asStateFlow()
     private val _ramondaStatus = MutableStateFlow("disconnected")
@@ -116,10 +139,7 @@ object RamondaWebSocket {
     fun subscribe(identity: RamondaTripIdentity) {
         require(identity.chateau.isNotBlank() && identity.trip_id.isNotBlank())
         scope.launch {
-            val count = leases[identity] ?: 0
-            leases[identity] = count + 1
-            if (count == 0) {
-                generations[identity] = ++nextGeneration
+            if (subscriptions.acquire(identity)) {
                 ensureConnection()
                 if (_ramondaStatus.value == "connected") sendSubscribe(identity)
             }
@@ -128,12 +148,7 @@ object RamondaWebSocket {
 
     fun unsubscribe(identity: RamondaTripIdentity) {
         scope.launch {
-            val count = leases[identity] ?: return@launch
-            if (count > 1) {
-                leases[identity] = count - 1
-            } else {
-                leases.remove(identity)
-                generations.remove(identity)
+            if (subscriptions.release(identity)) {
                 _tripSnapshots.value = _tripSnapshots.value - identity
                 if (_ramondaStatus.value == "connected") sendUnsubscribe(identity)
             }
@@ -168,7 +183,7 @@ object RamondaWebSocket {
                     scope.launch {
                         if (generation != socketGeneration) return@launch
                         _ramondaStatus.value = "connected"
-                        leases.keys.forEach(::sendSubscribe)
+                        subscriptions.active().forEach(::sendSubscribe)
                         pingJob?.cancel()
                         pingJob = scope.launch {
                             while (_ramondaStatus.value == "connected") {
@@ -211,7 +226,7 @@ object RamondaWebSocket {
         pingJob = null
         _ramondaStatus.value = status
         reconnectJob?.cancel()
-        if (leases.isNotEmpty()) reconnectJob = scope.launch {
+        if (subscriptions.isNotEmpty()) reconnectJob = scope.launch {
             delay(5_000)
             ensureConnection()
         }
@@ -222,7 +237,7 @@ object RamondaWebSocket {
         when (frame.type) {
             "initial_trip", "update_trip" -> {
                 val identity = frame.subscription ?: return
-                if (!leases.containsKey(identity)) return
+                if (!subscriptions.contains(identity)) return
                 val body = frame.data ?: return
                 val existing = _tripSnapshots.value[identity] ?: RamondaTripSnapshot()
                 val replacement = when (frame.type) {
@@ -230,7 +245,13 @@ object RamondaWebSocket {
                         val initial = json.decodeFromJsonElement(TripDataResponse.serializer(), body)
                         if ((initial.trip_id != null && initial.trip_id != identity.trip_id) ||
                             (initial.chateau != null && initial.chateau != identity.chateau)) return
-                        existing.copy(initial = initial, lastError = null)
+                        existing.copy(
+                            initial = initial,
+                            // Keep a response that preceded the first initial_trip,
+                            // but discard stale RT state when reconnection rehydrates.
+                            latestUpdate = if (existing.initial == null) existing.latestUpdate else null,
+                            lastError = null
+                        )
                     }
                     else -> {
                         val update = json.decodeFromJsonElement(TripRtUpdateData.serializer(), body)
@@ -243,7 +264,7 @@ object RamondaWebSocket {
             }
             "error" -> {
                 val identity = frame.subscription
-                if (identity != null && leases.containsKey(identity)) {
+                if (identity != null && subscriptions.contains(identity)) {
                     val old = _tripSnapshots.value[identity] ?: RamondaTripSnapshot()
                     _tripSnapshots.value = _tripSnapshots.value +
                         (identity to old.copy(lastError = frame.message))
