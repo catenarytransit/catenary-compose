@@ -18,6 +18,7 @@ data class TripStoptime(
         val rt_arrival: RtTime? = null,
         val rt_departure: RtTime? = null,
         val rt_platform_string: String? = null,
+        val platform_code: String? = null,
         val schedule_relationship: Int? = null, // 1 means cancelled
         val code: String? = null,
         val timepoint: Boolean? = null,
