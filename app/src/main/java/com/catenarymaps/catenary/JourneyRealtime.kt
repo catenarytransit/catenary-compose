@@ -118,7 +118,7 @@ internal fun DirectionsItinerary.withRamonda(
             val location = original?.copy(
                 platform = code ?: original.platform,
                 estimatedQuay = code ?: original.estimatedQuay,
-                plannedQuay = scheduled?.code ?: original.plannedQuay
+                plannedQuay = scheduled?.platform_code ?: original.plannedQuay
             )
             return Triple(scheduled, updated, location)
         }
