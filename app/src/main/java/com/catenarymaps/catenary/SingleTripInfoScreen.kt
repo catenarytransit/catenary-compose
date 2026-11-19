@@ -2386,6 +2386,7 @@ fun StopListItem(
                                                         isPast = journeyStop == null && isInactive,
                                                         isDashed = isTopDashed,
                                                         cancellationColor = incomingColor ?: cancellationColor,
+                                                        isOutsideJourneySegment = journeyStop?.incomingActive == false,
                                                         modifier = Modifier.fillMaxSize()
                                                 )
                                         }
@@ -2432,6 +2433,9 @@ fun StopListItem(
                                         topLineColor = incomingColor,
                                         bottomLineColor = outgoingColor,
                                         dotColor = journeyTextColor,
+                                        topOutsideJourneySegment = journeyStop?.incomingActive == false,
+                                        bottomOutsideJourneySegment = journeyStop?.outgoingActive == false,
+                                        dotOutsideJourneySegment = journeyStop?.active == false,
                                         filledDot = journeyStop?.endpoint == true,
                                         isFirst = isFirst, // Standard Dot Logic
                                         isLast = isLast,
@@ -2626,6 +2630,7 @@ fun StopListItem(
                                                 isPast = journeyStop == null && isBottomSegmentPast,
                                                 isDashed = isBottomDashed,
                                                 cancellationColor = outgoingColor ?: cancellationColor,
+                                                isOutsideJourneySegment = journeyStop?.outgoingActive == false,
                                                 modifier = Modifier.fillMaxSize()
                                         )
                                 }
@@ -2635,6 +2640,10 @@ fun StopListItem(
                 }
         }
 }
+
+// Thin muted rails and stop rings only when a journey segment is selected.
+private val UnselectedPearlLineWidth = 0.6.dp
+private val UnselectedPearlDotStrokeWidth = 0.75.dp
 
 // Each segment uses the exact pearl x-axis and its actual y-offset.
 private fun DrawScope.drawPearlSegment(
@@ -2662,7 +2671,8 @@ fun TimelineLine(
         isPast: Boolean,
         modifier: Modifier = Modifier,
         isDashed: Boolean = false,
-        cancellationColor: Color = Color.Red
+        cancellationColor: Color = Color.Red,
+        isOutsideJourneySegment: Boolean = false
 ) {
         Canvas(modifier = modifier) {
                 drawPearlSegment(
@@ -2670,7 +2680,7 @@ fun TimelineLine(
                                 .copy(alpha = if (isPast) 0.5f else 1f),
                         startY = 0f,
                         endY = size.height,
-                        width = (if (isDashed || !isPast) 2.dp else 1.dp).toPx(),
+                        width = (if (isOutsideJourneySegment) UnselectedPearlLineWidth else if (isDashed || !isPast) 2.dp else 1.dp).toPx(),
                         dashed = isDashed
                 )
         }
@@ -2695,7 +2705,10 @@ fun TripProgressIndicator(
         topLineColor: Color? = null,
         bottomLineColor: Color? = null,
         dotColor: Color? = null,
-        filledDot: Boolean = false
+        filledDot: Boolean = false,
+        topOutsideJourneySegment: Boolean = false,
+        bottomOutsideJourneySegment: Boolean = false,
+        dotOutsideJourneySegment: Boolean = false
 ) {
         val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
         Canvas(modifier = modifier) {
@@ -2706,16 +2719,13 @@ fun TripProgressIndicator(
                 // Determine Vertical Center for Dot and Split Point
                 val hCenter = if (dotOffset != null) dotOffset.toPx() else canvasHeight / 2
 
-                val activeLineWidth = 2.dp.toPx()
-                val pastLineWidth = 1.dp.toPx()
-
                 if (!isFirst) {
                         drawPearlSegment(
                                 lineColor = topLineColor ?: (if (isTopDashed) cancellationColor else neutralColor)
                                         .copy(alpha = if (isTopPast) 0.5f else 1f),
                                 startY = 0f,
                                 endY = hCenter,
-                                width = (if (topLineColor != null || isTopDashed || !isTopPast) 2.dp else 1.dp).toPx(),
+                                width = (if (topOutsideJourneySegment) UnselectedPearlLineWidth else if (topLineColor != null || isTopDashed || !isTopPast) 2.dp else 1.dp).toPx(),
                                 dashed = isTopDashed
                         )
                 }
@@ -2725,13 +2735,14 @@ fun TripProgressIndicator(
                                         .copy(alpha = if (isBottomPast) 0.5f else 1f),
                                 startY = hCenter,
                                 endY = canvasHeight,
-                                width = (if (bottomLineColor != null || isBottomDashed || !isBottomPast) 2.dp else 1.dp).toPx(),
+                                width = (if (bottomOutsideJourneySegment) UnselectedPearlLineWidth else if (bottomLineColor != null || isBottomDashed || !isBottomPast) 2.dp else 1.dp).toPx(),
                                 dashed = isBottomDashed
                         )
                 }
 
                 // Center circle (Dot)
                 val dotRadius = 4.dp.toPx()
+                val dotStrokeWidth = (if (dotOutsideJourneySegment) UnselectedPearlDotStrokeWidth else 2.dp).toPx()
                 val center = Offset(wCenter, hCenter)
                 val dotNeutralColor =
                         dotColor ?: if (isCancelledStop) cancellationColor
@@ -2740,8 +2751,8 @@ fun TripProgressIndicator(
                 // Always Neutral Circle
                 if (isDark) {
                         // Dark mode: Black fill, neutral ring, black border around it
-                        val borderStroke = 1.dp.toPx()
-                        val ringStroke = 2.dp.toPx()
+                        val borderStroke = (if (dotOutsideJourneySegment) 0.5.dp else 1.dp).toPx()
+                        val ringStroke = dotStrokeWidth
 
                         // Draw outer black border
                         drawCircle(
@@ -2776,7 +2787,7 @@ fun TripProgressIndicator(
                                 center = center,
                                 style =
                                         androidx.compose.ui.graphics.drawscope.Stroke(
-                                                width = 2.dp.toPx()
+                                                width = dotStrokeWidth
                                         )
                         )
                 }
