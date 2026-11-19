@@ -85,6 +85,8 @@ class SearchViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    // Completed snapshots only: partial or failed network requests must not be cached.
+    private val completedSearchCache = CompletedSearchCache<SearchCacheKey, List<SearchRow>>()
     private var searchJob: Job? = null
     @Volatile private var searchGeneration = 0
 
@@ -104,14 +106,15 @@ class SearchViewModel : ViewModel() {
             userLocation: Pair<Double, Double>?,
             mapCenter: Position,
     ) {
-        searchJob?.cancel() // Cancel previous job
+        searchJob?.cancel() // Invalidate any in-flight response before showing a cached snapshot.
         val generation = ++searchGeneration
-        _searchRows.value = emptyList()
-        if (query.isBlank()) {
-            _isLoading.value = false
-            _searchRows.value = emptyList()
-            return
-        }
+        val cacheKey = SearchCacheKey.from(
+            query, mapCenter.latitude, mapCenter.longitude, userLocation
+        )
+        val cachedRows = if (query.isBlank()) null else completedSearchCache.get(cacheKey)
+        _searchRows.value = cachedRows ?: emptyList()
+        _isLoading.value = false
+        if (query.isBlank() || cachedRows != null) return
 
         searchJob =
                 viewModelScope.launch(Dispatchers.IO) {
@@ -119,15 +122,17 @@ class SearchViewModel : ViewModel() {
                     delay(200) // Debounce for 200ms
 
                     try {
+                        data class PartialResults(
+                            var catenary: CatenarySearchResponse? = null,
+                            var cypress: List<CypressFeature> = emptyList(),
+                            var osmStations: List<OsmStationSearchResult> = emptyList(),
+                            var catenarySucceeded: Boolean = false,
+                            var cypressSucceeded: Boolean = false,
+                            var osmStationsSucceeded: Boolean = false,
+                        )
+
+                        val partialResults = PartialResults()
                         coroutineScope {
-                            data class PartialResults(
-                                var catenary: CatenarySearchResponse? = null,
-                                var cypress: List<CypressFeature> = emptyList(),
-                                var osmStations: List<OsmStationSearchResult> = emptyList(),
-                            )
-
-                            val partialResults = PartialResults()
-
                             fun recomputeRows() {
                                 if (generation != searchGeneration) return
                                 _searchRows.value =
@@ -150,7 +155,9 @@ class SearchViewModel : ViewModel() {
                                             userLocation = userLocation,
                                         )
 
-                                        client.get(catenaryUrl).body<CatenarySearchResponse>()
+                                        client.get(catenaryUrl).body<CatenarySearchResponse>().also {
+                                            partialResults.catenarySucceeded = true
+                                        }
                                     } catch (e: Exception) {
                                         if (e is kotlinx.coroutines.CancellationException) throw e
                                         e.printStackTrace()
@@ -172,7 +179,9 @@ class SearchViewModel : ViewModel() {
                                         )
 
                                         val response = client.get(cypressUrl).body<CypressResponse>()
-                                        response.features
+                                        response.features.also {
+                                            partialResults.cypressSucceeded = true
+                                        }
                                     } catch (e: Exception) {
                                         if (e is kotlinx.coroutines.CancellationException) throw e
                                         e.printStackTrace()
@@ -214,7 +223,9 @@ class SearchViewModel : ViewModel() {
                                                 json.decodeFromString<
                                                     OsmStationSearchResponse
                                                 >(bodyText)
-                                            parsed.results
+                                            parsed.results.also {
+                                                partialResults.osmStationsSucceeded = true
+                                            }
                                         } catch (e: Exception) {
                                             if (e is kotlinx.coroutines.CancellationException) throw e
                                             Log.e(
@@ -240,6 +251,24 @@ class SearchViewModel : ViewModel() {
 
                                 partialResults.osmStations = stations
                                 recomputeRows()
+                            }
+                        }
+
+                        // Rebuild after all three requests finish, so a cache hit always restores
+                        // the complete sorted list, including legitimate empty searches.
+                        if (generation == searchGeneration) {
+                            val completedRows = buildCombinedRows(
+                                partialResults.catenary,
+                                partialResults.cypress,
+                                partialResults.osmStations,
+                                userLocation,
+                            )
+                            _searchRows.value = completedRows
+                            if (partialResults.catenarySucceeded &&
+                                partialResults.cypressSucceeded &&
+                                partialResults.osmStationsSucceeded
+                            ) {
+                                completedSearchCache.put(cacheKey, completedRows)
                             }
                         }
                     } finally {

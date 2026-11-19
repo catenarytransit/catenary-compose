@@ -430,7 +430,8 @@ fun TripPlannerHeader(
                         }
                     } else {
                         // Retain the source row so addresses and location type icons match regular search.
-                        val suggestions = rows.mapNotNull { row -> row.directionsLocation()?.let { row to it } }
+                        val suggestions = filterRoutingSearchRows(rows)
+                            .mapNotNull { row -> row.directionsLocation()?.let { row to it } }
                             .distinctBy { (_, location) -> Triple(location.name, location.lat, location.lon) }
                         items(suggestions.take(12)) { (row, location) ->
                             val distance = plannerDistance(haversineDistance(reference.first, reference.second, location.lat, location.lon), streetUsUnits)
