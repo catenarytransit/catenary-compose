@@ -25,7 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -63,6 +63,11 @@ fun SearchResultsOverlay(
     val isLoading by viewModel.isLoading.collectAsState()
     // Read observable history during composition, not only when the query changes.
     val recentStations = if (searchQuery.isBlank()) stationHistory.topHistory() else emptyList()
+    // Match persisted visits synchronously. The request is debounced, but history is not.
+    val matchingVisits = if (searchQuery.isNotBlank()) {
+        matchingRecentStationHistory(searchQuery, stationHistory.topHistory(100))
+    } else emptyList()
+    val networkRows = withoutMatchingVisitedResults(combinedRows, matchingVisits)
 
     Surface(
             modifier =
@@ -100,8 +105,18 @@ fun SearchResultsOverlay(
                         }
                     }
                 } else {
-                    // Single, intermingled list for nonempty queries.
-                    items(combinedRows) { row ->
+                    // Recent matches are always the first result, even before network loading.
+                    items(matchingVisits, key = { "recent:" + it.stableKey() }) { recent ->
+                        RecentStationResultItem(recent, onClick = { onRecentClick(recent) })
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                        )
+                    }
+                    if (isLoading) {
+                        item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
+                    }
+                    // Incoming results never repeat an already promoted visit.
+                    items(networkRows) { row ->
                     when (row) {
                         is SearchRow.CypressRow -> {
                             CypressResultItem(
@@ -150,11 +165,6 @@ fun SearchResultsOverlay(
                 }
             }
 
-            if (isLoading && searchQuery.isNotBlank()) {
-                CircularProgressIndicator(modifier = Modifier
-                    .size(32.dp)
-                    .align(Alignment.Center))
-            }
         }
     }
 }
@@ -167,7 +177,12 @@ fun RecentStationResultItem(recent: RecentStation, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SearchTypeIcon(SearchTypeIcons.Recent)
+        Icon(
+            imageVector = Icons.Default.AccessTime,
+            contentDescription = "Recently used",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(
             text = recent.name,
