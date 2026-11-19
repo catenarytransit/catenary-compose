@@ -22,6 +22,7 @@ class RealtimeDelayTest {
         val stop = json.decodeFromString<TripStoptime>("""{
             "stop_id": "107",
             "name": "L.A. Union Station",
+            "longitude": -118.233513, "latitude": 34.055729,
             "gtfs_stop_sequence": 1,
             "scheduled_arrival_time_unix_seconds": 1795113600,
             "scheduled_departure_time_unix_seconds": 1795113600,
