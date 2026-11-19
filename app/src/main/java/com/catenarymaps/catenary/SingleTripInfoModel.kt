@@ -10,6 +10,7 @@ import io.ktor.client.request.get
 import java.net.URLEncoder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,7 +28,12 @@ data class StopTimeCleaned(
         val showBoth: Boolean = false // Logic to calculate this
 )
 
-class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip) : ViewModel() {
+class SingleTripViewModel(
+    private val tripSelected: CatenaryStackEnum.SingleTrip,
+    private val snapshots: StateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>> = RamondaWebSocket.tripSnapshots,
+    private val subscribeTrip: (RamondaTripIdentity) -> Unit = RamondaWebSocket::subscribe,
+    private val unsubscribeTrip: (RamondaTripIdentity) -> Unit = RamondaWebSocket::unsubscribe
+) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
@@ -80,8 +86,16 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
         )
     }
 
+    // All state touched by snapshot collection must be initialized before init:
+    // a cached Ramonda StateFlow value is emitted synchronously on Main.immediate.
+    private var lastAppliedUpdate: TripRtUpdateData? = null
+    private val _movingDotSegmentIdx = MutableStateFlow(-1)
+    val movingDotSegmentIdx = _movingDotSegmentIdx.asStateFlow()
+    private val _movingDotProgress = MutableStateFlow(0f)
+    val movingDotProgress = _movingDotProgress.asStateFlow()
+
     init {
-        subscription?.let(RamondaWebSocket::subscribe)
+        subscription?.let(subscribeTrip)
         observeWebSocketData()
         startTimers()
     }
@@ -89,7 +103,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
     private fun observeWebSocketData() {
         val identity = subscription ?: return
         viewModelScope.launch {
-            RamondaWebSocket.tripSnapshots.collect { snapshots ->
+            snapshots.collect { snapshots ->
                 val snapshot = snapshots[identity] ?: return@collect
                 snapshot.initial?.let { data ->
                     if (data.trip_id == identity.trip_id && data !== _tripData.value) {
@@ -111,8 +125,6 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
             }
         }
     }
-
-    private var lastAppliedUpdate: TripRtUpdateData? = null
 
     private fun handleInitialTripData(data: TripDataResponse) {
         _tripData.value = data
@@ -187,7 +199,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
 
     override fun onCleared() {
         super.onCleared()
-        subscription?.let(RamondaWebSocket::unsubscribe)
+        subscription?.let(unsubscribeTrip)
     }
 
     // --- Logic ported from Svelte ---
@@ -241,13 +253,7 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
         return updated
     }
 
-    // --- Moving Dot State (Exposed) ---
-    private val _movingDotSegmentIdx = MutableStateFlow(-1)
-    val movingDotSegmentIdx = _movingDotSegmentIdx.asStateFlow()
-
-    private val _movingDotProgress = MutableStateFlow(0f)
-    val movingDotProgress = _movingDotProgress.asStateFlow()
-
+    // --- Moving Dot State ---
     private fun updateStopProgress() {
         val nowSec = _currentTime.value / 1000
         var lastDepartedIdx = -1
