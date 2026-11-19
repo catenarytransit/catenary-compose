@@ -94,6 +94,9 @@ class SingleTripViewModel(private val tripSelected: CatenaryStackEnum.SingleTrip
                 snapshot.initial?.let { data ->
                     if (data.trip_id == identity.trip_id && data !== _tripData.value) {
                         handleInitialTripData(data)
+                        // If an update arrived before initial_trip, reapply it to
+                        // the newly hydrated scheduled stop-time list.
+                        lastAppliedUpdate = null
                     }
                 }
                 snapshot.latestUpdate?.let { data ->
