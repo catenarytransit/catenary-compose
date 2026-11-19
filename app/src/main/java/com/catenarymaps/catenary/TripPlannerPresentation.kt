@@ -31,7 +31,10 @@ internal val DirectionsItinerary.departureTimezone: String?
 internal val DirectionsItinerary.arrivalTimezone: String?
     get() = legs.lastOrNull { !it.street }?.to?.timezone ?: legs.lastOrNull()?.to?.timezone
 
-internal data class PreviewTimeMarker(val time: String, val endpoint: Boolean, val timezone: String? = null)
+internal data class PreviewTimeMarker(
+    val time: String, val endpoint: Boolean, val timezone: String? = null,
+    val delaySeconds: Long? = null
+)
 internal data class PreviewTimeGroups(val departure: List<PreviewTimeMarker>, val arrival: List<PreviewTimeMarker>)
 
 /** Match the web preview: negligible access/egress uses only the endpoint time. */
@@ -48,14 +51,15 @@ internal fun DirectionsItinerary.previewTimeGroups(): PreviewTimeGroups {
     val boarding = legs[first].startTime ?: legs.getOrNull(first - 1)?.endTime
     val alighting = legs[last].endTime ?: legs.getOrNull(last + 1)?.startTime
         ?: endTime.takeIf { last == legs.lastIndex }
+    val boardingDelay = legs[first].departureDelaySeconds
     val originAtStop = atStop(legs.take(first))
     val destinationAtStop = atStop(legs.drop(last + 1))
     val showBoarding = !originAtStop && instant(boarding) != null && instant(boarding) != instant(startTime)
     val showAlighting = !destinationAtStop && instant(alighting) != null && instant(alighting) != instant(endTime)
     return PreviewTimeGroups(
         buildList {
-            add(PreviewTimeMarker(startTime, true, departureTimezone))
-            if (showBoarding) add(PreviewTimeMarker(boarding!!, false, legs[first].from?.timezone))
+            add(PreviewTimeMarker(startTime, true, departureTimezone, if (showBoarding) null else boardingDelay))
+            if (showBoarding) add(PreviewTimeMarker(boarding!!, false, legs[first].from?.timezone, boardingDelay))
         },
         buildList {
             if (showAlighting) add(PreviewTimeMarker(alighting!!, false, legs[last].to?.timezone))
