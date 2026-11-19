@@ -1,16 +1,16 @@
 package com.catenarymaps.catenary
 
 import android.util.Log
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.Job
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -21,213 +21,235 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import java.util.concurrent.Executors
 
 private const val TAG = "RamondaWebSocket"
 
+/** Full GTFS trip instance identity; reused verbatim as the WebSocket subscription key. */
 @Serializable
 data class SubscribeTrip(
-        @EncodeDefault val type: String = "subscribe_trip",
-        val chateau: String,
-        val trip_id: String,
-        val route_id: String? = null,
-        val start_date: String? = null,
-        val start_time: String? = null
+    @EncodeDefault val type: String = "subscribe_trip",
+    val chateau: String,
+    val trip_id: String,
+    val route_id: String? = null,
+    val start_date: String? = null,
+    val start_time: String? = null
 )
 
 @Serializable
 data class UnsubscribeTrip(
-        @EncodeDefault val type: String = "unsubscribe_trip",
-        val chateau: String,
-        val trip_id: String? = null,
-        val route_id: String? = null,
-        val start_date: String? = null,
-        val start_time: String? = null
+    @EncodeDefault val type: String = "unsubscribe_trip",
+    val chateau: String,
+    val trip_id: String,
+    val route_id: String? = null,
+    val start_date: String? = null,
+    val start_time: String? = null
 )
 
 @Serializable
+data class RamondaTripIdentity(
+    val chateau: String,
+    val trip_id: String,
+    val route_id: String? = null,
+    val start_date: String? = null,
+    val start_time: String? = null
+) {
+    fun subscribe() = SubscribeTrip(
+        chateau = chateau, trip_id = trip_id, route_id = route_id,
+        start_date = start_date, start_time = start_time
+    )
+}
+
+fun SubscribeTrip.identity() = RamondaTripIdentity(chateau, trip_id, route_id, start_date, start_time)
+
+@Serializable
 data class RamondaCommonMessage(
-        val type: String,
-        val data: JsonElement? = null, // For initial_trip and update_trip
-        val message: String? = null // For error
+    val type: String,
+    val subscription: RamondaTripIdentity? = null,
+    val data: JsonElement? = null,
+    val message: String? = null
 )
 
+data class RamondaTripSnapshot(
+    val initial: TripDataResponse? = null,
+    val latestUpdate: TripRtUpdateData? = null,
+    val lastError: String? = null
+)
+
+/**
+ * One socket, independently tracked subscriptions, no global "current trip".
+ * Every frame is routed by its server-supplied complete subscription identity.
+ *
+ * The lease count is per screen/viewmodel. A journey and SingleTripScreen can
+ * subscribe to the same run without unsubscribing each other. Only the final
+ * release sends unsubscribe_trip. All mutations run on a single dispatcher.
+ */
 object RamondaWebSocket {
     private val client = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .pingInterval(15, TimeUnit.SECONDS)
         .minWebSocketMessageToCompress(0)
         .build()
-
-    private var webSocket: WebSocket? = null
     private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val scope = CoroutineScope(dispatcher)
-
-    // State Flows
+    private val json = Json { ignoreUnknownKeys = true }
+    private var webSocket: WebSocket? = null
+    private var socketGeneration = 0L
+    private var reconnectJob: Job? = null
+    private var pingJob: Job? = null
+    private val leases = mutableMapOf<RamondaTripIdentity, Int>()
+    private val generations = mutableMapOf<RamondaTripIdentity, Long>()
+    private var nextGeneration = 0L
+    private val _tripSnapshots = MutableStateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>>(emptyMap())
+    val tripSnapshots: StateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>> = _tripSnapshots.asStateFlow()
     private val _ramondaStatus = MutableStateFlow("disconnected")
     val ramondaStatus: StateFlow<String> = _ramondaStatus.asStateFlow()
-
-    private val _ramondaTripData = MutableStateFlow<JsonElement?>(null)
-    val ramondaTripData: StateFlow<JsonElement?> = _ramondaTripData.asStateFlow()
-
-    private val _ramondaUpdateData = MutableStateFlow<JsonElement?>(null)
-    val ramondaUpdateData: StateFlow<JsonElement?> = _ramondaUpdateData.asStateFlow()
-
     private val _ramondaError = MutableStateFlow<String?>(null)
     val ramondaError: StateFlow<String?> = _ramondaError.asStateFlow()
 
-    private var activeTripParams: SubscribeTrip? = null
+    fun init() { scope.launch { ensureConnection() } }
 
-    private var pingJob: Job? = null
+    fun subscribeTrip(
+        chateau: String, tripId: String, routeId: String? = null,
+        startDate: String? = null, startTime: String? = null
+    ) = subscribe(RamondaTripIdentity(chateau, tripId, routeId, startDate, startTime))
 
-    private val json = Json { ignoreUnknownKeys = true }
+    fun subscribe(identity: RamondaTripIdentity) {
+        require(identity.chateau.isNotBlank() && identity.trip_id.isNotBlank())
+        scope.launch {
+            val count = leases[identity] ?: 0
+            leases[identity] = count + 1
+            if (count == 0) {
+                generations[identity] = ++nextGeneration
+                ensureConnection()
+                if (_ramondaStatus.value == "connected") sendSubscribe(identity)
+            }
+        }
+    }
 
-    fun init() {
-        ensureConnection()
+    fun unsubscribe(identity: RamondaTripIdentity) {
+        scope.launch {
+            val count = leases[identity] ?: return@launch
+            if (count > 1) {
+                leases[identity] = count - 1
+            } else {
+                leases.remove(identity)
+                generations.remove(identity)
+                _tripSnapshots.value = _tripSnapshots.value - identity
+                if (_ramondaStatus.value == "connected") sendUnsubscribe(identity)
+            }
+        }
+    }
+
+    fun unsubscribeTrip(
+        chateau: String, tripId: String, routeId: String? = null,
+        startDate: String? = null, startTime: String? = null
+    ) = unsubscribe(RamondaTripIdentity(chateau, tripId, routeId, startDate, startTime))
+
+    private fun sendSubscribe(identity: RamondaTripIdentity) {
+        webSocket?.send(json.encodeToString(identity.subscribe()))
+    }
+
+    private fun sendUnsubscribe(identity: RamondaTripIdentity) {
+        webSocket?.send(json.encodeToString(UnsubscribeTrip(
+            chateau = identity.chateau, trip_id = identity.trip_id,
+            route_id = identity.route_id, start_date = identity.start_date,
+            start_time = identity.start_time
+        )))
     }
 
     private fun ensureConnection() {
-        if (webSocket != null &&
-                        (_ramondaStatus.value == "connected" || _ramondaStatus.value == "connecting")
-        ) {
-            return
-        }
-
+        if (webSocket != null) return
         _ramondaStatus.value = "connecting"
-        val request = Request.Builder().url("wss://ramonda.catenarymaps.org/ws/").build()
-
-        webSocket =
-                client.newWebSocket(
-                        request,
-                        object : WebSocketListener() {
-                            override fun onOpen(webSocket: WebSocket, response: Response) {
-                                Log.d(TAG, "Ramonda WS Connected")
-                                _ramondaStatus.value = "connected"
-                                startPingLoop(webSocket)
-
-                                activeTripParams?.let {
-                                    Log.d(TAG, "Resending active trip params")
-                                    sendTripSubscription(it)
-                                }
-                            }
-
-                            override fun onMessage(webSocket: WebSocket, text: String) {
-                                scope.launch {
-                                    try {
-                                        val msg = json.decodeFromString<RamondaCommonMessage>(text)
-                                        when (msg.type) {
-                                            "initial_trip" -> _ramondaTripData.value = msg.data
-                                            "update_trip" -> _ramondaUpdateData.value = msg.data
-                                            "pong" -> {
-                                                Log.d(TAG, "Ramonda WS received pong")
-                                            }
-                                            "error" -> {
-                                                _ramondaError.value = msg.message
-                                                Log.e(TAG, "Ramonda WS Error: ${msg.message}")
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                        Log.e(TAG, "Error parsing Ramonda WS message", e)
-                                    }
-                                }
-                            }
-
-                            override fun onClosing(
-                                    webSocket: WebSocket,
-                                    code: Int,
-                                    reason: String
-                            ) {
-                                Log.d(TAG, "Ramonda WS Closing: $code / $reason")
-                                _ramondaStatus.value = "disconnected"
-                                this@RamondaWebSocket.webSocket = null
-                                pingJob?.cancel()
-                                pingJob = null
-                            }
-
-                            override fun onFailure(
-                                    webSocket: WebSocket,
-                                    t: Throwable,
-                                    response: Response?
-                            ) {
-                                Log.e(TAG, "Ramonda WS Failure", t)
-                                _ramondaStatus.value = "error"
-                                this@RamondaWebSocket.webSocket = null
-                                pingJob?.cancel()
-                                pingJob = null
-
-                                // Retry connection after delay
-                                scope.launch {
-                                    delay(5000)
-                                    ensureConnection()
-                                }
+        val generation = ++socketGeneration
+        webSocket = client.newWebSocket(
+            Request.Builder().url("wss://ramonda.catenarymaps.org/ws/").build(),
+            object : WebSocketListener() {
+                override fun onOpen(socket: WebSocket, response: Response) {
+                    scope.launch {
+                        if (generation != socketGeneration) return@launch
+                        _ramondaStatus.value = "connected"
+                        leases.keys.forEach(::sendSubscribe)
+                        pingJob?.cancel()
+                        pingJob = scope.launch {
+                            while (_ramondaStatus.value == "connected") {
+                                delay(10_000)
+                                socket.send("{\"type\":\"ping\"}")
                             }
                         }
-                )
-    }
+                    }
+                }
 
-    fun subscribeTrip(
-        chateau: String,
-        tripId: String,
-        routeId: String? = null,
-        startDate: String? = null,
-        startTime: String? = null
-    ) {
-        ensureConnection()
-        val params =
-            SubscribeTrip(
-                chateau = chateau,
-                trip_id = tripId,
-                route_id = routeId,
-                start_date = startDate,
-                start_time = startTime
-            )
-        activeTripParams = params
-        sendTripSubscription(params)
-    }
+                override fun onMessage(socket: WebSocket, text: String) {
+                    scope.launch {
+                        if (generation != socketGeneration) return@launch
+                        try {
+                            val frame = json.decodeFromString<RamondaCommonMessage>(text)
+                            acceptFrame(frame)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Malformed Ramonda frame", e)
+                        }
+                    }
+                }
 
-    fun unsubscribeTrip(chateau: String) {
-        val paramsToSend = activeTripParams
-        activeTripParams = null
-
-        if (_ramondaStatus.value == "connected") {
-            try {
-                val msg =
-                    UnsubscribeTrip(
-                        chateau = chateau,
-                        trip_id = paramsToSend?.trip_id,
-                        route_id = paramsToSend?.route_id,
-                        start_date = paramsToSend?.start_date,
-                        start_time = paramsToSend?.start_time
-                    )
-                val text = json.encodeToString(msg)
-                webSocket?.send(text)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error sending unsubscribe trip", e)
-            }
-        }
-    }
-
-    private fun startPingLoop(ws: WebSocket) {
-        pingJob?.cancel()
-        pingJob = scope.launch {
-            while (_ramondaStatus.value == "connected") {
-                delay(10000)
-                try {
-                    ws.send("{\"type\":\"ping\"}")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error sending ping", e)
+                override fun onFailure(socket: WebSocket, t: Throwable, response: Response?) {
+                    scope.launch { disconnect(generation, "error") }
+                }
+                override fun onClosed(socket: WebSocket, code: Int, reason: String) {
+                    scope.launch { disconnect(generation, "disconnected") }
+                }
+                override fun onClosing(socket: WebSocket, code: Int, reason: String) {
+                    socket.close(code, reason)
                 }
             }
+        )
+    }
+
+    private fun disconnect(generation: Long, status: String) {
+        if (generation != socketGeneration) return
+        webSocket = null
+        pingJob?.cancel()
+        pingJob = null
+        _ramondaStatus.value = status
+        reconnectJob?.cancel()
+        if (leases.isNotEmpty()) reconnectJob = scope.launch {
+            delay(5_000)
+            ensureConnection()
         }
     }
 
-    private fun sendTripSubscription(params: SubscribeTrip) {
-        if (_ramondaStatus.value == "connected") {
-            try {
-                val text = json.encodeToString(params)
-                webSocket?.send(text)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error sending trip subscription", e)
+    /** Missing identities are deliberately rejected: guessing is unsafe for multi-trip views. */
+    private fun acceptFrame(frame: RamondaCommonMessage) {
+        when (frame.type) {
+            "initial_trip", "update_trip" -> {
+                val identity = frame.subscription ?: return
+                if (!leases.containsKey(identity)) return
+                val body = frame.data ?: return
+                val existing = _tripSnapshots.value[identity] ?: RamondaTripSnapshot()
+                val replacement = when (frame.type) {
+                    "initial_trip" -> {
+                        val initial = json.decodeFromJsonElement(TripDataResponse.serializer(), body)
+                        if (initial.trip_id != identity.trip_id ||
+                            (initial.chateau != null && initial.chateau != identity.chateau)) return
+                        existing.copy(initial = initial, lastError = null)
+                    }
+                    else -> {
+                        val update = json.decodeFromJsonElement(TripRtUpdateData.serializer(), body)
+                        if (update.trip_id != null && update.trip_id != identity.trip_id) return
+                        if (update.chateau != null && update.chateau != identity.chateau) return
+                        existing.copy(latestUpdate = update, lastError = null)
+                    }
+                }
+                _tripSnapshots.value = _tripSnapshots.value + (identity to replacement)
+            }
+            "error" -> {
+                val identity = frame.subscription
+                if (identity != null && leases.containsKey(identity)) {
+                    val old = _tripSnapshots.value[identity] ?: RamondaTripSnapshot()
+                    _tripSnapshots.value = _tripSnapshots.value +
+                        (identity to old.copy(lastError = frame.message))
+                } else if (identity == null) {
+                    _ramondaError.value = frame.message
+                }
             }
         }
     }
