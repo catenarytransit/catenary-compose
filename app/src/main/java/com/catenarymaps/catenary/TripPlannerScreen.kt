@@ -58,6 +58,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -804,6 +805,7 @@ private fun JourneyEndpoint(name: String, first: Boolean) {
 @Composable
 private fun ConnectionRow(
     rail: Color, time: String = "", platform: String = "", delaySeconds: Long? = null,
+    platformTextStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     pearl: Boolean = false,
     first: Boolean = false, last: Boolean = false, dotted: Boolean = false,
     content: @Composable RowScope.() -> Unit
@@ -840,7 +842,7 @@ private fun ConnectionRow(
             verticalAlignment = if (alignClock) Alignment.Top else Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp), content = content)
         if (platform.isNotBlank()) Text(platform, modifier = Modifier.widthIn(max = 48.dp).padding(start = 8.dp),
-            style = MaterialTheme.typography.labelMedium, textAlign = androidx.compose.ui.text.style.TextAlign.End)
+            style = platformTextStyle, textAlign = androidx.compose.ui.text.style.TextAlign.End)
     }
 }
 
@@ -862,7 +864,10 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean, onTrip
     Card(modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = surface, contentColor = TripPlannerColors.content),
         border = if (leg.street) BorderStroke(1.dp, TripPlannerColors.streetBorder) else null) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+        // A 12dp top inset balances the pearl's first-row inset with the
+        // 28dp final row's space below the arrival pearl (without a delay).
+        Column(Modifier.padding(start = 12.dp, end = 12.dp,
+            top = if (leg.street) 4.dp else 12.dp, bottom = 4.dp)) {
             if (leg.street) {
                 ConnectionRow(rail, time = directionsDuration(leg.seconds), dotted = true) {
                     LegModeIcon(leg)
@@ -899,7 +904,8 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean, onTrip
                 val tripInfo = remember(leg) { leg.singleTripInfo() }
                 if (tripInfo != null && onTripInfo != null) ConnectionRow(rail) {
                     val linkColor = if (surface.luminance() < 0.5f) Color(0xFF93C5FD) else Color(0xFF1D4ED8)
-                    TextButton(onClick = { onTripInfo(tripInfo) }, contentPadding = PaddingValues(0.dp),
+                    TextButton(onClick = { onTripInfo(tripInfo) }, modifier = Modifier.height(32.dp),
+                        contentPadding = PaddingValues(0.dp),
                         colors = ButtonDefaults.textButtonColors(contentColor = linkColor)) {
                         Text(stringResource(R.string.directions_trip_info))
                         Icon(Icons.Default.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -922,6 +928,7 @@ private fun JourneyLegDetails(leg: DirectionsLeg, streetUsUnits: Boolean, onTrip
                             stop.departure ?: stop.arrival ?: stop.scheduledDeparture ?: stop.scheduledArrival,
                         stop.timezone),
                         platform = stop.estimatedQuay ?: stop.plannedQuay ?: "",
+                        platformTextStyle = MaterialTheme.typography.bodyMedium,
                         delaySeconds = directionsDelaySeconds(
                             stop.serviceDeparture?.recordedAtTime ?: stop.serviceDeparture?.estimatedTime
                                 ?: stop.serviceArrival?.recordedAtTime ?: stop.serviceArrival?.estimatedTime,
