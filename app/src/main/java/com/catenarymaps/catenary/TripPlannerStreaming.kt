@@ -32,7 +32,7 @@ internal fun directionsPageQuery(base: JsonObject, direction: ConnectionDirectio
     buildJsonObject {
         base.forEach { (key, value) -> put(key, value) }
         cursor?.let { put("page_cursor", it) }
-        put("number_of_results_before", if (direction == ConnectionDirection.BEFORE) (if (cursor == null) 8 else 4) else 0)
+        put("number_of_results_before", if (direction == ConnectionDirection.BEFORE) (if (cursor == null) 8 else 3) else 0)
         put("number_of_results_after", if (direction == ConnectionDirection.AFTER) (if (cursor == null) 8 else 5) else 0)
     }
 
