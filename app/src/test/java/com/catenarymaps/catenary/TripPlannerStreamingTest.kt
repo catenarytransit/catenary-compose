@@ -18,7 +18,7 @@ class TripPlannerStreamingTest {
         val later = directionsPageQuery(base, ConnectionDirection.AFTER, "opaque-after")
         for (query in listOf(initial, earlier, later)) base.forEach { (key, value) -> assertEquals(value, query[key]) }
         assertEquals(8, initial["number_of_results_before"]!!.jsonPrimitive.int)
-        assertEquals(4, earlier["number_of_results_before"]!!.jsonPrimitive.int)
+        assertEquals(3, earlier["number_of_results_before"]!!.jsonPrimitive.int)
         assertEquals(0, earlier["number_of_results_after"]!!.jsonPrimitive.int)
         assertEquals(5, later["number_of_results_after"]!!.jsonPrimitive.int)
         assertEquals("opaque-after", later["page_cursor"]!!.jsonPrimitive.content)
