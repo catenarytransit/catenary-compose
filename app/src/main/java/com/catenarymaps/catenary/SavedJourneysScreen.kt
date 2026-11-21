@@ -41,7 +41,7 @@ internal fun HomeNavigation(
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
         Row(
             Modifier.fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                 .selectableGroup()
                 .padding(horizontal = 8.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
