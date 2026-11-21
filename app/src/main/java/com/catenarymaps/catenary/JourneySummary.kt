@@ -1,5 +1,11 @@
 package com.catenarymaps.catenary
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -36,7 +42,8 @@ internal fun JourneySummary(
 ) {
     val journey = planner.selectedJourney ?: return
     val visibleJourney = rememberLiveJourney(journey)
-    val context = LocalContext.current.applicationContext
+    val activityContext = LocalContext.current
+    val context = activityContext.applicationContext
     val scope = rememberCoroutineScope()
     val language = LocalConfiguration.current.locales[0].language
     val identity = journey.identity()
@@ -108,6 +115,13 @@ internal fun JourneySummary(
                                 }
                                 if (!changed) { saveable = false; return@launch }
                                 saved = !wasSaved
+                                if (!wasSaved && Build.VERSION.SDK_INT >= 33 &&
+                                    ContextCompat.checkSelfPermission(activityContext, Manifest.permission.POST_NOTIFICATIONS)
+                                        != PackageManager.PERMISSION_GRANTED
+                                    && activityContext is Activity) {
+                                    ActivityCompat.requestPermissions(activityContext,
+                                        arrayOf(Manifest.permission.POST_NOTIFICATIONS), 7103)
+                                }
                                 onSavedChanged()
                             } catch (e: CancellationException) { throw e }
                             catch (_: Exception) { failed = true }
