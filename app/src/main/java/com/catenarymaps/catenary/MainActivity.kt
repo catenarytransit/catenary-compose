@@ -711,6 +711,14 @@ val ktorClient =
 
 class MainActivity : ComponentActivity() {
 
+        private val openSavedFromNotification = mutableStateOf(false)
+
+        override fun onNewIntent(intent: android.content.Intent) {
+                super.onNewIntent(intent)
+                setIntent(intent)
+                if (intent.getBooleanExtra("openSavedJourneys", false)) openSavedFromNotification.value = true
+        }
+
         // private var tracker: Tracker? = null
 
         private val layerSettings = mutableStateOf(AllLayerSettings())
@@ -977,6 +985,8 @@ class MainActivity : ComponentActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
                 installSplashScreen()
                 super.onCreate(savedInstanceState)
+                if (intent?.getBooleanExtra("openSavedJourneys", false) == true) openSavedFromNotification.value = true
+                JourneyNotifierSyncWorker.ensureStarted(this)
                 enableEdgeToEdge()
                 SpruceWebSocket.init()
                 RamondaWebSocket.init()
@@ -1331,6 +1341,12 @@ class MainActivity : ComponentActivity() {
                         }
 
                     var savedTripsVisible by rememberSaveable { mutableStateOf(false) }
+                    LaunchedEffect(openSavedFromNotification.value) {
+                        if (openSavedFromNotification.value) {
+                            savedTripsVisible = true
+                            openSavedFromNotification.value = false
+                        }
+                    }
                     val homeNavigationVisible = savedTripsVisible || catenaryStack.isEmpty() ||
                         catenaryStack.lastOrNull() is CatenaryStackEnum.NearbyDeparturesStack
                     var homeNavigationHeight by remember { mutableStateOf(0.dp) }
