@@ -82,7 +82,8 @@ private fun RowScope.HomeNavigationItem(selected: Boolean, onClick: () -> Unit, 
 internal fun SavedJourneysScreen(
     streetUsUnits: Boolean, wide: Boolean, foreground: Boolean,
     onExplore: () -> Unit, onPlan: () -> Unit, modifier: Modifier = Modifier, client: HttpClient,
-    onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null
+    onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null,
+    notificationJourneyId: String? = null
 ) {
     val context = LocalContext.current.applicationContext
     val planner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "saved-journey-details")
@@ -112,6 +113,15 @@ internal fun SavedJourneysScreen(
             catch (_: Exception) { failed = true }
             loaded = true
             delay(60_000)
+        }
+    }
+    LaunchedEffect(notificationJourneyId, snapshots) {
+        val target = notificationJourneyId?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
+        val snapshot = snapshots.firstOrNull { JourneyNotifierSyncWorker.stableId(it.journey) == target }
+            ?: return@LaunchedEffect
+        if (planner.selectedJourney?.identity() != snapshot.journey.identity() || !planner.details) {
+            selectedIdentity = snapshot.journey.identity()
+            planner.openSavedJourney(snapshot)
         }
     }
     val groups = snapshots.groupedByDepartureDate()
