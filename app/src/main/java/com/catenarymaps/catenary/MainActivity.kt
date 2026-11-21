@@ -712,11 +712,15 @@ val ktorClient =
 class MainActivity : ComponentActivity() {
 
         private val openSavedFromNotification = mutableStateOf(false)
+        private val notificationJourneyId = mutableStateOf<String?>(null)
 
         override fun onNewIntent(intent: android.content.Intent) {
                 super.onNewIntent(intent)
                 setIntent(intent)
-                if (intent.getBooleanExtra("openSavedJourneys", false)) openSavedFromNotification.value = true
+                if (intent.getBooleanExtra("openSavedJourneys", false) || intent.hasExtra("journeyId")) {
+                    notificationJourneyId.value = intent.getStringExtra("journeyId")
+                    openSavedFromNotification.value = true
+                }
         }
 
         // private var tracker: Tracker? = null
@@ -985,7 +989,10 @@ class MainActivity : ComponentActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
                 installSplashScreen()
                 super.onCreate(savedInstanceState)
-                if (intent?.getBooleanExtra("openSavedJourneys", false) == true) openSavedFromNotification.value = true
+                if (intent?.getBooleanExtra("openSavedJourneys", false) == true || intent?.hasExtra("journeyId") == true) {
+                    notificationJourneyId.value = intent?.getStringExtra("journeyId")
+                    openSavedFromNotification.value = true
+                }
                 JourneyFirebaseMessagingService.ensureChannel(this)
                 JourneyNotifierSyncWorker.ensureStarted(this)
                 enableEdgeToEdge()
@@ -4478,6 +4485,7 @@ class MainActivity : ComponentActivity() {
 
                                         if (savedTripsVisible) {
                                             SavedJourneysScreen(
+                                                notificationJourneyId = notificationJourneyId.value,
                                                 onTripInfo = openJourneyTrip,
                                                 client = ktorHttpClient,
                                                 streetUsUnits = streetUsUnits,
