@@ -93,10 +93,12 @@ internal fun SavedJourneysScreen(
     var failed by remember { mutableStateOf(false) }
     var refresh by remember { mutableIntStateOf(0) }
     var selectedIdentity by rememberSaveable { mutableStateOf<String?>(planner.selectedJourney?.identity()) }
-    LaunchedEffect(refresh, foreground) {
+    LaunchedEffect(refresh, foreground, notificationJourneyId) {
         if (foreground) while (true) {
             try {
-                snapshots = withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.readAll() } }
+                snapshots = withContext(Dispatchers.IO) { SavedJourneyStore(context).use {
+                    if (notificationJourneyId != null) it.readForNotifier() else it.readAll()
+                } }
                 failed = false
                 val selected = snapshots.firstOrNull { it.journey.identity() == selectedIdentity }
                 // Removing a bookmark deletes the persisted snapshot, but the currently open
