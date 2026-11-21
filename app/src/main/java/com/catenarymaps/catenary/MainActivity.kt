@@ -4486,6 +4486,7 @@ class MainActivity : ComponentActivity() {
                                         if (savedTripsVisible) {
                                             SavedJourneysScreen(
                                                 notificationJourneyId = notificationJourneyId.value,
+                                                onNotificationHandled = { notificationJourneyId.value = null },
                                                 onTripInfo = openJourneyTrip,
                                                 client = ktorHttpClient,
                                                 streetUsUnits = streetUsUnits,
