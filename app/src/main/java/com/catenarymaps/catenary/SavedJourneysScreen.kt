@@ -83,7 +83,8 @@ internal fun SavedJourneysScreen(
     streetUsUnits: Boolean, wide: Boolean, foreground: Boolean,
     onExplore: () -> Unit, onPlan: () -> Unit, modifier: Modifier = Modifier, client: HttpClient,
     onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null,
-    notificationJourneyId: String? = null
+    notificationJourneyId: String? = null,
+    onNotificationHandled: () -> Unit = {}
 ) {
     val context = LocalContext.current.applicationContext
     val planner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "saved-journey-details")
@@ -123,6 +124,7 @@ internal fun SavedJourneysScreen(
             selectedIdentity = snapshot.journey.identity()
             planner.openSavedJourney(snapshot)
         }
+        onNotificationHandled()
     }
     val groups = snapshots.groupedByDepartureDate()
     val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
