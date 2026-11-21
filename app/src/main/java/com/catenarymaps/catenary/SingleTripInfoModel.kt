@@ -5,9 +5,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import java.net.URLEncoder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -167,11 +164,9 @@ class SingleTripViewModel(
             if (vehicleId.isNullOrBlank()) return@launch
 
             try {
-                val encodedChateauId = URLEncoder.encode(tripSelected.chateau_id, "UTF-8")
-                val url =
-                        "https://birch.catenarymaps.org/get_vehicle_information_from_label/${encodedChateauId}/$vehicleId"
-                val response = ktorClient.get(url).body<VehicleRealtimeDataResponse>()
-                _vehicleData.value = response.data?.firstOrNull()
+                _vehicleData.value = fetchVehicleRealtimeForLabel(
+                    tripSelected.chateau_id, vehicleId
+                ).firstOrNull()
             } catch (e: Exception) {
                 Log.e("SingleTripViewModel", "Error fetching vehicle info: ${e.message}")
             }

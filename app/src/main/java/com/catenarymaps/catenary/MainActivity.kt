@@ -3031,8 +3031,13 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 }
 
+                                                // Do not modify persisted layer preferences for a temporary planner view.
+                                                val journeyMapLayerSettings =
+                                                    if (directionsVisible && tripPlanner.usingMap)
+                                                        layerSettings.value.forJourneyDetailsMap()
+                                                    else layerSettings.value
                                                 AddShapes(
-                                                        layerSettings = layerSettings.value,
+                                                        layerSettings = journeyMapLayerSettings,
                                                         railInFrame = railinframe
                                                 )
 
@@ -3392,7 +3397,7 @@ class MainActivity : ComponentActivity() {
                                                         isDark = isDark,
                                                         usUnits = usUnits,
                                                         showZombieBuses = showZombieBuses,
-                                                        layerSettings = layerSettings.value,
+                                                        layerSettings = journeyMapLayerSettings,
                                                         vehicleLocationsV2 = locationsV2,
                                                         routeCache = cache,
                                                         busDotsSrc = busDotsSrc,
