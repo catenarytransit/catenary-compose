@@ -166,4 +166,5 @@
     <string name="saved_journeys_select">旅程を選択すると詳細が表示されます。</string>
     <string name="nearby_departures_filters_no_matches">%1$d件の結果がありますが、フィルターに一致するものはありません。周辺の出発情報を表示するには、フィルターを解除するか、選択範囲を広げてください。</string>
     <string name="directions_trip_info">便の情報</string>
+    <string name="directions_bookmark_tooltip">この旅程をブックマークすると、移動中のリアルタイム追跡や運行障害に関する通知を受け取れます。</string>
 </resources>

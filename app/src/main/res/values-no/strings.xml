@@ -165,4 +165,5 @@
     <string name="saved_journeys_select">Velg en reise for å se detaljer.</string>
     <string name="nearby_departures_filters_no_matches">%1$d resultater, men ingen samsvarer med filtrene. Fjern eller utvid filtervalget for å vise avganger i nærheten.</string>
     <string name="directions_trip_info">Turinformasjon</string>
+    <string name="directions_bookmark_tooltip">Bokmerk denne reisen for å få varsler om sanntidssporing underveis og driftsavvik.</string>
 </resources>
