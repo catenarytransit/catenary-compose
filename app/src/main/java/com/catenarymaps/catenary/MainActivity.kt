@@ -3,7 +3,6 @@ package com.catenarymaps.catenary
 import android.Manifest
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
@@ -85,7 +84,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -1919,20 +1917,20 @@ class MainActivity : ComponentActivity() {
 
                                         val focusManager = LocalFocusManager.current
 
-                                        // âœ… Tablet/wide layout breakpoint
-                                        val isWideLayout = maxWidth >= 600.dp
-                                        val contentWidthFraction = if (isWideLayout) 0.5f else 1f
+                                        // Use the actual app window width so Chromebook resizing updates the layout.
+                                        val isWideLayout = maxWidth >= WIDE_LAYOUT_MIN_WIDTH
+                                        // Half of an ordinary tablet window, capped on extra-wide Chromebook windows.
+                                        val drawerWidth = drawerWidthForWindow(maxWidth)
+                                        val contentWidthFraction = drawerWidth.value / maxWidth.value
                                         val searchAlignment =
                                                 if (isWideLayout) Alignment.TopStart
                                                 else Alignment.TopCenter
-                                        val sheetAlignment =
+                                        // The bottom drawer and Explore/Trips navigation use the same edge.
+                                         val sheetAlignment =
                                                 if (isWideLayout) Alignment.BottomStart
                                                 else Alignment.BottomCenter
 
-                                        val configuration = LocalConfiguration.current
-                                        val isLandscape =
-                                                configuration.orientation ==
-                                                        Configuration.ORIENTATION_LANDSCAPE
+                                        val isLandscape = maxWidth > maxHeight
 
                                         // The home bar already includes the bottom system inset.
                                         // Sheet offsets are measured from the top of the space above it.
@@ -2037,10 +2035,8 @@ class MainActivity : ComponentActivity() {
                                                         with(density) {
                                                                 (mapSize.height / 2f).toDp()
                                                         }
-                                                val halfWidthDp =
-                                                        with(density) {
-                                                                (mapSize.width / 2f).toDp()
-                                                        }
+                                                // Camera padding must match the actual capped drawer width.
+                                                val drawerPaddingDp = drawerWidth
 
                                                 when {
                                                         // Rule A: full-width content + bottom sheet
@@ -2052,10 +2048,10 @@ class MainActivity : ComponentActivity() {
                                                         // Rule B: 0.5 content width + (search
                                                         // focused OR bottom sheet half or
                                                         // more)
-                                                        contentWidthFraction == 0.5f &&
+                                                        isWideLayout &&
                                                                 (isSearchFocused ||
                                                                         sheetHalfOrMore) ->
-                                                                PaddingValues(start = halfWidthDp)
+                                                                PaddingValues(start = drawerPaddingDp)
                                                         else -> PaddingValues(0.dp)
                                                 }
                                         }
@@ -3548,7 +3544,7 @@ class MainActivity : ComponentActivity() {
                                                         .padding(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp)
                                                         // The home bar also covers the system navigation inset.
                                                         .consumeWindowInsets(PaddingValues(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp))
-                                                        .align(Alignment.BottomStart)
+                                                        .align(sheetAlignment)
                                                         // Landscape three-button navigation can occupy either side.
                                                         .windowInsetsPadding(
                                                                 WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
@@ -4352,7 +4348,7 @@ class MainActivity : ComponentActivity() {
                                                                         bottom = with(density) { (screenHeightPx - draggableState.requireOffset()).toDp() } + 16.dp,
                                                                         start = 24.dp, end = 24.dp
                                                                 ) else PaddingValues(
-                                                                        start = with(density) { (mapSize.width * contentWidthFraction).toDp() } + 24.dp,
+                                                                        start = drawerWidth + 24.dp,
                                                                         top = 24.dp, end = 24.dp, bottom = 24.dp)
                                                                 camera.animateTo(boundingBox = org.maplibre.spatialk.geojson.BoundingBox(
                                                                         positions.minOf { it.second } - 0.001, positions.minOf { it.first } - 0.001,
@@ -4400,7 +4396,7 @@ class MainActivity : ComponentActivity() {
                                                                         currentLocation = currentLocation, mapCenter = camera.position.target,
                                                                         stationHistory = stationHistory, streetUsUnits = streetUsUnits,
                                                                         forceInputs = forceInputs,
-                                                                        compact = isLandscape && configuration.screenHeightDp < 480 && !isWideLayout,
+                                                                        compact = isLandscape && maxHeight < 480.dp && !isWideLayout,
                                                                         modifier = Modifier.then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier),
                                                                         onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) }
                                                                 )
@@ -4470,7 +4466,10 @@ class MainActivity : ComponentActivity() {
                                                 tripsSelected = savedTripsVisible,
                                                 onExplore = { savedTripsVisible = false; catenaryStack = ArrayDeque() },
                                                 onTrips = { catenaryStack = ArrayDeque(); savedTripsVisible = true },
-                                                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().zIndex(9f)
+                                                modifier = Modifier.align(sheetAlignment).fillMaxWidth(contentWidthFraction)
+                                                     // Match the sheet's horizontal safe-area padding, including side navigation bars.
+                                                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                                                     .zIndex(9f)
                                                     .onSizeChanged { homeNavigationHeight = with(density) { it.height.toDp() } }
                                             )
                                         }
