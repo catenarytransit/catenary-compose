@@ -143,8 +143,9 @@ private fun JourneyMapVehicles(journey: DirectionsItinerary) {
                             candidate.identity.chateau, candidate.label
                         ).firstOrNull { it.matchesJourneyTrip(candidate.identity) }
                             ?: return@async null
-                        val latitude = vehicle.position?.latitude ?: return@async null
-                        val longitude = vehicle.position.longitude ?: return@async null
+                        val position = vehicle.position ?: return@async null
+                        val latitude = position.latitude ?: return@async null
+                        val longitude = position.longitude ?: return@async null
                         if (!latitude.isFinite() || !longitude.isFinite() ||
                             latitude !in -90.0..90.0 || longitude !in -180.0..180.0) {
                             return@async null
