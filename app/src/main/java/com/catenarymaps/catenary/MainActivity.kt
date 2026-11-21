@@ -1918,8 +1918,10 @@ class MainActivity : ComponentActivity() {
                                         val focusManager = LocalFocusManager.current
 
                                         // Use the actual app window width so Chromebook resizing updates the layout.
-                                        val isWideLayout = maxWidth >= 600.dp
-                                        val contentWidthFraction = if (isWideLayout) 0.5f else 1f
+                                        val isWideLayout = maxWidth >= WIDE_LAYOUT_MIN_WIDTH
+                                        // Half of an ordinary tablet window, capped on extra-wide Chromebook windows.
+                                        val drawerWidth = drawerWidthForWindow(maxWidth)
+                                        val contentWidthFraction = drawerWidth.value / maxWidth.value
                                         val searchAlignment =
                                                 if (isWideLayout) Alignment.TopStart
                                                 else Alignment.TopCenter
@@ -2033,10 +2035,8 @@ class MainActivity : ComponentActivity() {
                                                         with(density) {
                                                                 (mapSize.height / 2f).toDp()
                                                         }
-                                                val halfWidthDp =
-                                                        with(density) {
-                                                                (mapSize.width / 2f).toDp()
-                                                        }
+                                                // Camera padding must match the actual capped drawer width.
+                                                val drawerPaddingDp = drawerWidth
 
                                                 when {
                                                         // Rule A: full-width content + bottom sheet
@@ -2048,10 +2048,10 @@ class MainActivity : ComponentActivity() {
                                                         // Rule B: 0.5 content width + (search
                                                         // focused OR bottom sheet half or
                                                         // more)
-                                                        contentWidthFraction == 0.5f &&
+                                                        isWideLayout &&
                                                                 (isSearchFocused ||
                                                                         sheetHalfOrMore) ->
-                                                                PaddingValues(start = halfWidthDp)
+                                                                PaddingValues(start = drawerPaddingDp)
                                                         else -> PaddingValues(0.dp)
                                                 }
                                         }
@@ -4348,7 +4348,7 @@ class MainActivity : ComponentActivity() {
                                                                         bottom = with(density) { (screenHeightPx - draggableState.requireOffset()).toDp() } + 16.dp,
                                                                         start = 24.dp, end = 24.dp
                                                                 ) else PaddingValues(
-                                                                        start = with(density) { (mapSize.width * contentWidthFraction).toDp() } + 24.dp,
+                                                                        start = drawerWidth + 24.dp,
                                                                         top = 24.dp, end = 24.dp, bottom = 24.dp)
                                                                 camera.animateTo(boundingBox = org.maplibre.spatialk.geojson.BoundingBox(
                                                                         positions.minOf { it.second } - 0.001, positions.minOf { it.first } - 0.001,
