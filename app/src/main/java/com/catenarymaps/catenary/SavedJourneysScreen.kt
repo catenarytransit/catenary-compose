@@ -12,7 +12,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,7 +47,7 @@ internal fun HomeNavigation(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             HomeNavigationItem(!tripsSelected, onExplore, Icons.Default.Map, stringResource(R.string.home_explore))
-            HomeNavigationItem(tripsSelected, onTrips, Icons.Default.Star, stringResource(R.string.home_trips))
+            HomeNavigationItem(tripsSelected, onTrips, Icons.Default.Bookmark, stringResource(R.string.home_trips))
         }
     }
 }
@@ -97,7 +97,7 @@ internal fun SavedJourneysScreen(
                 snapshots = withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.readAll() } }
                 failed = false
                 val selected = snapshots.firstOrNull { it.journey.identity() == selectedIdentity }
-                // Unstarring deletes the persisted snapshot, but the currently open
+                // Removing a bookmark deletes the persisted snapshot, but the currently open
                 // journey is still a valid in-memory detail view until the user leaves.
                 if (!planner.details) {
                     selectedIdentity = null

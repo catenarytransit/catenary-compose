@@ -7,8 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clipToBounds
@@ -115,7 +115,7 @@ internal fun JourneySummary(
                         }
                     }
                 ) {
-                    Icon(if (saved) Icons.Default.Star else Icons.Default.StarBorder,
+                    Icon(if (saved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                         stringResource(if (saved) R.string.directions_unsave_trip else R.string.directions_save_trip))
                 }
                 if (showMapAction && !planner.streetOnly) SummaryAction(onClick = { planner.mapMode = !planner.usingMap }) {
