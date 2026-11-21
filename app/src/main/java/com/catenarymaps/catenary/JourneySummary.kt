@@ -14,6 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import io.ktor.client.HttpClient
@@ -28,6 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** Shared between fullscreen detail, the tablet detail pane, and the map overlay. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
@@ -37,6 +41,8 @@ internal fun JourneySummary(
     val journey = planner.selectedJourney ?: return
     val visibleJourney = rememberLiveJourney(journey)
     val context = LocalContext.current.applicationContext
+    val bookmarkOnboarding = remember(context) { BookmarkTripOnboardingStore(context) }
+    var hasBookmarkedTrip by remember(bookmarkOnboarding) { mutableStateOf(bookmarkOnboarding.hasBookmarkedTrip()) }
     val scope = rememberCoroutineScope()
     val language = LocalConfiguration.current.locales[0].language
     val identity = journey.identity()
@@ -53,9 +59,19 @@ internal fun JourneySummary(
     LaunchedEffect(identity) {
         try {
             saved = withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.contains(identity) } }
+            // An already-saved journey indicates the feature was used on an earlier visit.
+            if (saved && !hasBookmarkedTrip) {
+                bookmarkOnboarding.markBookmarkedTrip()
+                hasBookmarkedTrip = true
+            }
         } catch (e: CancellationException) { throw e }
         catch (_: Exception) { failed = true }
         finally { busy = false }
+    }
+    val showBookmarkTooltip = shouldShowBookmarkTooltip(hasBookmarkedTrip, saved, busy, saveable)
+    val bookmarkTooltipState = rememberTooltipState(isPersistent = true)
+    LaunchedEffect(identity, showBookmarkTooltip) {
+        if (showBookmarkTooltip) bookmarkTooltipState.show() else bookmarkTooltipState.dismiss()
     }
     Column(modifier) {
         if (showBack) FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp).size(32.dp),
@@ -86,37 +102,57 @@ internal fun JourneySummary(
             }
             Row(Modifier.align(androidx.compose.ui.Alignment.BottomStart).padding(start = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                SummaryAction(
-                    enabled = !busy && (saved || saveable),
-                    onClick = {
-                        if (!saved && !journey.canBeSaved()) return@SummaryAction
-                        busy = true; failed = false
-                        val wasSaved = saved
-                        val snapshot = SavedJourney(journey, planner.origin, planner.destination)
-                        scope.launch {
-                            try {
-                                val namedSnapshot = if (wasSaved) snapshot else snapshot.withNamedCurrentLocations { location ->
-                                    reverseMapLocationName(client, location.lat, location.lon, language)
-                                }
-                                val changed = withContext(Dispatchers.IO) {
-                                    // Geocoding may have crossed the journey's arrival time.
-                                    if (!wasSaved && !journey.canBeSaved()) return@withContext false
-                                    SavedJourneyStore(context).use { store ->
-                                        if (wasSaved) store.remove(identity) else store.save(namedSnapshot)
-                                    }
-                                    true
-                                }
-                                if (!changed) { saveable = false; return@launch }
-                                saved = !wasSaved
-                                onSavedChanged()
-                            } catch (e: CancellationException) { throw e }
-                            catch (_: Exception) { failed = true }
-                            finally { busy = false }
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+                    tooltip = {
+                        RichTooltip(
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                            caretShape = TooltipDefaults.caretShape(),
+                            maxWidth = 280.dp
+                        ) {
+                            Text(stringResource(R.string.directions_bookmark_tooltip))
                         }
-                    }
+                    },
+                    state = bookmarkTooltipState,
+                    enableUserInput = false
                 ) {
-                    Icon(if (saved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        stringResource(if (saved) R.string.directions_unsave_trip else R.string.directions_save_trip))
+                    SummaryAction(
+                        enabled = !busy && (saved || saveable),
+                        onClick = {
+                            if (!saved && !journey.canBeSaved()) return@SummaryAction
+                            busy = true; failed = false
+                            val wasSaved = saved
+                            val snapshot = SavedJourney(journey, planner.origin, planner.destination)
+                            scope.launch {
+                                try {
+                                    val namedSnapshot = if (wasSaved) snapshot else snapshot.withNamedCurrentLocations { location ->
+                                        reverseMapLocationName(client, location.lat, location.lon, language)
+                                    }
+                                    val changed = withContext(Dispatchers.IO) {
+                                        // Geocoding may have crossed the journey's arrival time.
+                                        if (!wasSaved && !journey.canBeSaved()) return@withContext false
+                                        SavedJourneyStore(context).use { store ->
+                                            if (wasSaved) store.remove(identity) else store.save(namedSnapshot)
+                                        }
+                                        true
+                                    }
+                                    if (!changed) { saveable = false; return@launch }
+                                    saved = !wasSaved
+                                    if (!wasSaved) {
+                                        // Hide the guidance permanently only after storage succeeds.
+                                        bookmarkOnboarding.markBookmarkedTrip()
+                                        hasBookmarkedTrip = true
+                                    }
+                                    onSavedChanged()
+                                } catch (e: CancellationException) { throw e }
+                                catch (_: Exception) { failed = true }
+                                finally { busy = false }
+                            }
+                        }
+                    ) {
+                        Icon(if (saved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            stringResource(if (saved) R.string.directions_unsave_trip else R.string.directions_save_trip))
+                    }
                 }
                 if (showMapAction && !planner.streetOnly) SummaryAction(onClick = { planner.mapMode = !planner.usingMap }) {
                     Icon(if (planner.usingMap) Icons.AutoMirrored.Filled.List else Icons.Default.Map,
