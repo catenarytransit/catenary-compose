@@ -57,6 +57,7 @@ class JourneyFirebaseMessagingService : FirebaseMessagingService() {
         ensureChannel(this)
         val open = Intent(this, MainActivity::class.java).apply {
             putExtra("openSavedJourneys", true)
+            putExtra("journeyId", data["journeyId"])
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val pending = PendingIntent.getActivity(this, id.hashCode(), open,
