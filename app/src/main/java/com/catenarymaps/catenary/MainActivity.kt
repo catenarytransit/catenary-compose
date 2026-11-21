@@ -986,6 +986,7 @@ class MainActivity : ComponentActivity() {
                 installSplashScreen()
                 super.onCreate(savedInstanceState)
                 if (intent?.getBooleanExtra("openSavedJourneys", false) == true) openSavedFromNotification.value = true
+                JourneyFirebaseMessagingService.ensureChannel(this)
                 JourneyNotifierSyncWorker.ensureStarted(this)
                 enableEdgeToEdge()
                 SpruceWebSocket.init()
