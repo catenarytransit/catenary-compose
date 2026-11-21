@@ -15,7 +15,11 @@ plugins {
 
 android {
     namespace = "com.catenarymaps.catenary"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 1
+        }
+    }
 
     androidResources {
         generateLocaleConfig = true
