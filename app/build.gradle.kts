@@ -28,7 +28,7 @@ android {
     defaultConfig {
         applicationId = "com.catenarymaps.catenary"
         // Configure in local.properties or via -PjourneyNotifierBaseUrl=https://your-host
-        buildConfigField("String", "JOURNEY_NOTIFIER_BASE_URL", "\\\"" + providers.gradleProperty("journeyNotifierBaseUrl").orElse("").get() + "\\\"")
+        buildConfigField("String", "JOURNEY_NOTIFIER_BASE_URL", "\"" + providers.gradleProperty("journeyNotifierBaseUrl").orElse("").get() + "\"")
         minSdk = 27
         targetSdk = 37
         versionCode = 387
