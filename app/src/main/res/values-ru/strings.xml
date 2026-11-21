@@ -167,4 +167,5 @@
     <string name="saved_journeys_select">Выберите поездку, чтобы посмотреть подробности.</string>
     <string name="nearby_departures_filters_no_matches">%1$d результатов, но ни один не соответствует фильтрам. Сбросьте фильтры или расширьте выбор, чтобы увидеть отправления поблизости.</string>
     <string name="directions_trip_info">Информация о рейсе</string>
+    <string name="directions_bookmark_tooltip">Добавьте эту поездку в закладки, чтобы получать уведомления об отслеживании в реальном времени во время поездки и о сбоях в движении.</string>
 </resources>

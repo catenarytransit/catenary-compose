@@ -160,4 +160,5 @@
     <string name="saved_journeys_select">Seleccionatz un viatge per veire los detalhs.</string>
     <string name="nearby_departures_filters_no_matches">%1$d resultats, mas cap correspond pas als filtres. Suprimissètz o espandissètz la seleccion dels filtres per afichar las parténças a proximitat.</string>
     <string name="directions_trip_info">Informacions del viatge</string>
+    <string name="directions_bookmark_tooltip">Apondètz aqueste trajècte als marcapaginas per recebre de notificacions sul seguiment en temps real pendent lo viatge e sus las perturbacions.</string>
 </resources>
