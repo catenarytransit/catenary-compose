@@ -85,6 +85,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -92,6 +93,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpRect
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -1931,6 +1933,13 @@ class MainActivity : ComponentActivity() {
                                                 else Alignment.BottomCenter
 
                                         val isLandscape = maxWidth > maxHeight
+                                        // The rotated width alone cannot distinguish phones from tablets.
+                                        val isLandscapePhone = usesTwoSheetAnchors(
+                                                isLandscape, LocalConfiguration.current.smallestScreenWidthDp
+                                        )
+                                        val isPortraitPhone = !isLandscape && !isWideLayout
+                                        val normalSheetTarget =
+                                                if (isLandscapePhone) SheetSnapPoint.Expanded else SheetSnapPoint.PartiallyExpanded
                                         // Capture this from BoxWithConstraints before entering the
                                         // planner's nested composable lambdas (which have other receivers).
                                         val compactLandscapeHeader =
@@ -1959,15 +1968,18 @@ class MainActivity : ComponentActivity() {
                                         val anchors =
                                                 DraggableAnchors<SheetSnapPoint> {
                                                         SheetSnapPoint.Collapsed at collapsedAnchor
-                                                        SheetSnapPoint.PartiallyExpanded at
-                                                                maxOf(expandedAnchor, sheetViewportHeightPx / 2f - bottomInset)
+                                                        if (!isLandscapePhone) {
+                                                                SheetSnapPoint.PartiallyExpanded at
+                                                                        maxOf(expandedAnchor, sheetViewportHeightPx / 2f - bottomInset)
+                                                        }
                                                         SheetSnapPoint.Expanded at expandedAnchor
                                                 }
 
                                         val draggableState = remember {
                                                 AnchoredDraggableState(
                                                         initialValue =
-                                                                SheetSnapPoint.PartiallyExpanded,
+                                                                if (isLandscapePhone) SheetSnapPoint.Collapsed
+                                                                else SheetSnapPoint.PartiallyExpanded,
                                                         anchors = anchors,
                                                         positionalThreshold = { distance ->
                                                                 distance * if (directionsVisible && tripPlanner.usingMap) 0.5f else 0.35f
@@ -1985,8 +1997,15 @@ class MainActivity : ComponentActivity() {
                                         // When screen size / insets change (rotation, etc.),
                                         // refresh the anchors
                                         // so the sheet snaps correctly with the new height.
-                                        LaunchedEffect(anchors) {
-                                                draggableState.updateAnchors(anchors)
+                                        LaunchedEffect(anchors, isLandscapePhone) {
+                                                val oldTarget = draggableState.targetValue
+                                                val nextTarget = if (isLandscapePhone &&
+                                                        oldTarget == SheetSnapPoint.PartiallyExpanded
+                                                ) SheetSnapPoint.Expanded else oldTarget
+                                                draggableState.updateAnchors(anchors, nextTarget)
+                                                if (isLandscapePhone &&
+                                                        draggableState.currentValue == SheetSnapPoint.PartiallyExpanded
+                                                ) draggableState.snapTo(SheetSnapPoint.Expanded)
                                         }
 
                                         val sheetNestedScrollConnection = remember(
@@ -2031,57 +2050,59 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
-                                        // 2) Compute desired PaddingValues in dp from the current
-                                        // map size
+                                        // Nearby Departures is always unpadded; portrait-phone
+                                        // padding is reserved for a one-shot selection fly-to.
+                                        val nearbyDeparturesVisible = catenaryStack.isEmpty() ||
+                                                catenaryStack.lastOrNull() is CatenaryStackEnum.NearbyDeparturesStack
                                         val desiredPadding: PaddingValues = run {
-                                                val density = LocalDensity.current
-                                                val halfHeightDp =
-                                                        with(density) {
-                                                                (mapSize.height / 2f).toDp()
-                                                        }
-                                                // Camera padding must match the actual capped drawer width.
-                                                val drawerPaddingDp = drawerWidth
-
+                                                val halfHeightDp = with(density) { (mapSize.height / 2f).toDp() }
                                                 when {
-                                                        // Rule A: full-width content + bottom sheet
-                                                        // half or more
-                                                        contentWidthFraction == 1f &&
-                                                                sheetHalfOrMore ->
+                                                        !usesPersistentDrawerPadding(
+                                                                nearbyDeparturesVisible, isPortraitPhone
+                                                        ) -> PaddingValues(0.dp)
+                                                        contentWidthFraction == 1f && sheetHalfOrMore ->
                                                                 PaddingValues(bottom = halfHeightDp)
-
-                                                        // Rule B: 0.5 content width + (search
-                                                        // focused OR bottom sheet half or
-                                                        // more)
-                                                        isWideLayout &&
-                                                                (isSearchFocused ||
-                                                                        sheetHalfOrMore) ->
-                                                                PaddingValues(start = drawerPaddingDp)
+                                                        isWideLayout && (isSearchFocused || sheetHalfOrMore) ->
+                                                                PaddingValues(start = drawerWidth)
                                                         else -> PaddingValues(0.dp)
                                                 }
                                         }
 
-                                        // 3) Apply padding to the camera when it changes
+                                        // Apply layout changes without a camera animation. Dragging
+                                        // the drawer must not move the map in Nearby Departures.
                                         LaunchedEffect(desiredPadding) {
-                                                geoLock.beginInternalMove()
-
-                                                try {
-                                                        teleportCamera(
-                                                                camera,
-                                                                geoLock,
-                                                                lat =
-                                                                        camera.position
-                                                                                .target
-                                                                                .latitude,
-                                                                lon =
-                                                                        camera.position
-                                                                                .target
-                                                                                .longitude,
-                                                                zoom = camera.position.zoom,
-                                                                padding = desiredPadding
-                                                        )
-                                                } finally {
-                                                        geoLock.endInternalMove()
+                                                if (camera.position.padding != desiredPadding) {
+                                                        camera.position = camera.position.copy(padding = desiredPadding)
                                                 }
+                                        }
+
+                                        // Temporary padding places the selected location above
+                                        // the portrait phone's drawer, but is not retained.
+                                        LaunchedEffect(selectedLocationPin?.key, isPortraitPhone) {
+                                                val selection = selectedLocationPin ?: return@LaunchedEffect
+                                                if (!isPortraitPhone || nearbyDeparturesVisible) return@LaunchedEffect
+                                                val heightDp = with(density) { mapSize.height.toDp() }
+                                                if (heightDp <= 0.dp) return@LaunchedEffect
+                                                geoLock.deactivate()
+                                                camera.animateTo(
+                                                        camera.position.copy(
+                                                                target = selection.position,
+                                                                zoom = maxOf(camera.position.zoom, 15.0),
+                                                                padding = PaddingValues(bottom = heightDp / 2f)
+                                                        )
+                                                )
+                                                // Rebase to the actual visual center before dropping
+                                                // padding, preserving where the pin appears on screen.
+                                                val actualCenter = camera.projection?.positionFromScreenLocation(
+                                                        DpOffset(
+                                                                x = with(density) { (mapSize.width / 2f).toDp() },
+                                                                y = heightDp / 2f
+                                                        )
+                                                )
+                                                camera.position = camera.position.copy(
+                                                        target = actualCenter ?: camera.position.target,
+                                                        padding = PaddingValues(0.dp)
+                                                )
                                         }
 
                                         /** idle detection state for move/zoom end */
@@ -2289,7 +2310,7 @@ class MainActivity : ComponentActivity() {
                                                                 catenaryStack = ArrayDeque(catenaryStack).apply { addLast(poi) }
                                                                 scope.launch {
                                                                     if (draggableState.currentValue == SheetSnapPoint.Collapsed) {
-                                                                        draggableState.animateTo(SheetSnapPoint.PartiallyExpanded)
+                                                                        draggableState.animateTo(normalSheetTarget)
                                                                     }
                                                                 }
                                                                 return@MaplibreMap ClickResult.Consume
@@ -2426,10 +2447,7 @@ class MainActivity : ComponentActivity() {
                                                                                                 .Collapsed
                                                                         ) {
                                                                                 draggableState
-                                                                                        .animateTo(
-                                                                                                SheetSnapPoint
-                                                                                                        .PartiallyExpanded
-                                                                                        )
+                                                                                        .animateTo(normalSheetTarget)
                                                                         }
                                                                 }
                                                         }
@@ -3818,9 +3836,7 @@ class MainActivity : ComponentActivity() {
                                                                                                                 )
                                                                                                         )
                                                                                                         if (draggableState.currentValue == SheetSnapPoint.Collapsed) {
-                                                                                                                draggableState.animateTo(
-                                                                                                                        SheetSnapPoint.PartiallyExpanded
-                                                                                                                )
+                                                                                                                draggableState.animateTo(normalSheetTarget)
                                                                                                         }
                                                                                                 }
                                                                                         }
@@ -4343,7 +4359,7 @@ class MainActivity : ComponentActivity() {
                                         LaunchedEffect(directionsVisible, tripPlanner.usingMap, tripPlanner.selectedJourney?.identity()) {
                                                 if (directionsVisible && tripPlanner.usingMap) {
                                                         withFrameNanos { }
-                                                        draggableState.snapTo(SheetSnapPoint.PartiallyExpanded)
+                                                        draggableState.snapTo(normalSheetTarget)
                                                         val positions = tripPlanner.selectedJourney?.legs.orEmpty().flatMap { directionsCoordinates(it) }
                                                         if (positions.isNotEmpty()) {
                                                                 geoLock.deactivate()
@@ -4585,10 +4601,7 @@ class MainActivity : ComponentActivity() {
                                                                                 // see the settings
                                                                                 scope.launch {
                                                                                         draggableState
-                                                                                                .animateTo(
-                                                                                                        SheetSnapPoint
-                                                                                                                .PartiallyExpanded
-                                                                                                )
+                                                                                                .animateTo(normalSheetTarget)
                                                                                 }
                                                                                 focusManager
                                                                                         .clearFocus()
@@ -4797,7 +4810,7 @@ class MainActivity : ComponentActivity() {
                                                             catenaryStack = ArrayDeque(catenaryStack.filterNot { it is CatenaryStackEnum.DirectionsStack }).apply {
                                                                 addLast(CatenaryStackEnum.DirectionsStack)
                                                             }
-                                                            scope.launch { draggableState.animateTo(SheetSnapPoint.PartiallyExpanded) }
+                                                            scope.launch { draggableState.animateTo(normalSheetTarget) }
                                                         },
                                                         shape = CircleShape,
                                                         containerColor = MaterialTheme.colorScheme.surface
@@ -4943,9 +4956,7 @@ class MainActivity : ComponentActivity() {
                                                                         newStack.addLast(item)
                                                                         catenaryStack = newStack
                                                                         scope.launch {
-                                                                                draggableState.animateTo(
-                                                                                        SheetSnapPoint.PartiallyExpanded
-                                                                                )
+                                                                                draggableState.animateTo(normalSheetTarget)
                                                                                 val lat = recent.latitude
                                                                                 val lon = recent.longitude
                                                                                 if (lat != null && lon != null &&
@@ -5026,9 +5037,7 @@ class MainActivity : ComponentActivity() {
                                                                             ), zoom = 16.0
                                                                         )
                                                                     )
-                                                                    draggableState.animateTo(
-                                                                        SheetSnapPoint.PartiallyExpanded
-                                                                    )
+                                                                    draggableState.animateTo(normalSheetTarget)
                                                                 }
                                                             }
                                                             focusManager.clearFocus()
@@ -5053,10 +5062,7 @@ class MainActivity : ComponentActivity() {
                                                                 catenaryStack = newStack
 
                                                                 scope.launch {
-                                                                        draggableState.animateTo(
-                                                                                SheetSnapPoint
-                                                                                        .PartiallyExpanded
-                                                                        )
+                                                                        draggableState.animateTo(normalSheetTarget)
                                                                 }
                                                                 focusManager.clearFocus()
                                                         },
@@ -5097,10 +5103,7 @@ class MainActivity : ComponentActivity() {
                                                                 catenaryStack = newStack
 
                                                                 scope.launch {
-                                                                        draggableState.animateTo(
-                                                                                SheetSnapPoint
-                                                                                        .PartiallyExpanded
-                                                                        )
+                                                                        draggableState.animateTo(normalSheetTarget)
                                                                 }
                                                                 focusManager.clearFocus()
                                                         },
@@ -5164,10 +5167,7 @@ class MainActivity : ComponentActivity() {
                                                                 catenaryStack = newStack
 
                                                                 scope.launch {
-                                                                        draggableState.animateTo(
-                                                                                SheetSnapPoint
-                                                                                        .PartiallyExpanded
-                                                                        )
+                                                                        draggableState.animateTo(normalSheetTarget)
                                                                 }
                                                                 focusManager.clearFocus()
                                                         }
