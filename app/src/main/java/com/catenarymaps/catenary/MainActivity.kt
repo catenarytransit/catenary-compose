@@ -1931,6 +1931,10 @@ class MainActivity : ComponentActivity() {
                                                 else Alignment.BottomCenter
 
                                         val isLandscape = maxWidth > maxHeight
+                                        // Capture this from BoxWithConstraints before entering the
+                                        // planner's nested composable lambdas (which have other receivers).
+                                        val compactLandscapeHeader =
+                                                isLandscape && maxHeight < 480.dp && !isWideLayout
 
                                         // The home bar already includes the bottom system inset.
                                         // Sheet offsets are measured from the top of the space above it.
@@ -4396,7 +4400,7 @@ class MainActivity : ComponentActivity() {
                                                                         currentLocation = currentLocation, mapCenter = camera.position.target,
                                                                         stationHistory = stationHistory, streetUsUnits = streetUsUnits,
                                                                         forceInputs = forceInputs,
-                                                                        compact = isLandscape && maxHeight < 480.dp && !isWideLayout,
+                                                                        compact = compactLandscapeHeader,
                                                                         modifier = Modifier.then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier),
                                                                         onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) }
                                                                 )
