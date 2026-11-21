@@ -18,6 +18,16 @@ import com.google.firebase.messaging.RemoteMessage
  * background. When in the foreground, render the message ourselves.
  */
 class JourneyFirebaseMessagingService : FirebaseMessagingService() {
+    companion object {
+        fun ensureChannel(context: android.content.Context) {
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(
+                NotificationChannel("journey_changes", "Journey changes", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "Departure, platform, cancellation and missed-connection alerts"
+                }
+            )
+        }
+    }
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         JourneyNotifierSyncWorker.enqueue(applicationContext)
@@ -44,12 +54,7 @@ class JourneyFirebaseMessagingService : FirebaseMessagingService() {
         if (shown.contains(id)) return
         prefs.edit().putString("seen", (listOf(id) + shown).distinct().take(128).joinToString(",")).apply()
 
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(
-            NotificationChannel("journey_changes", "Journey changes", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Departure, platform, cancellation and missed-connection alerts"
-            }
-        )
+        ensureChannel(this)
         val open = Intent(this, MainActivity::class.java).apply {
             putExtra("openSavedJourneys", true)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
