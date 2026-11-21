@@ -116,7 +116,7 @@ internal class JourneyNotifierSyncWorker(
             runCatching { Instant.parse(value).epochSecond }.getOrNull()
 
         /** Keep server identifiers short even if Edelweiss returns a synthetic long identity. */
-        private fun stableId(journey: DirectionsItinerary): String =
+        fun stableId(journey: DirectionsItinerary): String =
             MessageDigest.getInstance("SHA-256").digest(journey.identity().toByteArray(Charsets.UTF_8))
                 .joinToString("") { "%02x".format(it) }
 
