@@ -162,4 +162,5 @@
     <string name="saved_journeys_select">Select a journey to view details.</string>
     <string name="nearby_departures_filters_no_matches">%1$d results but nothing matches the filters. Remove or expand the filter selection to show nearby departures.</string>
     <string name="directions_trip_info">Trip info</string>
+    <string name="directions_bookmark_tooltip">Bookmark this trip to receive notifications of live tracking during your trip and disruptions.</string>
 </resources>

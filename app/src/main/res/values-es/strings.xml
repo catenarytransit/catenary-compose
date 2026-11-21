@@ -157,6 +157,7 @@
     <string name="route_category_bus">Autobús</string>
     <string name="route_category_other">Otro</string>
     <string name="directions_save_trip">Guardar viaje</string>
+    <string name="directions_bookmark_tooltip">Guarda este viaje en marcadores para recibir notificaciones de seguimiento en tiempo real durante el trayecto y sobre incidencias.</string>
     <string name="directions_unsave_trip">Eliminar viaje guardado</string>
     <string name="directions_map_view">Mostrar mapa</string>
     <string name="directions_list_view">Mostrar lista</string>

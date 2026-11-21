@@ -165,4 +165,5 @@
     <string name="saved_journeys_select">Selecteer een reis om details te bekijken.</string>
     <string name="nearby_departures_filters_no_matches">%1$d resultaten, maar geen enkele komt overeen met de filters. Verwijder of verruim de filterselectie om vertrekken in de buurt te tonen.</string>
     <string name="directions_trip_info">Ritinformatie</string>
+    <string name="directions_bookmark_tooltip">Voeg deze reis toe aan je bladwijzers om meldingen te ontvangen over het live volgen van je reis en verstoringen onderweg.</string>
 </resources>

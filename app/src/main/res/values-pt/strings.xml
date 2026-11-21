@@ -165,4 +165,5 @@
     <string name="saved_journeys_select">Selecione uma viagem para ver os detalhes.</string>
     <string name="nearby_departures_filters_no_matches">%1$d resultados, mas nenhum corresponde aos filtros. Remova ou amplie a seleção de filtros para mostrar as partidas nas proximidades.</string>
     <string name="directions_trip_info">Informações da viagem</string>
+    <string name="directions_bookmark_tooltip">Guarde esta viagem nos favoritos para receber notificações de acompanhamento em tempo real durante a viagem e de perturbações no serviço.</string>
 </resources>

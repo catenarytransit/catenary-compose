@@ -165,4 +165,5 @@
     <string name="saved_journeys_select">Изберете пътуване, за да видите подробностите.</string>
     <string name="nearby_departures_filters_no_matches">%1$d резултата, но нито един не отговаря на филтрите. Премахнете филтрите или разширете избора, за да се покажат заминаванията наблизо.</string>
     <string name="directions_trip_info">Информация за курса</string>
+    <string name="directions_bookmark_tooltip">Добавете това пътуване към отметките, за да получавате известия за проследяване в реално време по време на пътуването и за смущения в движението.</string>
 </resources>
