@@ -106,9 +106,9 @@ internal fun JourneySummary(
                     positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
                     tooltip = {
                         RichTooltip(
-                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                            caretShape = TooltipDefaults.caretShape(),
-                            maxWidth = 280.dp
+                            modifier = Modifier.widthIn(max = 280.dp)
+                                .semantics { liveRegion = LiveRegionMode.Polite },
+                            caretShape = TooltipDefaults.caretShape()
                         ) {
                             Text(stringResource(R.string.directions_bookmark_tooltip))
                         }
