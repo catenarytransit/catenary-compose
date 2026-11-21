@@ -174,7 +174,7 @@ private fun JourneyMapVehicles(journey: DirectionsItinerary) {
         id = "directions-selected-vehicle-labels", source = source,
         textField = get("maptag").cast<StringValue>(),
         textFont = const(listOf("Arimo-SemiBold")),
-        textSize = const(0.75f.em), textColor = const(Color.White),
+        textSize = 0.75f.em, textColor = const(Color.White),
         textHaloColor = const(Color.Black), textHaloWidth = const(1.dp)
     )
 }
