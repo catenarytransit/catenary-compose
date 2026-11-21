@@ -19,6 +19,12 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.PopupPositionProvider
 import io.ktor.client.HttpClient
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -103,7 +109,8 @@ internal fun JourneySummary(
             Row(Modifier.align(androidx.compose.ui.Alignment.BottomStart).padding(start = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TooltipBox(
-                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+                    // Always below the bookmark: Material 3 points its caret upward.
+                    positionProvider = rememberBookmarkTooltipPositionProvider(),
                     tooltip = {
                         RichTooltip(
                             modifier = Modifier.widthIn(max = 280.dp)
@@ -171,4 +178,31 @@ private fun SummaryAction(enabled: Boolean = true, onClick: () -> Unit, content:
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shadowElevation = 3.dp) {
         IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(44.dp), content = content)
     }
+}
+
+/** Keep the popup below its bookmark icon so Material 3 renders the caret pointing upward. */
+@Composable
+private fun rememberBookmarkTooltipPositionProvider(): PopupPositionProvider {
+    val gapPx = with(LocalDensity.current) { 4.dp.roundToPx() }
+    return remember(gapPx) {
+        object : PopupPositionProvider {
+            override fun calculatePosition(
+                anchorBounds: IntRect,
+                windowSize: IntSize,
+                layoutDirection: LayoutDirection,
+                popupContentSize: IntSize
+            ): IntOffset = bookmarkTooltipPosition(anchorBounds, windowSize, popupContentSize, gapPx)
+        }
+    }
+}
+
+/** Clamp horizontally, but never flip to a position above the bookmark icon. */
+internal fun bookmarkTooltipPosition(
+    anchorBounds: IntRect,
+    windowSize: IntSize,
+    popupContentSize: IntSize,
+    gapPx: Int
+): IntOffset {
+    val maxX = (windowSize.width - popupContentSize.width).coerceAtLeast(0)
+    return IntOffset(anchorBounds.left.coerceIn(0, maxX), anchorBounds.bottom + gapPx)
 }
