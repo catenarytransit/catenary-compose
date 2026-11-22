@@ -301,7 +301,7 @@ fun TripPlannerHeader(
     streetUsUnits: Boolean,
     modifier: Modifier = Modifier, cardModifier: Modifier = Modifier,
     compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Float = planner.detailsCollapse,
-    onBack: () -> Unit = {}, onExpandedHeight: (Int) -> Unit = {},
+    onBack: () -> Unit = {}, onHome: () -> Unit, onExpandedHeight: (Int) -> Unit = {},
     onDetailsHeight: (Int) -> Unit = {},
     forceInputs: Boolean = false, client: HttpClient
 ) {
@@ -365,7 +365,7 @@ fun TripPlannerHeader(
     val destinationName = planner.destinationText.ifBlank { stringResource(R.string.directions_destination) }
     Column(modifier.imePadding().onSizeChanged { if (planner.details && !forceInputs) onDetailsHeight(it.height) }) {
         if (planner.details && !forceInputs) {
-            JourneySummary(planner, streetUsUnits, collapseDetails, cardModifier, client = client)
+            JourneySummary(planner, streetUsUnits, collapseDetails, cardModifier, client = client, onHome = onHome)
         } else ElevatedCard(modifier = cardModifier.fillMaxWidth().padding(8.dp)
                 .then(Modifier.animateContentSize()),
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),

@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
@@ -52,7 +53,8 @@ import kotlinx.coroutines.withContext
 internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
     collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier,
-    showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}, client: HttpClient
+    showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}, client: HttpClient,
+    onHome: () -> Unit
 ) {
     val journey = planner.selectedJourney ?: return
     val visibleJourney = rememberLiveJourney(journey)
@@ -98,10 +100,31 @@ internal fun JourneySummary(
         if (showBookmarkTooltip) bookmarkTooltipState.show() else bookmarkTooltipState.dismiss()
     }
     Column(modifier) {
-        if (showBack) FilledIconButton(onClick = { planner.details = false }, modifier = Modifier.padding(start = 20.dp, top = 4.dp).size(32.dp),
-            shape = CircleShape, colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back), modifier = Modifier.size(18.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            if (showBack) FilledIconButton(
+                onClick = { planner.details = false },
+                modifier = Modifier.size(32.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content
+                )
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back), modifier = Modifier.size(18.dp))
+            } else Spacer(Modifier.size(32.dp))
+            FilledIconButton(
+                onClick = onHome,
+                modifier = Modifier.size(32.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content
+                )
+            ) {
+                Icon(Icons.Filled.Home, stringResource(R.string.osm_home), modifier = Modifier.size(18.dp))
+            }
         }
         // Buttons overlap the summary's lower edge while retaining full touch targets.
         Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 4.dp)) {

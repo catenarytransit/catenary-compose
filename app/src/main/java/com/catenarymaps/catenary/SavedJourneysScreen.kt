@@ -177,7 +177,7 @@ internal fun SavedJourneysScreen(
             if (wide || planner.details) Column(Modifier.weight(1f).fillMaxHeight()) {
                 if (planner.details) {
                     JourneySummary(planner, streetUsUnits, showBack = !wide, showMapAction = false,
-                        onSavedChanged = { refresh++ }, client = client)
+                        onSavedChanged = { refresh++ }, client = client, onHome = onExplore)
                     Box(Modifier.weight(1f)) {
                         planner.selectedJourney?.let { JourneyDetails(planner, it, streetUsUnits, onTripInfo = onTripInfo) }
                     }

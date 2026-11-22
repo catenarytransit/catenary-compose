@@ -1383,6 +1383,12 @@ class MainActivity : ComponentActivity() {
                         }
                         catenaryStack = ArrayDeque(catenaryStack).apply { addLast(trip) }
                     }
+                    // Home from a journey goes to Explore without ending its active guidance.
+                    val navigateHome: () -> Unit = {
+                        returnToSavedTrips = false
+                        savedTripsVisible = false
+                        catenaryStack = ArrayDeque()
+                    }
                     val directionsVisible = catenaryStack.lastOrNull() is CatenaryStackEnum.DirectionsStack
                     // Trip info covers the planner without removing its navigation entry.
                     // Keep its saved results/details available while that entry remains below it.
@@ -3796,10 +3802,7 @@ class MainActivity : ComponentActivity() {
                                                                         }
                                                                 }
 
-                                                                val onHome: () -> Unit = {
-                                                                        returnToSavedTrips = false
-                                                                        catenaryStack = ArrayDeque()
-                                                                }
+                                                                val onHome: () -> Unit = navigateHome
                                                                 Column(
                                                                         modifier =
                                                                                 Modifier.padding(
@@ -4426,7 +4429,8 @@ class MainActivity : ComponentActivity() {
                                                                 .fillMaxWidth(contentWidthFraction)
                                                                 .windowInsetsPadding(WindowInsets.safeDrawing)
                                                                 .onSizeChanged { directionsDetailsHeight = it.height }
-                                                                .zIndex(6f)
+                                                                .zIndex(6f),
+                                                        onHome = navigateHome
                                                 )
                                         }
 
@@ -4443,7 +4447,8 @@ class MainActivity : ComponentActivity() {
                                                                         forceInputs = forceInputs,
                                                                         compact = compactLandscapeHeader,
                                                                         modifier = Modifier.then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier),
-                                                                        onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) }
+                                                                        onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) },
+                                                                        onHome = navigateHome
                                                                 )
                                                         }
                                                         if (isWideLayout) {
@@ -4458,7 +4463,7 @@ class MainActivity : ComponentActivity() {
                                                                                 VerticalDivider()
                                                                                 Column(Modifier.weight(1f).fillMaxHeight()) {
                                                                                         if (tripPlanner.details) {
-                                                                                                JourneySummary(tripPlanner, streetUsUnits, showBack = false, client = ktorHttpClient)
+                                                                                                JourneySummary(tripPlanner, streetUsUnits, showBack = false, client = ktorHttpClient, onHome = navigateHome)
                                                                                                 Box(Modifier.weight(1f)) {
                                                                                                         tripPlanner.selectedJourney?.let { JourneyDetails(tripPlanner, it, streetUsUnits, onTripInfo = openJourneyTrip) }
                                                                                                 }
@@ -4493,7 +4498,7 @@ class MainActivity : ComponentActivity() {
                                                 streetUsUnits = streetUsUnits,
                                                 wide = isWideLayout,
                                                 foreground = isAppInForeground,
-                                                onExplore = { savedTripsVisible = false },
+                                                onExplore = navigateHome,
                                                 onPlan = {
                                                     savedTripsVisible = false
                                                     tripPlanner.details = false
