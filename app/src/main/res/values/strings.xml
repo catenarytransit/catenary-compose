@@ -166,6 +166,7 @@
     <string name="directions_earlier_connections">Earlier connections</string>
     <string name="directions_later_connections">Later connections</string>
     <string name="directions_save_trip">Save trip</string>
+    <string name="directions_bookmark_tooltip">Bookmark this trip to receive notifications of live tracking during your trip and disruptions.</string>
     <string name="directions_unsave_trip">Remove saved trip</string>
     <string name="directions_map_view">Show map</string>
     <string name="directions_list_view">Show list</string>

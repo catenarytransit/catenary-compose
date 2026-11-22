@@ -167,4 +167,5 @@
     <string name="saved_journeys_select">Vyberte cestu na zobrazenie podrobností.</string>
     <string name="nearby_departures_filters_no_matches">%1$d výsledkov, ale žiadny nezodpovedá filtrom. Zrušte alebo rozšírte výber filtrov, aby sa zobrazili odchody v okolí.</string>
     <string name="directions_trip_info">Informácie o spoji</string>
+    <string name="directions_bookmark_tooltip">Uložte si túto cestu medzi záložky, aby ste počas nej dostávali upozornenia na sledovanie v reálnom čase a na dopravné obmedzenia.</string>
 </resources>

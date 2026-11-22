@@ -154,6 +154,7 @@
     <string name="directions_earlier_connections">Relations précédentes</string>
     <string name="directions_later_connections">Relations suivantes</string>
     <string name="directions_save_trip">Enregistrer le trajet</string>
+    <string name="directions_bookmark_tooltip">Ajoutez ce trajet aux favoris pour recevoir des notifications de suivi en temps réel pendant votre voyage et en cas de perturbations.</string>
     <string name="directions_unsave_trip">Supprimer le trajet enregistré</string>
     <string name="directions_map_view">Afficher la carte</string>
     <string name="directions_list_view">Afficher la liste</string>

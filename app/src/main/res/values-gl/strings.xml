@@ -158,4 +158,5 @@
     <string name="saved_journeys_select">Seleccione unha viaxe para ver os detalles.</string>
     <string name="nearby_departures_filters_no_matches">%1$d resultados, pero ningún coincide cos filtros. Elimina ou amplía a selección de filtros para amosar as saídas próximas.</string>
     <string name="directions_trip_info">Información da viaxe</string>
+    <string name="directions_bookmark_tooltip">Garda esta viaxe nos marcadores para recibir notificacións sobre o seguimento en tempo real durante a viaxe e as incidencias do servizo.</string>
 </resources>

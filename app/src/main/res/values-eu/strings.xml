@@ -163,4 +163,5 @@
     <string name="saved_journeys_select">Hautatu bidaia bat xehetasunak ikusteko.</string>
     <string name="nearby_departures_filters_no_matches">%1$d emaitza, baina bat ere ez dator bat iragazkiekin. Kendu edo zabaldu iragazkien hautaketa inguruko irteerak erakusteko.</string>
     <string name="directions_trip_info">Bidaiaren informazioa</string>
+    <string name="directions_bookmark_tooltip">Gorde bidaia hau laster-marketan, bidaian zeharreko denbora errealeko jarraipenari eta zerbitzuaren gorabeherei buruzko jakinarazpenak jasotzeko.</string>
 </resources>

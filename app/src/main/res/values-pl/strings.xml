@@ -167,4 +167,5 @@
     <string name="saved_journeys_select">Wybierz podróż, aby zobaczyć szczegóły.</string>
     <string name="nearby_departures_filters_no_matches">%1$d wyników, ale żaden nie pasuje do filtrów. Usuń filtry lub rozszerz ich wybór, aby wyświetlić odjazdy w pobliżu.</string>
     <string name="directions_trip_info">Informacje o kursie</string>
+    <string name="directions_bookmark_tooltip">Dodaj tę podróż do zakładek, aby otrzymywać powiadomienia o śledzeniu jej na żywo i utrudnieniach w trakcie podróży.</string>
 </resources>
