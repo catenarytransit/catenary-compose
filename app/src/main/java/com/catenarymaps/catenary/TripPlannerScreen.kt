@@ -237,7 +237,7 @@ private fun ConnectionResults(
         item(key = "results-status") {
             planner.error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
             if (planner.searched && !planner.loading && planner.error == null && journeys.isEmpty()) {
-                Text(stringResource(R.string.directions_no_journeys))
+                Text(stringResource(R.string.directions_no_journeys), color = TripPlannerColors.content)
             }
         }
         item(key = "earlier") { ConnectionLoadingEdge(planner, client, earlier = true) }
