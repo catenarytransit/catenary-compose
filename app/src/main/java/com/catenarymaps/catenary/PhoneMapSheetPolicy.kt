@@ -20,6 +20,33 @@ internal fun usesPersistentDrawerPadding(
 ): Boolean = !nearbyDeparturesVisible && !isPortraitPhone
 
 /**
+ * The active journey guidance covers the map regardless of drawer state. When
+ * visible, reserve the measured bottom chrome (guidance, navigation and safe
+ * area) as one occlusion; do not add it twice to an existing drawer inset.
+ * Without active guidance, keep the existing Nearby Departures zero-padding.
+ */
+internal fun activeJourneyMapPadding(
+    cameraPadding: PaddingValues,
+    bottomChromeHeight: Dp,
+    visible: Boolean,
+    layoutDirection: LayoutDirection,
+): PaddingValues {
+    if (!visible || bottomChromeHeight <= 0.dp) return cameraPadding
+    val left = cameraPadding.calculateLeftPadding(layoutDirection)
+    val right = cameraPadding.calculateRightPadding(layoutDirection)
+    return PaddingValues(
+        start = if (layoutDirection == LayoutDirection.Ltr) left else right,
+        top = cameraPadding.calculateTopPadding(),
+        end = if (layoutDirection == LayoutDirection.Ltr) right else left,
+        bottom = maxOf(cameraPadding.calculateBottomPadding(), bottomChromeHeight),
+    )
+}
+
+/** Lift the map controls only while guidance occupies the bottom edge. */
+internal fun activeJourneyControlsClearance(visible: Boolean, bottomChromeHeight: Dp): Dp =
+    if (visible) bottomChromeHeight.coerceAtLeast(0.dp) else 0.dp
+
+/**
  * Frame a GPS recenter around the map area not covered by the sheet.
  *
  * This padding is temporary: Nearby Departures and portrait phones intentionally keep
