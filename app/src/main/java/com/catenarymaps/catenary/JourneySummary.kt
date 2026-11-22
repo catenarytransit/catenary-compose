@@ -304,6 +304,7 @@ internal fun JourneySummary(
             }
                 actionContent()
         }
+        }
         if (failed) Text(stringResource(R.string.directions_save_error),
             color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 20.dp))
     }
