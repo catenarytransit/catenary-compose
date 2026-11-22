@@ -27,6 +27,8 @@ android {
 
     defaultConfig {
         applicationId = "com.catenarymaps.catenary"
+        // Configure in local.properties or via -PjourneyNotifierBaseUrl=https://your-host
+        buildConfigField("String", "JOURNEY_NOTIFIER_BASE_URL", "\"" + providers.gradleProperty("journeyNotifierBaseUrl").orElse("").get() + "\"")
         minSdk = 27
         targetSdk = 37
         versionCode = 387
@@ -103,6 +105,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.messaging)
+    implementation(libs.androidx.work.runtime.ktx)
     // Datadog SDK (disabled)
     // implementation(libs.dd.sdk.android.rum)
     // implementation(libs.dd.sdk.android.compose)

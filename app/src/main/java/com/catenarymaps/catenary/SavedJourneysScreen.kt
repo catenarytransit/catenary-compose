@@ -82,7 +82,9 @@ private fun RowScope.HomeNavigationItem(selected: Boolean, onClick: () -> Unit, 
 internal fun SavedJourneysScreen(
     streetUsUnits: Boolean, wide: Boolean, foreground: Boolean,
     onExplore: () -> Unit, onPlan: () -> Unit, modifier: Modifier = Modifier, client: HttpClient,
-    onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null
+    onTripInfo: ((CatenaryStackEnum.SingleTrip) -> Unit)? = null,
+    notificationJourneyId: String? = null,
+    onNotificationHandled: () -> Unit = {}
 ) {
     val context = LocalContext.current.applicationContext
     val planner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "saved-journey-details")
@@ -91,10 +93,12 @@ internal fun SavedJourneysScreen(
     var failed by remember { mutableStateOf(false) }
     var refresh by remember { mutableIntStateOf(0) }
     var selectedIdentity by rememberSaveable { mutableStateOf<String?>(planner.selectedJourney?.identity()) }
-    LaunchedEffect(refresh, foreground) {
+    LaunchedEffect(refresh, foreground, notificationJourneyId) {
         if (foreground) while (true) {
             try {
-                snapshots = withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.readAll() } }
+                snapshots = withContext(Dispatchers.IO) { SavedJourneyStore(context).use {
+                    if (notificationJourneyId != null) it.readForNotifier() else it.readAll()
+                } }
                 failed = false
                 val selected = snapshots.firstOrNull { it.journey.identity() == selectedIdentity }
                 // Removing a bookmark deletes the persisted snapshot, but the currently open
@@ -113,6 +117,16 @@ internal fun SavedJourneysScreen(
             loaded = true
             delay(60_000)
         }
+    }
+    LaunchedEffect(notificationJourneyId, snapshots) {
+        val target = notificationJourneyId?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
+        val snapshot = snapshots.firstOrNull { JourneyNotifierSyncWorker.stableId(it.journey) == target }
+            ?: return@LaunchedEffect
+        if (planner.selectedJourney?.identity() != snapshot.journey.identity() || !planner.details) {
+            selectedIdentity = snapshot.journey.identity()
+            planner.openSavedJourney(snapshot)
+        }
+        onNotificationHandled()
     }
     val groups = snapshots.groupedByDepartureDate()
     val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)

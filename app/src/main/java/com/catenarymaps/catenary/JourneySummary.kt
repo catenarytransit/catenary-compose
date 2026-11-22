@@ -1,5 +1,12 @@
 package com.catenarymaps.catenary
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -46,7 +53,15 @@ internal fun JourneySummary(
 ) {
     val journey = planner.selectedJourney ?: return
     val visibleJourney = rememberLiveJourney(journey)
-    val context = LocalContext.current.applicationContext
+    val activityContext = LocalContext.current
+    val context = activityContext.applicationContext
+    // Stored with the notifier installation credentials; excluded from Android backup.
+    val notificationPrefs = remember(context) {
+        context.getSharedPreferences("journey-notifier", Context.MODE_PRIVATE)
+    }
+    val requestNotificationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* Notifications are optional; the saved journey remains saved if denied. */ }
     val bookmarkOnboarding = remember(context) { BookmarkTripOnboardingStore(context) }
     var hasBookmarkedTrip by remember(bookmarkOnboarding) { mutableStateOf(bookmarkOnboarding.hasBookmarkedTrip()) }
     val scope = rememberCoroutineScope()
@@ -149,6 +164,19 @@ internal fun JourneySummary(
                                         // Hide the guidance permanently only after storage succeeds.
                                         bookmarkOnboarding.markBookmarkedTrip()
                                         hasBookmarkedTrip = true
+                                        // Request only after a first successful save, and only once
+                                        // even if the user declines. Android 12 and earlier are exempt.
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                            !notificationPrefs.getBoolean("notification_permission_requested", false)) {
+                                            val granted = ContextCompat.checkSelfPermission(
+                                                activityContext, Manifest.permission.POST_NOTIFICATIONS
+                                            ) == PackageManager.PERMISSION_GRANTED
+                                            if (notificationPrefs.edit()
+                                                    .putBoolean("notification_permission_requested", true)
+                                                    .commit() && !granted) {
+                                                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                            }
+                                        }
                                     }
                                     onSavedChanged()
                                 } catch (e: CancellationException) { throw e }

@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Chromebooks can lack a touchscreen or GPS; the app also supports pointer input and non-GPS location. -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -44,6 +45,14 @@
                     android:host="maps.catenarymaps.org" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".JourneyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <profileable android:shell="true" />
     </application>
