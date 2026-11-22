@@ -5380,6 +5380,12 @@ class MainActivity : ComponentActivity() {
                                                 modifier =
                                                         Modifier
                                                                 .align(Alignment.BottomCenter)
+                                                                .windowInsetsPadding(
+                                                                        // Keep the entire sheet above Android navigation controls, not just its content.
+                                                                        WindowInsets.safeDrawing.only(
+                                                                                WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal
+                                                                        )
+                                                                )
                                                                 .zIndex(11f), // Above navigation and all other screen overlays.
                                                 enter = slideInVertically(initialOffsetY = { it }),
                                                 exit = slideOutVertically(targetOffsetY = { it })
@@ -5416,16 +5422,6 @@ class MainActivity : ComponentActivity() {
                                                         Column(
                                                                 modifier =
                                                                         Modifier
-                                                                                .windowInsetsPadding(
-                                                                                        WindowInsets(
-                                                                                                bottom =
-                                                                                                        WindowInsets
-                                                                                                                .safeContent
-                                                                                                                .getBottom(
-                                                                                                                        density
-                                                                                                                )
-                                                                                        )
-                                                                                )
                                                                                 .fillMaxWidth()
                                                                                 .padding(16.dp),
                                                                 horizontalAlignment =
