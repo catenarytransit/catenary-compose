@@ -303,11 +303,17 @@ fun TripPlannerHeader(
     compact: Boolean = false, collapseInputs: Boolean = false, collapseDetails: Float = planner.detailsCollapse,
     onBack: () -> Unit = {}, onHome: () -> Unit, onExpandedHeight: (Int) -> Unit = {},
     onDetailsHeight: (Int) -> Unit = {},
-    forceInputs: Boolean = false, client: HttpClient
+    forceInputs: Boolean = false, client: HttpClient,
+    onEndpointFocusChanged: (Boolean) -> Unit = {}
 ) {
     val focus = LocalFocusManager.current
     val originFocus = remember { FocusRequester() }
     val destinationFocus = remember { FocusRequester() }
+    var originFieldFocused by remember { mutableStateOf(false) }
+    var destinationFieldFocused by remember { mutableStateOf(false) }
+    SideEffect { onEndpointFocusChanged(originFieldFocused || destinationFieldFocused) }
+    val currentFocusListener by rememberUpdatedState(onEndpointFocusChanged)
+    DisposableEffect(Unit) { onDispose { currentFocusListener(false) } }
     LaunchedEffect(planner.editing, forceInputs, planner.details) {
         if (!planner.details || forceInputs) {
             when (planner.editing) {
@@ -385,10 +391,12 @@ fun TripPlannerHeader(
                     Box(Modifier.weight(1f)) {
                         Column {
                             EndpointInput(planner.originText, stringResource(R.string.directions_start_placeholder),
-                                stringResource(R.string.directions_origin), { planner.edit(true, it) }, { planner.beginEditing(true) }, originFocus, compact)
+                                stringResource(R.string.directions_origin), { planner.edit(true, it) }, { planner.beginEditing(true) }, originFocus, compact,
+                                 onFocusStateChange = { originFieldFocused = it })
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                             EndpointInput(planner.destinationText, stringResource(R.string.directions_destination_placeholder),
-                                stringResource(R.string.directions_destination), { planner.edit(false, it) }, { planner.beginEditing(false) }, destinationFocus, compact)
+                                stringResource(R.string.directions_destination), { planner.edit(false, it) }, { planner.beginEditing(false) }, destinationFocus, compact,
+                                 onFocusStateChange = { destinationFieldFocused = it })
                         }
                         Surface(modifier = Modifier.align(Alignment.CenterEnd), shape = CircleShape,
                             color = TripPlannerColors.card, contentColor = TripPlannerColors.content, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
@@ -529,7 +537,8 @@ private fun RowScope.EndpointPearls(originIsCurrent: Boolean, destinationIsCurre
 @Composable
 private fun EndpointInput(
     value: String, placeholder: String, label: String, onChange: (String) -> Unit,
-    onFocus: () -> Unit, requester: FocusRequester, compact: Boolean = false
+    onFocus: () -> Unit, requester: FocusRequester, compact: Boolean = false,
+    onFocusStateChange: (Boolean) -> Unit = {}
 ) {
     var focused by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().padding(end = 52.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -538,7 +547,7 @@ private fun EndpointInput(
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             modifier = Modifier.weight(1f).heightIn(min = if (compact) 36.dp else 48.dp)
                 .focusRequester(requester).semantics { contentDescription = label }
-                .onFocusChanged { focused = it.isFocused; if (it.isFocused) onFocus() },
+                .onFocusChanged { focused = it.isFocused; onFocusStateChange(it.isFocused); if (it.isFocused) onFocus() },
             decorationBox = { input ->
                 Box(Modifier.padding(4.dp), contentAlignment = Alignment.CenterStart) {
                     if (value.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyLarge,
