@@ -57,7 +57,8 @@ fun SelectionRouteBadges(
         resolveRouteInfo: (String) -> ResolvedRouteBadgeInfo?,
         modifier: Modifier = Modifier,
         textSize: TextUnit = 10.sp,
-        compact: Boolean = false
+        compact: Boolean = false,
+        flush: Boolean = false
 ) {
     val routeInfos =
         remember(routeIds) {
@@ -129,7 +130,7 @@ fun SelectionRouteBadges(
 
                 if (remainingRoutes.isNotEmpty()) {
                         FlowRow(
-                                modifier = Modifier.padding(top = 4.dp),
+                                modifier = Modifier.padding(top = if (flush) 0.dp else 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {

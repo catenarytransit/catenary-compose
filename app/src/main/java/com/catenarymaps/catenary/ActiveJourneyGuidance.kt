@@ -5,6 +5,8 @@ import android.util.Log
 import android.content.SharedPreferences
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -15,12 +17,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -205,11 +208,46 @@ internal fun journeyGuidance(
 }
 
 internal fun journeyServiceName(leg: DirectionsLeg): String {
+    // National Rail train services outside the existing operator exemptions must not
+    // fall back to route names: these represent unrelated trains on the same route.
     if (!NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId)) {
-        leg.tripShortName?.takeIf { it.isNotBlank() }?.let { return it }
+        return leg.tripShortName?.trim()?.takeIf { it.isNotBlank() } ?: leg.mode
     }
     return sequenceOf(leg.routeShortName, leg.routeLongName, leg.tripShortName, leg.routeId, leg.mode)
         .filterNotNull().map(::timelineRouteName).firstOrNull { it.isNotBlank() }.orEmpty()
+}
+
+private const val ROUTE_BADGE_MARKER = "__catenary_route_badge__"
+
+/** Reuse planner route badges, but show the trip short name as plain text on non-exempt UK rail. */
+@Composable
+private fun ActiveJourneyServiceLabel(leg: DirectionsLeg) {
+    if (!NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId)) {
+        Text(
+            journeyServiceName(leg), color = Color.White, fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis
+        )
+        return
+    }
+    val shortName = leg.routeShortName?.let(::timelineRouteName)?.takeIf { it.isNotBlank() }
+    val longName = leg.routeLongName?.let(::timelineRouteName)?.takeIf { it.isNotBlank() }
+    val label = shortName ?: longName ?: leg.tripShortName?.takeIf { it.isNotBlank() }
+        ?: leg.routeId?.takeIf { it.isNotBlank() } ?: leg.mode
+    SelectionRouteBadges(
+        routeIds = listOf(leg.routeId ?: label),
+        modifier = Modifier.widthIn(max = 112.dp),
+        textSize = 10.sp, compact = true, flush = true,
+        resolveRouteInfo = { id ->
+            ResolvedRouteBadgeInfo(
+                routeId = id,
+                shortName = shortName ?: label.takeIf { longName == null && leg.routeId == null },
+                longName = longName,
+                color = leg.routeColor ?: "2563EB",
+                textColor = leg.routeTextColor ?: "FFFFFF",
+                chateauId = leg.chateau
+            )
+        }
+    )
 }
 
 internal fun journeyPlatform(leg: DirectionsLeg): String? =
@@ -217,6 +255,7 @@ internal fun journeyPlatform(leg: DirectionsLeg): String? =
         leg.from?.platformCode, leg.from?.platform)
         .filterNotNull().firstOrNull { it.isNotBlank() }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ActiveJourneyBar(
     active: ActiveJourney, position: Pair<Double, Double>?, streetUsUnits: Boolean,
@@ -243,14 +282,17 @@ internal fun ActiveJourneyBar(
         }
     }
     val progress = journeyGuidance(journey, now, position, snapshot.destination)
-    val text = when (progress) {
+    // Keep the route identifier as its own composable while retaining the existing
+    // localized word order; some languages place the service name in the middle.
+    val guidanceText = when (progress) {
         is JourneyGuidance.Boarding -> {
-            val service = journeyServiceName(progress.leg)
             val departure = directionsTime(progress.leg.departureCurrent, progress.leg.from?.timezone)
             val stopName = progress.leg.from?.name.orEmpty()
             val main = if (progress.transfer) stringResource(
-                R.string.journey_tracking_transfer, stopName, service, departure, progress.minutes
-            ) else stringResource(R.string.journey_tracking_departing, service, departure, progress.minutes)
+                R.string.journey_tracking_transfer, stopName, ROUTE_BADGE_MARKER, departure, progress.minutes
+            ) else stringResource(
+                R.string.journey_tracking_departing, ROUTE_BADGE_MARKER, departure, progress.minutes
+            )
             val platform = journeyPlatform(progress.leg)
             if (platform == null) main else main + " · " +
                 stringResource(R.string.journey_tracking_platform, platform)
@@ -265,32 +307,54 @@ internal fun ActiveJourneyBar(
         }
         is JourneyGuidance.Arriving -> stringResource(R.string.journey_tracking_arriving, progress.destination)
     }
+    val serviceFragments = if (progress is JourneyGuidance.Boarding)
+        guidanceText.split(ROUTE_BADGE_MARKER, limit = 2) else emptyList()
     Surface(
         modifier = modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onOpenDetails),
         color = Color.Black, contentColor = Color.White, shadowElevation = 6.dp
     ) {
         Row(
             Modifier.fillMaxWidth()
-                // Keep the black surface flush with the screen edge while protecting content.
+                // Keep the surface edge-to-edge and reserve only the inset actually needed.
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-                .heightIn(min = 56.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .heightIn(min = 42.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
         ) {
             if (progress is JourneyGuidance.FinalStreet) {
                 Icon(
                     if (progress.cycling) Icons.Default.DirectionsBike else Icons.Default.DirectionsWalk,
-                    contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp)
+                    contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp)
                 )
             }
-            // Non-filling weight lets short guidance and its chevron center as one group,
-            // while wrapping longer translations without pushing the chevron offscreen.
-            Text(text, modifier = Modifier.weight(1f, fill = false), color = Color.White,
-                fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // Let long stops and localized fragments wrap around the badge while keeping
+            // the badge and chevron part of a centered, compact group.
+            FlowRow(
+                modifier = Modifier.weight(1f, fill = false),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.Center
+            ) {
+                @Composable
+                fun GuidanceText(value: String) {
+                    if (value.isNotBlank()) Text(
+                        value.trim(), color = Color.White, fontSize = 12.sp,
+                        lineHeight = 15.sp, fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center, maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (progress is JourneyGuidance.Boarding && serviceFragments.size == 2) {
+                    GuidanceText(serviceFragments[0])
+                    ActiveJourneyServiceLabel(progress.leg)
+                    GuidanceText(serviceFragments[1])
+                } else {
+                    GuidanceText(guidanceText)
+                }
+            }
             Icon(Icons.Default.ChevronRight, stringResource(R.string.directions_show_details),
-                modifier = Modifier.size(20.dp), tint = Color.White)
+                modifier = Modifier.size(18.dp), tint = Color.White)
+
         }
     }
 }

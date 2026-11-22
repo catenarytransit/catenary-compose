@@ -83,4 +83,28 @@ class ActiveJourneyGuidanceTest {
         assertTrue(hasArrivedAtJourneyDestination(journey, destination,
             epoch(arrival) + 901, null))
     }
+    @Test fun activeJourneyUsesNationalRailTripNameWithoutRouteNameFallback() {
+        val rail = DirectionsLeg(
+            mode = "RAIL", chateau = "nationalrailuk", agencyId = "GW",
+            routeShortName = "GWR-route", routeLongName = "Unrelated railway service",
+            tripShortName = "1A23"
+        )
+        assertEquals("1A23", journeyServiceName(rail))
+        assertEquals("RAIL", journeyServiceName(rail.copy(tripShortName = null)))
+    }
+
+    @Test fun activeJourneyRespectsNationalRailOperatorExemptions() {
+        for (agency in listOf("TW", "ME", "LO", "XR", "HX")) {
+            val rail = DirectionsLeg(
+                mode = "RAIL", chateau = "nationalrailuk", agencyId = agency,
+                routeShortName = "Elizabeth Line", tripShortName = "1A23"
+            )
+            assertEquals("Elizabeth", journeyServiceName(rail))
+        }
+        val bus = DirectionsLeg(
+            mode = "BUS", routeShortName = "42", tripShortName = "vehicle 123"
+        )
+        assertEquals("42", journeyServiceName(bus))
+    }
+
 }

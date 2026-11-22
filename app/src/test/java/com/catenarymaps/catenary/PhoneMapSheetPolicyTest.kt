@@ -73,4 +73,33 @@ class PhoneMapSheetPolicyTest {
         assertEquals(308.dp, mapViewportCenter(600.dp, 600.dp, padding, LayoutDirection.Ltr).x)
         assertEquals(298.dp, mapViewportCenter(600.dp, 600.dp, padding, LayoutDirection.Ltr).y)
     }
+    @Test fun activeJourneyPaddingReservesChromeWithoutDoubleCountingSheet() {
+        val base = PaddingValues(start = 24.dp, top = 12.dp, end = 8.dp, bottom = 110.dp)
+        val active = activeJourneyMapPadding(base, 72.dp, true, LayoutDirection.Ltr)
+        assertEquals(110.dp, active.calculateBottomPadding())
+        assertEquals(24.dp, active.calculateLeftPadding(LayoutDirection.Ltr))
+        assertEquals(8.dp, active.calculateRightPadding(LayoutDirection.Ltr))
+
+        val largerChrome = activeJourneyMapPadding(PaddingValues(0.dp), 100.dp, true, LayoutDirection.Ltr)
+        assertEquals(100.dp, largerChrome.calculateBottomPadding())
+        assertEquals(100.dp, activeJourneyControlsClearance(true, 100.dp))
+    }
+
+    @Test fun hidingJourneyRestoresExistingNearbyPaddingAndControlPositions() {
+        val base = PaddingValues(0.dp)
+        assertEquals(base, activeJourneyMapPadding(base, 96.dp, false, LayoutDirection.Ltr))
+        assertEquals(0.dp, activeJourneyControlsClearance(false, 96.dp))
+    }
+
+    @Test fun gpsRecenterRespectsActiveJourneyOcclusion() {
+        val active = activeJourneyMapPadding(PaddingValues(0.dp), 96.dp, true, LayoutDirection.Ltr)
+        val padding = gpsRecenterPadding(
+            cameraPadding = active, mapHeight = 800.dp, sheetTop = 740.dp,
+            sideDrawerWidth = 0.dp, fullWidthSheet = true,
+            sideDrawerVisible = false, layoutDirection = LayoutDirection.Ltr,
+        )
+        assertEquals(96.dp, padding.calculateBottomPadding())
+        assertEquals(352.dp, mapViewportCenter(400.dp, 800.dp, padding, LayoutDirection.Ltr).y)
+    }
+
 }
