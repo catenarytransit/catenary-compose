@@ -54,7 +54,8 @@ internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
     collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier,
     showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}, client: HttpClient,
-    onHome: () -> Unit, onBack: (() -> Unit)? = null
+    onHome: () -> Unit, onBack: (() -> Unit)? = null,
+    landscapeStrip: Boolean = false, detailsContent: (@Composable () -> Unit)? = null
 ) {
     val journey = planner.selectedJourney ?: return
     val visibleJourney = rememberLiveJourney(journey)
@@ -111,54 +112,7 @@ internal fun JourneySummary(
     LaunchedEffect(identity, showBookmarkTooltip) {
         if (showBookmarkTooltip) bookmarkTooltipState.show() else bookmarkTooltipState.dismiss()
     }
-    Column(modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-        ) {
-            if (showBack) FilledIconButton(
-                onClick = { if (onBack != null) onBack() else planner.details = false },
-                modifier = Modifier.size(32.dp),
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content
-                )
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back), modifier = Modifier.size(18.dp))
-            } else Spacer(Modifier.size(32.dp))
-            FilledIconButton(
-                onClick = onHome,
-                modifier = Modifier.size(32.dp),
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content
-                )
-            ) {
-                Icon(Icons.Filled.Home, stringResource(R.string.osm_home), modifier = Modifier.size(18.dp))
-            }
-        }
-        // Buttons overlap the summary's lower edge while retaining full touch targets.
-        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 4.dp)) {
-            Card(Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-                Column(Modifier.padding(bottom = 12.dp)) {
-                    Text("${planner.originText} → ${planner.destinationText}",
-                        fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp))
-                    // Measure at full height, then reveal only the fraction controlled by the gesture.
-                    // No animation or content replacement: reversing a gesture reverses the height.
-                    Box(Modifier.clipToBounds().layout { measurable, constraints ->
-                        val preview = measurable.measure(constraints.copy(minHeight = 0))
-                        planner.detailsCollapseRangePx = preview.height.toFloat().coerceAtLeast(1f)
-                        val height = (preview.height * (1f - collapseFraction.coerceIn(0f, 1f))).toInt()
-                        layout(preview.width, height) { preview.placeRelative(0, 0) }
-                    }) {
-                        JourneyPreviewContent(visibleJourney, streetUsUnits)
-                    }
-                }
-            }
+    val actionContent: @Composable BoxScope.() -> Unit = {
             Row(Modifier.align(androidx.compose.ui.Alignment.BottomStart).padding(start = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TooltipBox(
@@ -285,6 +239,71 @@ internal fun JourneySummary(
                     }
                 )
             }
+    }
+    Column(modifier.then(if (landscapeStrip) Modifier.fillMaxHeight() else Modifier)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            if (showBack) FilledIconButton(
+                onClick = { if (onBack != null) onBack() else planner.details = false },
+                modifier = Modifier.size(32.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content
+                )
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back), modifier = Modifier.size(18.dp))
+            } else Spacer(Modifier.size(32.dp))
+            if (landscapeStrip) {
+                Text("${planner.originText} → ${planner.destinationText}",
+                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                    fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    color = TripPlannerColors.content)
+            }
+            FilledIconButton(
+                onClick = onHome,
+                modifier = Modifier.size(32.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content
+                )
+            ) {
+                Icon(Icons.Filled.Home, stringResource(R.string.osm_home), modifier = Modifier.size(18.dp))
+            }
+        }
+        if (landscapeStrip) {
+            // Fixed header above, scrollable journey legs in the middle, fixed actions below.
+            Box(Modifier.weight(1f).fillMaxWidth()) { detailsContent?.invoke() }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Box(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 12.dp, vertical = 6.dp)) {
+                actionContent()
+            }
+        } else {
+        // Buttons overlap the summary's lower edge while retaining full touch targets.
+        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 4.dp)) {
+            Card(Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+                Column(Modifier.padding(bottom = 12.dp)) {
+                    Text("${planner.originText} → ${planner.destinationText}",
+                        fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp))
+                    // Measure at full height, then reveal only the fraction controlled by the gesture.
+                    // No animation or content replacement: reversing a gesture reverses the height.
+                    Box(Modifier.clipToBounds().layout { measurable, constraints ->
+                        val preview = measurable.measure(constraints.copy(minHeight = 0))
+                        planner.detailsCollapseRangePx = preview.height.toFloat().coerceAtLeast(1f)
+                        val height = (preview.height * (1f - collapseFraction.coerceIn(0f, 1f))).toInt()
+                        layout(preview.width, height) { preview.placeRelative(0, 0) }
+                    }) {
+                        JourneyPreviewContent(visibleJourney, streetUsUnits)
+                    }
+                }
+            }
+                actionContent()
+        }
         }
         if (failed) Text(stringResource(R.string.directions_save_error),
             color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 20.dp))
