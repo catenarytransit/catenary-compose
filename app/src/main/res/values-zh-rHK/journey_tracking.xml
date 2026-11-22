@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">開始</string>
+    <string name="journey_tracking_end">結束</string>
+    <string name="journey_tracking_departing">%1$s – %2$s 開出，尚餘 %3$d 分鐘</string>
+    <string name="journey_tracking_transfer">下一班由%1$s開出：%2$s，%3$s 開出，尚餘 %4$d 分鐘</string>
+    <string name="journey_tracking_platform">月台 %1$s</string>
+    <string name="journey_tracking_alight">%2$d 分鐘後於%1$s落車</string>
+    <string name="journey_tracking_remaining">尚餘 %1$s</string>
+    <string name="journey_tracking_arriving">即將抵達%1$s</string>
+</resources>

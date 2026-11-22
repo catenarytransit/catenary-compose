@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Pornește</string>
+    <string name="journey_tracking_end">Încheie</string>
+    <string name="journey_tracking_departing">%1$s – plecare la %2$s în %3$d min</string>
+    <string name="journey_tracking_transfer">Următorul din %1$s: %2$s la %3$s în %4$d min</string>
+    <string name="journey_tracking_platform">Peronul %1$s</string>
+    <string name="journey_tracking_alight">Coborâți la %1$s în %2$d min</string>
+    <string name="journey_tracking_remaining">Mai sunt %1$s</string>
+    <string name="journey_tracking_arriving">Sosire la %1$s</string>
+</resources>

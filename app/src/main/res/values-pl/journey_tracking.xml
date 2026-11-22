@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Rozpocznij</string>
+    <string name="journey_tracking_end">Zakończ</string>
+    <string name="journey_tracking_departing">%1$s – odjazd o %2$s za %3$d min</string>
+    <string name="journey_tracking_transfer">Następny z %1$s: %2$s o %3$s za %4$d min</string>
+    <string name="journey_tracking_platform">Peron %1$s</string>
+    <string name="journey_tracking_alight">Wysiądź na %1$s za %2$d min</string>
+    <string name="journey_tracking_remaining">Pozostało %1$s</string>
+    <string name="journey_tracking_arriving">Przyjazd do %1$s</string>
+</resources>

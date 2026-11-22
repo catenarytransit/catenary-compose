@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
@@ -21,6 +22,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -193,6 +196,33 @@ internal fun JourneySummary(
                     Icon(if (planner.usingMap) Icons.AutoMirrored.Filled.List else Icons.Default.Map,
                         stringResource(if (planner.usingMap) R.string.directions_list_view else R.string.directions_map_view))
                 }
+            }
+            // Every summary variant (planner, map and saved journeys) uses the same active trip state.
+            val tracking = ActiveJourneySession.current?.snapshot?.journey?.identity() == identity
+            val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+            Button(
+                onClick = {
+                    if (tracking) ActiveJourneySession.end(identity)
+                    else ActiveJourneySession.start(SavedJourney(journey, planner.origin, planner.destination))
+                },
+                modifier = Modifier.align(androidx.compose.ui.Alignment.BottomEnd)
+                    .padding(end = 12.dp).height(44.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (tracking) {
+                        if (darkTheme) Color(0xFFFCA5A5) else Color(0xFFB91C1C)
+                    } else {
+                        if (darkTheme) Color(0xFF93C5FD) else Color(0xFF1D4ED8)
+                    },
+                    contentColor = if (tracking) {
+                        if (darkTheme) Color(0xFF7F1D1D) else Color.White
+                    } else {
+                        if (darkTheme) Color(0xFF172554) else Color.White
+                    }
+                )
+            ) {
+                Text(stringResource(if (tracking) R.string.journey_tracking_end else R.string.journey_tracking_start),
+                    fontWeight = FontWeight.SemiBold)
             }
         }
         if (failed) Text(stringResource(R.string.directions_save_error),

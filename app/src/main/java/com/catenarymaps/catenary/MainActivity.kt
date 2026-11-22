@@ -1222,6 +1222,7 @@ class MainActivity : ComponentActivity() {
                 lifecycleScope.launch {
                     val plannerSessionStore = TripPlannerSessionStore(File(noBackupFilesDir, "trip-planner-session.json"))
                     val initialPlannerSession = withContext(Dispatchers.IO) { plannerSessionStore.read() }
+                    ActiveJourneySession.initialize(applicationContext)
                 setContent {
                         val context = LocalContext.current
                         val lifecycleOwner = LocalLifecycleOwner.current
@@ -4518,6 +4519,47 @@ class MainActivity : ComponentActivity() {
                                                      .zIndex(9f)
                                                     .onSizeChanged { homeNavigationHeight = with(density) { it.height.toDp() } }
                                             )
+                                        }
+
+                                        // Global guidance survives leaving details and is layered over app navigation.
+                                        val runningJourney = ActiveJourneySession.current
+                                        var displayedJourney by remember { mutableStateOf(runningJourney) }
+                                        LaunchedEffect(runningJourney) {
+                                                if (runningJourney != null) displayedJourney = runningJourney
+                                        }
+                                        var guidanceClock by remember { mutableLongStateOf(java.time.Instant.now().epochSecond) }
+                                        LaunchedEffect(runningJourney?.startedAtEpochSeconds) {
+                                                if (runningJourney != null) while (true) {
+                                                        guidanceClock = java.time.Instant.now().epochSecond
+                                                        kotlinx.coroutines.delay(15_000L)
+                                                }
+                                        }
+                                        AnimatedVisibility(
+                                                visible = runningJourney != null &&
+                                                    shouldShowActiveJourney(runningJourney, guidanceClock, currentLocation),
+                                                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                                                    .padding(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp)
+                                                    .windowInsetsPadding(
+                                                        if (homeNavigationVisible) WindowInsets(0, 0, 0, 0)
+                                                        else WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+                                                    ).zIndex(11f),
+                                                enter = slideInVertically(initialOffsetY = { it }),
+                                                exit = slideOutVertically(targetOffsetY = { it })
+                                        ) {
+                                                displayedJourney?.let { active ->
+                                                        ActiveJourneyBar(
+                                                                active = active, position = currentLocation,
+                                                                streetUsUnits = streetUsUnits,
+                                                                onOpenDetails = {
+                                                                        savedTripsVisible = false
+                                                                        tripPlanner.openSavedJourney(active.snapshot)
+                                                                        tripPlanner.mapMode = true
+                                                                        catenaryStack = ArrayDeque<CatenaryStackEnum>().apply {
+                                                                                addLast(CatenaryStackEnum.DirectionsStack)
+                                                                        }
+                                                                }
+                                                        )
+                                                }
                                         }
 
                                         val layerButtonColor =

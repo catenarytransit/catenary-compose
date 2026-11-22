@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Hasi</string>
+    <string name="journey_tracking_end">Amaitu</string>
+    <string name="journey_tracking_departing">%1$s – irteera %2$s(e)tan, %3$d min barru</string>
+    <string name="journey_tracking_transfer">Hurrengoa %1$s(e)tik: %2$s %3$s(e)tan, %4$d min barru</string>
+    <string name="journey_tracking_platform">Nasaren zenbakia: %1$s</string>
+    <string name="journey_tracking_alight">Jaitsi %1$s geltokian %2$d min barru</string>
+    <string name="journey_tracking_remaining">%1$s falta dira</string>
+    <string name="journey_tracking_arriving">%1$s helmugara iristen</string>
+</resources>

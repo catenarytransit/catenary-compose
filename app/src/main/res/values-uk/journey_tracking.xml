@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Почати</string>
+    <string name="journey_tracking_end">Завершити</string>
+    <string name="journey_tracking_departing">%1$s – відправлення о %2$s через %3$d хв</string>
+    <string name="journey_tracking_transfer">Наступний з %1$s: %2$s о %3$s через %4$d хв</string>
+    <string name="journey_tracking_platform">Платформа %1$s</string>
+    <string name="journey_tracking_alight">Вийдіть на %1$s через %2$d хв</string>
+    <string name="journey_tracking_remaining">Залишилося %1$s</string>
+    <string name="journey_tracking_arriving">Прибуття до %1$s</string>
+</resources>
