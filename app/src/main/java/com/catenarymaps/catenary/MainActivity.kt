@@ -3746,7 +3746,8 @@ class MainActivity : ComponentActivity() {
                                                                 WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
                                                         )
 
-                                        if (!savedTripsVisible && (!directionsVisible || (tripPlanner.usingMap && tripPlanner.mapPicking == null))) Surface(
+                                        if (!savedTripsVisible && (!directionsVisible || (tripPlanner.usingMap && tripPlanner.mapPicking == null)) &&
+                                                (!activeJourneyVisible || activeJourneyPlanner.usingMap)) Surface(
                                                 modifier =
                                                         sheetModifier
                                                                 .offset {
@@ -3959,7 +3960,20 @@ class MainActivity : ComponentActivity() {
                                                                         when (currentScreen) {
                                                                             is CatenaryStackEnum.ActiveJourneyDetailsStack -> {
                                                                                 activeJourneyPlanner.selectedJourney?.let { journey ->
-                                                                                    JourneyDetails(
+                                                                                    if (isLandscape) {
+                                                                                        JourneySummary(
+                                                                                            planner = activeJourneyPlanner,
+                                                                                            streetUsUnits = streetUsUnits,
+                                                                                            client = ktorHttpClient,
+                                                                                            modifier = Modifier.fillMaxSize(),
+                                                                                            landscapeStrip = true,
+                                                                                            onHome = navigateHome,
+                                                                                            onBack = closeActiveJourney,
+                                                                                            detailsContent = {
+                                                                                                JourneyDetails(activeJourneyPlanner, journey, streetUsUnits, onTripInfo = openJourneyTrip)
+                                                                                            }
+                                                                                        )
+                                                                                    } else JourneyDetails(
                                                                                         planner = activeJourneyPlanner,
                                                                                         journey = journey,
                                                                                         streetUsUnits = streetUsUnits,
@@ -4570,7 +4584,7 @@ class MainActivity : ComponentActivity() {
                                                 TripPlannerMapPicker(camera, mapSize, tripPlanner,
                                                     modifier = Modifier.fillMaxSize().zIndex(7f), client = ktorHttpClient)
                                         }
-                                        if (journeyMapVisible && journeyMapPlanner.mapPicking == null) {
+                                        if (journeyMapVisible && journeyMapPlanner.mapPicking == null && !(activeJourneyVisible && isLandscape)) {
                                                 // Map mode needs only the summary, never the endpoint search overlay.
                                                 JourneySummary(
                                                         client = ktorHttpClient,
@@ -4593,7 +4607,44 @@ class MainActivity : ComponentActivity() {
                                                 )
                                         }
 
-                                        if (directionsVisible && tripPlanner.mapPicking == null) {
+                                        
+                                         // Tracking owns an independent planner: list mode is a fullscreen destination.
+                                         if (activeJourneyVisible && !activeJourneyPlanner.usingMap) {
+                                                 JourneyPlannerResultsOverlay(usingMap = false) {
+                                                         activeJourneyPlanner.selectedJourney?.let { journey ->
+                                                                 if (isLandscape) {
+                                                                         JourneySummary(
+                                                                                 planner = activeJourneyPlanner,
+                                                                                 streetUsUnits = streetUsUnits,
+                                                                                 client = ktorHttpClient,
+                                                                                 modifier = Modifier.fillMaxSize()
+                                                                                         .windowInsetsPadding(WindowInsets.safeDrawing),
+                                                                                 landscapeStrip = true,
+                                                                                 onHome = navigateHome,
+                                                                                 onBack = closeActiveJourney,
+                                                                                 detailsContent = {
+                                                                                         JourneyDetails(activeJourneyPlanner, journey, streetUsUnits, onTripInfo = openJourneyTrip)
+                                                                                 }
+                                                                         )
+                                                                 } else {
+                                                                         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
+                                                                                 JourneySummary(
+                                                                                         planner = activeJourneyPlanner,
+                                                                                         streetUsUnits = streetUsUnits,
+                                                                                         client = ktorHttpClient,
+                                                                                         onHome = navigateHome,
+                                                                                         onBack = closeActiveJourney
+                                                                                 )
+                                                                                 Box(Modifier.weight(1f)) {
+                                                                                         JourneyDetails(activeJourneyPlanner, journey, streetUsUnits, onTripInfo = openJourneyTrip)
+                                                                                 }
+                                                                         }
+                                                                 }
+                                                         }
+                                                 }
+                                         }
+
+if (directionsVisible && tripPlanner.mapPicking == null) {
                                                 JourneyPlannerResultsOverlay(
                                                         usingMap = tripPlanner.usingMap
                                                 ) {
