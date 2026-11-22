@@ -2124,25 +2124,27 @@ class MainActivity : ComponentActivity() {
                                                                         padding = gpsCameraPadding,
                                                                 )
                                                         )
-                                                        // Read the coordinate under the final camera's
-                                                        // original viewport center before removing the
-                                                        // temporary padding, avoiding an apparent jump.
-                                                        val originalViewportCenter = mapViewportCenter(
-                                                                mapWidth = with(density) { mapSize.width.toDp() },
-                                                                mapHeight = with(density) { mapSize.height.toDp() },
-                                                                cameraPadding = originalPadding,
-                                                                layoutDirection = mapLayoutDirection,
-                                                        )
-                                                        val rebasedTarget = camera.projection
-                                                                ?.positionFromScreenLocation(originalViewportCenter)
-                                                                ?: camera.position.target
-                                                        geoLock.setInternalPos(rebasedTarget)
-                                                        camera.position = camera.position.copy(
-                                                                target = rebasedTarget,
-                                                                padding = originalPadding,
-                                                        )
                                                 } finally {
-                                                        geoLock.endInternalMove()
+                                                        // Restore padding even if an incoming GPS update
+                                                        // cancels the in-flight camera animation.
+                                                        try {
+                                                                val originalViewportCenter = mapViewportCenter(
+                                                                        mapWidth = with(density) { mapSize.width.toDp() },
+                                                                        mapHeight = with(density) { mapSize.height.toDp() },
+                                                                        cameraPadding = originalPadding,
+                                                                        layoutDirection = mapLayoutDirection,
+                                                                )
+                                                                val rebasedTarget = camera.projection
+                                                                        ?.positionFromScreenLocation(originalViewportCenter)
+                                                                        ?: camera.position.target
+                                                                geoLock.setInternalPos(rebasedTarget)
+                                                                camera.position = camera.position.copy(
+                                                                        target = rebasedTarget,
+                                                                        padding = originalPadding,
+                                                                )
+                                                        } finally {
+                                                                geoLock.endInternalMove()
+                                                        }
                                                 }
                                         }
 
