@@ -716,10 +716,17 @@ class MainActivity : ComponentActivity() {
         private val openActiveJourneyFromNotification = mutableStateOf(false)
         private val notificationJourneyId = mutableStateOf<String?>(null)
 
+        private fun shouldOpenActiveJourney(intent: android.content.Intent?): Boolean {
+                if (intent?.getBooleanExtra("openActiveJourney", false) == true) return true
+                val journeyId = intent?.getStringExtra("journeyId") ?: return false
+                val active = ActiveJourneySession.persisted(applicationContext) ?: return false
+                return journeyId == JourneyNotifierSyncWorker.stableId(active.snapshot.journey)
+        }
+
         override fun onNewIntent(intent: android.content.Intent) {
                 super.onNewIntent(intent)
                 setIntent(intent)
-                if (intent.getBooleanExtra("openActiveJourney", false)) {
+                if (shouldOpenActiveJourney(intent)) {
                     openActiveJourneyFromNotification.value = true
                 } else if (intent.getBooleanExtra("openSavedJourneys", false) || intent.hasExtra("journeyId")) {
                     notificationJourneyId.value = intent.getStringExtra("journeyId")
@@ -993,7 +1000,7 @@ class MainActivity : ComponentActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
                 installSplashScreen()
                 super.onCreate(savedInstanceState)
-                if (intent?.getBooleanExtra("openActiveJourney", false) == true) {
+                if (shouldOpenActiveJourney(intent)) {
                     openActiveJourneyFromNotification.value = true
                 } else if (intent?.getBooleanExtra("openSavedJourneys", false) == true || intent?.hasExtra("journeyId") == true) {
                     notificationJourneyId.value = intent?.getStringExtra("journeyId")
