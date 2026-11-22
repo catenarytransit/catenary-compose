@@ -89,7 +89,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -2096,6 +2096,8 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
+                                        val mapLayoutDirection = LocalLayoutDirection.current
+
                                         // The GPS button is different from a selected-place fly-to:
                                         // always frame the fix in the part of the map the user can see.
                                         // Restore persistent padding afterward so drawer dragging does
@@ -2107,7 +2109,7 @@ class MainActivity : ComponentActivity() {
                                                 sideDrawerWidth = drawerWidth,
                                                 fullWidthSheet = contentWidthFraction == 1f,
                                                 sideDrawerVisible = isSearchFocused || sheetHalfOrMore,
-                                                layoutDirection = LayoutDirection.Ltr,
+                                                layoutDirection = mapLayoutDirection,
                                         )
 
                                         val recenterGps: suspend (Pair<Double, Double>, Double?) -> Unit = { loc, zoom ->
@@ -2129,7 +2131,7 @@ class MainActivity : ComponentActivity() {
                                                                 mapWidth = with(density) { mapSize.width.toDp() },
                                                                 mapHeight = with(density) { mapSize.height.toDp() },
                                                                 cameraPadding = originalPadding,
-                                                                layoutDirection = LayoutDirection.Ltr,
+                                                                layoutDirection = mapLayoutDirection,
                                                         )
                                                         val rebasedTarget = camera.projection
                                                                 ?.positionFromScreenLocation(originalViewportCenter)
@@ -2144,7 +2146,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
-                                        LaunchedEffect(currentLocation, geoLock.isActive(), gpsCameraPadding) {
+                                        LaunchedEffect(currentLocation, gpsCameraPadding) {
                                                 val loc = currentLocation ?: return@LaunchedEffect
                                                 if (geoLock.isActive()) recenterGps(loc, null)
                                         }
