@@ -89,6 +89,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -1881,18 +1882,6 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
 
-                        LaunchedEffect(currentLocation, geoLock.isActive()) {
-                                val loc = currentLocation ?: return@LaunchedEffect
-                                if (geoLock.isActive()) {
-                                        teleportCamera(
-                                                camera,
-                                                geoLock,
-                                                lat = loc.first,
-                                                lon = loc.second
-                                        )
-                                }
-                        }
-
                         val styleUri =
                                 if (isSystemInDarkTheme())
                                         "https://maps.catenarymaps.org/dark-style.json"
@@ -2105,6 +2094,59 @@ class MainActivity : ComponentActivity() {
                                                 if (camera.position.padding != desiredPadding) {
                                                         camera.position = camera.position.copy(padding = desiredPadding)
                                                 }
+                                        }
+
+                                        // The GPS button is different from a selected-place fly-to:
+                                        // always frame the fix in the part of the map the user can see.
+                                        // Restore persistent padding afterward so drawer dragging does
+                                        // not permanently change Nearby Departures' camera geometry.
+                                        val gpsCameraPadding = gpsRecenterPadding(
+                                                cameraPadding = desiredPadding,
+                                                mapHeight = with(density) { mapSize.height.toDp() },
+                                                sheetTop = with(density) { draggableState.requireOffset().toDp() },
+                                                sideDrawerWidth = drawerWidth,
+                                                fullWidthSheet = contentWidthFraction == 1f,
+                                                sideDrawerVisible = isSearchFocused || sheetHalfOrMore,
+                                                layoutDirection = LayoutDirection.Ltr,
+                                        )
+
+                                        val recenterGps: suspend (Pair<Double, Double>, Double?) -> Unit = { loc, zoom ->
+                                                val originalPadding = desiredPadding
+                                                geoLock.beginInternalMove()
+                                                try {
+                                                        geoLock.setInternalPos(Position(loc.second, loc.first))
+                                                        camera.animateTo(
+                                                                camera.position.copy(
+                                                                        target = Position(loc.second, loc.first),
+                                                                        zoom = zoom ?: camera.position.zoom,
+                                                                        padding = gpsCameraPadding,
+                                                                )
+                                                        )
+                                                        // Read the coordinate under the final camera's
+                                                        // original viewport center before removing the
+                                                        // temporary padding, avoiding an apparent jump.
+                                                        val originalViewportCenter = mapViewportCenter(
+                                                                mapWidth = with(density) { mapSize.width.toDp() },
+                                                                mapHeight = with(density) { mapSize.height.toDp() },
+                                                                cameraPadding = originalPadding,
+                                                                layoutDirection = LayoutDirection.Ltr,
+                                                        )
+                                                        val rebasedTarget = camera.projection
+                                                                ?.positionFromScreenLocation(originalViewportCenter)
+                                                                ?: camera.position.target
+                                                        geoLock.setInternalPos(rebasedTarget)
+                                                        camera.position = camera.position.copy(
+                                                                target = rebasedTarget,
+                                                                padding = originalPadding,
+                                                        )
+                                                } finally {
+                                                        geoLock.endInternalMove()
+                                                }
+                                        }
+
+                                        LaunchedEffect(currentLocation, geoLock.isActive(), gpsCameraPadding) {
+                                                val loc = currentLocation ?: return@LaunchedEffect
+                                                if (geoLock.isActive()) recenterGps(loc, null)
                                         }
 
                                         // Temporary padding places the selected location above
@@ -4903,20 +4945,9 @@ class MainActivity : ComponentActivity() {
                                                                         }
                                                                         return@FloatingActionButton
                                                                 }
-                                                                // Activate lock and teleport *now*
+                                                                // Recenter within the visible map viewport.
                                                                 geoLock.activate()
-                                                                scope.launch {
-                                                                        teleportCamera(
-                                                                                camera = camera,
-                                                                                controller =
-                                                                                        geoLock,
-                                                                                lat = loc.first,
-                                                                                lon = loc.second,
-                                                                                zoom = 16.0 // pick
-                                                                                // your
-                                                                                // desired snap zoom
-                                                                                )
-                                                                }
+                                                                scope.launch { recenterGps(loc, 16.0) }
                                                                 println(
                                                                         "Geolock state ${geoLock.isActive()}"
                                                                 )
