@@ -1,10 +1,11 @@
 package com.catenarymaps.catenary
 
 import android.Manifest
-import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.core.app.ActivityCompat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
@@ -44,6 +45,13 @@ internal fun JourneySummary(
     val visibleJourney = rememberLiveJourney(journey)
     val activityContext = LocalContext.current
     val context = activityContext.applicationContext
+    // This preference is already excluded from Android cloud backup and device transfer.
+    val notificationPrefs = remember(context) {
+        context.getSharedPreferences("journey-notifier", Context.MODE_PRIVATE)
+    }
+    val requestNotificationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* Notification permission is optional; saving succeeds either way. */ }
     val scope = rememberCoroutineScope()
     val language = LocalConfiguration.current.locales[0].language
     val identity = journey.identity()
@@ -115,12 +123,18 @@ internal fun JourneySummary(
                                 }
                                 if (!changed) { saveable = false; return@launch }
                                 saved = !wasSaved
-                                if (!wasSaved && Build.VERSION.SDK_INT >= 33 &&
-                                    ContextCompat.checkSelfPermission(activityContext, Manifest.permission.POST_NOTIFICATIONS)
-                                        != PackageManager.PERMISSION_GRANTED
-                                    && activityContext is Activity) {
-                                    ActivityCompat.requestPermissions(activityContext,
-                                        arrayOf(Manifest.permission.POST_NOTIFICATIONS), 7103)
+                                if (!wasSaved && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                    !notificationPrefs.getBoolean("notification_permission_requested", false)) {
+                                    val granted = ContextCompat.checkSelfPermission(
+                                        activityContext, Manifest.permission.POST_NOTIFICATIONS
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    // Mark the first successful save even when already granted.
+                                    // After a denial, subsequent saves must not repeatedly interrupt users.
+                                    if (notificationPrefs.edit()
+                                            .putBoolean("notification_permission_requested", true)
+                                            .commit() && !granted) {
+                                        requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
                                 }
                                 onSavedChanged()
                             } catch (e: CancellationException) { throw e }
