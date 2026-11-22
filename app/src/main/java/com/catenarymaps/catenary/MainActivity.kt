@@ -2158,7 +2158,7 @@ class MainActivity : ComponentActivity() {
                                         // padding is reserved for a one-shot selection fly-to.
                                         val nearbyDeparturesVisible = catenaryStack.isEmpty() ||
                                                 catenaryStack.lastOrNull() is CatenaryStackEnum.NearbyDeparturesStack
-                                        val desiredPadding: PaddingValues = run {
+                                        val drawerPadding: PaddingValues = run {
                                                 val halfHeightDp = with(density) { (mapSize.height / 2f).toDp() }
                                                 when {
                                                         !usesPersistentDrawerPadding(
@@ -2172,6 +2172,19 @@ class MainActivity : ComponentActivity() {
                                                 }
                                         }
 
+                                        // Reserve the measured bottom navigation and guidance once,
+                                        // without changing Nearby Departures padding when guidance is hidden.
+                                        val mapLayoutDirection = LocalLayoutDirection.current
+                                        val activeChromeClearance = activeJourneyControlsClearance(
+                                                showActiveJourneyBar, bottomChromeHeight
+                                        )
+                                        val desiredPadding = activeJourneyMapPadding(
+                                                cameraPadding = drawerPadding,
+                                                bottomChromeHeight = bottomChromeHeight,
+                                                visible = showActiveJourneyBar,
+                                                layoutDirection = mapLayoutDirection,
+                                        )
+
                                         // Apply layout changes without a camera animation. Dragging
                                         // the drawer must not move the map in Nearby Departures.
                                         LaunchedEffect(desiredPadding) {
@@ -2179,8 +2192,6 @@ class MainActivity : ComponentActivity() {
                                                         camera.position = camera.position.copy(padding = desiredPadding)
                                                 }
                                         }
-
-                                        val mapLayoutDirection = LocalLayoutDirection.current
 
                                         // The GPS button is different from a selected-place fly-to:
                                         // always frame the fix in the part of the map the user can see.
@@ -4984,7 +4995,7 @@ class MainActivity : ComponentActivity() {
                                                                                         (fabYAboveSheet - with(density) { if (directionsVisible || activeJourneyVisible) 0 else 68.dp.roundToPx() })
                                                                                                 .coerceAtLeast(
                                                                                                         directionsTopInset
-                                                                                                ).coerceAtMost(with(density) { (maxHeight - fabSize - fabMargin).roundToPx() } - bottomInset)
+                                                                                                ).coerceAtMost(with(density) { (maxHeight - fabSize - fabMargin - activeChromeClearance).roundToPx() } - bottomInset)
                                                                         )
                                                                 }
                                                                 .zIndex(4f)
@@ -4996,7 +5007,7 @@ class MainActivity : ComponentActivity() {
                                                                 .align(Alignment.BottomEnd)
                                                                 .padding(
                                                                         end = 16.dp,
-                                                                        bottom = 16.dp
+                                                                        bottom = 16.dp + activeChromeClearance
                                                                 )
                                                                 .windowInsetsPadding(WindowInsets.safeDrawing)
                                                                 .zIndex(4f)
