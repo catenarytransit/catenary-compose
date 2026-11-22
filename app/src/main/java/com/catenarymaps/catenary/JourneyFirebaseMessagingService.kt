@@ -55,8 +55,12 @@ class JourneyFirebaseMessagingService : FirebaseMessagingService() {
         prefs.edit().putString("seen", (listOf(id) + shown).distinct().take(128).joinToString(",")).apply()
 
         ensureChannel(this)
+        val active = ActiveJourneySession.persisted(this)
+        val isActive = active != null &&
+            data["journeyId"] == JourneyNotifierSyncWorker.stableId(active.snapshot.journey)
         val open = Intent(this, MainActivity::class.java).apply {
-            putExtra("openSavedJourneys", true)
+            if (isActive) putExtra("openActiveJourney", true)
+            else putExtra("openSavedJourneys", true)
             putExtra("journeyId", data["journeyId"])
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }

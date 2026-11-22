@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Вийдіть на %1$s через %2$d хв</string>
     <string name="journey_tracking_remaining">Залишилося %1$s</string>
     <string name="journey_tracking_arriving">Прибуття до %1$s</string>
+    <string name="journey_tracking_switch_title">Почати цю поїздку?</string>
+    <string name="journey_tracking_switch_message">У вас уже є активна поїздка до %1$s. Перемкнутися на цю поїздку? Попередню можна зберегти, щоб пізніше отримувати сповіщення.</string>
+    <string name="journey_tracking_switch_dismiss">Скасувати</string>
+    <string name="journey_tracking_switch_confirm">Почати поїздку</string>
+    <string name="journey_tracking_notification_channel">Активна поїздка</string>
+    <string name="journey_tracking_notification_channel_description">Перебіг поточної поїздки</string>
+    <string name="journey_tracking_notification_title">Поїздка до %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Наступний етап %1$d/%2$d: %3$s до %4$s</string>
+    <string name="journey_tracking_notification_leg">Етап %1$d/%2$d: %3$s до %4$s</string>
+    <string name="journey_tracking_walk">Пішки</string>
+    <string name="journey_tracking_cycle">Велосипедом</string>
 </resources>

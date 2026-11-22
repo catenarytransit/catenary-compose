@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">%2$d분 후 %1$s에서 하차</string>
     <string name="journey_tracking_remaining">남은 거리 %1$s</string>
     <string name="journey_tracking_arriving">%1$s 도착 예정</string>
+    <string name="journey_tracking_switch_title">이 여정을 시작할까요?</string>
+    <string name="journey_tracking_switch_message">현재 %1$s까지 진행 중인 여정이 있습니다. 이 여정으로 전환할까요? 기존 여정을 저장하면 나중에 알림을 받을 수 있습니다.</string>
+    <string name="journey_tracking_switch_dismiss">취소</string>
+    <string name="journey_tracking_switch_confirm">여정 시작</string>
+    <string name="journey_tracking_notification_channel">진행 중인 여정</string>
+    <string name="journey_tracking_notification_channel_description">현재 여정 진행 상황</string>
+    <string name="journey_tracking_notification_title">%1$s까지의 여정</string>
+    <string name="journey_tracking_notification_next_leg">다음 구간 %1$d/%2$d: %3$s → %4$s</string>
+    <string name="journey_tracking_notification_leg">구간 %1$d/%2$d: %3$s → %4$s</string>
+    <string name="journey_tracking_walk">도보</string>
+    <string name="journey_tracking_cycle">자전거</string>
 </resources>

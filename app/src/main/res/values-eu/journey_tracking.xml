@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Jaitsi %1$s geltokian %2$d min barru</string>
     <string name="journey_tracking_remaining">%1$s falta dira</string>
     <string name="journey_tracking_arriving">%1$s helmugara iristen</string>
+    <string name="journey_tracking_switch_title">Bidaia hau hasi?</string>
+    <string name="journey_tracking_switch_message">Dagoeneko %1$s helmugarako bidaia aktibo bat duzu. Bidaia honetara aldatu nahi duzu? Aurrekoa gorde dezakezu gero jakinarazpenak jasotzeko.</string>
+    <string name="journey_tracking_switch_dismiss">Utzi</string>
+    <string name="journey_tracking_switch_confirm">Hasi bidaia</string>
+    <string name="journey_tracking_notification_channel">Bidaia aktiboa</string>
+    <string name="journey_tracking_notification_channel_description">Uneko bidaiaren aurrerapena</string>
+    <string name="journey_tracking_notification_title">Bidaia %1$s helmugara</string>
+    <string name="journey_tracking_notification_next_leg">Hurrengo tartea %1$d/%2$d: %3$s - %4$s</string>
+    <string name="journey_tracking_notification_leg">Tartea %1$d/%2$d: %3$s - %4$s</string>
+    <string name="journey_tracking_walk">Oinez</string>
+    <string name="journey_tracking_cycle">Bizikletaz</string>
 </resources>

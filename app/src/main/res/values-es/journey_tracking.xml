@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Baja en %1$s en %2$d min</string>
     <string name="journey_tracking_remaining">Quedan %1$s</string>
     <string name="journey_tracking_arriving">Llegada a %1$s</string>
+    <string name="journey_tracking_switch_title">¿Iniciar este viaje?</string>
+    <string name="journey_tracking_switch_message">Ya tienes un viaje activo a %1$s. ¿Quieres cambiar a este viaje? Puedes guardar el anterior para recibir notificaciones más adelante.</string>
+    <string name="journey_tracking_switch_dismiss">Cancelar</string>
+    <string name="journey_tracking_switch_confirm">Iniciar viaje</string>
+    <string name="journey_tracking_notification_channel">Viaje activo</string>
+    <string name="journey_tracking_notification_channel_description">Progreso de tu viaje actual</string>
+    <string name="journey_tracking_notification_title">Viaje a %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Próximo tramo %1$d/%2$d: %3$s a %4$s</string>
+    <string name="journey_tracking_notification_leg">Tramo %1$d/%2$d: %3$s a %4$s</string>
+    <string name="journey_tracking_walk">A pie</string>
+    <string name="journey_tracking_cycle">Bicicleta</string>
 </resources>

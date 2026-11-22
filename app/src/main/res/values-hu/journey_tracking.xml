@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Leszállás: %1$s, %2$d perc múlva</string>
     <string name="journey_tracking_remaining">Hátra van %1$s</string>
     <string name="journey_tracking_arriving">Érkezés ide: %1$s</string>
+    <string name="journey_tracking_switch_title">Elindítja ezt az utazást?</string>
+    <string name="journey_tracking_switch_message">Már van egy aktív utazása ide: %1$s. Átvált erre az utazásra? A korábbit elmentheti, hogy később értesítéseket kapjon.</string>
+    <string name="journey_tracking_switch_dismiss">Mégse</string>
+    <string name="journey_tracking_switch_confirm">Utazás indítása</string>
+    <string name="journey_tracking_notification_channel">Aktív utazás</string>
+    <string name="journey_tracking_notification_channel_description">Az aktuális utazás előrehaladása</string>
+    <string name="journey_tracking_notification_title">Utazás ide: %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Következő szakasz %1$d/%2$d: %3$s – %4$s</string>
+    <string name="journey_tracking_notification_leg">Szakasz %1$d/%2$d: %3$s – %4$s</string>
+    <string name="journey_tracking_walk">Gyalog</string>
+    <string name="journey_tracking_cycle">Kerékpárral</string>
 </resources>

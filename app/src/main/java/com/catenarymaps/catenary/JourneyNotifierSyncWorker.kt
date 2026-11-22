@@ -62,7 +62,12 @@ internal class JourneyNotifierSyncWorker(
                 putJson(http, "$base/v1/devices/$registeredId", body, registeredId, registeredSecret)
             }
             preferences.edit().putString("fcm_token", token).apply()
-            val snapshots = SavedJourneyStore(applicationContext).use { it.readForNotifier() }
+            val bookmarks = SavedJourneyStore(applicationContext).use { it.readForNotifier() }
+            // A started trip is subscribed even if it has never been bookmarked.
+            // Bookmark wins on duplicate identity; ending tracking then preserves that bookmark.
+            val snapshots = journeysForNotifier(
+                bookmarks, ActiveJourneySession.persisted(applicationContext)?.snapshot
+            )
             val payload = JSONObject().put("journeys", JSONArray().apply {
                 snapshots.forEach { snapshot ->
                     journeyBody(snapshot)?.let { put(it) }
@@ -176,3 +181,9 @@ internal class JourneyNotifierSyncWorker(
         }
     }
 }
+
+/** The server receives the complete set: saved journeys plus the currently tracked trip. */
+internal fun journeysForNotifier(
+    bookmarked: List<SavedJourney>, active: SavedJourney?
+): List<SavedJourney> =
+    (bookmarked + listOfNotNull(active)).distinctBy { it.journey.identity() }

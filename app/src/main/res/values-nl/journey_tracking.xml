@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Stap uit bij %1$s over %2$d min</string>
     <string name="journey_tracking_remaining">Nog %1$s</string>
     <string name="journey_tracking_arriving">Aankomst bij %1$s</string>
+    <string name="journey_tracking_switch_title">Deze reis starten?</string>
+    <string name="journey_tracking_switch_message">Je hebt al een actieve reis naar %1$s. Wil je overschakelen naar deze reis? Je kunt de vorige reis opslaan voor meldingen op een later moment.</string>
+    <string name="journey_tracking_switch_dismiss">Annuleren</string>
+    <string name="journey_tracking_switch_confirm">Reis starten</string>
+    <string name="journey_tracking_notification_channel">Actieve reis</string>
+    <string name="journey_tracking_notification_channel_description">Voortgang van je huidige reis</string>
+    <string name="journey_tracking_notification_title">Reis naar %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Volgend deel %1$d/%2$d: %3$s naar %4$s</string>
+    <string name="journey_tracking_notification_leg">Deel %1$d/%2$d: %3$s naar %4$s</string>
+    <string name="journey_tracking_walk">Lopen</string>
+    <string name="journey_tracking_cycle">Fietsen</string>
 </resources>
