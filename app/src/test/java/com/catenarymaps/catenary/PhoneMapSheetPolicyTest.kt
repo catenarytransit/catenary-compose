@@ -1,5 +1,9 @@
 package com.catenarymaps.catenary
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -23,5 +27,50 @@ class PhoneMapSheetPolicyTest {
     @Test fun portraitPhoneOnlyUsesTemporarySelectionPadding() {
         assertFalse(usesPersistentDrawerPadding(nearbyDeparturesVisible = false, isPortraitPhone = true))
         assertTrue(usesPersistentDrawerPadding(nearbyDeparturesVisible = false, isPortraitPhone = false))
+    }
+
+    @Test fun gpsRecenterUsesSpaceAbovePortraitPhoneDrawer() {
+        val padding = gpsRecenterPadding(
+            cameraPadding = PaddingValues(0.dp),
+            mapHeight = 800.dp,
+            sheetTop = 360.dp,
+            sideDrawerWidth = 0.dp,
+            fullWidthSheet = true,
+            sideDrawerVisible = true,
+            layoutDirection = LayoutDirection.Ltr,
+        )
+        assertEquals(440.dp, padding.calculateBottomPadding())
+        assertEquals(180.dp, mapViewportCenter(400.dp, 800.dp, padding, LayoutDirection.Ltr).y)
+    }
+
+    @Test fun gpsRecenterMovesCenterAwayFromTabletSideDrawer() {
+        val padding = gpsRecenterPadding(
+            cameraPadding = PaddingValues(0.dp),
+            mapHeight = 800.dp,
+            sheetTop = 240.dp,
+            sideDrawerWidth = 300.dp,
+            fullWidthSheet = false,
+            sideDrawerVisible = true,
+            layoutDirection = LayoutDirection.Ltr,
+        )
+        assertEquals(300.dp, padding.calculateLeftPadding(LayoutDirection.Ltr))
+        assertEquals(350.dp, mapViewportCenter(400.dp, 800.dp, padding, LayoutDirection.Ltr).x)
+        assertEquals(0.dp, padding.calculateBottomPadding())
+    }
+
+    @Test fun gpsRecenterPreservesExistingPaddingWhenNothingIsObscured() {
+        val existing = PaddingValues(start = 24.dp, top = 12.dp, end = 8.dp, bottom = 16.dp)
+        val padding = gpsRecenterPadding(
+            cameraPadding = existing,
+            mapHeight = 600.dp,
+            sheetTop = 600.dp,
+            sideDrawerWidth = 300.dp,
+            fullWidthSheet = false,
+            sideDrawerVisible = false,
+            layoutDirection = LayoutDirection.Ltr,
+        )
+        assertEquals(existing, padding)
+        assertEquals(308.dp, mapViewportCenter(600.dp, 600.dp, padding, LayoutDirection.Ltr).x)
+        assertEquals(298.dp, mapViewportCenter(600.dp, 600.dp, padding, LayoutDirection.Ltr).y)
     }
 }
