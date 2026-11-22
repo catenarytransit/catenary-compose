@@ -31,8 +31,8 @@ android {
         buildConfigField("String", "JOURNEY_NOTIFIER_BASE_URL", "\"" + providers.gradleProperty("journeyNotifierBaseUrl").orElse("").get() + "\"")
         minSdk = 27
         targetSdk = 37
-        versionCode = 387
-        versionName = "2.0.287"
+        versionCode = 389
+        versionName = "2.0.289"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
