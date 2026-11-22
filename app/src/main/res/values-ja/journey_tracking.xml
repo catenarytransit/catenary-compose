@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">あと%2$d分で%1$sにて降車</string>
     <string name="journey_tracking_remaining">残り%1$s</string>
     <string name="journey_tracking_arriving">%1$sに到着</string>
+    <string name="journey_tracking_switch_title">この経路を開始しますか？</string>
+    <string name="journey_tracking_switch_message">すでに%1$sへの移動を開始しています。この経路に切り替えますか？ 元の経路を保存しておくと、後で通知を受け取れます。</string>
+    <string name="journey_tracking_switch_dismiss">キャンセル</string>
+    <string name="journey_tracking_switch_confirm">移動を開始</string>
+    <string name="journey_tracking_notification_channel">移動中</string>
+    <string name="journey_tracking_notification_channel_description">現在の移動状況</string>
+    <string name="journey_tracking_notification_title">%1$sへの移動</string>
+    <string name="journey_tracking_notification_next_leg">次の区間 %1$d/%2$d：%3$s → %4$s</string>
+    <string name="journey_tracking_notification_leg">区間 %1$d/%2$d：%3$s → %4$s</string>
+    <string name="journey_tracking_walk">徒歩</string>
+    <string name="journey_tracking_cycle">自転車</string>
 </resources>

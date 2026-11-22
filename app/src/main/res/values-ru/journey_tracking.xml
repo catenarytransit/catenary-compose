@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Выход на %1$s через %2$d мин</string>
     <string name="journey_tracking_remaining">Осталось %1$s</string>
     <string name="journey_tracking_arriving">Прибытие в %1$s</string>
+    <string name="journey_tracking_switch_title">Начать эту поездку?</string>
+    <string name="journey_tracking_switch_message">У вас уже есть активная поездка до %1$s. Переключиться на эту поездку? Предыдущую поездку можно сохранить, чтобы позже получать уведомления.</string>
+    <string name="journey_tracking_switch_dismiss">Отмена</string>
+    <string name="journey_tracking_switch_confirm">Начать поездку</string>
+    <string name="journey_tracking_notification_channel">Активная поездка</string>
+    <string name="journey_tracking_notification_channel_description">Ход текущей поездки</string>
+    <string name="journey_tracking_notification_title">Поездка до %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Следующий этап %1$d/%2$d: %3$s до %4$s</string>
+    <string name="journey_tracking_notification_leg">Этап %1$d/%2$d: %3$s до %4$s</string>
+    <string name="journey_tracking_walk">Пешком</string>
+    <string name="journey_tracking_cycle">На велосипеде</string>
 </resources>

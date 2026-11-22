@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Vystúpte na %1$s o %2$d min</string>
     <string name="journey_tracking_remaining">Zostáva %1$s</string>
     <string name="journey_tracking_arriving">Príchod do %1$s</string>
+    <string name="journey_tracking_switch_title">Spustiť túto cestu?</string>
+    <string name="journey_tracking_switch_message">Už máte aktívnu cestu do %1$s. Chcete prepnúť na túto cestu? Predchádzajúcu cestu si môžete uložiť a dostávať upozornenia neskôr.</string>
+    <string name="journey_tracking_switch_dismiss">Zrušiť</string>
+    <string name="journey_tracking_switch_confirm">Spustiť cestu</string>
+    <string name="journey_tracking_notification_channel">Aktívna cesta</string>
+    <string name="journey_tracking_notification_channel_description">Priebeh aktuálnej cesty</string>
+    <string name="journey_tracking_notification_title">Cesta do %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Ďalší úsek %1$d/%2$d: %3$s do %4$s</string>
+    <string name="journey_tracking_notification_leg">Úsek %1$d/%2$d: %3$s do %4$s</string>
+    <string name="journey_tracking_walk">Pešo</string>
+    <string name="journey_tracking_cycle">Na bicykli</string>
 </resources>

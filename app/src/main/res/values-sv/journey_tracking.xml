@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Gå av vid %1$s om %2$d min</string>
     <string name="journey_tracking_remaining">%1$s kvar</string>
     <string name="journey_tracking_arriving">Ankomst till %1$s</string>
+    <string name="journey_tracking_switch_title">Starta den här resan?</string>
+    <string name="journey_tracking_switch_message">Du har redan en aktiv resa till %1$s. Vill du byta till den här resan? Du kan spara den tidigare resan för att få aviseringar senare.</string>
+    <string name="journey_tracking_switch_dismiss">Avbryt</string>
+    <string name="journey_tracking_switch_confirm">Starta resan</string>
+    <string name="journey_tracking_notification_channel">Aktiv resa</string>
+    <string name="journey_tracking_notification_channel_description">Förlopp för din aktuella resa</string>
+    <string name="journey_tracking_notification_title">Resa till %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Nästa etapp %1$d/%2$d: %3$s till %4$s</string>
+    <string name="journey_tracking_notification_leg">Etapp %1$d/%2$d: %3$s till %4$s</string>
+    <string name="journey_tracking_walk">Gång</string>
+    <string name="journey_tracking_cycle">Cykel</string>
 </resources>

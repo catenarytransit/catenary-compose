@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">%2$d 分钟后在%1$s下车</string>
     <string name="journey_tracking_remaining">剩余 %1$s</string>
     <string name="journey_tracking_arriving">即将到达%1$s</string>
+    <string name="journey_tracking_switch_title">开始这段行程？</string>
+    <string name="journey_tracking_switch_message">您已有前往%1$s的进行中行程。要切换到这段行程吗？您可以保存之前的行程，以便稍后接收通知。</string>
+    <string name="journey_tracking_switch_dismiss">取消</string>
+    <string name="journey_tracking_switch_confirm">开始行程</string>
+    <string name="journey_tracking_notification_channel">进行中行程</string>
+    <string name="journey_tracking_notification_channel_description">当前行程进度</string>
+    <string name="journey_tracking_notification_title">前往%1$s的行程</string>
+    <string name="journey_tracking_notification_next_leg">下一段 %1$d/%2$d：%3$s 至 %4$s</string>
+    <string name="journey_tracking_notification_leg">第 %1$d/%2$d 段：%3$s 至 %4$s</string>
+    <string name="journey_tracking_walk">步行</string>
+    <string name="journey_tracking_cycle">骑行</string>
 </resources>

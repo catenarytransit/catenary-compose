@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Davalar a %1$s dins %2$d min</string>
     <string name="journey_tracking_remaining">Demòran %1$s</string>
     <string name="journey_tracking_arriving">Arribada a %1$s</string>
+    <string name="journey_tracking_switch_title">Començar aqueste trajècte?</string>
+    <string name="journey_tracking_switch_message">Avètz ja un trajècte actiu cap a %1$s. Volètz passar a aqueste trajècte? Podètz enregistrar lo precedent per recebre de notificacions mai tard.</string>
+    <string name="journey_tracking_switch_dismiss">Anullar</string>
+    <string name="journey_tracking_switch_confirm">Començar lo trajècte</string>
+    <string name="journey_tracking_notification_channel">Trajècte actiu</string>
+    <string name="journey_tracking_notification_channel_description">Progression del trajècte actual</string>
+    <string name="journey_tracking_notification_title">Trajècte cap a %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Etapa seguenta %1$d/%2$d: %3$s cap a %4$s</string>
+    <string name="journey_tracking_notification_leg">Etapa %1$d/%2$d: %3$s cap a %4$s</string>
+    <string name="journey_tracking_walk">A pè</string>
+    <string name="journey_tracking_cycle">A bicicleta</string>
 </resources>

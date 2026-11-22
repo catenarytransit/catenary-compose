@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Coborâți la %1$s în %2$d min</string>
     <string name="journey_tracking_remaining">Mai sunt %1$s</string>
     <string name="journey_tracking_arriving">Sosire la %1$s</string>
+    <string name="journey_tracking_switch_title">Porniți această călătorie?</string>
+    <string name="journey_tracking_switch_message">Aveți deja o călătorie activă spre %1$s. Doriți să treceți la aceasta? Puteți salva călătoria anterioară pentru notificări ulterioare.</string>
+    <string name="journey_tracking_switch_dismiss">Anulează</string>
+    <string name="journey_tracking_switch_confirm">Pornește călătoria</string>
+    <string name="journey_tracking_notification_channel">Călătorie activă</string>
+    <string name="journey_tracking_notification_channel_description">Progresul călătoriei actuale</string>
+    <string name="journey_tracking_notification_title">Călătorie spre %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Următoarea etapă %1$d/%2$d: %3$s spre %4$s</string>
+    <string name="journey_tracking_notification_leg">Etapa %1$d/%2$d: %3$s spre %4$s</string>
+    <string name="journey_tracking_walk">Pe jos</string>
+    <string name="journey_tracking_cycle">Bicicletă</string>
 </resources>
