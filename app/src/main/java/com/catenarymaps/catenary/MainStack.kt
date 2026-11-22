@@ -12,6 +12,10 @@ sealed interface CatenaryStackEnum {
     @Serializable
     data object DirectionsStack : CatenaryStackEnum
 
+    /** Journey guidance is its own destination, never the planner search results. */
+    @Serializable
+    data class ActiveJourneyDetailsStack(val journeyIdentity: String) : CatenaryStackEnum
+
     @Serializable
     data class SingleTrip(
             val chateau_id: String,
@@ -131,3 +135,11 @@ sealed interface MapSelectionSelector {
             val lon: Double
     ) : MapSelectionSelector
 }
+
+/** Push guidance details above the current screen without changing the planner search history. */
+internal fun pushActiveJourneyDetails(
+    stack: ArrayDeque<CatenaryStackEnum>, journeyIdentity: String
+): ArrayDeque<CatenaryStackEnum> =
+    ArrayDeque(stack.filterNot { it is CatenaryStackEnum.ActiveJourneyDetailsStack }).apply {
+        addLast(CatenaryStackEnum.ActiveJourneyDetailsStack(journeyIdentity))
+    }

@@ -54,7 +54,7 @@ internal fun JourneySummary(
     planner: TripPlannerViewModel, streetUsUnits: Boolean,
     collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier,
     showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}, client: HttpClient,
-    onHome: () -> Unit
+    onHome: () -> Unit, onBack: (() -> Unit)? = null
 ) {
     val journey = planner.selectedJourney ?: return
     val visibleJourney = rememberLiveJourney(journey)
@@ -106,7 +106,7 @@ internal fun JourneySummary(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             if (showBack) FilledIconButton(
-                onClick = { planner.details = false },
+                onClick = { if (onBack != null) onBack() else planner.details = false },
                 modifier = Modifier.size(32.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
