@@ -66,7 +66,19 @@ internal fun JourneySummary(
     }
     val requestNotificationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { /* Notifications are optional; the saved journey remains saved if denied. */ }
+    ) { /* Guidance continues even when notifications are denied. */ }
+    val requestNotificationsOnce: () -> Unit = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !notificationPrefs.getBoolean("notification_permission_requested", false)) {
+            val granted = ContextCompat.checkSelfPermission(
+                activityContext, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (notificationPrefs.edit().putBoolean("notification_permission_requested", true)
+                    .commit() && !granted) {
+                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
     val bookmarkOnboarding = remember(context) { BookmarkTripOnboardingStore(context) }
     var hasBookmarkedTrip by remember(bookmarkOnboarding) { mutableStateOf(bookmarkOnboarding.hasBookmarkedTrip()) }
     val scope = rememberCoroutineScope()
@@ -192,17 +204,7 @@ internal fun JourneySummary(
                                         hasBookmarkedTrip = true
                                         // Request only after a first successful save, and only once
                                         // even if the user declines. Android 12 and earlier are exempt.
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                                            !notificationPrefs.getBoolean("notification_permission_requested", false)) {
-                                            val granted = ContextCompat.checkSelfPermission(
-                                                activityContext, Manifest.permission.POST_NOTIFICATIONS
-                                            ) == PackageManager.PERMISSION_GRANTED
-                                            if (notificationPrefs.edit()
-                                                    .putBoolean("notification_permission_requested", true)
-                                                    .commit() && !granted) {
-                                                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                            }
-                                        }
+                                        requestNotificationsOnce()
                                     }
                                     onSavedChanged()
                                 } catch (e: CancellationException) { throw e }
@@ -221,16 +223,25 @@ internal fun JourneySummary(
                 }
             }
             // Every summary variant (planner, map and saved journeys) uses the same active trip state.
-            val tracking = ActiveJourneySession.current?.snapshot?.journey?.identity() == identity
+            val existingJourney = ActiveJourneySession.current
+            val tracking = existingJourney?.snapshot?.journey?.identity() == identity
+            var confirmSwitch by remember(identity) { mutableStateOf(false) }
+            val startJourney: () -> Unit = {
+                ActiveJourneySession.start(SavedJourney(journey, planner.origin, planner.destination))
+                requestNotificationsOnce()
+            }
             val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
             Button(
                 onClick = {
-                    if (tracking) ActiveJourneySession.end(identity)
-                    else ActiveJourneySession.start(SavedJourney(journey, planner.origin, planner.destination))
+                    when {
+                        tracking -> ActiveJourneySession.end(identity)
+                        existingJourney != null -> confirmSwitch = true
+                        else -> startJourney()
+                    }
                 },
                 modifier = Modifier.align(androidx.compose.ui.Alignment.BottomEnd)
                     .padding(end = 12.dp).height(44.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (tracking) {
                         if (darkTheme) Color(0xFFFCA5A5) else Color(0xFFB91C1C)
@@ -246,6 +257,33 @@ internal fun JourneySummary(
             ) {
                 Text(stringResource(if (tracking) R.string.journey_tracking_end else R.string.journey_tracking_start),
                     fontWeight = FontWeight.SemiBold)
+            }
+            if (confirmSwitch) {
+                val currentDestination = existingJourney?.snapshot?.destination?.name
+                    ?.takeIf { it.isNotBlank() }
+                    ?: existingJourney?.snapshot?.journey?.legs?.lastOrNull()?.to?.name
+                        ?.takeIf { it.isNotBlank() }
+                    ?: stringResource(R.string.app_name)
+                AlertDialog(
+                    onDismissRequest = { confirmSwitch = false },
+                    title = { Text(stringResource(R.string.journey_tracking_switch_title)) },
+                    text = {
+                        Text(stringResource(R.string.journey_tracking_switch_message, currentDestination))
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { confirmSwitch = false }) {
+                            Text(stringResource(R.string.journey_tracking_switch_dismiss))
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            confirmSwitch = false
+                            startJourney()
+                        }) {
+                            Text(stringResource(R.string.journey_tracking_switch_confirm))
+                        }
+                    }
+                )
             }
         }
         if (failed) Text(stringResource(R.string.directions_save_error),

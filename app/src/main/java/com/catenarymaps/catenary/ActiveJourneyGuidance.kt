@@ -1,6 +1,7 @@
 package com.catenarymaps.catenary
 
 import android.content.Context
+import android.util.Log
 import android.content.SharedPreferences
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,29 +49,49 @@ internal data class ActiveJourney(
 internal object ActiveJourneySession {
     private const val KEY = "active"
     private var preferences: SharedPreferences? = null
+    private var appContext: Context? = null
     var current by mutableStateOf<ActiveJourney?>(null)
         private set
 
+    /** Used by WorkManager/FCM without initializing Compose or overwriting the active UI state. */
+    fun persisted(context: Context): ActiveJourney? =
+        context.applicationContext.getSharedPreferences("active-journey", Context.MODE_PRIVATE)
+            .getString(KEY, null)?.let { serialized ->
+                runCatching { Json.decodeFromString<ActiveJourney>(serialized) }.getOrNull()
+            }?.takeIf { it.snapshot.journey.legs.isNotEmpty() }
+
     fun initialize(context: Context) {
         if (preferences != null) return
-        val prefs = context.applicationContext.getSharedPreferences("active-journey", Context.MODE_PRIVATE)
-        current = prefs.getString(KEY, null)?.let {
-            runCatching { Json.decodeFromString<ActiveJourney>(it) }.getOrNull()
-        }?.takeIf { it.snapshot.journey.legs.isNotEmpty() }
+        val app = context.applicationContext
+        val prefs = app.getSharedPreferences("active-journey", Context.MODE_PRIVATE)
+        current = persisted(app)
         preferences = prefs
+        appContext = app
         if (current == null) prefs.edit().remove(KEY).apply()
     }
 
+    /** Replaces the previous active session atomically; bookmarks remain independent. */
     fun start(snapshot: SavedJourney, at: Long = Instant.now().epochSecond) {
+        require(snapshot.journey.legs.isNotEmpty())
         val active = ActiveJourney(snapshot, at)
         preferences?.edit()?.putString(KEY, Json.encodeToString(active))?.apply()
+        ActiveJourneyLiveState.clear()
         current = active
+        appContext?.let { app ->
+            JourneyNotifierSyncWorker.enqueue(app)
+            ActiveJourneyProgressService.start(app)
+        }
     }
 
     fun end(expectedIdentity: String? = null) {
         if (expectedIdentity != null && current?.snapshot?.journey?.identity() != expectedIdentity) return
         preferences?.edit()?.remove(KEY)?.apply()
+        ActiveJourneyLiveState.clear()
         current = null
+        appContext?.let { app ->
+            ActiveJourneyProgressService.stop(app)
+            JourneyNotifierSyncWorker.enqueue(app)
+        }
     }
 }
 
@@ -190,6 +211,11 @@ internal fun ActiveJourneyBar(
     val snapshot = active.snapshot
     val identity = snapshot.journey.identity()
     val journey = rememberLiveJourney(snapshot.journey)
+    LaunchedEffect(identity, journey) {
+        // Reuse Ramonda predictions already held by the app while it is visible.
+        // The notification service falls back to the persisted timetable offline.
+        ActiveJourneyLiveState.update(identity, journey)
+    }
     var now by remember(identity) { mutableLongStateOf(Instant.now().epochSecond) }
     LaunchedEffect(identity) {
         while (true) {

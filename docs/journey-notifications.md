@@ -8,9 +8,14 @@ Saving a journey bookmarks its full local itinerary, then schedules a
 WorkManager reconciliation with the backend. Removing the bookmark removes
 that journey from the next full-device subscription sync. FCM wakes the app
 for foreground messages, and Google Play services shows notification
-messages in the background. **No continuously-running background service,
-location permission beyond the existing map use, or WebSocket connection is
-needed for these notifications.**
+messages in the background. Saved-trip disruption alerts do not require
+a foreground service. **When the rider explicitly starts a journey**, a separate
+foreground service displays an ongoing leg-progress notification and refreshes
+it while the app is backgrounded. This service never requests background GPS
+or starts a second WebSocket; its progress is estimated from scheduled times
+and uses the latest Ramonda prediction when already available to the app.
+Android 14+ declares the `specialUse` foreground service type for this
+user-initiated guidance, which requires declaration and review in Play Console.
 
 ## Firebase project and Android setup
 
@@ -98,3 +103,36 @@ The app never contains Google service-account credentials. The device bearer
 secret must not appear in analytics, logs or exported backups. Backend
 registration and full reconciliation must be served over HTTPS, with
 registration rate limits, device-auth checks and a request-size ceiling.
+
+## Started-trip subscription and leg progress
+
+* Pressing **Start** persists one active trip, registers or refreshes the Firebase
+  token through the existing WorkManager job, and reconciles the backend set of
+  **bookmarked journeys plus the one active journey**. An active journey does not
+  need to be bookmarked to receive disruption alerts.
+* Pressing **End** removes only the active-only subscription on the next sync.
+  If it is also bookmarked, it stays subscribed. Switching active journeys atomically
+  replaces the active-only subscription without removing either bookmark.
+* The low-importance `active_journey_progress` channel carries a silent, ongoing
+  foreground-service notification with the current leg's time-based progress (0–100%).
+  During a walking transfer, it switches to the **next transit leg** and shows 0%
+  until that service departs. The app updates it roughly every 20 seconds.
+* Tapping the notification opens standalone active-journey details; it does not
+  overwrite a planner search. Ending guidance stops and removes this notification,
+  while the regular high-importance `journey_changes` FCM alert channel remains.
+* Android 13+ asks for notification permission on the first Start or successful
+  bookmark. If denied, trip tracking and remote subscription still work, but
+  Android may suppress the notification from the notification drawer.
+* The foreground service only starts in response to foreground app interaction,
+  resumes when the app itself is brought to the foreground, and uses Android's
+  `specialUse` type for continuous, user-initiated trip guidance; declare this
+  type in Play Console before publishing and verify it is accepted.
+* Progress is an **estimate** based on departure/arrival times, not proof that the
+  rider is physically on board. Background realtime predictions are not actively
+  polled by this service, and the last known predictions can become stale.
+
+## Switch-trip confirmation
+
+If the user presses Start on a different journey while one is active, the
+existing trip remains active behind a modal dialog. Dismiss leaves it untouched;
+**Start trip** replaces the active session. Bookmarks are unaffected.

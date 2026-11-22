@@ -713,12 +713,15 @@ val ktorClient =
 class MainActivity : ComponentActivity() {
 
         private val openSavedFromNotification = mutableStateOf(false)
+        private val openActiveJourneyFromNotification = mutableStateOf(false)
         private val notificationJourneyId = mutableStateOf<String?>(null)
 
         override fun onNewIntent(intent: android.content.Intent) {
                 super.onNewIntent(intent)
                 setIntent(intent)
-                if (intent.getBooleanExtra("openSavedJourneys", false) || intent.hasExtra("journeyId")) {
+                if (intent.getBooleanExtra("openActiveJourney", false)) {
+                    openActiveJourneyFromNotification.value = true
+                } else if (intent.getBooleanExtra("openSavedJourneys", false) || intent.hasExtra("journeyId")) {
                     notificationJourneyId.value = intent.getStringExtra("journeyId")
                     openSavedFromNotification.value = true
                 }
@@ -990,7 +993,9 @@ class MainActivity : ComponentActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
                 installSplashScreen()
                 super.onCreate(savedInstanceState)
-                if (intent?.getBooleanExtra("openSavedJourneys", false) == true || intent?.hasExtra("journeyId") == true) {
+                if (intent?.getBooleanExtra("openActiveJourney", false) == true) {
+                    openActiveJourneyFromNotification.value = true
+                } else if (intent?.getBooleanExtra("openSavedJourneys", false) == true || intent?.hasExtra("journeyId") == true) {
                     notificationJourneyId.value = intent?.getStringExtra("journeyId")
                     openSavedFromNotification.value = true
                 }
@@ -1224,6 +1229,11 @@ class MainActivity : ComponentActivity() {
                     val plannerSessionStore = TripPlannerSessionStore(File(noBackupFilesDir, "trip-planner-session.json"))
                     val initialPlannerSession = withContext(Dispatchers.IO) { plannerSessionStore.read() }
                     ActiveJourneySession.initialize(applicationContext)
+                    // The Activity is visible: foreground-service restoration is user-visible
+                    // and allowed even if the OS reclaimed the process during guidance.
+                    if (ActiveJourneySession.current != null) {
+                        ActiveJourneyProgressService.start(applicationContext)
+                    }
                 setContent {
                         val context = LocalContext.current
                         val lifecycleOwner = LocalLifecycleOwner.current
@@ -1375,6 +1385,22 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     var returnToSavedTrips by rememberSaveable { mutableStateOf(false) }
+                    LaunchedEffect(openActiveJourneyFromNotification.value) {
+                        if (openActiveJourneyFromNotification.value) {
+                            ActiveJourneySession.current?.snapshot?.let { snapshot ->
+                                if (savedTripsVisible) {
+                                    returnToSavedTrips = true
+                                    savedTripsVisible = false
+                                }
+                                activeJourneyPlanner.openSavedJourney(snapshot)
+                                activeJourneyPlanner.mapMode = true
+                                catenaryStack = pushActiveJourneyDetails(
+                                    catenaryStack, snapshot.journey.identity()
+                                )
+                            }
+                            openActiveJourneyFromNotification.value = false
+                        }
+                    }
                     LaunchedEffect(catenaryStack.isEmpty()) {
                         if (catenaryStack.isEmpty() && returnToSavedTrips) {
                             returnToSavedTrips = false
