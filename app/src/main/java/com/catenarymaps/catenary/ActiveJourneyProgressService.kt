@@ -183,7 +183,8 @@ class ActiveJourneyProgressService : Service() {
         refreshJob = scope.launch {
             while (isActive) {
                 delay(20_000)
-                val current = ActiveJourneySession.current ?: run {
+                val current = ActiveJourneySession.current
+                if (current == null) {
                     stopSelf()
                     break
                 }
