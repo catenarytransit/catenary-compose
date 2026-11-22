@@ -1380,7 +1380,7 @@ class MainActivity : ComponentActivity() {
                     }
                     val homeNavigationVisible = savedTripsVisible || catenaryStack.isEmpty() ||
                         catenaryStack.lastOrNull() is CatenaryStackEnum.NearbyDeparturesStack
-                    var homeNavigationHeight by remember { mutableStateOf(0.dp) }
+                    var bottomChromeHeight by remember { mutableStateOf(0.dp) }
                     // Run on resume and periodically even when the saved-trips screen is closed.
                     LaunchedEffect(isAppInForeground) {
                         if (isAppInForeground) while (true) {
@@ -1956,6 +1956,7 @@ class MainActivity : ComponentActivity() {
                         var searchQuery by remember { mutableStateOf("") }
 
                         var isSearchFocused by remember { mutableStateOf(false) }
+                        var isPlannerEndpointFocused by remember { mutableStateOf(false) }
 
                         var lastPosByLock by remember { mutableStateOf<CameraPosition?>(null) }
 
@@ -2031,12 +2032,28 @@ class MainActivity : ComponentActivity() {
                                         val compactLandscapeHeader =
                                                 isLandscape && maxHeight < 480.dp && !isWideLayout
 
-                                        // The home bar already includes the bottom system inset.
-                                        // Sheet offsets are measured from the top of the space above it.
-                                        val sheetViewportHeightPx = screenHeightPx -
-                                                if (homeNavigationVisible) with(density) { homeNavigationHeight.toPx() } else 0f
+                                        // Track an active journey independently of the visible planner.
+                                        val runningJourney = ActiveJourneySession.current
+                                        var displayedJourney by remember { mutableStateOf(runningJourney) }
+                                        LaunchedEffect(runningJourney) {
+                                                if (runningJourney != null) displayedJourney = runningJourney
+                                        }
+                                        var guidanceClock by remember { mutableLongStateOf(java.time.Instant.now().epochSecond) }
+                                        LaunchedEffect(runningJourney?.startedAtEpochSeconds) {
+                                                if (runningJourney != null) while (true) {
+                                                        guidanceClock = java.time.Instant.now().epochSecond
+                                                        kotlinx.coroutines.delay(15_000L)
+                                                }
+                                        }
+                                        val showActiveJourneyBar = shouldDisplayActiveJourneyBar(
+                                                runningJourney, guidanceClock, currentLocation, isSearchFocused,
+                                                directionsVisible && isPlannerEndpointFocused
+                                        )
+                                        // The sheet must stop above both bottom navigation and guidance.
+                                        val sheetViewportHeightPx = (screenHeightPx -
+                                                with(density) { bottomChromeHeight.toPx() }).coerceAtLeast(0f)
                                         val bottomInset =
-                                                if (homeNavigationVisible) 0 else WindowInsets.safeDrawing.getBottom(density)
+                                                if (bottomChromeHeight > 0.dp) 0 else WindowInsets.safeDrawing.getBottom(density)
                                         val collapsedHandleHeight = with(density) { 64.dp.toPx() }
                                         val collapsedAnchor =
                                                 (sheetViewportHeightPx - collapsedHandleHeight - bottomInset).coerceAtLeast(0f)
@@ -3709,9 +3726,9 @@ class MainActivity : ComponentActivity() {
                                         val sheetModifier =
                                                 Modifier
                                                         .fillMaxWidth(contentWidthFraction)
-                                                        .padding(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp)
-                                                        // The home bar also covers the system navigation inset.
-                                                        .consumeWindowInsets(PaddingValues(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp))
+                                                        .padding(bottom = bottomChromeHeight)
+                                                        // The bottom chrome includes the system navigation inset.
+                                                        .consumeWindowInsets(PaddingValues(bottom = bottomChromeHeight))
                                                         .align(sheetAlignment)
                                                         // Landscape three-button navigation can occupy either side.
                                                         .windowInsetsPadding(
@@ -3781,7 +3798,7 @@ class MainActivity : ComponentActivity() {
                                                                         // Apply after offset compensation so the visible drawer
                                                                         // content ends above bottom navigation in every snap state.
                                                                         .windowInsetsPadding(
-                                                                                if (homeNavigationVisible) WindowInsets(0, 0, 0, 0) else WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+                                                                                if (bottomChromeHeight > 0.dp) WindowInsets(0, 0, 0, 0) else WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
                                                                         ),
                                                         horizontalAlignment =
                                                                 Alignment.CenterHorizontally
@@ -4579,7 +4596,8 @@ class MainActivity : ComponentActivity() {
                                                                         compact = compactLandscapeHeader,
                                                                         modifier = Modifier.then(if (tripPlanner.editing != null) Modifier.fillMaxHeight() else Modifier),
                                                                         onBack = { catenaryStack = ArrayDeque(catenaryStack.dropLast(1)) },
-                                                                        onHome = navigateHome
+                                                                        onHome = navigateHome,
+                                                                        onEndpointFocusChanged = { isPlannerEndpointFocused = it }
                                                                 )
                                                         }
                                                         if (isWideLayout) {
@@ -4641,67 +4659,52 @@ class MainActivity : ComponentActivity() {
                                                         addLast(CatenaryStackEnum.DirectionsStack)
                                                     }
                                                 },
-                                                modifier = Modifier.fillMaxSize().padding(bottom = homeNavigationHeight).zIndex(8f)
+                                                modifier = Modifier.fillMaxSize().padding(bottom = bottomChromeHeight).zIndex(8f)
                                             )
                                         }
-                                        if (homeNavigationVisible) {
-                                            HomeNavigation(
-                                                tripsSelected = savedTripsVisible,
-                                                onExplore = { savedTripsVisible = false; catenaryStack = ArrayDeque() },
-                                                onTrips = { catenaryStack = ArrayDeque(); savedTripsVisible = true },
-                                                modifier = Modifier.align(sheetAlignment).fillMaxWidth(contentWidthFraction)
-                                                     // Match the sheet's horizontal safe-area padding, including side navigation bars.
-                                                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                                                     .zIndex(9f)
-                                                    .onSizeChanged { homeNavigationHeight = with(density) { it.height.toDp() } }
-                                            )
-                                        }
-
-                                        // Global guidance survives leaving details and is layered over app navigation.
-                                        val runningJourney = ActiveJourneySession.current
-                                        var displayedJourney by remember { mutableStateOf(runningJourney) }
-                                        LaunchedEffect(runningJourney) {
-                                                if (runningJourney != null) displayedJourney = runningJourney
-                                        }
-                                        var guidanceClock by remember { mutableLongStateOf(java.time.Instant.now().epochSecond) }
-                                        LaunchedEffect(runningJourney?.startedAtEpochSeconds) {
-                                                if (runningJourney != null) while (true) {
-                                                        guidanceClock = java.time.Instant.now().epochSecond
-                                                        kotlinx.coroutines.delay(15_000L)
-                                                }
-                                        }
-                                        AnimatedVisibility(
-                                                visible = runningJourney != null &&
-                                                    shouldShowActiveJourney(runningJourney, guidanceClock, currentLocation),
-                                                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                                                    .padding(bottom = if (homeNavigationVisible) homeNavigationHeight else 0.dp)
-                                                    .windowInsetsPadding(
-                                                        if (homeNavigationVisible) WindowInsets(0, 0, 0, 0)
-                                                        else WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
-                                                    ).zIndex(11f),
-                                                enter = slideInVertically(initialOffsetY = { it }),
-                                                exit = slideOutVertically(targetOffsetY = { it })
+                                        // Navigation is ABOVE guidance, which remains flush with the window bottom.
+                                        Column(
+                                                modifier = Modifier.align(Alignment.BottomCenter)
+                                                        .fillMaxWidth()
+                                                        .onSizeChanged { bottomChromeHeight = with(density) { it.height.toDp() } }
+                                                        .zIndex(10f),
+                                                horizontalAlignment = if (isWideLayout) Alignment.Start else Alignment.CenterHorizontally
                                         ) {
-                                                displayedJourney?.let { active ->
-                                                        ActiveJourneyBar(
-                                                                active = active, position = currentLocation,
-                                                                streetUsUnits = streetUsUnits,
-                                                                onOpenDetails = {
-                                                                        if (savedTripsVisible) {
-                                                                            returnToSavedTrips = true
-                                                                            savedTripsVisible = false
-                                                                        }
-                                                                        // Only the details ViewModel changes; keep the
-                                                                        // underlying search and navigation history.
-                                                                        if (activeJourneyPlanner.selectedJourney?.identity() != active.snapshot.journey.identity()) {
-                                                                            activeJourneyPlanner.openSavedJourney(active.snapshot)
-                                                                        }
-                                                                        activeJourneyPlanner.mapMode = true
-                                                                        catenaryStack = pushActiveJourneyDetails(
-                                                                            catenaryStack, active.snapshot.journey.identity()
-                                                                        )
-                                                                }
+                                                if (homeNavigationVisible) {
+                                                        HomeNavigation(
+                                                                tripsSelected = savedTripsVisible,
+                                                                onExplore = { savedTripsVisible = false; catenaryStack = ArrayDeque() },
+                                                                onTrips = { catenaryStack = ArrayDeque(); savedTripsVisible = true },
+                                                                includeBottomInset = !showActiveJourneyBar,
+                                                                modifier = Modifier.fillMaxWidth(contentWidthFraction)
+                                                                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                                                         )
+                                                }
+                                                AnimatedVisibility(
+                                                        visible = showActiveJourneyBar,
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        enter = slideInVertically(initialOffsetY = { it }),
+                                                        exit = slideOutVertically(targetOffsetY = { it })
+                                                ) {
+                                                        displayedJourney?.let { active ->
+                                                                ActiveJourneyBar(
+                                                                        active = active, position = currentLocation,
+                                                                        streetUsUnits = streetUsUnits,
+                                                                        onOpenDetails = {
+                                                                                if (savedTripsVisible) {
+                                                                                        returnToSavedTrips = true
+                                                                                        savedTripsVisible = false
+                                                                                }
+                                                                                if (activeJourneyPlanner.selectedJourney?.identity() != active.snapshot.journey.identity()) {
+                                                                                        activeJourneyPlanner.openSavedJourney(active.snapshot)
+                                                                                }
+                                                                                activeJourneyPlanner.mapMode = true
+                                                                                catenaryStack = pushActiveJourneyDetails(
+                                                                                        catenaryStack, active.snapshot.journey.identity()
+                                                                                )
+                                                                        }
+                                                                )
+                                                        }
                                                 }
                                         }
 
@@ -5381,12 +5384,12 @@ class MainActivity : ComponentActivity() {
                                                         Modifier
                                                                 .align(Alignment.BottomCenter)
                                                                 .windowInsetsPadding(
-                                                                        // Keep the entire sheet above Android navigation controls, not just its content.
+                                                                        // Keep the whole layers panel above Android navigation controls.
                                                                         WindowInsets.safeDrawing.only(
                                                                                 WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal
                                                                         )
                                                                 )
-                                                                .zIndex(11f), // Above navigation and all other screen overlays.
+                                                                .zIndex(12f), // Layers panel must cover the journey bar and bottom menu.
                                                 enter = slideInVertically(initialOffsetY = { it }),
                                                 exit = slideOutVertically(targetOffsetY = { it })
                                         ) {

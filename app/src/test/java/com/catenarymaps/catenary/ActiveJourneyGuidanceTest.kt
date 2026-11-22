@@ -25,6 +25,19 @@ class ActiveJourneyGuidanceTest {
         assertTrue(shouldShowActiveJourney(active, epoch(departure), null))
     }
 
+    @Test fun journeyBarHidesOnlyForFocusedSearchInputs() {
+        val active = ActiveJourney(
+            SavedJourney(trip(DirectionsLeg("BUS", startTime = departure, endTime = arrival)), origin, destination),
+            epoch(departure)
+        )
+        val now = epoch(departure)
+        assertTrue(shouldDisplayActiveJourneyBar(active, now, null, false, false))
+        assertFalse(shouldDisplayActiveJourneyBar(active, now, null, true, false))
+        assertFalse(shouldDisplayActiveJourneyBar(active, now, null, false, true))
+        assertFalse(shouldDisplayActiveJourneyBar(null, now, null, false, false))
+        assertFalse(shouldDisplayActiveJourneyBar(active, now - 4 * 3600, null, false, false))
+    }
+
     @Test fun boardingSwitchesToAlightingAfterEffectiveDeparture() {
         val journey = trip(DirectionsLeg("BUS", startTime = departure, endTime = arrival,
             from = DirectionsPoint(name = "Origin"), to = DirectionsPoint(name = "Destination"),

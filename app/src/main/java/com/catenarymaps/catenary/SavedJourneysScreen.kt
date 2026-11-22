@@ -36,12 +36,15 @@ import kotlinx.coroutines.withContext
 
 @Composable
 internal fun HomeNavigation(
-    tripsSelected: Boolean, onExplore: () -> Unit, onTrips: () -> Unit, modifier: Modifier = Modifier
+    tripsSelected: Boolean, onExplore: () -> Unit, onTrips: () -> Unit,
+    includeBottomInset: Boolean = true, modifier: Modifier = Modifier
 ) {
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
         Row(
             Modifier.fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                .windowInsetsPadding(if (includeBottomInset)
+                    WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+                else WindowInsets(0, 0, 0, 0))
                 .selectableGroup()
                 .padding(horizontal = 8.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
