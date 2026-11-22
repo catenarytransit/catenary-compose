@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Aloita</string>
+    <string name="journey_tracking_end">Lopeta</string>
+    <string name="journey_tracking_departing">%1$s – lähtö klo %2$s, %3$d min kuluttua</string>
+    <string name="journey_tracking_transfer">Seuraava pysäkiltä %1$s: %2$s klo %3$s, %4$d min kuluttua</string>
+    <string name="journey_tracking_platform">Laituri %1$s</string>
+    <string name="journey_tracking_alight">Poistu pysäkillä %1$s %2$d min kuluttua</string>
+    <string name="journey_tracking_remaining">Jäljellä %1$s</string>
+    <string name="journey_tracking_arriving">Saapuminen: %1$s</string>
+</resources>

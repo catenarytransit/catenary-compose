@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Έναρξη</string>
+    <string name="journey_tracking_end">Τερματισμός</string>
+    <string name="journey_tracking_departing">%1$s – αναχώρηση στις %2$s σε %3$d λεπτά</string>
+    <string name="journey_tracking_transfer">Επόμενο από %1$s: %2$s στις %3$s σε %4$d λεπτά</string>
+    <string name="journey_tracking_platform">Αποβάθρα %1$s</string>
+    <string name="journey_tracking_alight">Αποβίβαση στο %1$s σε %2$d λεπτά</string>
+    <string name="journey_tracking_remaining">Απομένουν %1$s</string>
+    <string name="journey_tracking_arriving">Άφιξη στο %1$s</string>
+</resources>

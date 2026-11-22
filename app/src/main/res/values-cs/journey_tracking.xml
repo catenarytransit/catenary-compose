@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Spustit</string>
+    <string name="journey_tracking_end">Ukončit</string>
+    <string name="journey_tracking_departing">%1$s – odjezd v %2$s za %3$d min</string>
+    <string name="journey_tracking_transfer">Další z %1$s: %2$s v %3$s za %4$d min</string>
+    <string name="journey_tracking_platform">Nástupiště %1$s</string>
+    <string name="journey_tracking_alight">Vystupte na %1$s za %2$d min</string>
+    <string name="journey_tracking_remaining">Zbývá %1$s</string>
+    <string name="journey_tracking_arriving">Příjezd do %1$s</string>
+</resources>

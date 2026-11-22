@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Indítás</string>
+    <string name="journey_tracking_end">Befejezés</string>
+    <string name="journey_tracking_departing">%1$s – indulás: %2$s, %3$d perc múlva</string>
+    <string name="journey_tracking_transfer">Következő innen: %1$s – %2$s, %3$s, %4$d perc múlva</string>
+    <string name="journey_tracking_platform">Vágány: %1$s</string>
+    <string name="journey_tracking_alight">Leszállás: %1$s, %2$d perc múlva</string>
+    <string name="journey_tracking_remaining">Hátra van %1$s</string>
+    <string name="journey_tracking_arriving">Érkezés ide: %1$s</string>
+</resources>

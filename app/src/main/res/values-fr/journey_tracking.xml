@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Démarrer</string>
+    <string name="journey_tracking_end">Terminer</string>
+    <string name="journey_tracking_departing">%1$s – départ à %2$s dans %3$d min</string>
+    <string name="journey_tracking_transfer">Prochain départ de %1$s : %2$s à %3$s dans %4$d min</string>
+    <string name="journey_tracking_platform">Voie %1$s</string>
+    <string name="journey_tracking_alight">Descendre à %1$s dans %2$d min</string>
+    <string name="journey_tracking_remaining">Encore %1$s</string>
+    <string name="journey_tracking_arriving">Arrivée à %1$s</string>
+</resources>

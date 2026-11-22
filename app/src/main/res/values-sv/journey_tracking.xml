@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Starta</string>
+    <string name="journey_tracking_end">Avsluta</string>
+    <string name="journey_tracking_departing">%1$s – avgår kl. %2$s om %3$d min</string>
+    <string name="journey_tracking_transfer">Nästa från %1$s: %2$s kl. %3$s om %4$d min</string>
+    <string name="journey_tracking_platform">Spår %1$s</string>
+    <string name="journey_tracking_alight">Gå av vid %1$s om %2$d min</string>
+    <string name="journey_tracking_remaining">%1$s kvar</string>
+    <string name="journey_tracking_arriving">Ankomst till %1$s</string>
+</resources>

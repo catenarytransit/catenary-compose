@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">開始</string>
+    <string name="journey_tracking_end">終了</string>
+    <string name="journey_tracking_departing">%1$s – %2$s発（あと%3$d分）</string>
+    <string name="journey_tracking_transfer">次は%1$sから%2$s（%3$s発、あと%4$d分）</string>
+    <string name="journey_tracking_platform">のりば %1$s</string>
+    <string name="journey_tracking_alight">あと%2$d分で%1$sにて降車</string>
+    <string name="journey_tracking_remaining">残り%1$s</string>
+    <string name="journey_tracking_arriving">%1$sに到着</string>
+</resources>

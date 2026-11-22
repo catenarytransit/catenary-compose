@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journey_tracking_start">Starten</string>
+    <string name="journey_tracking_end">Beëindigen</string>
+    <string name="journey_tracking_departing">%1$s – vertrek om %2$s over %3$d min</string>
+    <string name="journey_tracking_transfer">Volgende vanaf %1$s: %2$s om %3$s over %4$d min</string>
+    <string name="journey_tracking_platform">Spoor %1$s</string>
+    <string name="journey_tracking_alight">Stap uit bij %1$s over %2$d min</string>
+    <string name="journey_tracking_remaining">Nog %1$s</string>
+    <string name="journey_tracking_arriving">Aankomst bij %1$s</string>
+</resources>
