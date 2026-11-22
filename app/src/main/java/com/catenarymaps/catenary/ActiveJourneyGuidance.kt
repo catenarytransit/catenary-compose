@@ -6,6 +6,12 @@ import android.content.SharedPreferences
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -31,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
@@ -136,6 +143,13 @@ internal fun shouldShowActiveJourney(
     val positionSafe = position ?: return false
     return haversineDistance(origin.first, origin.second, positionSafe.first, positionSafe.second) <= 5_000.0
 }
+
+/** Suppress eligible guidance while a search or journey endpoint field has focus. */
+internal fun shouldDisplayActiveJourneyBar(
+    active: ActiveJourney?, now: Long, position: Pair<Double, Double>?,
+    searchFocused: Boolean, plannerInputFocused: Boolean
+): Boolean = active != null && !searchFocused && !plannerInputFocused &&
+    shouldShowActiveJourney(active, now, position)
 
 /** No time-only completion while a usable device position still shows the rider away from the destination. */
 internal fun hasArrivedAtJourneyDestination(
@@ -256,22 +270,27 @@ internal fun ActiveJourneyBar(
         color = Color.Black, contentColor = Color.White, shadowElevation = 6.dp
     ) {
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 56.dp)
+            Modifier.fillMaxWidth()
+                // Keep the black surface flush with the screen edge while protecting content.
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+                .heightIn(min = 56.dp)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
         ) {
             if (progress is JourneyGuidance.FinalStreet) {
                 Icon(
                     if (progress.cycling) Icons.Default.DirectionsBike else Icons.Default.DirectionsWalk,
-                    contentDescription = null, tint = Color.White
+                    contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp)
                 )
             }
-            Text(text, modifier = Modifier.weight(1f), color = Color.White,
+            // Non-filling weight lets short guidance and its chevron center as one group,
+            // while wrapping longer translations without pushing the chevron offscreen.
+            Text(text, modifier = Modifier.weight(1f, fill = false), color = Color.White,
                 fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2, overflow = TextOverflow.Ellipsis)
+                textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Icon(Icons.Default.ChevronRight, stringResource(R.string.directions_show_details),
-                tint = Color.White)
+                modifier = Modifier.size(20.dp), tint = Color.White)
         }
     }
 }
