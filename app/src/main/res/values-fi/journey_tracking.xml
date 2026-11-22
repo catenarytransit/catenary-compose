@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Poistu pysäkillä %1$s %2$d min kuluttua</string>
     <string name="journey_tracking_remaining">Jäljellä %1$s</string>
     <string name="journey_tracking_arriving">Saapuminen: %1$s</string>
+    <string name="journey_tracking_switch_title">Aloitetaanko tämä matka?</string>
+    <string name="journey_tracking_switch_message">Sinulla on jo aktiivinen matka kohteeseen %1$s. Haluatko vaihtaa tähän matkaan? Voit tallentaa edellisen matkan saadaksesi ilmoituksia myöhemmin.</string>
+    <string name="journey_tracking_switch_dismiss">Peruuta</string>
+    <string name="journey_tracking_switch_confirm">Aloita matka</string>
+    <string name="journey_tracking_notification_channel">Aktiivinen matka</string>
+    <string name="journey_tracking_notification_channel_description">Nykyisen matkan eteneminen</string>
+    <string name="journey_tracking_notification_title">Matka kohteeseen %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Seuraava osuus %1$d/%2$d: %3$s – %4$s</string>
+    <string name="journey_tracking_notification_leg">Osuus %1$d/%2$d: %3$s – %4$s</string>
+    <string name="journey_tracking_walk">Kävely</string>
+    <string name="journey_tracking_cycle">Pyöräily</string>
 </resources>

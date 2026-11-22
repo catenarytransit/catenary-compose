@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Stå af ved %1$s om %2$d min</string>
     <string name="journey_tracking_remaining">%1$s tilbage</string>
     <string name="journey_tracking_arriving">Ankommer til %1$s</string>
+    <string name="journey_tracking_switch_title">Start denne rejse?</string>
+    <string name="journey_tracking_switch_message">Du har allerede en aktiv rejse til %1$s. Vil du skifte til denne rejse? Du kan gemme den tidligere rejse for at få beskeder senere.</string>
+    <string name="journey_tracking_switch_dismiss">Annuller</string>
+    <string name="journey_tracking_switch_confirm">Start rejse</string>
+    <string name="journey_tracking_notification_channel">Aktiv rejse</string>
+    <string name="journey_tracking_notification_channel_description">Status for din aktuelle rejse</string>
+    <string name="journey_tracking_notification_title">Rejse til %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Næste etape %1$d/%2$d: %3$s til %4$s</string>
+    <string name="journey_tracking_notification_leg">Etape %1$d/%2$d: %3$s til %4$s</string>
+    <string name="journey_tracking_walk">Til fods</string>
+    <string name="journey_tracking_cycle">Cykel</string>
 </resources>

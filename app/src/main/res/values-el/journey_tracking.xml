@@ -8,4 +8,15 @@
     <string name="journey_tracking_alight">Αποβίβαση στο %1$s σε %2$d λεπτά</string>
     <string name="journey_tracking_remaining">Απομένουν %1$s</string>
     <string name="journey_tracking_arriving">Άφιξη στο %1$s</string>
+    <string name="journey_tracking_switch_title">Έναρξη αυτής της διαδρομής;</string>
+    <string name="journey_tracking_switch_message">Έχετε ήδη ενεργή διαδρομή προς %1$s. Θέλετε να μεταβείτε σε αυτή; Μπορείτε να αποθηκεύσετε την προηγούμενη για να λαμβάνετε ειδοποιήσεις αργότερα.</string>
+    <string name="journey_tracking_switch_dismiss">Ακύρωση</string>
+    <string name="journey_tracking_switch_confirm">Έναρξη διαδρομής</string>
+    <string name="journey_tracking_notification_channel">Ενεργή διαδρομή</string>
+    <string name="journey_tracking_notification_channel_description">Πρόοδος της τρέχουσας διαδρομής</string>
+    <string name="journey_tracking_notification_title">Διαδρομή προς %1$s</string>
+    <string name="journey_tracking_notification_next_leg">Επόμενο σκέλος %1$d/%2$d: %3$s προς %4$s</string>
+    <string name="journey_tracking_notification_leg">Σκέλος %1$d/%2$d: %3$s προς %4$s</string>
+    <string name="journey_tracking_walk">Περπάτημα</string>
+    <string name="journey_tracking_cycle">Ποδήλατο</string>
 </resources>
