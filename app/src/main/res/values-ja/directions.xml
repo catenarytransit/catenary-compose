@@ -40,4 +40,14 @@
     <string name="directions_minutes">%1$d分</string>
     <string name="directions_hours_minutes">%1$d時間%2$d分</string>
     <string name="directions_ferry">フェリー</string>
+    <string name="directions_options_title">経路オプション</string>
+    <string name="directions_filter_transport">交通手段を絞り込む</string>
+    <string name="directions_mode_train">鉄道</string>
+    <string name="directions_mode_bus">バス</string>
+    <string name="directions_mode_metro">地下鉄</string>
+    <string name="directions_mode_tram">路面電車</string>
+    <string name="directions_mode_boat">船</string>
+    <string name="directions_mode_funicular">ケーブルカー・ラック式鉄道</string>
+    <string name="directions_mode_aerial_tramway">ロープウェイ</string>
+    <string name="directions_mode_coach_note">このフィルターが有効な場合、民間の長距離バスは除外されます。</string>
 </resources>
