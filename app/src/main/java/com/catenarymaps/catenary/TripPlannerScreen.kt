@@ -634,7 +634,7 @@ private fun JourneyOptionsContent(
             Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(stringResource(R.string.directions_options_title),
+            Text(stringResource(R.string.directions_advanced_search),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.titleLarge,
                 color = TripPlannerColors.content)
@@ -653,9 +653,12 @@ private fun JourneyOptionsContent(
             TransportModeOptions(planner)
         }
         HorizontalDivider()
-        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.End) {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.directions_done)) }
+        // Fixed footer stays accessible even while the settings scroll.
+        Button(
+            onClick = { planner.invalidate(); planner.options = DirectionsOptions() },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)
+        ) {
+            Text(stringResource(R.string.directions_reset))
         }
     }
 }
@@ -734,7 +737,6 @@ private fun StreetOptions(planner: TripPlannerViewModel) {
         Slider(value = options.egressSeconds, onValueChange = { update(options.copy(egressSeconds = it)) }, valueRange = 60f..3600f)
         Text(stringResource(R.string.directions_direct_limit, directionsDuration(options.directSeconds.toDouble())))
         Slider(value = options.directSeconds, onValueChange = { update(options.copy(directSeconds = it)) }, valueRange = 60f..3600f)
-        TextButton(onClick = { update(DirectionsOptions()) }) { Text(stringResource(R.string.directions_reset)) }
     }
 }
 
