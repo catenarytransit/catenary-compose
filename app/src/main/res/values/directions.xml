@@ -41,4 +41,14 @@
     <string name="directions_hours_minutes">%1$d h %2$d min</string>
     <string name="directions_ferry">Ferry</string>
     <string name="directions_clear_endpoint">Clear %1$s</string>
+    <string name="directions_options_title">Journey options</string>
+    <string name="directions_filter_transport">Filter means of transport</string>
+    <string name="directions_mode_train">Train</string>
+    <string name="directions_mode_bus">Bus</string>
+    <string name="directions_mode_metro">Metro</string>
+    <string name="directions_mode_tram">Tram</string>
+    <string name="directions_mode_boat">Boat</string>
+    <string name="directions_mode_funicular">Funicular / Cog Railway</string>
+    <string name="directions_mode_aerial_tramway">Aerial Tramway</string>
+    <string name="directions_mode_coach_note">Private coaches are excluded while this filter is enabled.</string>
 </resources>
