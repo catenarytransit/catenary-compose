@@ -49,6 +49,7 @@
     <string name="directions_mode_boat">船</string>
     <string name="directions_mode_funicular">ケーブルカー・ラック式鉄道</string>
     <string name="directions_mode_aerial_tramway">ロープウェイ</string>
+    <string name="directions_mode_coach">長距離バス</string>
     <string name="directions_mode_coach_note">このフィルターが有効な場合、民間の長距離バスは除外されます。</string>
     <string name="directions_advanced_search">詳細検索</string>
 </resources>
