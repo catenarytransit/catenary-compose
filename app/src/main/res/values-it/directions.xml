@@ -40,4 +40,14 @@
     <string name="directions_minutes">%1$d min</string>
     <string name="directions_hours_minutes">%1$d h %2$d min</string>
     <string name="directions_ferry">Traghetto</string>
+    <string name="directions_options_title">Opzioni di viaggio</string>
+    <string name="directions_filter_transport">Filtra i mezzi di trasporto</string>
+    <string name="directions_mode_train">Treno</string>
+    <string name="directions_mode_bus">Autobus</string>
+    <string name="directions_mode_metro">Metropolitana</string>
+    <string name="directions_mode_tram">Tram</string>
+    <string name="directions_mode_boat">Battello</string>
+    <string name="directions_mode_funicular">Funicolare / ferrovia a cremagliera</string>
+    <string name="directions_mode_aerial_tramway">Funivia</string>
+    <string name="directions_mode_coach_note">Gli autobus turistici privati sono esclusi quando il filtro è attivo.</string>
 </resources>
