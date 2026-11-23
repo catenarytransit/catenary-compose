@@ -50,4 +50,5 @@
     <string name="directions_mode_funicular">Funicular / comboio de cremalheira</string>
     <string name="directions_mode_aerial_tramway">Teleférico</string>
     <string name="directions_mode_coach_note">Os autocarros privados de longa distância são excluídos com este filtro ativo.</string>
+    <string name="directions_advanced_search">Pesquisa avançada</string>
 </resources>
