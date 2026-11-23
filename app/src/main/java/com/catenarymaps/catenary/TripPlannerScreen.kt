@@ -8,6 +8,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
@@ -580,10 +585,132 @@ private fun JourneyTimeControls(planner: TripPlannerViewModel, modifier: Modifie
             }
         }
     }
-    if (showOptions) AlertDialog(onDismissRequest = { showOptions = false },
-        title = { Text(stringResource(R.string.directions_speed_options)) },
-        text = { Column(Modifier.verticalScroll(rememberScrollState())) { StreetOptions(planner) } },
-        confirmButton = { TextButton(onClick = { showOptions = false }) { Text(stringResource(R.string.directions_done)) } })
+    if (showOptions) JourneyOptionsPopup(planner, onDismiss = { showOptions = false })
+}
+
+/** A swipeable, scrim-backed bottom sheet on phones and a bounded dialog on large displays. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun JourneyOptionsPopup(planner: TripPlannerViewModel, onDismiss: () -> Unit) {
+    val width = LocalConfiguration.current.screenWidthDp
+    val largeDisplay = width >= 1000
+    if (!largeDisplay) {
+        val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = state,
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = TripPlannerColors.card,
+            contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom) },
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            JourneyOptionsContent(planner, onDismiss, Modifier.fillMaxWidth().fillMaxHeight(0.90f))
+        }
+    } else {
+        Dialog(
+            onDismissRequest = onDismiss,
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(0.72f).fillMaxHeight(0.82f),
+                shape = RoundedCornerShape(24.dp),
+                color = TripPlannerColors.card,
+                tonalElevation = 6.dp
+            ) {
+                JourneyOptionsContent(planner, onDismiss, Modifier.fillMaxSize())
+            }
+        }
+    }
+}
+
+@Composable
+private fun JourneyOptionsContent(
+    planner: TripPlannerViewModel,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(stringResource(R.string.directions_options_title),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleLarge,
+                color = TripPlannerColors.content)
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.Default.Close, stringResource(R.string.directions_done))
+            }
+        }
+        HorizontalDivider()
+        Column(
+            modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            StreetOptions(planner)
+            HorizontalDivider()
+            TransportModeOptions(planner)
+        }
+        HorizontalDivider()
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.directions_done)) }
+        }
+    }
+}
+
+@Composable
+private fun TransportModeOptions(planner: TripPlannerViewModel) {
+    val options = planner.options
+    fun update(value: DirectionsOptions) { planner.invalidate(); planner.options = value }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable {
+            update(options.copy(filterTransportModes = !options.filterTransportModes))
+        },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(stringResource(R.string.directions_filter_transport), Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium, color = TripPlannerColors.content)
+        Switch(checked = options.filterTransportModes,
+            onCheckedChange = { update(options.copy(filterTransportModes = it)) })
+    }
+    Column(Modifier.fillMaxWidth().alpha(if (options.filterTransportModes) 1f else 0.38f)) {
+        val labels = listOf(
+            PublicTransportMode.TRAIN to R.string.directions_mode_train,
+            PublicTransportMode.BUS to R.string.directions_mode_bus,
+            PublicTransportMode.METRO to R.string.directions_mode_metro,
+            PublicTransportMode.TRAM to R.string.directions_mode_tram,
+            PublicTransportMode.BOAT to R.string.directions_mode_boat,
+            PublicTransportMode.FUNICULAR to R.string.directions_mode_funicular,
+            PublicTransportMode.AERIAL_TRAMWAY to R.string.directions_mode_aerial_tramway
+        )
+        labels.forEach { (mode, label) ->
+            val checked = mode in options.transportModes
+            Row(
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .clickable(enabled = options.filterTransportModes) {
+                        update(options.copy(transportModes = if (checked)
+                            options.transportModes - mode else options.transportModes + mode))
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = checked,
+                    enabled = options.filterTransportModes,
+                    onCheckedChange = {
+                        update(options.copy(transportModes = if (it)
+                            options.transportModes + mode else options.transportModes - mode))
+                    })
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(label), color = TripPlannerColors.content)
+            }
+        }
+        Text(stringResource(R.string.directions_mode_coach_note),
+            modifier = Modifier.padding(start = 12.dp, top = 8.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = TripPlannerColors.secondaryContent)
+    }
 }
 
 @Composable
