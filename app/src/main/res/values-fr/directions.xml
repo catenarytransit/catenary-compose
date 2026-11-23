@@ -41,4 +41,14 @@
     <string name="directions_hours_minutes">%1$d h %2$d min</string>
     <string name="directions_ferry">Ferry</string>
     <string name="directions_clear_endpoint">Effacer %1$s</string>
+    <string name="directions_options_title">Options d’itinéraire</string>
+    <string name="directions_filter_transport">Filtrer les moyens de transport</string>
+    <string name="directions_mode_train">Train</string>
+    <string name="directions_mode_bus">Bus</string>
+    <string name="directions_mode_metro">Métro</string>
+    <string name="directions_mode_tram">Tramway</string>
+    <string name="directions_mode_boat">Bateau</string>
+    <string name="directions_mode_funicular">Funiculaire / train à crémaillère</string>
+    <string name="directions_mode_aerial_tramway">Téléphérique</string>
+    <string name="directions_mode_coach_note">Les autocars privés sont exclus lorsque ce filtre est activé.</string>
 </resources>
