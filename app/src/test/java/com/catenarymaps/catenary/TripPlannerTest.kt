@@ -123,6 +123,33 @@ class TripPlannerTest {
         assertEquals("WALK", request["preTransitModes"]!!.jsonArray[0].jsonPrimitive.content)
     }
 
+    @Test fun coachIsSelectableWithoutEnablingUnrelatedModes() {
+        val options = DirectionsOptions(filterTransportModes = true,
+            transportModes = setOf(PublicTransportMode.COACH))
+        val modes = directionsRequest(from, to, 1793642246, false, options)
+            ["modeAndModeOfOperationFilter"]!!.jsonArray
+        assertEquals(1, modes.size)
+        assertFalse(modes[0].jsonObject["exclude"]!!.jsonPrimitive.boolean)
+        assertEquals(listOf("COACH"),
+            modes[0].jsonObject["ptModes"]!!.jsonArray.map { it.jsonPrimitive.content })
+    }
+
+    @Test fun defaultSelectionsIncludeCoachButLegacyChoicesStayUnchanged() {
+        val defaults = DirectionsOptions(filterTransportModes = true)
+        assertTrue(PublicTransportMode.COACH in defaults.transportModes)
+        val modes = directionsRequest(from, to, 1793642246, false, defaults)
+            ["modeAndModeOfOperationFilter"]!!.jsonArray[0]
+            .jsonObject["ptModes"]!!.jsonArray.map { it.jsonPrimitive.content }
+        assertTrue("COACH" in modes)
+
+        val previousSelection = PublicTransportMode.entries.toSet() - PublicTransportMode.COACH
+        val custom = DirectionsOptions(filterTransportModes = true, transportModes = previousSelection)
+        val selected = directionsRequest(from, to, 1793642246, false, custom)
+            ["modeAndModeOfOperationFilter"]!!.jsonArray[0]
+            .jsonObject["ptModes"]!!.jsonArray.map { it.jsonPrimitive.content }
+        assertFalse("COACH" in selected)
+    }
+
     @Test fun noSelectedModesSendsValidEmptyAllowList() {
         val request = directionsRequest(from, to, 1793642246, false,
             DirectionsOptions(filterTransportModes = true, transportModes = emptySet()))
