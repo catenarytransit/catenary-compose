@@ -50,4 +50,5 @@
     <string name="directions_mode_funicular">Kabelspoorweg / tandradbaan</string>
     <string name="directions_mode_aerial_tramway">Kabelbaan</string>
     <string name="directions_mode_coach_note">Particuliere touringcars worden uitgesloten wanneer dit filter aan staat.</string>
+    <string name="directions_advanced_search">Geavanceerd zoeken</string>
 </resources>
