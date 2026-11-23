@@ -40,6 +40,7 @@
     <string name="directions_minutes">%1$d min</string>
     <string name="directions_hours_minutes">%1$d h %2$d min</string>
     <string name="directions_ferry">Ferry</string>
+    <string name="directions_clear_endpoint">Limpar %1$s</string>
     <string name="directions_options_title">Opções de viagem</string>
     <string name="directions_filter_transport">Filtrar meios de transporte</string>
     <string name="directions_mode_train">Comboio</string>
@@ -50,6 +51,5 @@
     <string name="directions_mode_funicular">Funicular / comboio de cremalheira</string>
     <string name="directions_mode_aerial_tramway">Teleférico</string>
     <string name="directions_mode_coach">Autocarro de longa distância</string>
-    <string name="directions_mode_coach_note">Os autocarros privados de longa distância são excluídos com este filtro ativo.</string>
     <string name="directions_advanced_search">Pesquisa avançada</string>
 </resources>

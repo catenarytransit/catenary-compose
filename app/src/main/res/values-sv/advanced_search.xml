@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Rensa %1$s</string>
+    <string name="directions_options_title">Resealternativ</string>
+    <string name="directions_filter_transport">Filtrera färdmedel</string>
+    <string name="directions_mode_train">Tåg</string>
+    <string name="directions_mode_bus">Buss</string>
+    <string name="directions_mode_metro">Tunnelbana</string>
+    <string name="directions_mode_tram">Spårvagn</string>
+    <string name="directions_mode_boat">Båt</string>
+    <string name="directions_mode_funicular">Bergbana / kuggstångsbana</string>
+    <string name="directions_mode_aerial_tramway">Linbana</string>
+    <string name="directions_mode_coach">Långfärdsbuss</string>
+    <string name="directions_advanced_search">Avancerad sökning</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Tøm %1$s</string>
+    <string name="directions_options_title">Reisealternativer</string>
+    <string name="directions_filter_transport">Filtrer transportmidler</string>
+    <string name="directions_mode_train">Tog</string>
+    <string name="directions_mode_bus">Buss</string>
+    <string name="directions_mode_metro">T-bane</string>
+    <string name="directions_mode_tram">Trikk</string>
+    <string name="directions_mode_boat">Båt</string>
+    <string name="directions_mode_funicular">Kabelbane / tannhjulsbane</string>
+    <string name="directions_mode_aerial_tramway">Taubane</string>
+    <string name="directions_mode_coach">Ekspressbuss</string>
+    <string name="directions_advanced_search">Avansert søk</string>
+</resources>

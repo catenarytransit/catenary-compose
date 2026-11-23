@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Vymazať %1$s</string>
+    <string name="directions_options_title">Možnosti cesty</string>
+    <string name="directions_filter_transport">Filtrovať druhy dopravy</string>
+    <string name="directions_mode_train">Vlak</string>
+    <string name="directions_mode_bus">Autobus</string>
+    <string name="directions_mode_metro">Metro</string>
+    <string name="directions_mode_tram">Električka</string>
+    <string name="directions_mode_boat">Loď</string>
+    <string name="directions_mode_funicular">Pozemná lanovka / ozubnicová železnica</string>
+    <string name="directions_mode_aerial_tramway">Visutá lanovka</string>
+    <string name="directions_mode_coach">Diaľkový autobus</string>
+    <string name="directions_advanced_search">Rozšírené vyhľadávanie</string>
+</resources>

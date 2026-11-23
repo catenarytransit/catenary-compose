@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Ryd %1$s</string>
+    <string name="directions_options_title">Rejseindstillinger</string>
+    <string name="directions_filter_transport">Filtrer transportmidler</string>
+    <string name="directions_mode_train">Tog</string>
+    <string name="directions_mode_bus">Bus</string>
+    <string name="directions_mode_metro">Metro</string>
+    <string name="directions_mode_tram">Sporvogn</string>
+    <string name="directions_mode_boat">Båd</string>
+    <string name="directions_mode_funicular">Kabelbane / tandhjulsbane</string>
+    <string name="directions_mode_aerial_tramway">Svævebane</string>
+    <string name="directions_mode_coach">Fjernbus</string>
+    <string name="directions_advanced_search">Avanceret søgning</string>
+</resources>
