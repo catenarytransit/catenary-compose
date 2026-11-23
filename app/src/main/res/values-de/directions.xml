@@ -51,6 +51,5 @@
     <string name="directions_mode_funicular">Standseilbahn / Zahnradbahn</string>
     <string name="directions_mode_aerial_tramway">Luftseilbahn</string>
     <string name="directions_mode_coach">Fernbus</string>
-    <string name="directions_mode_coach_note">Private Fernbusse werden bei aktiviertem Filter ausgeschlossen.</string>
     <string name="directions_advanced_search">Erweiterte Suche</string>
 </resources>

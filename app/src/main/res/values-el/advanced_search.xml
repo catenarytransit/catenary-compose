@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Εκκαθάριση %1$s</string>
+    <string name="directions_options_title">Επιλογές διαδρομής</string>
+    <string name="directions_filter_transport">Φιλτράρισμα μέσων μεταφοράς</string>
+    <string name="directions_mode_train">Τρένο</string>
+    <string name="directions_mode_bus">Λεωφορείο</string>
+    <string name="directions_mode_metro">Μετρό</string>
+    <string name="directions_mode_tram">Τραμ</string>
+    <string name="directions_mode_boat">Πλοίο</string>
+    <string name="directions_mode_funicular">Επίγειο τελεφερίκ / οδοντωτός σιδηρόδρομος</string>
+    <string name="directions_mode_aerial_tramway">Εναέριο τελεφερίκ</string>
+    <string name="directions_mode_coach">Υπεραστικό λεωφορείο</string>
+    <string name="directions_advanced_search">Σύνθετη αναζήτηση</string>
+</resources>

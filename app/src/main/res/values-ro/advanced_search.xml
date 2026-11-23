@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Șterge %1$s</string>
+    <string name="directions_options_title">Opțiuni de călătorie</string>
+    <string name="directions_filter_transport">Filtrează mijloacele de transport</string>
+    <string name="directions_mode_train">Tren</string>
+    <string name="directions_mode_bus">Autobuz</string>
+    <string name="directions_mode_metro">Metrou</string>
+    <string name="directions_mode_tram">Tramvai</string>
+    <string name="directions_mode_boat">Vapor</string>
+    <string name="directions_mode_funicular">Funicular / cale ferată cu cremalieră</string>
+    <string name="directions_mode_aerial_tramway">Telecabină</string>
+    <string name="directions_mode_coach">Autocar</string>
+    <string name="directions_advanced_search">Căutare avansată</string>
+</resources>

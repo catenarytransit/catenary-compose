@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Изчисти %1$s</string>
+    <string name="directions_options_title">Опции за пътуване</string>
+    <string name="directions_filter_transport">Филтриране по вид транспорт</string>
+    <string name="directions_mode_train">Влак</string>
+    <string name="directions_mode_bus">Автобус</string>
+    <string name="directions_mode_metro">Метро</string>
+    <string name="directions_mode_tram">Трамвай</string>
+    <string name="directions_mode_boat">Кораб</string>
+    <string name="directions_mode_funicular">Фуникуляр / зъбчата железница</string>
+    <string name="directions_mode_aerial_tramway">Въжена линия</string>
+    <string name="directions_mode_coach">Междуградски автобус</string>
+    <string name="directions_advanced_search">Разширено търсене</string>
+</resources>

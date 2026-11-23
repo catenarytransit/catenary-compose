@@ -40,6 +40,7 @@
     <string name="directions_minutes">%1$d分钟</string>
     <string name="directions_hours_minutes">%1$d小时%2$d分钟</string>
     <string name="directions_ferry">轮渡</string>
+    <string name="directions_clear_endpoint">清除%1$s</string>
     <string name="directions_options_title">路线选项</string>
     <string name="directions_filter_transport">筛选交通方式</string>
     <string name="directions_mode_train">火车</string>
@@ -50,6 +51,5 @@
     <string name="directions_mode_funicular">缆索铁路 / 齿轨铁路</string>
     <string name="directions_mode_aerial_tramway">空中缆车</string>
     <string name="directions_mode_coach">长途客车</string>
-    <string name="directions_mode_coach_note">启用筛选时将排除私人长途客车。</string>
     <string name="directions_advanced_search">高级搜索</string>
 </resources>

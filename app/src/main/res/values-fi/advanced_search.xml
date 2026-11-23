@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Tyhjennä %1$s</string>
+    <string name="directions_options_title">Matkan asetukset</string>
+    <string name="directions_filter_transport">Suodata kulkuvälineitä</string>
+    <string name="directions_mode_train">Juna</string>
+    <string name="directions_mode_bus">Bussi</string>
+    <string name="directions_mode_metro">Metro</string>
+    <string name="directions_mode_tram">Raitiovaunu</string>
+    <string name="directions_mode_boat">Laiva</string>
+    <string name="directions_mode_funicular">Funikulaari / hammasratajuna</string>
+    <string name="directions_mode_aerial_tramway">Ilmaköysirata</string>
+    <string name="directions_mode_coach">Kaukoliikenteen linja-auto</string>
+    <string name="directions_advanced_search">Tarkennettu haku</string>
+</resources>

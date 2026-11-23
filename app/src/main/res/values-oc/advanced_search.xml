@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Escafar %1$s</string>
+    <string name="directions_options_title">Opcions de trajècte</string>
+    <string name="directions_filter_transport">Filtrar los mejans de transpòrt</string>
+    <string name="directions_mode_train">Tren</string>
+    <string name="directions_mode_bus">Bus</string>
+    <string name="directions_mode_metro">Mètro</string>
+    <string name="directions_mode_tram">Tramvai</string>
+    <string name="directions_mode_boat">Batèu</string>
+    <string name="directions_mode_funicular">Fonicular / camin de fèrre de cremalhièra</string>
+    <string name="directions_mode_aerial_tramway">Teleferic</string>
+    <string name="directions_mode_coach">Autocar</string>
+    <string name="directions_advanced_search">Recèrca avançada</string>
+</resources>

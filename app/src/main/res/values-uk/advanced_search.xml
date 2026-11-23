@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">Очистити %1$s</string>
+    <string name="directions_options_title">Параметри поїздки</string>
+    <string name="directions_filter_transport">Фільтрувати види транспорту</string>
+    <string name="directions_mode_train">Поїзд</string>
+    <string name="directions_mode_bus">Автобус</string>
+    <string name="directions_mode_metro">Метро</string>
+    <string name="directions_mode_tram">Трамвай</string>
+    <string name="directions_mode_boat">Судно</string>
+    <string name="directions_mode_funicular">Фунікулер / зубчаста залізниця</string>
+    <string name="directions_mode_aerial_tramway">Канатна дорога</string>
+    <string name="directions_mode_coach">Міжміський автобус</string>
+    <string name="directions_advanced_search">Розширений пошук</string>
+</resources>

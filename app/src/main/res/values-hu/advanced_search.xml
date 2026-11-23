@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">%1$s törlése</string>
+    <string name="directions_options_title">Útvonalbeállítások</string>
+    <string name="directions_filter_transport">Közlekedési módok szűrése</string>
+    <string name="directions_mode_train">Vonat</string>
+    <string name="directions_mode_bus">Busz</string>
+    <string name="directions_mode_metro">Metró</string>
+    <string name="directions_mode_tram">Villamos</string>
+    <string name="directions_mode_boat">Hajó</string>
+    <string name="directions_mode_funicular">Sikló / fogaskerekű vasút</string>
+    <string name="directions_mode_aerial_tramway">Drótkötélpálya</string>
+    <string name="directions_mode_coach">Távolsági busz</string>
+    <string name="directions_advanced_search">Speciális keresés</string>
+</resources>

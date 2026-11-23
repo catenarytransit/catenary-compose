@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="directions_clear_endpoint">清除%1$s</string>
+    <string name="directions_options_title">行程選項</string>
+    <string name="directions_filter_transport">篩選交通工具</string>
+    <string name="directions_mode_train">火車</string>
+    <string name="directions_mode_bus">巴士</string>
+    <string name="directions_mode_metro">地鐵</string>
+    <string name="directions_mode_tram">電車</string>
+    <string name="directions_mode_boat">船</string>
+    <string name="directions_mode_funicular">纜索鐵路／齒軌鐵路</string>
+    <string name="directions_mode_aerial_tramway">空中纜車</string>
+    <string name="directions_mode_coach">長途巴士</string>
+    <string name="directions_advanced_search">進階搜尋</string>
+</resources>
