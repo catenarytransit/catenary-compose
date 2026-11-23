@@ -93,10 +93,18 @@ data class DirectionsPlan(
     val previousPageCursor: String? = null, val nextPageCursor: String? = null
 )
 
+/** Public-transport categories accepted by Edelweiss's OJP-style mode filter. */
+@Serializable
+enum class PublicTransportMode {
+    TRAIN, BUS, METRO, TRAM, BOAT, FUNICULAR, AERIAL_TRAMWAY
+}
+
 @Serializable
 data class DirectionsOptions(
     val cycling: Boolean = false, val walkingPace: Float = 840f, val cyclingKmh: Float = 16f,
-    val accessSeconds: Float = 900f, val egressSeconds: Float = 900f, val directSeconds: Float = 1800f
+    val accessSeconds: Float = 900f, val egressSeconds: Float = 900f, val directSeconds: Float = 1800f,
+    val filterTransportModes: Boolean = false,
+    val transportModes: Set<PublicTransportMode> = PublicTransportMode.entries.toSet()
 )
 
 /** Same request contract and units as catenary-web's directions/edelweiss.ts. */
@@ -121,6 +129,26 @@ fun directionsRequest(from: DirectionsLocation, to: DirectionsLocation, time: Lo
         put("maxPreTransitTime", budget(options.accessSeconds))
         put("maxPostTransitTime", budget(options.egressSeconds))
         put("maxDirectTime", budget(options.directSeconds)); put("detailed_legs", true)
+        // Missing filter means unrestricted routing, including COACH and unknown classes.
+        if (options.filterTransportModes) {
+            val selected = PublicTransportMode.entries.filter { it in options.transportModes }
+            put("modeAndModeOfOperationFilter", buildJsonArray {
+                add(buildJsonObject {
+                    put("exclude", false)
+                    // Edelweiss rejects an empty ptModes list. Including then excluding
+                    // TRAIN produces an empty allowed mask when every box is unchecked.
+                    put("ptModes", buildJsonArray {
+                        (selected.ifEmpty { listOf(PublicTransportMode.TRAIN) }).forEach { add(it.name) }
+                    })
+                })
+                if (selected.isEmpty()) {
+                    add(buildJsonObject {
+                        put("exclude", true)
+                        put("ptModes", buildJsonArray { add(PublicTransportMode.TRAIN.name) })
+                    })
+                }
+            })
+        }
         put("timetable_view", true); put("timeout_seconds", 8)
     }
 }

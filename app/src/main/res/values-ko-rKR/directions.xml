@@ -40,4 +40,15 @@
     <string name="directions_minutes">%1$d분</string>
     <string name="directions_hours_minutes">%1$d시간 %2$d분</string>
     <string name="directions_ferry">페리</string>
+    <string name="directions_options_title">경로 옵션</string>
+    <string name="directions_filter_transport">교통수단 필터링</string>
+    <string name="directions_mode_train">기차</string>
+    <string name="directions_mode_bus">버스</string>
+    <string name="directions_mode_metro">지하철</string>
+    <string name="directions_mode_tram">트램</string>
+    <string name="directions_mode_boat">선박</string>
+    <string name="directions_mode_funicular">강삭철도 / 톱니바퀴 철도</string>
+    <string name="directions_mode_aerial_tramway">케이블카</string>
+    <string name="directions_mode_coach_note">필터를 켜면 민간 장거리 버스가 제외됩니다.</string>
+    <string name="directions_advanced_search">고급 검색</string>
 </resources>

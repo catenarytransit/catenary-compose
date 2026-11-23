@@ -100,6 +100,40 @@ class TripPlannerTest {
         assertNull(connectionPageAtEdge(1, 15, 21, 20, prefetchItems = 4))
     }
 
+    @Test fun modeFilterIsAbsentUnlessEnabled() {
+        val defaultRequest = directionsRequest(from, to, 1793642246, false, DirectionsOptions())
+        assertFalse(defaultRequest.containsKey("modeAndModeOfOperationFilter"))
+        val inactive = DirectionsOptions(transportModes = setOf(PublicTransportMode.TRAIN))
+        assertFalse(directionsRequest(from, to, 1793642246, false, inactive)
+            .containsKey("modeAndModeOfOperationFilter"))
+    }
+
+    @Test fun modeFilterUsesBackendOjpContract() {
+        val options = DirectionsOptions(
+            filterTransportModes = true,
+            transportModes = setOf(PublicTransportMode.TRAIN, PublicTransportMode.METRO,
+                PublicTransportMode.FUNICULAR, PublicTransportMode.AERIAL_TRAMWAY)
+        )
+        val request = directionsRequest(from, to, 1793642246, false, options)
+        val entries = request["modeAndModeOfOperationFilter"]!!.jsonArray
+        assertEquals(1, entries.size)
+        assertFalse(entries[0].jsonObject["exclude"]!!.jsonPrimitive.boolean)
+        assertEquals(setOf("TRAIN", "METRO", "FUNICULAR", "AERIAL_TRAMWAY"),
+            entries[0].jsonObject["ptModes"]!!.jsonArray.map { it.jsonPrimitive.content }.toSet())
+        assertEquals("WALK", request["preTransitModes"]!!.jsonArray[0].jsonPrimitive.content)
+    }
+
+    @Test fun noSelectedModesSendsValidEmptyAllowList() {
+        val request = directionsRequest(from, to, 1793642246, false,
+            DirectionsOptions(filterTransportModes = true, transportModes = emptySet()))
+        val entries = request["modeAndModeOfOperationFilter"]!!.jsonArray
+        assertEquals(2, entries.size)
+        assertFalse(entries[0].jsonObject["exclude"]!!.jsonPrimitive.boolean)
+        assertTrue(entries[1].jsonObject["exclude"]!!.jsonPrimitive.boolean)
+        assertEquals("TRAIN", entries[0].jsonObject["ptModes"]!!.jsonArray.single().jsonPrimitive.content)
+        assertEquals("TRAIN", entries[1].jsonObject["ptModes"]!!.jsonArray.single().jsonPrimitive.content)
+    }
+
     @Test fun requestUsesExclusiveTimeAndSiUnits() {
         val depart = directionsRequest(from, to, 1793642246, false, DirectionsOptions())
         assertEquals(1793642246L, depart["departure_unix_seconds"]!!.jsonPrimitive.long)
