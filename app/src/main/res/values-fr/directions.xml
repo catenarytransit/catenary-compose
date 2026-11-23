@@ -50,6 +50,7 @@
     <string name="directions_mode_boat">Bateau</string>
     <string name="directions_mode_funicular">Funiculaire / train à crémaillère</string>
     <string name="directions_mode_aerial_tramway">Téléphérique</string>
+    <string name="directions_mode_coach">Autocar</string>
     <string name="directions_mode_coach_note">Les autocars privés sont exclus lorsque ce filtre est activé.</string>
     <string name="directions_advanced_search">Recherche avancée</string>
 </resources>
