@@ -40,4 +40,14 @@
     <string name="directions_minutes">%1$d min</string>
     <string name="directions_hours_minutes">%1$d u %2$d min</string>
     <string name="directions_ferry">Veerboot</string>
+    <string name="directions_options_title">Reisopties</string>
+    <string name="directions_filter_transport">Vervoermiddelen filteren</string>
+    <string name="directions_mode_train">Trein</string>
+    <string name="directions_mode_bus">Bus</string>
+    <string name="directions_mode_metro">Metro</string>
+    <string name="directions_mode_tram">Tram</string>
+    <string name="directions_mode_boat">Boot</string>
+    <string name="directions_mode_funicular">Kabelspoorweg / tandradbaan</string>
+    <string name="directions_mode_aerial_tramway">Kabelbaan</string>
+    <string name="directions_mode_coach_note">Particuliere touringcars worden uitgesloten wanneer dit filter aan staat.</string>
 </resources>
