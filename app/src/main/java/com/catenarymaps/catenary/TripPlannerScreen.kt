@@ -684,7 +684,8 @@ private fun TransportModeOptions(planner: TripPlannerViewModel) {
             PublicTransportMode.TRAM to R.string.directions_mode_tram,
             PublicTransportMode.BOAT to R.string.directions_mode_boat,
             PublicTransportMode.FUNICULAR to R.string.directions_mode_funicular,
-            PublicTransportMode.AERIAL_TRAMWAY to R.string.directions_mode_aerial_tramway
+            PublicTransportMode.AERIAL_TRAMWAY to R.string.directions_mode_aerial_tramway,
+            PublicTransportMode.COACH to R.string.directions_mode_coach
         )
         labels.forEach { (mode, label) ->
             val checked = mode in options.transportModes
@@ -707,10 +708,6 @@ private fun TransportModeOptions(planner: TripPlannerViewModel) {
                 Text(stringResource(label), color = TripPlannerColors.content)
             }
         }
-        Text(stringResource(R.string.directions_mode_coach_note),
-            modifier = Modifier.padding(start = 12.dp, top = 8.dp),
-            style = MaterialTheme.typography.bodySmall,
-            color = TripPlannerColors.secondaryContent)
     }
 }
 
