@@ -96,7 +96,7 @@ data class DirectionsPlan(
 /** Public-transport categories accepted by Edelweiss's OJP-style mode filter. */
 @Serializable
 enum class PublicTransportMode {
-    TRAIN, BUS, METRO, TRAM, BOAT, FUNICULAR, AERIAL_TRAMWAY
+    TRAIN, BUS, METRO, TRAM, BOAT, FUNICULAR, AERIAL_TRAMWAY, COACH
 }
 
 @Serializable
