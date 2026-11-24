@@ -55,7 +55,7 @@ class ConnectionRouteSortingTest {
     fun sortsLargeMixedListsWithoutTimSortFailure() {
         val random = Random(4322)
         val names = (0..100).map { it.toString() } +
-            (0..100).map { "${it}A" } + listOf("", "02", "2147483648")
+                (0..100).map { "${it}A" } + listOf("", "02", "2147483648")
         val expected = names.sortedWith(comparator)
         repeat(100) {
             assertEquals(expected, names.shuffled(random).sortedWith(comparator))

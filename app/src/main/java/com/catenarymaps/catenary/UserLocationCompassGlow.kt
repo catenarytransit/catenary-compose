@@ -116,10 +116,13 @@ private fun rememberCompassHeading(): Float? {
                     when (view.display?.rotation ?: Surface.ROTATION_0) {
                         Surface.ROTATION_90 ->
                             SensorManager.AXIS_Y to SensorManager.AXIS_MINUS_X
+
                         Surface.ROTATION_180 ->
                             SensorManager.AXIS_MINUS_X to SensorManager.AXIS_MINUS_Y
+
                         Surface.ROTATION_270 ->
                             SensorManager.AXIS_MINUS_Y to SensorManager.AXIS_X
+
                         else -> SensorManager.AXIS_X to SensorManager.AXIS_Y
                     }
 
@@ -240,6 +243,7 @@ private fun rememberCompassHeading(): Float? {
                             unregisterSensors()
                             heading = null
                         }
+
                         else -> Unit
                     }
                 }

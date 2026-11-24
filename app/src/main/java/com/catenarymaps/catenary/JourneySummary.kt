@@ -51,11 +51,18 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun JourneySummary(
-    planner: TripPlannerViewModel, streetUsUnits: Boolean,
-    collapseFraction: Float = planner.detailsCollapse, modifier: Modifier = Modifier,
-    showBack: Boolean = true, showMapAction: Boolean = true, onSavedChanged: () -> Unit = {}, client: HttpClient,
-    onHome: () -> Unit, onBack: (() -> Unit)? = null,
-    landscapeStrip: Boolean = false, detailsContent: (@Composable () -> Unit)? = null
+    planner: TripPlannerViewModel,
+    streetUsUnits: Boolean,
+    collapseFraction: Float = planner.detailsCollapse,
+    modifier: Modifier = Modifier,
+    showBack: Boolean = true,
+    showMapAction: Boolean = true,
+    onSavedChanged: () -> Unit = {},
+    client: HttpClient,
+    onHome: () -> Unit,
+    onBack: (() -> Unit)? = null,
+    landscapeStrip: Boolean = false,
+    detailsContent: (@Composable () -> Unit)? = null
 ) {
     val journey = planner.selectedJourney ?: return
     val visibleJourney = rememberLiveJourney(journey)
@@ -70,12 +77,14 @@ internal fun JourneySummary(
     ) { /* Guidance continues even when notifications are denied. */ }
     val requestNotificationsOnce: () -> Unit = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !notificationPrefs.getBoolean("notification_permission_requested", false)) {
+            !notificationPrefs.getBoolean("notification_permission_requested", false)
+        ) {
             val granted = ContextCompat.checkSelfPermission(
                 activityContext, Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
             if (notificationPrefs.edit().putBoolean("notification_permission_requested", true)
-                    .commit() && !granted) {
+                    .commit() && !granted
+            ) {
                 requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
@@ -97,15 +106,20 @@ internal fun JourneySummary(
     }
     LaunchedEffect(identity) {
         try {
-            saved = withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.contains(identity) } }
+            saved =
+                withContext(Dispatchers.IO) { SavedJourneyStore(context).use { it.contains(identity) } }
             // An already-saved journey indicates the feature was used on an earlier visit.
             if (saved && !hasBookmarkedTrip) {
                 bookmarkOnboarding.markBookmarkedTrip()
                 hasBookmarkedTrip = true
             }
-        } catch (e: CancellationException) { throw e }
-        catch (_: Exception) { failed = true }
-        finally { busy = false }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            failed = true
+        } finally {
+            busy = false
+        }
     }
     val showBookmarkTooltip = shouldShowBookmarkTooltip(hasBookmarkedTrip, saved, busy, saveable)
     val bookmarkTooltipState = rememberTooltipState(isPersistent = true)
@@ -113,136 +127,172 @@ internal fun JourneySummary(
         if (showBookmarkTooltip) bookmarkTooltipState.show() else bookmarkTooltipState.dismiss()
     }
     val actionContent: @Composable BoxScope.() -> Unit = {
-            Row(Modifier.align(androidx.compose.ui.Alignment.BottomStart).padding(start = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TooltipBox(
-                    // Always below the bookmark: Material 3 points its caret upward.
-                    positionProvider = rememberBookmarkTooltipPositionProvider(),
-                    tooltip = {
-                        RichTooltip(
-                            modifier = Modifier.widthIn(max = 280.dp)
-                                .semantics { liveRegion = LiveRegionMode.Polite },
-                            caretShape = TooltipDefaults.caretShape()
-                        ) {
-                            Text(stringResource(R.string.directions_bookmark_tooltip))
-                        }
-                    },
-                    state = bookmarkTooltipState,
-                    enableUserInput = false
-                ) {
-                    SummaryAction(
-                        enabled = !busy && (saved || saveable),
-                        onClick = {
-                            if (!saved && !journey.canBeSaved()) return@SummaryAction
-                            busy = true; failed = false
-                            val wasSaved = saved
-                            val snapshot = SavedJourney(journey, planner.origin, planner.destination)
-                            scope.launch {
-                                try {
-                                    val namedSnapshot = if (wasSaved) snapshot else snapshot.withNamedCurrentLocations { location ->
-                                        reverseMapLocationName(client, location.lat, location.lon, language)
-                                    }
-                                    val changed = withContext(Dispatchers.IO) {
-                                        // Geocoding may have crossed the journey's arrival time.
-                                        if (!wasSaved && !journey.canBeSaved()) return@withContext false
-                                        SavedJourneyStore(context).use { store ->
-                                            if (wasSaved) store.remove(identity) else store.save(namedSnapshot)
-                                        }
-                                        true
-                                    }
-                                    if (!changed) { saveable = false; return@launch }
-                                    saved = !wasSaved
-                                    if (!wasSaved) {
-                                        // Hide the guidance permanently only after storage succeeds.
-                                        bookmarkOnboarding.markBookmarkedTrip()
-                                        hasBookmarkedTrip = true
-                                        // Request only after a first successful save, and only once
-                                        // even if the user declines. Android 12 and earlier are exempt.
-                                        requestNotificationsOnce()
-                                    }
-                                    onSavedChanged()
-                                } catch (e: CancellationException) { throw e }
-                                catch (_: Exception) { failed = true }
-                                finally { busy = false }
-                            }
-                        }
+        Row(
+            Modifier
+                .align(androidx.compose.ui.Alignment.BottomStart)
+                .padding(start = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            TooltipBox(
+                // Always below the bookmark: Material 3 points its caret upward.
+                positionProvider = rememberBookmarkTooltipPositionProvider(),
+                tooltip = {
+                    RichTooltip(
+                        modifier = Modifier
+                            .widthIn(max = 280.dp)
+                            .semantics { liveRegion = LiveRegionMode.Polite },
+                        caretShape = TooltipDefaults.caretShape()
                     ) {
-                        Icon(if (saved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                            stringResource(if (saved) R.string.directions_unsave_trip else R.string.directions_save_trip))
-                    }
-                }
-                if (showMapAction && !planner.streetOnly) SummaryAction(onClick = { planner.mapMode = !planner.usingMap }) {
-                    Icon(if (planner.usingMap) Icons.AutoMirrored.Filled.List else Icons.Default.Map,
-                        stringResource(if (planner.usingMap) R.string.directions_list_view else R.string.directions_map_view))
-                }
-            }
-            // Every summary variant (planner, map and saved journeys) uses the same active trip state.
-            val existingJourney = ActiveJourneySession.current
-            val tracking = existingJourney?.snapshot?.journey?.identity() == identity
-            var confirmSwitch by remember(identity) { mutableStateOf(false) }
-            val startJourney: () -> Unit = {
-                ActiveJourneySession.start(SavedJourney(journey, planner.origin, planner.destination))
-                requestNotificationsOnce()
-            }
-            val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-            Button(
-                onClick = {
-                    when {
-                        tracking -> ActiveJourneySession.end(identity)
-                        existingJourney != null -> confirmSwitch = true
-                        else -> startJourney()
+                        Text(stringResource(R.string.directions_bookmark_tooltip))
                     }
                 },
-                modifier = Modifier.align(androidx.compose.ui.Alignment.BottomEnd)
-                    .padding(end = 12.dp).height(44.dp),
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (tracking) {
-                        if (darkTheme) Color(0xFFFCA5A5) else Color(0xFFB91C1C)
-                    } else {
-                        if (darkTheme) Color(0xFF93C5FD) else Color(0xFF1D4ED8)
-                    },
-                    contentColor = if (tracking) {
-                        if (darkTheme) Color(0xFF7F1D1D) else Color.White
-                    } else {
-                        if (darkTheme) Color(0xFF172554) else Color.White
-                    }
-                )
+                state = bookmarkTooltipState,
+                enableUserInput = false
             ) {
-                Text(stringResource(if (tracking) R.string.journey_tracking_end else R.string.journey_tracking_start),
-                    fontWeight = FontWeight.SemiBold)
-            }
-            if (confirmSwitch) {
-                val currentDestination = existingJourney?.snapshot?.destination?.name
-                    ?.takeIf { it.isNotBlank() }
-                    ?: existingJourney?.snapshot?.journey?.legs?.lastOrNull()?.to?.name
-                        ?.takeIf { it.isNotBlank() }
-                    ?: stringResource(R.string.app_name)
-                AlertDialog(
-                    onDismissRequest = { confirmSwitch = false },
-                    title = { Text(stringResource(R.string.journey_tracking_switch_title)) },
-                    text = {
-                        Text(stringResource(R.string.journey_tracking_switch_message, currentDestination))
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { confirmSwitch = false }) {
-                            Text(stringResource(R.string.journey_tracking_switch_dismiss))
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            confirmSwitch = false
-                            startJourney()
-                        }) {
-                            Text(stringResource(R.string.journey_tracking_switch_confirm))
+                SummaryAction(
+                    enabled = !busy && (saved || saveable),
+                    onClick = {
+                        if (!saved && !journey.canBeSaved()) return@SummaryAction
+                        busy = true; failed = false
+                        val wasSaved = saved
+                        val snapshot = SavedJourney(journey, planner.origin, planner.destination)
+                        scope.launch {
+                            try {
+                                val namedSnapshot =
+                                    if (wasSaved) snapshot else snapshot.withNamedCurrentLocations { location ->
+                                        reverseMapLocationName(
+                                            client,
+                                            location.lat,
+                                            location.lon,
+                                            language
+                                        )
+                                    }
+                                val changed = withContext(Dispatchers.IO) {
+                                    // Geocoding may have crossed the journey's arrival time.
+                                    if (!wasSaved && !journey.canBeSaved()) return@withContext false
+                                    SavedJourneyStore(context).use { store ->
+                                        if (wasSaved) store.remove(identity) else store.save(
+                                            namedSnapshot
+                                        )
+                                    }
+                                    true
+                                }
+                                if (!changed) {
+                                    saveable = false; return@launch
+                                }
+                                saved = !wasSaved
+                                if (!wasSaved) {
+                                    // Hide the guidance permanently only after storage succeeds.
+                                    bookmarkOnboarding.markBookmarkedTrip()
+                                    hasBookmarkedTrip = true
+                                    // Request only after a first successful save, and only once
+                                    // even if the user declines. Android 12 and earlier are exempt.
+                                    requestNotificationsOnce()
+                                }
+                                onSavedChanged()
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                failed = true
+                            } finally {
+                                busy = false
+                            }
                         }
                     }
+                ) {
+                    Icon(
+                        if (saved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        stringResource(if (saved) R.string.directions_unsave_trip else R.string.directions_save_trip)
+                    )
+                }
+            }
+            if (showMapAction && !planner.streetOnly) SummaryAction(onClick = {
+                planner.mapMode = !planner.usingMap
+            }) {
+                Icon(
+                    if (planner.usingMap) Icons.AutoMirrored.Filled.List else Icons.Default.Map,
+                    stringResource(if (planner.usingMap) R.string.directions_list_view else R.string.directions_map_view)
                 )
             }
+        }
+        // Every summary variant (planner, map and saved journeys) uses the same active trip state.
+        val existingJourney = ActiveJourneySession.current
+        val tracking = existingJourney?.snapshot?.journey?.identity() == identity
+        var confirmSwitch by remember(identity) { mutableStateOf(false) }
+        val startJourney: () -> Unit = {
+            ActiveJourneySession.start(SavedJourney(journey, planner.origin, planner.destination))
+            requestNotificationsOnce()
+        }
+        val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+        Button(
+            onClick = {
+                when {
+                    tracking -> ActiveJourneySession.end(identity)
+                    existingJourney != null -> confirmSwitch = true
+                    else -> startJourney()
+                }
+            },
+            modifier = Modifier
+                .align(androidx.compose.ui.Alignment.BottomEnd)
+                .padding(end = 12.dp)
+                .height(44.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (tracking) {
+                    if (darkTheme) Color(0xFFFCA5A5) else Color(0xFFB91C1C)
+                } else {
+                    if (darkTheme) Color(0xFF93C5FD) else Color(0xFF1D4ED8)
+                },
+                contentColor = if (tracking) {
+                    if (darkTheme) Color(0xFF7F1D1D) else Color.White
+                } else {
+                    if (darkTheme) Color(0xFF172554) else Color.White
+                }
+            )
+        ) {
+            Text(
+                stringResource(if (tracking) R.string.journey_tracking_end else R.string.journey_tracking_start),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        if (confirmSwitch) {
+            val currentDestination = existingJourney?.snapshot?.destination?.name
+                ?.takeIf { it.isNotBlank() }
+                ?: existingJourney?.snapshot?.journey?.legs?.lastOrNull()?.to?.name
+                    ?.takeIf { it.isNotBlank() }
+                ?: stringResource(R.string.app_name)
+            AlertDialog(
+                onDismissRequest = { confirmSwitch = false },
+                title = { Text(stringResource(R.string.journey_tracking_switch_title)) },
+                text = {
+                    Text(
+                        stringResource(
+                            R.string.journey_tracking_switch_message,
+                            currentDestination
+                        )
+                    )
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmSwitch = false }) {
+                        Text(stringResource(R.string.journey_tracking_switch_dismiss))
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirmSwitch = false
+                        startJourney()
+                    }) {
+                        Text(stringResource(R.string.journey_tracking_switch_confirm))
+                    }
+                }
+            )
+        }
     }
     Column(modifier.then(if (landscapeStrip) Modifier.fillMaxHeight() else Modifier)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
@@ -251,70 +301,130 @@ internal fun JourneySummary(
                 modifier = Modifier.size(32.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content
+                    containerColor = TripPlannerColors.card,
+                    contentColor = TripPlannerColors.content
                 )
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.osm_back), modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    stringResource(R.string.osm_back),
+                    modifier = Modifier.size(18.dp)
+                )
             } else Spacer(Modifier.size(32.dp))
             if (landscapeStrip) {
-                Text("${planner.originText} → ${planner.destinationText}",
-                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                Text(
+                    "${planner.originText} → ${planner.destinationText}",
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp),
                     fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    color = TripPlannerColors.content)
+                    color = TripPlannerColors.content
+                )
             }
             FilledIconButton(
                 onClick = onHome,
                 modifier = Modifier.size(32.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content
+                    containerColor = TripPlannerColors.card,
+                    contentColor = TripPlannerColors.content
                 )
             ) {
-                Icon(Icons.Filled.Home, stringResource(R.string.osm_home), modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.Filled.Home,
+                    stringResource(R.string.osm_home),
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
         if (landscapeStrip) {
             // Fixed header above, scrollable journey legs in the middle, fixed actions below.
-            Box(Modifier.weight(1f).fillMaxWidth()) { detailsContent?.invoke() }
+            Box(Modifier
+                .weight(1f)
+                .fillMaxWidth()) { detailsContent?.invoke() }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Box(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 12.dp, vertical = 6.dp)) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
                 actionContent()
             }
         } else {
-        // Buttons overlap the summary's lower edge while retaining full touch targets.
-        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 4.dp)) {
-            Card(Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                colors = CardDefaults.cardColors(containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-                Column(Modifier.padding(bottom = 12.dp)) {
-                    Text("${planner.originText} → ${planner.destinationText}",
-                        fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp))
-                    // Measure at full height, then reveal only the fraction controlled by the gesture.
-                    // No animation or content replacement: reversing a gesture reverses the height.
-                    Box(Modifier.clipToBounds().layout { measurable, constraints ->
-                        val preview = measurable.measure(constraints.copy(minHeight = 0))
-                        planner.detailsCollapseRangePx = preview.height.toFloat().coerceAtLeast(1f)
-                        val height = (preview.height * (1f - collapseFraction.coerceIn(0f, 1f))).toInt()
-                        layout(preview.width, height) { preview.placeRelative(0, 0) }
-                    }) {
-                        JourneyPreviewContent(visibleJourney, streetUsUnits)
+            // Buttons overlap the summary's lower edge while retaining full touch targets.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 8.dp, bottom = 4.dp)
+            ) {
+                Card(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = TripPlannerColors.card,
+                        contentColor = TripPlannerColors.content
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Column(Modifier.padding(bottom = 12.dp)) {
+                        Text(
+                            "${planner.originText} → ${planner.destinationText}",
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp)
+                        )
+                        // Measure at full height, then reveal only the fraction controlled by the gesture.
+                        // No animation or content replacement: reversing a gesture reverses the height.
+                        Box(Modifier
+                            .clipToBounds()
+                            .layout { measurable, constraints ->
+                                val preview = measurable.measure(constraints.copy(minHeight = 0))
+                                planner.detailsCollapseRangePx =
+                                    preview.height.toFloat().coerceAtLeast(1f)
+                                val height =
+                                    (preview.height * (1f - collapseFraction.coerceIn(
+                                        0f,
+                                        1f
+                                    ))).toInt()
+                                layout(preview.width, height) { preview.placeRelative(0, 0) }
+                            }) {
+                            JourneyPreviewContent(visibleJourney, streetUsUnits)
+                        }
                     }
                 }
-            }
                 actionContent()
+            }
         }
-        }
-        if (failed) Text(stringResource(R.string.directions_save_error),
-            color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 20.dp))
+        if (failed) Text(
+            stringResource(R.string.directions_save_error),
+            color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 20.dp)
+        )
     }
 }
 
 @Composable
-private fun SummaryAction(enabled: Boolean = true, onClick: () -> Unit, content: @Composable () -> Unit) {
-    Surface(shape = CircleShape, color = TripPlannerColors.card, contentColor = TripPlannerColors.content,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shadowElevation = 3.dp) {
-        IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(44.dp), content = content)
+private fun SummaryAction(
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Surface(
+        shape = CircleShape,
+        color = TripPlannerColors.card,
+        contentColor = TripPlannerColors.content,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 3.dp
+    ) {
+        IconButton(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = Modifier.size(44.dp),
+            content = content
+        )
     }
 }
 
@@ -329,7 +439,8 @@ private fun rememberBookmarkTooltipPositionProvider(): PopupPositionProvider {
                 windowSize: IntSize,
                 layoutDirection: LayoutDirection,
                 popupContentSize: IntSize
-            ): IntOffset = bookmarkTooltipPosition(anchorBounds, windowSize, popupContentSize, gapPx)
+            ): IntOffset =
+                bookmarkTooltipPosition(anchorBounds, windowSize, popupContentSize, gapPx)
         }
     }
 }

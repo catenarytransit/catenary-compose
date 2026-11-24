@@ -6,7 +6,9 @@ import org.junit.Test
 class TripPlannerOptionsTest {
     private class MemoryStore(var saved: DirectionsOptions? = null) : TripPlannerOptionsStore {
         override fun read() = saved
-        override fun write(options: DirectionsOptions) { saved = options }
+        override fun write(options: DirectionsOptions) {
+            saved = options
+        }
     }
 
     private val custom = DirectionsOptions(
@@ -20,11 +22,16 @@ class TripPlannerOptionsTest {
         origin = DirectionsLocation("Start", 34.0, -118.0),
         destination = DirectionsLocation("End", 34.1, -118.1),
         options = options, arriveBy = false, now = true, time = 1793898000,
-        itineraries = listOf(DirectionsItinerary("2026-11-05T17:00:00Z", "2026-11-05T18:00:00Z",
-            legs = listOf(DirectionsLeg("BUS"))))
+        itineraries = listOf(
+            DirectionsItinerary(
+                "2026-11-05T17:00:00Z", "2026-11-05T18:00:00Z",
+                legs = listOf(DirectionsLeg("BUS"))
+            )
+        )
     )
 
-    @Test fun optionsSurviveWithoutACompletedSearchAndResetPersists() {
+    @Test
+    fun optionsSurviveWithoutACompletedSearchAndResetPersists() {
         val store = MemoryStore()
         val first = TripPlannerViewModel()
         first.restoreSession(null, store)
@@ -50,7 +57,8 @@ class TripPlannerOptionsTest {
         assertEquals(DirectionsOptions(), store.saved)
     }
 
-    @Test fun savedPreferencesTakePrecedenceOverStaleSession() {
+    @Test
+    fun savedPreferencesTakePrecedenceOverStaleSession() {
         val store = MemoryStore(custom)
         val planner = TripPlannerViewModel()
         planner.restoreSession(session(DirectionsOptions()), store)
@@ -60,7 +68,8 @@ class TripPlannerOptionsTest {
         assertEquals(custom, store.saved)
     }
 
-    @Test fun matchingSessionStillRestoresAndLegacySessionMigrates() {
+    @Test
+    fun matchingSessionStillRestoresAndLegacySessionMigrates() {
         val store = MemoryStore()
         val saved = session(custom)
         val first = TripPlannerViewModel()
@@ -77,7 +86,8 @@ class TripPlannerOptionsTest {
         assertEquals(DirectionsOptions(), store.saved)
     }
 
-    @Test fun emptyModeSelectionIsPreserved() {
+    @Test
+    fun emptyModeSelectionIsPreserved() {
         val store = MemoryStore()
         val first = TripPlannerViewModel()
         first.restoreSession(null, store)

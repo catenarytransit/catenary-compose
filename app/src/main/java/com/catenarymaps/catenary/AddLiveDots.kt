@@ -112,359 +112,376 @@ fun AddLiveDots(
         updateIfChanged("metro", metroDotsSrc)
         updateIfChanged("rail", railDotsSrc)
         updateIfChanged("other", otherDotsSrc)
-    }
+    }
+
 // Layers for BUS
-                                                LiveDotLayers(
-                                                        category = "bus",
-                                                        source = busDotsSrc.value, // <- persistent
-                                                        // source
-                                                        settings =
-                                                                layerSettings
-                                                                        .bus
-                                                                        .labelrealtimedots,
-                                                        isVisible =
-                                                                layerSettings
-                                                                        .bus
-                                                                        .visiblerealtimedots,
-                                                        baseFilter =
-                                                                if (showZombieBuses)
-                                                                        all(
-                                                                                applyFilterToLiveDots
-                                                                        )
-                                                                else
-                                                                        all(
-                                                                                feature.has(
-                                                                                        "trip_id"
-                                                                                ),
-                                                                                get("trip_id")
-                                                                                        .cast<
-                                                                                                StringValue>()
-                                                                                        .neq(
-                                                                                                const(
-                                                                                                        ""
-                                                                                                )
-                                                                                        ),
-                                                                                applyFilterToLiveDots
-                                                                        ),
-                                                        bearingFilter =
-                                                                all(
-                                                                        applyFilterToLiveDots,
-                                                                        get("has_bearing")
-                                                                                .cast<
-                                                                                        BooleanValue>()
-                                                                                .eq(const(true)),
-                                                                        if (showZombieBuses) all()
-                                                                        else
-                                                                                all(
-                                                                                        feature.has(
-                                                                                                "trip_id"
-                                                                                        ),
-                                                                                        get(
-                                                                                                        "trip_id"
-                                                                                                )
-                                                                                                .cast<
-                                                                                                        StringValue>()
-                                                                                                .neq(
-                                                                                                        const(
-                                                                                                                ""
-                                                                                                        )
-                                                                                                )
-                                                                                )
-                                                                ),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.Bus,
-                                                        railInFrame = railinframe
-                                                )
+    LiveDotLayers(
+        category = "bus",
+        source = busDotsSrc.value, // <- persistent
+        // source
+        settings =
+            layerSettings
+                .bus
+                .labelrealtimedots,
+        isVisible =
+            layerSettings
+                .bus
+                .visiblerealtimedots,
+        baseFilter =
+            if (showZombieBuses)
+                all(
+                    applyFilterToLiveDots
+                )
+            else
+                all(
+                    feature.has(
+                        "trip_id"
+                    ),
+                    get("trip_id")
+                        .cast<
+                                StringValue>()
+                        .neq(
+                            const(
+                                ""
+                            )
+                        ),
+                    applyFilterToLiveDots
+                ),
+        bearingFilter =
+            all(
+                applyFilterToLiveDots,
+                get("has_bearing")
+                    .cast<
+                            BooleanValue>()
+                    .eq(const(true)),
+                if (showZombieBuses) all()
+                else
+                    all(
+                        feature.has(
+                            "trip_id"
+                        ),
+                        get(
+                            "trip_id"
+                        )
+                            .cast<
+                                    StringValue>()
+                            .neq(
+                                const(
+                                    ""
+                                )
+                            )
+                    )
+            ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.Bus,
+        railInFrame = railinframe
+    )
 
-                                                // Layers for METRO/TRAM share the metro source but
-                                                // are filtered
-                                                LiveDotLayers(
-                                                        category = "metro",
-                                                        source = metroDotsSrc.value,
-                                                        settings =
-                                                                layerSettings
-                                                                        .localrail
-                                                                        .labelrealtimedots,
-                                                        isVisible =
-                                                                layerSettings
-                                                                        .localrail
-                                                                        .visiblerealtimedots,
-                                                        baseFilter =
-                                                                all(
-                                                                        applyFilterToLiveDots,
-                                                                        any(rtEq(1), rtEq(12)),
-                                                                        if (showZombieBuses) all()
-                                                                        else
-                                                                                all(
-                                                                                        feature.has(
-                                                                                                "trip_id"
-                                                                                        ),
-                                                                                        get(
-                                                                                                        "trip_id"
-                                                                                                )
-                                                                                                .cast<
-                                                                                                        StringValue>()
-                                                                                                .neq(
-                                                                                                        const(
-                                                                                                                ""
-                                                                                                        )
-                                                                                                ),
-                                                                                )
-                                                                ),
-                                                        bearingFilter =
-                                                                all(
-                                                                        applyFilterToLiveDots,
-                                                                        any(rtEq(1), rtEq(12)),
-                                                                        get("has_bearing")
-                                                                                .cast<
-                                                                                        BooleanValue>()
-                                                                                .eq(const(true))
-                                                                ),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.Metro,
-                                                        railInFrame = railinframe
-                                                )
+    // Layers for METRO/TRAM share the metro source but
+    // are filtered
+    LiveDotLayers(
+        category = "metro",
+        source = metroDotsSrc.value,
+        settings =
+            layerSettings
+                .localrail
+                .labelrealtimedots,
+        isVisible =
+            layerSettings
+                .localrail
+                .visiblerealtimedots,
+        baseFilter =
+            all(
+                applyFilterToLiveDots,
+                any(rtEq(1), rtEq(12)),
+                if (showZombieBuses) all()
+                else
+                    all(
+                        feature.has(
+                            "trip_id"
+                        ),
+                        get(
+                            "trip_id"
+                        )
+                            .cast<
+                                    StringValue>()
+                            .neq(
+                                const(
+                                    ""
+                                )
+                            ),
+                    )
+            ),
+        bearingFilter =
+            all(
+                applyFilterToLiveDots,
+                any(rtEq(1), rtEq(12)),
+                get("has_bearing")
+                    .cast<
+                            BooleanValue>()
+                    .eq(const(true))
+            ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.Metro,
+        railInFrame = railinframe
+    )
 
-                                                LiveDotLayers(
-                                                        category = "tram",
-                                                        source =
-                                                                metroDotsSrc.value, // re-uses metro
-                                                        // source, different
-                                                        // filter
-                                                        // via layerIdPrefix branch
-                                                        settings =
-                                                                layerSettings
-                                                                        .localrail
-                                                                        .labelrealtimedots,
-                                                        isVisible =
-                                                                layerSettings
-                                                                        .localrail
-                                                                        .visiblerealtimedots,
-                                                        baseFilter =
-                                                                all(
-                                                                        applyFilterToLiveDots,
-                                                                        any(rtEq(0), rtEq(5)),
-                                                                        if (showZombieBuses) all()
-                                                                        else
-                                                                                all(
-                                                                                        feature.has(
-                                                                                                "trip_id"
-                                                                                        ),
-                                                                                        get(
-                                                                                                        "trip_id"
-                                                                                                )
-                                                                                                .cast<
-                                                                                                        StringValue>()
-                                                                                                .neq(
-                                                                                                        const(
-                                                                                                                ""
-                                                                                                        )
-                                                                                                )
-                                                                                )
-                                                                ),
-                                                        bearingFilter =
-                                                                all(
-                                                                        applyFilterToLiveDots,
-                                                                        any(rtEq(0), rtEq(5)),
-                                                                        get("has_bearing")
-                                                                                .cast<
-                                                                                        BooleanValue>()
-                                                                                .eq(const(true))
-                                                                ),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.Tram,
-                                                        railInFrame = railinframe
-                                                )
+    LiveDotLayers(
+        category = "tram",
+        source =
+            metroDotsSrc.value, // re-uses metro
+        // source, different
+        // filter
+        // via layerIdPrefix branch
+        settings =
+            layerSettings
+                .localrail
+                .labelrealtimedots,
+        isVisible =
+            layerSettings
+                .localrail
+                .visiblerealtimedots,
+        baseFilter =
+            all(
+                applyFilterToLiveDots,
+                any(rtEq(0), rtEq(5)),
+                if (showZombieBuses) all()
+                else
+                    all(
+                        feature.has(
+                            "trip_id"
+                        ),
+                        get(
+                            "trip_id"
+                        )
+                            .cast<
+                                    StringValue>()
+                            .neq(
+                                const(
+                                    ""
+                                )
+                            )
+                    )
+            ),
+        bearingFilter =
+            all(
+                applyFilterToLiveDots,
+                any(rtEq(0), rtEq(5)),
+                get("has_bearing")
+                    .cast<
+                            BooleanValue>()
+                    .eq(const(true))
+            ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.Tram,
+        railInFrame = railinframe
+    )
 
-                                                // Layers for INTERCITY
-                                                LiveDotLayers(
-                                                        category = "intercityrail",
-                                                        source = railDotsSrc.value,
-                                                        settings =
-                                                                (layerSettings[
-                                                                                "intercityrail"] as
-                                                                                LayerCategorySettings)
-                                                                        .labelrealtimedots,
-                                                        isVisible =
-                                                                (layerSettings[
-                                                                                "intercityrail"] as
-                                                                                LayerCategorySettings)
-                                                                        .visiblerealtimedots,
-                                                        baseFilter =
-                                                                all(
-                                                                        applyFilterToLiveDots,
-                                                                        isIntercity(),
-                                                                        if (showZombieBuses) all()
-                                                                        else
-                                                                                all(
-                                                                                        feature.has(
-                                                                                                "trip_id"
-                                                                                        ),
-                                                                                        get(
-                                                                                                        "trip_id"
-                                                                                                )
-                                                                                                .cast<
-                                                                                                        StringValue>()
-                                                                                                .neq(
-                                                                                                        const(
-                                                                                                                ""
-                                                                                                        )
-                                                                                                )
-                                                                                )
-                                                                ),
-                                                        bearingFilter =
-                                                                all(
-                                                                        applyFilterToLiveDots,
-                                                                        isIntercity(),
-                                                                        get("has_bearing")
-                                                                                .cast<
-                                                                                        BooleanValue>()
-                                                                                .eq(const(true))
-                                                                ),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix =
-                                                                LayersPerCategory.IntercityRail,
-                                                        railInFrame = railinframe
-                                                )
+    // Layers for INTERCITY
+    LiveDotLayers(
+        category = "intercityrail",
+        source = railDotsSrc.value,
+        settings =
+            (layerSettings[
+                "intercityrail"] as
+                    LayerCategorySettings)
+                .labelrealtimedots,
+        isVisible =
+            (layerSettings[
+                "intercityrail"] as
+                    LayerCategorySettings)
+                .visiblerealtimedots,
+        baseFilter =
+            all(
+                applyFilterToLiveDots,
+                isIntercity(),
+                if (showZombieBuses) all()
+                else
+                    all(
+                        feature.has(
+                            "trip_id"
+                        ),
+                        get(
+                            "trip_id"
+                        )
+                            .cast<
+                                    StringValue>()
+                            .neq(
+                                const(
+                                    ""
+                                )
+                            )
+                    )
+            ),
+        bearingFilter =
+            all(
+                applyFilterToLiveDots,
+                isIntercity(),
+                get("has_bearing")
+                    .cast<
+                            BooleanValue>()
+                    .eq(const(true))
+            ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix =
+            LayersPerCategory.IntercityRail,
+        railInFrame = railinframe
+    )
 
-                                                // Layers for OTHER
-                                                LiveDotLayers(
-                                                        category = "other",
-                                                        source = otherDotsSrc.value,
-                                                        settings =
-                                                                (layerSettings["other"] as
-                                                                                LayerCategorySettings)
-                                                                        .labelrealtimedots,
-                                                        isVisible =
-                                                                (layerSettings["other"] as
-                                                                                LayerCategorySettings)
-                                                                        .visiblerealtimedots,
-                                                        baseFilter =
-                                                                if (showZombieBuses)
-                                                                        all(
-                                                                                applyFilterToLiveDots
-                                                                        )
-                                                                else
-                                                                        all(
-                                                                                applyFilterToLiveDots,
-                                                                                feature.has(
-                                                                                        "trip_id"
-                                                                                ),
-                                                                                get("trip_id")
-                                                                                        .cast<
-                                                                                                StringValue>()
-                                                                                        .neq(
-                                                                                                const(
-                                                                                                        ""
-                                                                                                )
-                                                                                        )
-                                                                        ),
-                                                        bearingFilter =
-                                                                all(
-                                                                        applyFilterToLiveDots,
-                                                                        get("has_bearing")
-                                                                                .cast<
-                                                                                        BooleanValue>()
-                                                                                .eq(const(true)),
-                                                                        if (showZombieBuses) all()
-                                                                        else
-                                                                                all(
-                                                                                        feature.has(
-                                                                                                "trip_id"
-                                                                                        ),
-                                                                                        get(
-                                                                                                        "trip_id"
-                                                                                                )
-                                                                                                .cast<
-                                                                                                        StringValue>()
-                                                                                                .neq(
-                                                                                                        const(
-                                                                                                                ""
-                                                                                                        )
-                                                                                                )
-                                                                                )
-                                                                ),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.Other,
-                                                        railInFrame = railinframe
-                                                )
+    // Layers for OTHER
+    LiveDotLayers(
+        category = "other",
+        source = otherDotsSrc.value,
+        settings =
+            (layerSettings["other"] as
+                    LayerCategorySettings)
+                .labelrealtimedots,
+        isVisible =
+            (layerSettings["other"] as
+                    LayerCategorySettings)
+                .visiblerealtimedots,
+        baseFilter =
+            if (showZombieBuses)
+                all(
+                    applyFilterToLiveDots
+                )
+            else
+                all(
+                    applyFilterToLiveDots,
+                    feature.has(
+                        "trip_id"
+                    ),
+                    get("trip_id")
+                        .cast<
+                                StringValue>()
+                        .neq(
+                            const(
+                                ""
+                            )
+                        )
+                ),
+        bearingFilter =
+            all(
+                applyFilterToLiveDots,
+                get("has_bearing")
+                    .cast<
+                            BooleanValue>()
+                    .eq(const(true)),
+                if (showZombieBuses) all()
+                else
+                    all(
+                        feature.has(
+                            "trip_id"
+                        ),
+                        get(
+                            "trip_id"
+                        )
+                            .cast<
+                                    StringValue>()
+                            .neq(
+                                const(
+                                    ""
+                                )
+                            )
+                    )
+            ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.Other,
+        railInFrame = railinframe
+    )
 
-                                                LiveDotLayers(
-                                                        category = "bus",
-                                                        source = trajBusDotsSrc.value,
-                                                        settings = (layerSettings["bus"] as LayerCategorySettings).labelrealtimedots,
-                                                        isVisible = (layerSettings["bus"] as LayerCategorySettings).visiblerealtimedots,
-                                                        baseFilter = all(applyFilterToLiveDots),
-                                                        bearingFilter = all(applyFilterToLiveDots, get("has_bearing").cast<BooleanValue>().eq(const(true))),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.TrajectoryBus,
-                                                        railInFrame = railinframe,
-                                                        labelTrajectories = (layerSettings["bus"] as LayerCategorySettings).labeltrajectories
-                                                )
+    LiveDotLayers(
+        category = "bus",
+        source = trajBusDotsSrc.value,
+        settings = (layerSettings["bus"] as LayerCategorySettings).labelrealtimedots,
+        isVisible = (layerSettings["bus"] as LayerCategorySettings).visiblerealtimedots,
+        baseFilter = all(applyFilterToLiveDots),
+        bearingFilter = all(
+            applyFilterToLiveDots,
+            get("has_bearing").cast<BooleanValue>().eq(const(true))
+        ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.TrajectoryBus,
+        railInFrame = railinframe,
+        labelTrajectories = (layerSettings["bus"] as LayerCategorySettings).labeltrajectories
+    )
 
-                                                LiveDotLayers(
-                                                        category = "metro",
-                                                        source = trajMetroDotsSrc.value,
-                                                        settings = (layerSettings["localrail"] as LayerCategorySettings).labelrealtimedots,
-                                                        isVisible = (layerSettings["localrail"] as LayerCategorySettings).visiblerealtimedots,
-                                                        baseFilter = all(applyFilterToLiveDots, any(rtEq(1), rtEq(12))),
-                                                        bearingFilter = all(applyFilterToLiveDots, any(rtEq(1), rtEq(12)), get("has_bearing").cast<BooleanValue>().eq(const(true))),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.TrajectoryMetro,
-                                                        railInFrame = railinframe,
-                                                        labelTrajectories = (layerSettings["localrail"] as LayerCategorySettings).labeltrajectories
-                                                )
+    LiveDotLayers(
+        category = "metro",
+        source = trajMetroDotsSrc.value,
+        settings = (layerSettings["localrail"] as LayerCategorySettings).labelrealtimedots,
+        isVisible = (layerSettings["localrail"] as LayerCategorySettings).visiblerealtimedots,
+        baseFilter = all(applyFilterToLiveDots, any(rtEq(1), rtEq(12))),
+        bearingFilter = all(
+            applyFilterToLiveDots,
+            any(rtEq(1), rtEq(12)),
+            get("has_bearing").cast<BooleanValue>().eq(const(true))
+        ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.TrajectoryMetro,
+        railInFrame = railinframe,
+        labelTrajectories = (layerSettings["localrail"] as LayerCategorySettings).labeltrajectories
+    )
 
-                                                LiveDotLayers(
-                                                        category = "tram",
-                                                        source = trajMetroDotsSrc.value,
-                                                        settings = (layerSettings["localrail"] as LayerCategorySettings).labelrealtimedots,
-                                                        isVisible = (layerSettings["localrail"] as LayerCategorySettings).visiblerealtimedots,
-                                                        baseFilter = all(applyFilterToLiveDots, any(rtEq(0), rtEq(5))),
-                                                        bearingFilter = all(applyFilterToLiveDots, any(rtEq(0), rtEq(5)), get("has_bearing").cast<BooleanValue>().eq(const(true))),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.TrajectoryTram,
-                                                        railInFrame = railinframe,
-                                                        labelTrajectories = (layerSettings["localrail"] as LayerCategorySettings).labeltrajectories
-                                                )
+    LiveDotLayers(
+        category = "tram",
+        source = trajMetroDotsSrc.value,
+        settings = (layerSettings["localrail"] as LayerCategorySettings).labelrealtimedots,
+        isVisible = (layerSettings["localrail"] as LayerCategorySettings).visiblerealtimedots,
+        baseFilter = all(applyFilterToLiveDots, any(rtEq(0), rtEq(5))),
+        bearingFilter = all(
+            applyFilterToLiveDots,
+            any(rtEq(0), rtEq(5)),
+            get("has_bearing").cast<BooleanValue>().eq(const(true))
+        ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.TrajectoryTram,
+        railInFrame = railinframe,
+        labelTrajectories = (layerSettings["localrail"] as LayerCategorySettings).labeltrajectories
+    )
 
-                                                LiveDotLayers(
-                                                        category = "intercityrail",
-                                                        source = trajRailDotsSrc.value,
-                                                        settings = (layerSettings["intercityrail"] as LayerCategorySettings).labelrealtimedots,
-                                                        isVisible = (layerSettings["intercityrail"] as LayerCategorySettings).visiblerealtimedots,
-                                                        baseFilter = all(applyFilterToLiveDots),
-                                                        bearingFilter = all(applyFilterToLiveDots, get("has_bearing").cast<BooleanValue>().eq(const(true))),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.TrajectoryIntercityRail,
-                                                        railInFrame = railinframe,
-                                                        labelTrajectories = (layerSettings["intercityrail"] as LayerCategorySettings).labeltrajectories
-                                                )
+    LiveDotLayers(
+        category = "intercityrail",
+        source = trajRailDotsSrc.value,
+        settings = (layerSettings["intercityrail"] as LayerCategorySettings).labelrealtimedots,
+        isVisible = (layerSettings["intercityrail"] as LayerCategorySettings).visiblerealtimedots,
+        baseFilter = all(applyFilterToLiveDots),
+        bearingFilter = all(
+            applyFilterToLiveDots,
+            get("has_bearing").cast<BooleanValue>().eq(const(true))
+        ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.TrajectoryIntercityRail,
+        railInFrame = railinframe,
+        labelTrajectories = (layerSettings["intercityrail"] as LayerCategorySettings).labeltrajectories
+    )
 
-                                                LiveDotLayers(
-                                                        category = "other",
-                                                        source = trajOtherDotsSrc.value,
-                                                        settings = (layerSettings["other"] as LayerCategorySettings).labelrealtimedots,
-                                                        isVisible = (layerSettings["other"] as LayerCategorySettings).visiblerealtimedots,
-                                                        baseFilter = all(applyFilterToLiveDots),
-                                                        bearingFilter = all(applyFilterToLiveDots, get("has_bearing").cast<BooleanValue>().eq(const(true))),
-                                                        usUnits = usUnits,
-                                                        isDark = isDark,
-                                                        layerIdPrefix = LayersPerCategory.TrajectoryOther,
-                                                        railInFrame = railinframe,
-                                                        labelTrajectories = (layerSettings["other"] as LayerCategorySettings).labeltrajectories
-                                                )
+    LiveDotLayers(
+        category = "other",
+        source = trajOtherDotsSrc.value,
+        settings = (layerSettings["other"] as LayerCategorySettings).labelrealtimedots,
+        isVisible = (layerSettings["other"] as LayerCategorySettings).visiblerealtimedots,
+        baseFilter = all(applyFilterToLiveDots),
+        bearingFilter = all(
+            applyFilterToLiveDots,
+            get("has_bearing").cast<BooleanValue>().eq(const(true))
+        ),
+        usUnits = usUnits,
+        isDark = isDark,
+        layerIdPrefix = LayersPerCategory.TrajectoryOther,
+        railInFrame = railinframe,
+        labelTrajectories = (layerSettings["other"] as LayerCategorySettings).labeltrajectories
+    )
 
-                                                
 
 }
 
@@ -593,52 +610,52 @@ fun LiveDotLayers(
     )
 
     val isTrajectory = layerIdPrefix is LayersPerCategory.TrajectoryBus ||
-        layerIdPrefix is LayersPerCategory.TrajectoryMetro ||
-        layerIdPrefix is LayersPerCategory.TrajectoryTram ||
-        layerIdPrefix is LayersPerCategory.TrajectoryIntercityRail ||
-        layerIdPrefix is LayersPerCategory.TrajectoryOther
+            layerIdPrefix is LayersPerCategory.TrajectoryMetro ||
+            layerIdPrefix is LayersPerCategory.TrajectoryTram ||
+            layerIdPrefix is LayersPerCategory.TrajectoryIntercityRail ||
+            layerIdPrefix is LayersPerCategory.TrajectoryOther
 
     val isLabelVisible = if (isTrajectory) (isVisible && labelTrajectories) else isVisible
 
     // Bearing Pointer Shell (Outline)
     if (!isTrajectory) {
-    SymbolLayer(
-        id = idPointingShell,
-        source = source,
-        iconImage = image(painterResource(R.drawable.pointing_shell)),
-        iconColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
-        iconSize = styles.bearingIconSize,
-        iconRotate = get("bearing").cast<FloatValue>(),
-        iconRotationAlignment = const(IconRotationAlignment.Map),
-        iconAllowOverlap = const(true),
-        iconIgnorePlacement = const(true),
-        iconOffset = styles.bearingIconOffset,
-        iconOpacity = styles.bearingShellOpacity,
-        filter = actualBearingFilter,
-        visible = isVisible,
-        minZoom = styles.minBearingZoom
-    )
+        SymbolLayer(
+            id = idPointingShell,
+            source = source,
+            iconImage = image(painterResource(R.drawable.pointing_shell)),
+            iconColor = if (isDark) const(Color(0xFF1E293B)) else const(Color.White),
+            iconSize = styles.bearingIconSize,
+            iconRotate = get("bearing").cast<FloatValue>(),
+            iconRotationAlignment = const(IconRotationAlignment.Map),
+            iconAllowOverlap = const(true),
+            iconIgnorePlacement = const(true),
+            iconOffset = styles.bearingIconOffset,
+            iconOpacity = styles.bearingShellOpacity,
+            filter = actualBearingFilter,
+            visible = isVisible,
+            minZoom = styles.minBearingZoom
+        )
 
-    // Bearing Pointer
-    SymbolLayer(
-        id = idPointing,
-        source = source,
-        iconImage = image(
-            painterResource(R.drawable.pointing50percent),
-            drawAsSdf = true
-        ),
-        iconOpacity = styles.bearingFilledOpacity,
-        iconColor = bearingColor,
-        iconSize = styles.bearingIconSize,
-        iconRotate = get("bearing").cast<FloatValue>(),
-        iconRotationAlignment = const(IconRotationAlignment.Map),
-        iconAllowOverlap = const(true),
-        iconIgnorePlacement = const(true),
-        iconOffset = styles.bearingIconOffset,
-        filter = actualBearingFilter,
-        visible = isVisible,
-        minZoom = styles.minBearingZoom
-    )
+        // Bearing Pointer
+        SymbolLayer(
+            id = idPointing,
+            source = source,
+            iconImage = image(
+                painterResource(R.drawable.pointing50percent),
+                drawAsSdf = true
+            ),
+            iconOpacity = styles.bearingFilledOpacity,
+            iconColor = bearingColor,
+            iconSize = styles.bearingIconSize,
+            iconRotate = get("bearing").cast<FloatValue>(),
+            iconRotationAlignment = const(IconRotationAlignment.Map),
+            iconAllowOverlap = const(true),
+            iconIgnorePlacement = const(true),
+            iconOffset = styles.bearingIconOffset,
+            filter = actualBearingFilter,
+            visible = isVisible,
+            minZoom = styles.minBearingZoom
+        )
     }
 
     // Label
@@ -669,8 +686,10 @@ fun LiveDotLayers(
 
     if (category == "other") {
         val tramStyles = getLiveDotStyle("tram", settings, railInFrame, isDark)
-        val aerialBaseFilter = all(baseFilter, get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)))
-        val aerialBearingFilter = all(bearingFilter, get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)))
+        val aerialBaseFilter =
+            all(baseFilter, get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)))
+        val aerialBearingFilter =
+            all(bearingFilter, get("route_type").cast<NumberValue<EquatableValue>>().eq(const(6)))
 
         CircleLayer(
             id = "${idDots}_aerial",

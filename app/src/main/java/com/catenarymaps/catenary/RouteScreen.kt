@@ -81,83 +81,83 @@ import org.maplibre.spatialk.geojson.Position
 
 @Serializable
 data class RouteInfoStop(
-        val name: String,
-        val code: String? = null,
-        val latitude: Double,
-        val longitude: Double,
-        @SerialName("parent_station") val parentStation: String? = null,
+    val name: String,
+    val code: String? = null,
+    val latitude: Double,
+    val longitude: Double,
+    @SerialName("parent_station") val parentStation: String? = null,
 )
 
 @Serializable
 data class ConnectingRoute(
-        @SerialName("short_name") val shortName: String? = null,
-        @SerialName("long_name") val longName: String? = null,
-        @SerialName("color") val color: String? = null,
-        @SerialName("text_color") val textColor: String? = null,
-        @SerialName("route_type") val routeType: Int = 3,
-        @SerialName("agency_id") val agencyId: String? = null,
+    @SerialName("short_name") val shortName: String? = null,
+    @SerialName("long_name") val longName: String? = null,
+    @SerialName("color") val color: String? = null,
+    @SerialName("text_color") val textColor: String? = null,
+    @SerialName("route_type") val routeType: Int = 3,
+    @SerialName("agency_id") val agencyId: String? = null,
 )
 
 @Serializable
 data class RouteInfoDirectionPatternDetail(
-        val headsign_or_destination: String,
-        val gtfs_shape_id: String? = null,
-        val direction_pattern_id: String
+    val headsign_or_destination: String,
+    val gtfs_shape_id: String? = null,
+    val direction_pattern_id: String
 )
 
 @Serializable
 data class RouteInfoDirectionPattern(
-        val direction_pattern: DirectionPatternMeta,
-        val rows: List<DirectionPatternRow>
+    val direction_pattern: DirectionPatternMeta,
+    val rows: List<DirectionPatternRow>
 )
 
 data class StopConnectionChip(
     val routeId: String,
-        val shortName: String?,
-        val longName: String?,
-        val color: String?,
-        val textColor: String?,
+    val shortName: String?,
+    val longName: String?,
+    val color: String?,
+    val textColor: String?,
     val chateauId: String? = null,
     val agencyId: String? = null
 )
 
 @Serializable
 data class RouteInfoResponse(
-        val color: String,
-        val text_color: String,
-        val agency_name: String,
-        val short_name: String? = null,
-        val long_name: String? = null,
-        val url: String? = null,
-        val route_type: Int,
-        val gtfs_desc: String? = null,
-        val onestop_feed_id: String,
-        val alert_id_to_alert: Map<String, JsonObject> = emptyMap(),
-        val direction_patterns: Map<String, RouteInfoDirectionPattern>,
-        val shapes_polyline: Map<String, String> = emptyMap(),
-        val shape_ids: List<String> = emptyList(),
-        val stops: Map<String, RouteInfoStop>,
-        val bounding_box: RustRect? = null,
-        // NEW: transfers stuff
-        @SerialName("connecting_routes")
-        val connectingRoutes: Map<String, Map<String, ConnectingRoute>>? = null,
-        @SerialName("connections_per_stop")
-        val connectionsPerStop: Map<String, Map<String, List<String>>>? = null,
+    val color: String,
+    val text_color: String,
+    val agency_name: String,
+    val short_name: String? = null,
+    val long_name: String? = null,
+    val url: String? = null,
+    val route_type: Int,
+    val gtfs_desc: String? = null,
+    val onestop_feed_id: String,
+    val alert_id_to_alert: Map<String, JsonObject> = emptyMap(),
+    val direction_patterns: Map<String, RouteInfoDirectionPattern>,
+    val shapes_polyline: Map<String, String> = emptyMap(),
+    val shape_ids: List<String> = emptyList(),
+    val stops: Map<String, RouteInfoStop>,
+    val bounding_box: RustRect? = null,
+    // NEW: transfers stuff
+    @SerialName("connecting_routes")
+    val connectingRoutes: Map<String, Map<String, ConnectingRoute>>? = null,
+    @SerialName("connections_per_stop")
+    val connectionsPerStop: Map<String, Map<String, List<String>>>? = null,
 )
 
 @Serializable
 data class RouteRealtimeResponse(
-        val vehicle_positions: Map<String, VehiclePosition> = emptyMap(),
-        val last_updated_time_ms: Long,
-        val trips_to_trips_compressed: Map<String, ItineraryPattern> = emptyMap(),
-        val itinerary_to_direction_id: Map<String, String> = emptyMap(),
-        val trip_updates: List<AspenisedTripUpdate> = emptyList()
+    val vehicle_positions: Map<String, VehiclePosition> = emptyMap(),
+    val last_updated_time_ms: Long,
+    val trips_to_trips_compressed: Map<String, ItineraryPattern> = emptyMap(),
+    val itinerary_to_direction_id: Map<String, String> = emptyMap(),
+    val trip_updates: List<AspenisedTripUpdate> = emptyList()
 )
 
 @Serializable
 data class ItineraryPattern(
-        val itinerary_pattern_id: String,
-        val trip_short_name: String? = null
+    val itinerary_pattern_id: String,
+    val trip_short_name: String? = null
 )
 
 fun getResolvedStopName(stopId: String, info: RouteInfoResponse): String {
@@ -169,18 +169,18 @@ fun getResolvedStopName(stopId: String, info: RouteInfoResponse): String {
 
 @Composable
 fun RouteScreen(
-        screenData: CatenaryStackEnum.RouteStack,
-        transitShapeSource: MutableState<GeoJsonSource>,
-        stopsContextSource: MutableState<GeoJsonSource>,
-        onStopClick: (CatenaryStackEnum.StopStack) -> Unit,
-        onTripClick: (CatenaryStackEnum.SingleTrip) -> Unit,
-        onSetStopsToHide: (Set<String>) -> Unit,
-        camera: CameraState,
-        desiredPadding: PaddingValues,
-        onBack: () -> Unit,
-        onHome: () -> Unit,
-        majorDotsSource: MutableState<GeoJsonSource>? = null,
-        applyFilterToLiveDots: MutableState<Expression<BooleanValue>>? = null
+    screenData: CatenaryStackEnum.RouteStack,
+    transitShapeSource: MutableState<GeoJsonSource>,
+    stopsContextSource: MutableState<GeoJsonSource>,
+    onStopClick: (CatenaryStackEnum.StopStack) -> Unit,
+    onTripClick: (CatenaryStackEnum.SingleTrip) -> Unit,
+    onSetStopsToHide: (Set<String>) -> Unit,
+    camera: CameraState,
+    desiredPadding: PaddingValues,
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+    majorDotsSource: MutableState<GeoJsonSource>? = null,
+    applyFilterToLiveDots: MutableState<Expression<BooleanValue>>? = null
 ) {
     var routeInfo by remember { mutableStateOf<RouteInfoResponse?>(null) }
     var routeRealtime by remember { mutableStateOf<RouteRealtimeResponse?>(null) }
@@ -189,25 +189,25 @@ fun RouteScreen(
     var error by remember { mutableStateOf<String?>(null) }
     val loadedShapes = remember { mutableStateMapOf<String, String>() }
     val scope =
-            rememberCoroutineScope() // Re-use or create new scope if needed, usually passed one is
+        rememberCoroutineScope() // Re-use or create new scope if needed, usually passed one is
     // better but creating one here is fine for this screen
 
     suspend fun fetchShape(chateauId: String, shapeId: String) {
         if (loadedShapes.contains(shapeId) ||
-                        routeInfo?.shapes_polyline?.containsKey(shapeId) == true
+            routeInfo?.shapes_polyline?.containsKey(shapeId) == true
         )
-                return
+            return
 
         val encodedChateau = URLEncoder.encode(chateauId, "UTF-8")
         val encodedShape = URLEncoder.encode(shapeId, "UTF-8")
         val url =
-                "https://birch.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline"
+            "https://birch.catenarymaps.org/get_shape?chateau=${encodedChateau}&shape_id=${encodedShape}&format=polyline"
 
         try {
             val response = ktorClient.get(url).body<JsonObject>()
             // Using JsonPrimitive to safely extract content
             val polyline =
-                    (response["polyline"] as? kotlinx.serialization.json.JsonPrimitive)?.content
+                (response["polyline"] as? kotlinx.serialization.json.JsonPrimitive)?.content
 
             if (polyline != null) {
                 loadedShapes[shapeId] = polyline
@@ -237,18 +237,18 @@ fun RouteScreen(
     LaunchedEffect(screenData) {
         try {
             val url =
-                    "https://birch.catenarymaps.org/route_info?chateau=${
+                "https://birch.catenarymaps.org/route_info?chateau=${
                     URLEncoder.encode(
                         screenData.chateau_id,
                         "UTF-8"
                     )
                 }" +
-                            "&route_id=${
-                    URLEncoder.encode(
-                        screenData.route_id,
-                        "UTF-8"
-                    )
-                }"
+                        "&route_id=${
+                            URLEncoder.encode(
+                                screenData.route_id,
+                                "UTF-8"
+                            )
+                        }"
             val response: RouteInfoResponse = ktorClient.get(url).body()
             routeInfo = response
 
@@ -257,12 +257,12 @@ fun RouteScreen(
             if (currentMapBounds != null) {
                 response.bounding_box?.let {
                     val newBoundingBox =
-                            BoundingBox(
-                                    west = it.min.x.toDouble(),
-                                    south = it.min.y.toDouble(),
-                                    east = it.max.x.toDouble(),
-                                    north = it.max.y.toDouble()
-                            )
+                        BoundingBox(
+                            west = it.min.x.toDouble(),
+                            south = it.min.y.toDouble(),
+                            east = it.max.x.toDouble(),
+                            north = it.max.y.toDouble()
+                        )
 
                     val currentWest = currentMapBounds.west
                     val currentSouth = currentMapBounds.south
@@ -275,10 +275,10 @@ fun RouteScreen(
                     val newNorth = newBoundingBox.north
 
                     val contained =
-                            (currentWest <= newWest &&
-                                    currentSouth <= newSouth &&
-                                    currentEast >= newEast &&
-                                    currentNorth >= newNorth) || camera.position.zoom < 4
+                        (currentWest <= newWest &&
+                                currentSouth <= newSouth &&
+                                currentEast >= newEast &&
+                                currentNorth >= newNorth) || camera.position.zoom < 4
 
                     if (!contained) {
                         camera.animateTo(boundingBox = newBoundingBox, padding = desiredPadding)
@@ -304,7 +304,7 @@ fun RouteScreen(
             try {
                 val lastUpdated = routeRealtime?.last_updated_time_ms ?: 0
                 val url =
-                        "https://birch.catenarymaps.org/get_rt_of_single_route?chateau=${
+                    "https://birch.catenarymaps.org/get_rt_of_single_route?chateau=${
                         URLEncoder.encode(
                             screenData.chateau_id,
                             "UTF-8"
@@ -336,13 +336,13 @@ fun RouteScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.End
             ) { NavigationControls(onBack = onBack, onHome = onHome) }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         }
         return
@@ -351,89 +351,89 @@ fun RouteScreen(
     val info = routeInfo!!
 
     val stopConnections =
-            remember(info) {
-                val result = mutableMapOf<String, List<StopConnectionChip>>()
-                val connectionsPerStop = info.connectionsPerStop ?: emptyMap()
-                val connectingRoutes = info.connectingRoutes ?: emptyMap()
+        remember(info) {
+            val result = mutableMapOf<String, List<StopConnectionChip>>()
+            val connectionsPerStop = info.connectionsPerStop ?: emptyMap()
+            val connectingRoutes = info.connectingRoutes ?: emptyMap()
 
-                for ((stopId, perChateau) in connectionsPerStop) {
-                    val connectingRoutesList =
-                        mutableListOf<Triple<ConnectingRoute, String, String>>()
-                    for ((chateauId, routeIds) in perChateau) {
-                        val routesForChateau = connectingRoutes[chateauId] ?: continue
-                        for (routeId in routeIds) {
-                            routesForChateau[routeId]?.let {
-                                connectingRoutesList.add(Triple(it, chateauId, routeId))
-                            }
+            for ((stopId, perChateau) in connectionsPerStop) {
+                val connectingRoutesList =
+                    mutableListOf<Triple<ConnectingRoute, String, String>>()
+                for ((chateauId, routeIds) in perChateau) {
+                    val routesForChateau = connectingRoutes[chateauId] ?: continue
+                    for (routeId in routeIds) {
+                        routesForChateau[routeId]?.let {
+                            connectingRoutesList.add(Triple(it, chateauId, routeId))
                         }
-                    }
-
-                    if (connectingRoutesList.isNotEmpty()) {
-
-                        // Sort connections
-                        val typeOrder =
-                                mapOf(
-                                        2 to 1, // Rail
-                                        1 to 2, // Subway, Metro
-                                        0 to 3, // Tram, Streetcar, Light rail
-                                        4 to 4 // Ferry
-                                )
-                        connectingRoutesList.sortWith(
-                            compareBy<Triple<ConnectingRoute, String, String>> {
-                                    typeOrder[it.first.routeType] ?: 5
-                                }
-                                        .thenComparator { a, b ->
-                                            val aName = a.first.shortName ?: a.first.longName ?: ""
-                                            val bName = b.first.shortName ?: b.first.longName ?: ""
-
-                                            val aNameAsInt = aName.toIntOrNull()
-                                            val bNameAsInt = bName.toIntOrNull()
-
-                                            if (aNameAsInt != null && bNameAsInt != null) {
-                                                aNameAsInt.compareTo(bNameAsInt)
-                                            } else {
-                                                aName.compareTo(bName)
-                                            }
-                                        }
-                        )
-
-                        result[stopId] =
-                            connectingRoutesList.map { (route, chateauId, routeId) ->
-                                    StopConnectionChip(
-                                        routeId = routeId,
-                                            shortName = route.shortName,
-                                            longName = route.longName,
-                                            color = route.color,
-                                            textColor = route.textColor,
-                                        chateauId = chateauId,
-                                        agencyId = route.agencyId
-                                    )
-                                }
                     }
                 }
 
-                result
+                if (connectingRoutesList.isNotEmpty()) {
+
+                    // Sort connections
+                    val typeOrder =
+                        mapOf(
+                            2 to 1, // Rail
+                            1 to 2, // Subway, Metro
+                            0 to 3, // Tram, Streetcar, Light rail
+                            4 to 4 // Ferry
+                        )
+                    connectingRoutesList.sortWith(
+                        compareBy<Triple<ConnectingRoute, String, String>> {
+                            typeOrder[it.first.routeType] ?: 5
+                        }
+                            .thenComparator { a, b ->
+                                val aName = a.first.shortName ?: a.first.longName ?: ""
+                                val bName = b.first.shortName ?: b.first.longName ?: ""
+
+                                val aNameAsInt = aName.toIntOrNull()
+                                val bNameAsInt = bName.toIntOrNull()
+
+                                if (aNameAsInt != null && bNameAsInt != null) {
+                                    aNameAsInt.compareTo(bNameAsInt)
+                                } else {
+                                    aName.compareTo(bName)
+                                }
+                            }
+                    )
+
+                    result[stopId] =
+                        connectingRoutesList.map { (route, chateauId, routeId) ->
+                            StopConnectionChip(
+                                routeId = routeId,
+                                shortName = route.shortName,
+                                longName = route.longName,
+                                color = route.color,
+                                textColor = route.textColor,
+                                chateauId = chateauId,
+                                agencyId = route.agencyId
+                            )
+                        }
+                }
             }
+
+            result
+        }
 
     // Map: parentId -> list of patterns sharing that parent
     val patternsByParentId =
-            remember(info) {
-                info.direction_patterns.values.groupBy { pattern ->
-                    pattern.direction_pattern.directionPatternIdParents
-                            ?: pattern.direction_pattern.directionPatternId
-                }
+        remember(info) {
+            info.direction_patterns.values.groupBy { pattern ->
+                pattern.direction_pattern.directionPatternIdParents
+                    ?: pattern.direction_pattern.directionPatternId
             }
+        }
 
     // Sort parents by the headsign of the first child pattern
     val sortedParentIds =
-            remember(patternsByParentId) {
-                patternsByParentId.keys.sortedWith(
-                        compareBy { parentId ->
-                            val refPattern = patternsByParentId[parentId]?.firstOrNull()
-                            refPattern?.direction_pattern?.headsignOrDestination ?: ""
-                        }
-                )
-            }
+        remember(patternsByParentId) {
+            patternsByParentId.keys.sortedWith(
+                compareBy { parentId ->
+                    val refPattern = patternsByParentId[parentId]?.firstOrNull()
+                    refPattern?.direction_pattern?.headsignOrDestination ?: ""
+                }
+            )
+        }
 
     // Ensure we always have an active parent
     LaunchedEffect(sortedParentIds) {
@@ -443,30 +443,30 @@ fun RouteScreen(
     }
 
     val directionIdToParentId =
-            remember(info) {
-                info.direction_patterns.values.associate { pattern ->
-                    val directionId = pattern.direction_pattern.directionPatternId
-                    val parentId =
-                            pattern.direction_pattern.directionPatternIdParents ?: directionId
-                    directionId to parentId
-                }
+        remember(info) {
+            info.direction_patterns.values.associate { pattern ->
+                val directionId = pattern.direction_pattern.directionPatternId
+                val parentId =
+                    pattern.direction_pattern.directionPatternIdParents ?: directionId
+                directionId to parentId
             }
+        }
 
     val rt = routeRealtime
 
     val vehiclesByDirectionParent =
-            remember(rt, directionIdToParentId) {
-                rt?.vehicle_positions?.values?.groupBy { vp ->
-                    val tripId = vp.trip?.trip_id
-                    val itineraryId = rt.trips_to_trips_compressed[tripId]?.itinerary_pattern_id
-                    val directionId = rt.itinerary_to_direction_id[itineraryId]
-                    directionIdToParentId[directionId]
-                }
-                        ?: emptyMap()
+        remember(rt, directionIdToParentId) {
+            rt?.vehicle_positions?.values?.groupBy { vp ->
+                val tripId = vp.trip?.trip_id
+                val itineraryId = rt.trips_to_trips_compressed[tripId]?.itinerary_pattern_id
+                val directionId = rt.itinerary_to_direction_id[itineraryId]
+                directionIdToParentId[directionId]
             }
+                ?: emptyMap()
+        }
 
     val tripUpdatesByTripId =
-            remember(rt) { rt?.trip_updates?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap() }
+        remember(rt) { rt?.trip_updates?.groupBy { it.trip.trip_id ?: "" } ?: emptyMap() }
 
     // Highlight all vehicles on the selected route, mirroring the web app's
     // RouteScreen.svelte injection into the livedots_context source.
@@ -523,16 +523,16 @@ fun RouteScreen(
             val positions = decodedPath.map { Position(it.longitude, it.latitude) }
             val lineString = LineString(positions)
             val feature =
-                    Feature(
-                            geometry = lineString,
-                            properties =
-                                    buildJsonObject {
-                                        put("color", info.color)
-                                        put("text_color", info.text_color)
-                                    }
-                    )
+                Feature(
+                    geometry = lineString,
+                    properties =
+                        buildJsonObject {
+                            put("color", info.color)
+                            put("text_color", info.text_color)
+                        }
+                )
             transitShapeSource.value.setData(
-                    GeoJsonData.Features(FeatureCollection(listOf(feature)))
+                GeoJsonData.Features(FeatureCollection(listOf(feature)))
             )
         } else {
             if (shapeId != null) {
@@ -540,37 +540,37 @@ fun RouteScreen(
                 launch { fetchShape(screenData.chateau_id, shapeId) }
             }
             transitShapeSource.value.setData(
-                    GeoJsonData.Features(
-                            FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
-                    )
+                GeoJsonData.Features(
+                    FeatureCollection(emptyList<Feature<Point, Map<String, Any>>>())
+                )
             )
         }
 
         // 2. Update stops on map
         val stopFeatures =
-                pattern.rows.mapNotNull { stopTime ->
-                    info.stops[stopTime.stopId]?.let { stopDetails ->
-                        Feature(
-                                geometry =
-                                        Point(
-                                                Position(
-                                                        stopDetails.longitude,
-                                                        stopDetails.latitude
-                                                )
-                                        ),
-                                properties =
-                                        buildJsonObject {
-                                            put("label", stopDetails.name)
-                                            put("map_label", stopDetails.name)
-                                            put("displayname", stopDetails.name)
-                                            put("gtfs_id", stopTime.stopId)
-                                            put("stop_id", stopTime.stopId)
-                                            put("chateau", screenData.chateau_id)
-                                            put("stop_route_type", info.route_type)
-                                        }
-                        )
-                    }
+            pattern.rows.mapNotNull { stopTime ->
+                info.stops[stopTime.stopId]?.let { stopDetails ->
+                    Feature(
+                        geometry =
+                            Point(
+                                Position(
+                                    stopDetails.longitude,
+                                    stopDetails.latitude
+                                )
+                            ),
+                        properties =
+                            buildJsonObject {
+                                put("label", stopDetails.name)
+                                put("map_label", stopDetails.name)
+                                put("displayname", stopDetails.name)
+                                put("gtfs_id", stopTime.stopId)
+                                put("stop_id", stopTime.stopId)
+                                put("chateau", screenData.chateau_id)
+                                put("stop_route_type", info.route_type)
+                            }
+                    )
                 }
+            }
         stopsContextSource.value.setData(GeoJsonData.Features(FeatureCollection(stopFeatures)))
 
         // 3. Hide these stops from the main layers
@@ -595,49 +595,49 @@ fun RouteScreen(
     }
 
     val activePattern =
-            activeParentId?.let { parentId -> patternsByParentId[parentId]?.firstOrNull() }
+        activeParentId?.let { parentId -> patternsByParentId[parentId]?.firstOrNull() }
     val activeStops = activePattern?.rows
 
     LazyColumn(
-            modifier =
-                Modifier
-                    .padding(horizontal = 8.dp)
-                    .windowInsetsPadding(
-                        WindowInsets(
-                            bottom =
-                                WindowInsets.safeDrawing.getBottom(
-                                    density = LocalDensity.current
-                                )
-                        )
+        modifier =
+            Modifier
+                .padding(horizontal = 8.dp)
+                .windowInsetsPadding(
+                    WindowInsets(
+                        bottom =
+                            WindowInsets.safeDrawing.getBottom(
+                                density = LocalDensity.current
+                            )
                     )
+                )
     ) {
         // Header
         item {
             RouteHeading(
-                    color = info.color,
-                    textColor = info.text_color,
-                    routeType = info.route_type,
-                    agencyName = info.agency_name,
-                    shortName = info.short_name,
-                    longName = info.long_name,
-                    description = info.gtfs_desc,
-                    isCompact = false,
-                    chateauId = screenData.chateau_id,
-                    onRouteClick = {},
-                    controls = { NavigationControls(onBack = onBack, onHome = onHome) }
+                color = info.color,
+                textColor = info.text_color,
+                routeType = info.route_type,
+                agencyName = info.agency_name,
+                shortName = info.short_name,
+                longName = info.long_name,
+                description = info.gtfs_desc,
+                isCompact = false,
+                chateauId = screenData.chateau_id,
+                onRouteClick = {},
+                controls = { NavigationControls(onBack = onBack, onHome = onHome) }
             )
             if (info.alert_id_to_alert.isNotEmpty()) {
                 val json = Json { ignoreUnknownKeys = true }
                 val alerts =
-                        info.alert_id_to_alert.mapValues { (_, value) ->
-                            json.decodeFromJsonElement(Alert.serializer(), value)
-                        }
+                    info.alert_id_to_alert.mapValues { (_, value) ->
+                        json.decodeFromJsonElement(Alert.serializer(), value)
+                    }
                 var alertsExpanded by remember { mutableStateOf(true) }
                 AlertsBox(
-                        alerts = alerts,
-                        chateau = screenData.chateau_id,
-                        expanded = alertsExpanded,
-                        onExpandedChange = { alertsExpanded = !alertsExpanded }
+                    alerts = alerts,
+                    chateau = screenData.chateau_id,
+                    expanded = alertsExpanded,
+                    onExpandedChange = { alertsExpanded = !alertsExpanded }
                 )
             }
 
@@ -647,9 +647,9 @@ fun RouteScreen(
         // Directions
         item {
             Text(
-                    text = stringResource(R.string.directions),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                text = stringResource(R.string.directions),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -666,8 +666,10 @@ fun RouteScreen(
 
                     val firstStopRow = refPattern.rows.firstOrNull()
                     val lastStopRow = refPattern.rows.lastOrNull()
-                    val firstStationName = firstStopRow?.let { getResolvedStopName(it.stopId, info) } ?: ""
-                    val lastStationName = lastStopRow?.let { getResolvedStopName(it.stopId, info) } ?: ""
+                    val firstStationName =
+                        firstStopRow?.let { getResolvedStopName(it.stopId, info) } ?: ""
+                    val lastStationName =
+                        lastStopRow?.let { getResolvedStopName(it.stopId, info) } ?: ""
                     val isSame = lastStationName.trim().equals(headsign.trim(), ignoreCase = true)
 
                     val tripShortName = run {
@@ -676,11 +678,12 @@ fun RouteScreen(
                         }
                         if (activeVehicle != null) return@run activeVehicle.trip?.trip_short_name
 
-                        val compressedTrip = rt?.trips_to_trips_compressed?.values?.firstOrNull { ip ->
-                            val dirId = rt.itinerary_to_direction_id[ip.itinerary_pattern_id]
-                            val parent = directionIdToParentId[dirId]
-                            parent == parentId && !ip.trip_short_name.isNullOrBlank()
-                        }
+                        val compressedTrip =
+                            rt?.trips_to_trips_compressed?.values?.firstOrNull { ip ->
+                                val dirId = rt.itinerary_to_direction_id[ip.itinerary_pattern_id]
+                                val parent = directionIdToParentId[dirId]
+                                parent == parentId && !ip.trip_short_name.isNullOrBlank()
+                            }
                         compressedTrip?.trip_short_name
                     }
 
@@ -695,55 +698,55 @@ fun RouteScreen(
                     }
 
                     Card(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable { activeParentId = parentId },
-                            shape = RoundedCornerShape(8.dp),
-                            colors =
-                                    CardDefaults.cardColors(
-                                            containerColor =
-                                                    if (isActive)
-                                                            MaterialTheme.colorScheme
-                                                                    .primaryContainer
-                                                    else MaterialTheme.colorScheme.surfaceVariant
-                                    )
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { activeParentId = parentId },
+                        shape = RoundedCornerShape(8.dp),
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor =
+                                    if (isActive)
+                                        MaterialTheme.colorScheme
+                                            .primaryContainer
+                                    else MaterialTheme.colorScheme.surfaceVariant
+                            )
                     ) {
                         Row(
-                                modifier = Modifier.padding(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.padding(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                        text = textToShow,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
+                                    text = textToShow,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                        text = "$stopCount stops",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = "$stopCount stops",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
                             if (vehicleCount > 0) {
                                 Spacer(Modifier.width(8.dp))
                                 Box(
-                                        modifier =
-                                            Modifier
-                                                .size(24.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    MaterialTheme.colorScheme.primary
-                                                ),
-                                        contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .size(24.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                MaterialTheme.colorScheme.primary
+                                            ),
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                            text = vehicleCount.toString(),
-                                            color = MaterialTheme.colorScheme.onPrimary,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            fontWeight = FontWeight.Bold
+                                        text = vehicleCount.toString(),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
@@ -759,9 +762,9 @@ fun RouteScreen(
         if (!activeVehicles.isNullOrEmpty()) {
             item {
                 Text(
-                        text = stringResource(R.string.vehicles),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                    text = stringResource(R.string.vehicles),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
 
@@ -771,46 +774,46 @@ fun RouteScreen(
 
             items(activeVehicles) { vehicle ->
                 Card(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                                .clickable {
-                                    onTripClick(
-                                        CatenaryStackEnum.SingleTrip(
-                                            chateau_id = screenData.chateau_id,
-                                            trip_id = vehicle.trip?.trip_id ?: "",
-                                            route_id = vehicle.trip?.route_id,
-                                            start_date = vehicle.trip?.start_date,
-                                            start_time = vehicle.trip?.start_time,
-                                            vehicle_id = vehicle.vehicle?.id,
-                                            route_type = vehicle.route_type
-                                        )
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .clickable {
+                                onTripClick(
+                                    CatenaryStackEnum.SingleTrip(
+                                        chateau_id = screenData.chateau_id,
+                                        trip_id = vehicle.trip?.trip_id ?: "",
+                                        route_id = vehicle.trip?.route_id,
+                                        start_date = vehicle.trip?.start_date,
+                                        start_time = vehicle.trip?.start_time,
+                                        vehicle_id = vehicle.vehicle?.id,
+                                        route_type = vehicle.route_type
                                     )
-                                },
-                        colors =
-                                CardDefaults.cardColors(
-                                        containerColor =
-                                                MaterialTheme.colorScheme.secondaryContainer
                                 )
+                            },
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                MaterialTheme.colorScheme.secondaryContainer
+                        )
                 ) {
                     Column(Modifier.padding(12.dp)) {
                         Text(
-                                "Vehicle ${vehicle.vehicle?.label ?: vehicle.vehicle?.id ?: "Unknown"}",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium
+                            "Vehicle ${vehicle.vehicle?.label ?: vehicle.vehicle?.id ?: "Unknown"}",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                         // vehicle.trip?.trip_headsign?.let { Text(stringResource(id =
                         // R.string.route_screen_to, it)) }
 
                         // New Trip Data and Occupancy Info
                         val possibleUpdates =
-                                tripUpdatesByTripId[vehicle.trip?.trip_id] ?: emptyList()
+                            tripUpdatesByTripId[vehicle.trip?.trip_id] ?: emptyList()
 
                         TripDataForVehicleOnRouteScreen(
-                                vehicle = vehicle,
-                                stops = info.stops,
-                                possibleTripUpdates = possibleUpdates,
+                            vehicle = vehicle,
+                            stops = info.stops,
+                            possibleTripUpdates = possibleUpdates,
                         ) // This composable also contains text, but let's shrink the top level
                         // first.
                         // Mirror the web route screen's per-vehicle trip delay.
@@ -824,8 +827,8 @@ fun RouteScreen(
                             )
                         }
                         OccupancyStatusText(
-                                occupancyStatus = vehicle.occupancy_status,
-                                style = MaterialTheme.typography.labelSmall
+                            occupancyStatus = vehicle.occupancy_status,
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
@@ -838,26 +841,26 @@ fun RouteScreen(
         if (!activeStops.isNullOrEmpty()) {
             item {
                 Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                            text = stringResource(R.string.stops),
-                            style = MaterialTheme.typography.titleLarge
+                        text = stringResource(R.string.stops),
+                        style = MaterialTheme.typography.titleLarge
                     )
                     if (stopConnections.isNotEmpty()) {
                         OutlinedButton(
-                                onClick = { showConnections = !showConnections },
-                                shape = RoundedCornerShape(percent = 50),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            onClick = { showConnections = !showConnections },
+                            shape = RoundedCornerShape(percent = 50),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                    text = if (showConnections) "Hide connections" else "Show connections",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Normal
+                                text = if (showConnections) "Hide connections" else "Show connections",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Normal
                             )
                         }
                     }
@@ -868,53 +871,55 @@ fun RouteScreen(
                 if (stopDetails != null) {
                     val headerHeight = 24.dp
                     Row(
-                            modifier =
-                                Modifier
-                                    .height(IntrinsicSize.Min)
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onStopClick(
-                                            CatenaryStackEnum.StopStack(
-                                                chateau_id = screenData.chateau_id,
-                                                stop_id = stopTime.stopId
-                                            )
+                        modifier =
+                            Modifier
+                                .height(IntrinsicSize.Min)
+                                .fillMaxWidth()
+                                .clickable {
+                                    onStopClick(
+                                        CatenaryStackEnum.StopStack(
+                                            chateau_id = screenData.chateau_id,
+                                            stop_id = stopTime.stopId
                                         )
-                                    },
-                            verticalAlignment = Alignment.Top
+                                    )
+                                },
+                        verticalAlignment = Alignment.Top
                     ) {
                         RouteStopProgressIndicator(
-                                isFirst = index == 0,
-                                isLast = index == activeStops.lastIndex,
-                                dotOffset = headerHeight / 2,
-                                modifier = Modifier
-                                    .width(16.dp)
-                                    .fillMaxHeight()
+                            isFirst = index == 0,
+                            isLast = index == activeStops.lastIndex,
+                            dotOffset = headerHeight / 2,
+                            modifier = Modifier
+                                .width(16.dp)
+                                .fillMaxHeight()
                         )
                         Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .defaultMinSize(minHeight = headerHeight),
-                                    verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .defaultMinSize(minHeight = headerHeight),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                        text = stopDetails.name,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Normal,
-                                        modifier = Modifier.weight(1f)
+                                    text = stopDetails.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Normal,
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
 
                             val parentId = stopDetails.parentStation
                             val connectionKey =
-                                    when {
-                                        parentId != null && stopConnections.containsKey(parentId) ->
-                                                parentId
-                                        stopConnections.containsKey(stopTime.stopId) ->
-                                                stopTime.stopId
-                                        else -> null
-                                    }
+                                when {
+                                    parentId != null && stopConnections.containsKey(parentId) ->
+                                        parentId
+
+                                    stopConnections.containsKey(stopTime.stopId) ->
+                                        stopTime.stopId
+
+                                    else -> null
+                                }
 
                             if (showConnections && connectionKey != null) {
                                 val connections = stopConnections[connectionKey].orEmpty()
@@ -950,10 +955,10 @@ fun RouteScreen(
 
 @Composable
 fun RouteStopProgressIndicator(
-        isFirst: Boolean,
-        isLast: Boolean,
-        modifier: Modifier = Modifier,
-        dotOffset: androidx.compose.ui.unit.Dp? = null
+    isFirst: Boolean,
+    isLast: Boolean,
+    modifier: Modifier = Modifier,
+    dotOffset: androidx.compose.ui.unit.Dp? = null
 ) {
     val isDark = isSystemInDarkTheme()
     val neutralColor = if (isDark) Color(0xFFDDDDDD) else Color(0xFF333333)
@@ -968,17 +973,17 @@ fun RouteStopProgressIndicator(
 
         if (!isFirst) {
             drawRect(
-                    color = neutralColor,
-                    topLeft = Offset(wCenter - lineWidth / 2, 0f),
-                    size = androidx.compose.ui.geometry.Size(lineWidth, hCenter)
+                color = neutralColor,
+                topLeft = Offset(wCenter - lineWidth / 2, 0f),
+                size = androidx.compose.ui.geometry.Size(lineWidth, hCenter)
             )
         }
 
         if (!isLast) {
             drawRect(
-                    color = neutralColor,
-                    topLeft = Offset(wCenter - lineWidth / 2, hCenter),
-                    size = androidx.compose.ui.geometry.Size(lineWidth, canvasHeight - hCenter)
+                color = neutralColor,
+                topLeft = Offset(wCenter - lineWidth / 2, hCenter),
+                size = androidx.compose.ui.geometry.Size(lineWidth, canvasHeight - hCenter)
             )
         }
 
@@ -992,25 +997,25 @@ fun RouteStopProgressIndicator(
             val ringStroke = 2.dp.toPx()
 
             drawCircle(
-                    color = Color.Black,
-                    radius = dotRadius + (borderStroke / 2) + (ringStroke / 2),
-                    center = dotCenter,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = borderStroke)
+                color = Color.Black,
+                radius = dotRadius + (borderStroke / 2) + (ringStroke / 2),
+                center = dotCenter,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = borderStroke)
             )
             drawCircle(color = Color.Black, radius = dotRadius, center = dotCenter)
             drawCircle(
-                    color = neutralColor,
-                    radius = dotRadius,
-                    center = dotCenter,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = ringStroke)
+                color = neutralColor,
+                radius = dotRadius,
+                center = dotCenter,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = ringStroke)
             )
         } else {
             drawCircle(color = Color.White, radius = dotRadius, center = dotCenter)
             drawCircle(
-                    color = neutralColor,
-                    radius = dotRadius,
-                    center = dotCenter,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+                color = neutralColor,
+                radius = dotRadius,
+                center = dotCenter,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
             )
         }
     }

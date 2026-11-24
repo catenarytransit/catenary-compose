@@ -14,17 +14,25 @@ import org.junit.Rule
 import org.junit.Test
 
 class ConnectionScrollPositionTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule
+    val compose = createComposeRule()
 
-    @Test fun prependAndAppendKeepTheVisibleCardAtTheSamePixel() = checkAnchor(5, 23)
-    @Test fun prependKeepsCardsInPlaceWhenEarlierSpinnerIsVisible() = checkAnchor(1, 12)
+    @Test
+    fun prependAndAppendKeepTheVisibleCardAtTheSamePixel() = checkAnchor(5, 23)
+    @Test
+    fun prependKeepsCardsInPlaceWhenEarlierSpinnerIsVisible() = checkAnchor(1, 12)
 
-    @Test fun shortFirstPageHasNoGapAboveTheFirstCard() {
+    @Test
+    fun shortFirstPageHasNoGapAboveTheFirstCard() {
         lateinit var state: LazyListState
         compose.setContent {
             state = rememberLazyListState()
-            LazyColumn(Modifier.width(300.dp).height(600.dp), state = state,
-                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp)) {
+            LazyColumn(
+                Modifier
+                    .width(300.dp)
+                    .height(600.dp), state = state,
+                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp)
+            ) {
                 item(key = "status") { }
                 item(key = "earlier") { Spacer(Modifier.height(0.dp)) }
                 item(key = "connection") { Spacer(Modifier.height(100.dp)) }
@@ -32,7 +40,10 @@ class ConnectionScrollPositionTest {
             }
         }
         compose.runOnIdle {
-            assertEquals(0, state.layoutInfo.visibleItemsInfo.first { it.key == "connection" }.offset)
+            assertEquals(
+                0,
+                state.layoutInfo.visibleItemsInfo.first { it.key == "connection" }.offset
+            )
         }
     }
 
@@ -42,11 +53,19 @@ class ConnectionScrollPositionTest {
         compose.setContent {
             state = rememberLazyListState()
             PreserveConnectionScrollPosition(state, identities)
-            LazyColumn(Modifier.width(300.dp).height(400.dp), state = state,
-                contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyColumn(
+                Modifier
+                    .width(300.dp)
+                    .height(400.dp),
+                state = state,
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 item(key = "status") { Spacer(Modifier.height(1.dp)) }
                 item(key = "earlier") { Spacer(Modifier.height(48.dp)) }
-                items(identities, key = { it }) { Spacer(Modifier.fillMaxWidth().height(100.dp)) }
+                items(identities, key = { it }) { Spacer(Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)) }
                 item(key = "later") { Spacer(Modifier.height(48.dp)) }
             }
         }
@@ -55,18 +74,26 @@ class ConnectionScrollPositionTest {
         var anchorKey: Any = ""
         var anchorOffset = 0
         compose.runOnIdle {
-            val anchor = state.layoutInfo.visibleItemsInfo.first { it.key.toString().startsWith("connection-") }
+            val anchor = state.layoutInfo.visibleItemsInfo.first {
+                it.key.toString().startsWith("connection-")
+            }
             anchorKey = anchor.key; anchorOffset = anchor.offset
             identities = (-4..-1).map { "connection-$it" } + identities
         }
         compose.waitForIdle()
         compose.runOnIdle {
-            assertEquals(anchorOffset, state.layoutInfo.visibleItemsInfo.first { it.key == anchorKey }.offset)
+            assertEquals(
+                anchorOffset,
+                state.layoutInfo.visibleItemsInfo.first { it.key == anchorKey }.offset
+            )
             identities = identities + (12..16).map { "connection-$it" }
         }
         compose.waitForIdle()
         compose.runOnIdle {
-            assertEquals(anchorOffset, state.layoutInfo.visibleItemsInfo.first { it.key == anchorKey }.offset)
+            assertEquals(
+                anchorOffset,
+                state.layoutInfo.visibleItemsInfo.first { it.key == anchorKey }.offset
+            )
         }
     }
 }

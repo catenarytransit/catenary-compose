@@ -15,14 +15,14 @@ import kotlinx.serialization.json.Json
 
 // This class will be the "cleaned" version from your Svelte logic
 data class StopTimeCleaned(
-        val raw: TripStoptime,
-        var rtArrivalTime: Long? = raw.rt_arrival?.time,
-        var rtDepartureTime: Long? = raw.rt_departure?.time,
-        var strikeDeparture: Boolean = raw.rt_departure?.time != null,
-        var strikeArrival: Boolean = raw.rt_arrival?.time != null,
-        var rtArrivalDiff: Long? = null,
-        var rtDepartureDiff: Long? = null,
-        val showBoth: Boolean = false // Logic to calculate this
+    val raw: TripStoptime,
+    var rtArrivalTime: Long? = raw.rt_arrival?.time,
+    var rtDepartureTime: Long? = raw.rt_departure?.time,
+    var strikeDeparture: Boolean = raw.rt_departure?.time != null,
+    var strikeArrival: Boolean = raw.rt_arrival?.time != null,
+    var rtArrivalDiff: Long? = null,
+    var rtDepartureDiff: Long? = null,
+    val showBoth: Boolean = false // Logic to calculate this
 )
 
 class SingleTripViewModel(
@@ -158,8 +158,8 @@ class SingleTripViewModel(
     private fun fetchVehicleInfo() {
         viewModelScope.launch {
             val vehicleId =
-                    tripData.value?.vehicle?.label
-                            ?: tripData.value?.vehicle?.id ?: tripSelected.vehicle_id
+                tripData.value?.vehicle?.label
+                    ?: tripData.value?.vehicle?.id ?: tripSelected.vehicle_id
 
             if (vehicleId.isNullOrBlank()) return@launch
 
@@ -204,13 +204,13 @@ class SingleTripViewModel(
 
         if (cleaned.rtArrivalTime != null && stoptime.scheduled_arrival_time_unix_seconds != null) {
             cleaned.rtArrivalDiff =
-                    cleaned.rtArrivalTime!! - stoptime.scheduled_arrival_time_unix_seconds
+                cleaned.rtArrivalTime!! - stoptime.scheduled_arrival_time_unix_seconds
         }
         if (cleaned.rtDepartureTime != null &&
-                        stoptime.scheduled_departure_time_unix_seconds != null
+            stoptime.scheduled_departure_time_unix_seconds != null
         ) {
             cleaned.rtDepartureDiff =
-                    cleaned.rtDepartureTime!! - stoptime.scheduled_departure_time_unix_seconds
+                cleaned.rtDepartureTime!! - stoptime.scheduled_departure_time_unix_seconds
         }
 
         return cleaned
@@ -218,20 +218,20 @@ class SingleTripViewModel(
 
     private fun mergeRtStopTime(existing: StopTimeCleaned, rt: StopTimeRefresh): StopTimeCleaned {
         val updated =
-                existing.copy(
-                        raw = existing.raw.copy(
-                                rt_platform_string = rt.rt_platform_string,
-                                schedule_relationship = rt.schedule_relationship
-                                        ?: existing.raw.schedule_relationship
-                        )
+            existing.copy(
+                raw = existing.raw.copy(
+                    rt_platform_string = rt.rt_platform_string,
+                    schedule_relationship = rt.schedule_relationship
+                        ?: existing.raw.schedule_relationship
                 )
+            )
 
         if (rt.rt_arrival?.time != null) {
             updated.rtArrivalTime = rt.rt_arrival.time
             updated.strikeArrival = true
             if (updated.raw.scheduled_arrival_time_unix_seconds != null) {
                 updated.rtArrivalDiff =
-                        updated.rtArrivalTime!! - updated.raw.scheduled_arrival_time_unix_seconds
+                    updated.rtArrivalTime!! - updated.raw.scheduled_arrival_time_unix_seconds
             }
         }
 
@@ -240,8 +240,8 @@ class SingleTripViewModel(
             updated.strikeDeparture = true
             if (updated.raw.scheduled_departure_time_unix_seconds != null) {
                 updated.rtDepartureDiff =
-                        updated.rtDepartureTime!! -
-                                updated.raw.scheduled_departure_time_unix_seconds
+                    updated.rtDepartureTime!! -
+                            updated.raw.scheduled_departure_time_unix_seconds
             }
         }
 
@@ -264,7 +264,7 @@ class SingleTripViewModel(
 
             if (hasAnyRealtime) {
                 if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
-                                arrivalTimeToUse != null
+                    arrivalTimeToUse != null
                 ) {
                     if (stoptime.raw.scheduled_departure_time_unix_seconds < arrivalTimeToUse) {
                         departureTimeToUse = arrivalTimeToUse
@@ -272,7 +272,7 @@ class SingleTripViewModel(
                 }
             } else {
                 if (stoptime.raw.scheduled_departure_time_unix_seconds != null &&
-                                arrivalTimeToUse != null
+                    arrivalTimeToUse != null
                 ) {
                     if (stoptime.raw.scheduled_departure_time_unix_seconds < arrivalTimeToUse) {
                         departureTimeToUse = arrivalTimeToUse
@@ -281,8 +281,8 @@ class SingleTripViewModel(
             }
 
             if (arrivalTimeToUse != null &&
-                            stoptime.raw.scheduled_arrival_time_unix_seconds != null &&
-                            stoptime.rtDepartureTime != null
+                stoptime.raw.scheduled_arrival_time_unix_seconds != null &&
+                stoptime.rtDepartureTime != null
             ) {
                 if (stoptime.raw.scheduled_arrival_time_unix_seconds > stoptime.rtDepartureTime!!) {
                     arrivalTimeToUse = stoptime.rtDepartureTime
@@ -294,11 +294,11 @@ class SingleTripViewModel(
             }
 
             val dep =
-                    if (hasAnyRealtime) departureTimeToUse
-                    else (departureTimeToUse ?: stoptime.raw.scheduled_departure_time_unix_seconds)
+                if (hasAnyRealtime) departureTimeToUse
+                else (departureTimeToUse ?: stoptime.raw.scheduled_departure_time_unix_seconds)
             val arr =
-                    if (hasAnyRealtime) arrivalTimeToUse
-                    else (arrivalTimeToUse ?: stoptime.raw.scheduled_arrival_time_unix_seconds)
+                if (hasAnyRealtime) arrivalTimeToUse
+                else (arrivalTimeToUse ?: stoptime.raw.scheduled_arrival_time_unix_seconds)
 
             val hasDeparted = dep != null && dep <= nowSec
             val hasArrived = arr != null && arr <= nowSec
@@ -323,24 +323,24 @@ class SingleTripViewModel(
             val nextStop = stopList[lastDepartedIdx + 1]
 
             val dep =
-                    if (hasAnyRealtime) {
-                        prevStop.rtDepartureTime?.toDouble() ?: prevStop.rtArrivalTime?.toDouble()
-                    } else {
-                        prevStop.rtDepartureTime?.toDouble()
-                                ?: prevStop.raw.scheduled_departure_time_unix_seconds?.toDouble()
-                                        ?: prevStop.raw.interpolated_stoptime_unix_seconds
-                                        ?.toDouble()
-                    }
+                if (hasAnyRealtime) {
+                    prevStop.rtDepartureTime?.toDouble() ?: prevStop.rtArrivalTime?.toDouble()
+                } else {
+                    prevStop.rtDepartureTime?.toDouble()
+                        ?: prevStop.raw.scheduled_departure_time_unix_seconds?.toDouble()
+                        ?: prevStop.raw.interpolated_stoptime_unix_seconds
+                            ?.toDouble()
+                }
 
             val arr =
-                    if (hasAnyRealtime) {
-                        nextStop.rtArrivalTime?.toDouble()
-                    } else {
-                        nextStop.rtArrivalTime?.toDouble()
-                                ?: nextStop.raw.scheduled_arrival_time_unix_seconds?.toDouble()
-                                        ?: nextStop.raw.interpolated_stoptime_unix_seconds
-                                        ?.toDouble()
-                    }
+                if (hasAnyRealtime) {
+                    nextStop.rtArrivalTime?.toDouble()
+                } else {
+                    nextStop.rtArrivalTime?.toDouble()
+                        ?: nextStop.raw.scheduled_arrival_time_unix_seconds?.toDouble()
+                        ?: nextStop.raw.interpolated_stoptime_unix_seconds
+                            ?.toDouble()
+                }
 
             val nowDouble = nowSec.toDouble()
 

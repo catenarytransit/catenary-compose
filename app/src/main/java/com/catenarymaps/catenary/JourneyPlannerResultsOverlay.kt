@@ -15,7 +15,9 @@ internal fun BoxScope.JourneyPlannerResultsOverlay(
 ) {
     if (usingMap) return
     Box(
-        Modifier.align(Alignment.TopStart).fillMaxSize()
+        Modifier
+            .align(Alignment.TopStart)
+            .fillMaxSize()
             .zIndex(5f)
             .background(TripPlannerColors.background),
         content = content

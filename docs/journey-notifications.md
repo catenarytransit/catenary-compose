@@ -76,7 +76,8 @@ user-initiated guidance, which requires declaration and review in Play Console.
 * Departure changed: "IC 5 at Genève now departs at 08:27."
 * Platform changed: "Change of platform in Genève. Departure at 08:24 now from platform 4."
 * Cancellation: "IC 5 during your journey has been cancelled. Tap for more information."
-* Missed connection: "Connection to RE 33 no longer possible due to delay. Please find an alternate connection."
+* Missed connection: "Connection to RE 33 no longer possible due to delay. Please find an alternate
+  connection."
 
 The notification's content intent opens the app's Saved Journeys screen.
 When the app is foregrounded, its `FirebaseMessagingService` posts the
@@ -107,8 +108,8 @@ registration rate limits, device-auth checks and a request-size ceiling.
 ## Started-trip subscription and leg progress
 
 * Pressing **Start** persists one active trip, registers or refreshes the Firebase
-  token through the existing WorkManager job, and reconciles the backend set of
-  **bookmarked journeys plus the one active journey**. An active journey does not
+  token through the existing WorkManager job, and reconciles the backend set of **bookmarked
+  journeys plus the one active journey**. An active journey does not
   need to be bookmarked to receive disruption alerts.
 * Pressing **End** removes only the active-only subscription on the next sync.
   If it is also bookmarked, it stays subscribed. Switching active journeys atomically
@@ -134,5 +135,5 @@ registration rate limits, device-auth checks and a request-size ceiling.
 ## Switch-trip confirmation
 
 If the user presses Start on a different journey while one is active, the
-existing trip remains active behind a modal dialog. Dismiss leaves it untouched;
-**Start trip** replaces the active session. Bookmarks are unaffected.
+existing trip remains active behind a modal dialog. Dismiss leaves it untouched; **Start trip**
+replaces the active session. Bookmarks are unaffected.

@@ -44,36 +44,36 @@ object MtaSubwayUtils {
     }
 
     private val SUBWAY_ROUTE_IDS =
-            setOf(
-                    "A",
-                    "C",
-                    "E",
-                    "B",
-                    "D",
-                    "F",
-                    "FX",
-                    "M",
-                    "G",
-                    "J",
-                    "Z",
-                    "L",
-                    "N",
-                    "Q",
-                    "R",
-                    "W",
-                    "GS",
-                    "FS",
-                    "H",
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "6X",
-                    "7",
-                    "7X"
-            )
+        setOf(
+            "A",
+            "C",
+            "E",
+            "B",
+            "D",
+            "F",
+            "FX",
+            "M",
+            "G",
+            "J",
+            "Z",
+            "L",
+            "N",
+            "Q",
+            "R",
+            "W",
+            "GS",
+            "FS",
+            "H",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "6X",
+            "7",
+            "7X"
+        )
 
     fun isSubwayRouteId(routeId: String): Boolean {
         return SUBWAY_ROUTE_IDS.contains(routeId.uppercase())
@@ -86,16 +86,16 @@ object MtaSubwayUtils {
     fun getMtaIconUrl(routeId: String): String? {
         val s = routeId.uppercase()
         val iconName =
-                when {
-                    s == "6X" -> "6d"
-                    s == "7X" -> "7d"
-                    s == "FX" -> "fd"
-                    s.endsWith("X") -> "${s.dropLast(1).lowercase()}d"
-                    s == "GS" || s == "FS" || s == "H" -> "s"
-                    s == "SIR" -> "sir"
-                    isSubwayRouteId(s) -> s.lowercase()
-                    else -> return null
-                }
+            when {
+                s == "6X" -> "6d"
+                s == "7X" -> "7d"
+                s == "FX" -> "fd"
+                s.endsWith("X") -> "${s.dropLast(1).lowercase()}d"
+                s == "GS" || s == "FS" || s == "H" -> "s"
+                s == "SIR" -> "sir"
+                isSubwayRouteId(s) -> s.lowercase()
+                else -> return null
+            }
         return "https://maps.catenarymaps.org/mtaicons/$iconName.svg"
     }
 }

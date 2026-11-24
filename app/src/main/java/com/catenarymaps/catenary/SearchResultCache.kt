@@ -42,6 +42,7 @@ internal class CompletedSearchCache<K, V>(
     }
 
     private data class Snapshot<V>(val value: V, val createdAt: Long)
+
     private val entries = LinkedHashMap<K, Snapshot<V>>(16, 0.75f, true)
 
     @Synchronized

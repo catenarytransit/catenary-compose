@@ -33,6 +33,7 @@ data class DirectionsPoint(
     @kotlinx.serialization.SerialName("ServiceArrival") val serviceArrival: DirectionsEventTime? = null,
     @kotlinx.serialization.SerialName("NotServicedStop") val notServicedStop: Boolean = false
 )
+
 @Serializable
 data class DirectionsStop(
     val name: String = "", val arrival: String? = null, val departure: String? = null,
@@ -44,24 +45,39 @@ data class DirectionsStop(
     @kotlinx.serialization.SerialName("EstimatedQuay") val estimatedQuay: String? = null,
     @kotlinx.serialization.SerialName("NotServicedStop") val notServicedStop: Boolean = false
 )
+
 @Serializable
 data class DirectionsGeometry(val points: String? = null, val precision: Int = 6)
+
 @Serializable
 data class DirectionsLeg(
-    val mode: String, val duration: Double? = null,
-    val startTime: String? = null, val endTime: String? = null,
-    val routeColor: String? = null, val routeTextColor: String? = null,
-    val routeShortName: String? = null, val routeLongName: String? = null,
-    val routeId: String? = null, val routeType: Int? = null, val chateau: String? = null,
-    val tripShortName: String? = null, val agencyId: String? = null,
-    val from: DirectionsPoint? = null, val to: DirectionsPoint? = null,
-    val fromPlatform: String? = null, val toPlatform: String? = null,
+    val mode: String,
+    val duration: Double? = null,
+    val startTime: String? = null,
+    val endTime: String? = null,
+    val routeColor: String? = null,
+    val routeTextColor: String? = null,
+    val routeShortName: String? = null,
+    val routeLongName: String? = null,
+    val routeId: String? = null,
+    val routeType: Int? = null,
+    val chateau: String? = null,
+    val tripShortName: String? = null,
+    val agencyId: String? = null,
+    val from: DirectionsPoint? = null,
+    val to: DirectionsPoint? = null,
+    val fromPlatform: String? = null,
+    val toPlatform: String? = null,
     val intermediateStops: List<DirectionsStop> = emptyList(),
     val legGeometry: DirectionsGeometry? = null,
     val headsign: String? = null,
-    val tripId: String? = null, val tripStartDate: String? = null, val tripStartTime: String? = null,
-    val fromStopSequence: Int? = null, val toStopSequence: Int? = null,
-    val scheduledStartTime: String? = null, val scheduledEndTime: String? = null,
+    val tripId: String? = null,
+    val tripStartDate: String? = null,
+    val tripStartTime: String? = null,
+    val fromStopSequence: Int? = null,
+    val toStopSequence: Int? = null,
+    val scheduledStartTime: String? = null,
+    val scheduledEndTime: String? = null,
     @kotlinx.serialization.SerialName("ServiceDeparture") val serviceDeparture: DirectionsEventTime? = null,
     @kotlinx.serialization.SerialName("ServiceArrival") val serviceArrival: DirectionsEventTime? = null,
     val cancelled: Boolean = false
@@ -73,19 +89,29 @@ data class DirectionsLeg(
     val walking get() = mode.uppercase() in setOf("WALK", "FOOT", "PEDESTRIAN")
     val street get() = walking || mode.uppercase() in setOf("BIKE", "BICYCLE")
     val label get() = routeShortName ?: routeLongName ?: routeId ?: mode
-    val seconds get() = duration ?: runCatching {
-        java.time.Duration.between(java.time.Instant.parse(startTime), java.time.Instant.parse(endTime)).seconds.toDouble()
-    }.getOrDefault(0.0)
+    val seconds
+        get() = duration ?: runCatching {
+            java.time.Duration.between(
+                java.time.Instant.parse(startTime),
+                java.time.Instant.parse(endTime)
+            ).seconds.toDouble()
+        }.getOrDefault(0.0)
 }
+
 @Serializable
 data class DirectionsItinerary(
     val startTime: String, val endTime: String, val duration: Double? = null,
     val transfers: Int? = null, val legs: List<DirectionsLeg>, val id: String? = null
 ) {
-    val seconds get() = duration ?: runCatching {
-        java.time.Duration.between(java.time.Instant.parse(startTime), java.time.Instant.parse(endTime)).seconds.toDouble()
-    }.getOrDefault(0.0)
+    val seconds
+        get() = duration ?: runCatching {
+            java.time.Duration.between(
+                java.time.Instant.parse(startTime),
+                java.time.Instant.parse(endTime)
+            ).seconds.toDouble()
+        }.getOrDefault(0.0)
 }
+
 @Serializable
 data class DirectionsPlan(
     val itineraries: List<DirectionsItinerary> = emptyList(),
@@ -101,15 +127,21 @@ enum class PublicTransportMode {
 
 @Serializable
 data class DirectionsOptions(
-    val cycling: Boolean = false, val walkingPace: Float = 840f, val cyclingKmh: Float = 16f,
-    val accessSeconds: Float = 900f, val egressSeconds: Float = 900f, val directSeconds: Float = 1800f,
+    val cycling: Boolean = false,
+    val walkingPace: Float = 840f,
+    val cyclingKmh: Float = 16f,
+    val accessSeconds: Float = 900f,
+    val egressSeconds: Float = 900f,
+    val directSeconds: Float = 1800f,
     val filterTransportModes: Boolean = false,
     val transportModes: Set<PublicTransportMode> = PublicTransportMode.entries.toSet()
 )
 
 /** Same request contract and units as catenary-web's directions/edelweiss.ts. */
-fun directionsRequest(from: DirectionsLocation, to: DirectionsLocation, time: Long,
-                      arriveBy: Boolean, options: DirectionsOptions): JsonObject {
+fun directionsRequest(
+    from: DirectionsLocation, to: DirectionsLocation, time: Long,
+    arriveBy: Boolean, options: DirectionsOptions
+): JsonObject {
     require(from.isValid() && to.isValid())
     require(options.walkingPace > 0 && options.cyclingKmh > 0)
     // Match Edelweiss's 1..3600-second contract, including options retained
@@ -118,6 +150,7 @@ fun directionsRequest(from: DirectionsLocation, to: DirectionsLocation, time: Lo
         require(seconds.isFinite())
         return seconds.toInt().coerceIn(1, 3600)
     }
+
     fun point(p: DirectionsLocation) = buildJsonObject { put("lat", p.lat); put("lon", p.lon) }
     return buildJsonObject {
         put("from", point(from)); put("to", point(to))
@@ -156,10 +189,13 @@ fun directionsRequest(from: DirectionsLocation, to: DirectionsLocation, time: Lo
 /** Defensive polyline decoding: malformed or truncated geometry cannot crash the screen. */
 fun decodeDirectionsPolyline(encoded: String, precision: Int = 6): List<Pair<Double, Double>> {
     if (precision !in 0..8) return emptyList()
-    var index = 0; var lat = 0L; var lon = 0L
+    var index = 0;
+    var lat = 0L;
+    var lon = 0L
     val scale = 10.0.pow(precision)
     fun next(): Long {
-        var result = 0L; var shift = 0
+        var result = 0L;
+        var shift = 0
         while (true) {
             require(index < encoded.length && shift <= 60)
             val byte = encoded[index++].code - 63
@@ -183,82 +219,117 @@ fun decodeDirectionsPolyline(encoded: String, precision: Int = 6): List<Pair<Dou
 }
 
 private fun lonDelta(a: Double, b: Double) = ((a - b + 540) % 360) - 180
-private data class DirectionsShapeProjection(val index: Int, val fraction: Double, val point: Pair<Double, Double>, val distance: Double)
+private data class DirectionsShapeProjection(
+    val index: Int,
+    val fraction: Double,
+    val point: Pair<Double, Double>,
+    val distance: Double
+)
 
 /** Project and trim full GTFS shapes to boarding/alighting stops, including reversed shapes. */
 fun directionsCoordinates(leg: DirectionsLeg): List<Pair<Double, Double>> {
     val geometry = leg.legGeometry
-    val points = geometry?.points?.let { decodeDirectionsPolyline(it, geometry.precision) }.orEmpty()
+    val points =
+        geometry?.points?.let { decodeDirectionsPolyline(it, geometry.precision) }.orEmpty()
     if (points.size < 2 && leg.walking) {
         // Match the web: walking connectors remain visible when OSR has no detailed shape.
         val endpoints = listOfNotNull(leg.from, leg.to)
         if (endpoints.size == 2 && endpoints.all {
-            it.lat != null && it.lon != null && it.lat.isFinite() && it.lon.isFinite() &&
-                it.lat in -90.0..90.0 && it.lon in -180.0..180.0
-        }) return endpoints.map { it.lat!! to it.lon!! }
+                it.lat != null && it.lon != null && it.lat.isFinite() && it.lon.isFinite() &&
+                        it.lat in -90.0..90.0 && it.lon in -180.0..180.0
+            }) return endpoints.map { it.lat!! to it.lon!! }
     }
-    val from = leg.from; val to = leg.to
+    val from = leg.from;
+    val to = leg.to
     if (leg.street || points.size < 2 || from?.lat == null || from.lon == null || to?.lat == null || to.lon == null) return points
     if (haversineDistance(from.lat, from.lon, to.lat, to.lon) < 20) return points
     fun projections(stop: DirectionsPoint): List<DirectionsShapeProjection> {
-        val latitude = stop.lat!!; val longitude = stop.lon!!
+        val latitude = stop.lat!!;
+        val longitude = stop.lon!!
         val scale = 111195 * max(0.00001, cos(Math.toRadians(latitude)))
         val candidates = points.zipWithNext().mapIndexedNotNull { i, (a, b) ->
-            val ax = lonDelta(a.second, longitude) * scale; val ay = (a.first - latitude) * 111195
-            val bx = lonDelta(b.second, longitude) * scale; val by = (b.first - latitude) * 111195
-            val dx = bx - ax; val dy = by - ay
+            val ax = lonDelta(a.second, longitude) * scale;
+            val ay = (a.first - latitude) * 111195
+            val bx = lonDelta(b.second, longitude) * scale;
+            val by = (b.first - latitude) * 111195
+            val dx = bx - ax;
+            val dy = by - ay
             val square = dx * dx + dy * dy
             if (square == 0.0) return@mapIndexedNotNull null
             val fraction = (-(ax * dx + ay * dy) / square).coerceIn(0.0, 1.0)
-            val x = ax + fraction * dx; val y = ay + fraction * dy
+            val x = ax + fraction * dx;
+            val y = ay + fraction * dy
             val distance = hypot(x, y)
-            if (distance > 350) null else DirectionsShapeProjection(i, fraction,
-                latitude + y / 111195 to ((longitude + x / scale + 540) % 360 - 180), distance)
+            if (distance > 350) null else DirectionsShapeProjection(
+                i, fraction,
+                latitude + y / 111195 to ((longitude + x / scale + 540) % 360 - 180), distance
+            )
         }.sortedBy { it.distance }
         val cutoff = min(350.0, (candidates.firstOrNull()?.distance ?: return emptyList()) + 30)
         return candidates.filter { it.distance <= cutoff }.take(64)
     }
-    val starts = projections(from); val ends = projections(to)
+
+    val starts = projections(from);
+    val ends = projections(to)
     val chosen = starts.flatMap { a -> ends.map { b -> a to b } }
         .filter { (a, b) -> abs(a.index + a.fraction - b.index - b.fraction) >= 1e-8 }
         .minByOrNull { (a, b) -> a.distance + b.distance + if (a.index + a.fraction > b.index + b.fraction) 5 else 0 }
         ?: return points
-    val reverse = chosen.first.index + chosen.first.fraction > chosen.second.index + chosen.second.fraction
+    val reverse =
+        chosen.first.index + chosen.first.fraction > chosen.second.index + chosen.second.fraction
     val first = if (reverse) chosen.second else chosen.first
     val last = if (reverse) chosen.first else chosen.second
-    val clipped = (listOf(first.point) + points.subList(first.index + 1, last.index + 1) + last.point)
-        .fold(emptyList<Pair<Double, Double>>()) { acc, p -> if (acc.lastOrNull() == p) acc else acc + p }
+    val clipped =
+        (listOf(first.point) + points.subList(first.index + 1, last.index + 1) + last.point)
+            .fold(emptyList<Pair<Double, Double>>()) { acc, p -> if (acc.lastOrNull() == p) acc else acc + p }
     return if (clipped.size < 2) points else if (reverse) clipped.reversed() else clipped
 }
 
 fun directionsDistance(leg: DirectionsLeg): Double? {
     // Map-only fallback connectors must not be mistaken for measured OSR walking distances.
     val geometry = leg.legGeometry ?: return null
-    if (decodeDirectionsPolyline(geometry.points ?: return null, geometry.precision).size < 2) return null
+    if (decodeDirectionsPolyline(
+            geometry.points ?: return null,
+            geometry.precision
+        ).size < 2
+    ) return null
     val points = directionsCoordinates(leg)
     if (points.size < 2) return null
-    return points.zipWithNext().sumOf { (a, b) -> haversineDistance(a.first, a.second, b.first, b.second) }
+    return points.zipWithNext()
+        .sumOf { (a, b) -> haversineDistance(a.first, a.second, b.first, b.second) }
 }
 
 fun SearchRow.directionsLocation(): DirectionsLocation? = when (this) {
     is SearchRow.CypressRow -> item.geometry.coordinates.takeIf { it.size >= 2 }?.let {
         DirectionsLocation(item.properties.name, it[1], it[0])
     }
+
     is SearchRow.StopRow -> DirectionsLocation(stopInfo.name, stopInfo.point.y, stopInfo.point.x)
-    is SearchRow.OsmStationRow -> result.point?.let { DirectionsLocation(result.name ?: "Station", it.y, it.x) }
+    is SearchRow.OsmStationRow -> result.point?.let {
+        DirectionsLocation(
+            result.name ?: "Station",
+            it.y,
+            it.x
+        )
+    }
+
     is SearchRow.RouteRow -> null
 }?.takeIf { it.isValid() }
 
 fun encodeDirectionsPolyline(points: List<Pair<Double, Double>>): String {
-    var lat = 0L; var lon = 0L
+    var lat = 0L;
+    var lon = 0L
     return buildString {
         fun appendDelta(delta: Long) {
             var value = if (delta < 0) (delta shl 1).inv() else delta shl 1
-            while (value >= 32) { append(((value and 31) or 32).toInt().plus(63).toChar()); value = value shr 5 }
+            while (value >= 32) {
+                append(((value and 31) or 32).toInt().plus(63).toChar()); value = value shr 5
+            }
             append((value + 63).toInt().toChar())
         }
         points.forEach { (a, b) ->
-            val nextLat = kotlin.math.round(a * 1e6).toLong(); val nextLon = kotlin.math.round(b * 1e6).toLong()
+            val nextLat = kotlin.math.round(a * 1e6).toLong();
+            val nextLon = kotlin.math.round(b * 1e6).toLong()
             appendDelta(nextLat - lat); appendDelta(nextLon - lon); lat = nextLat; lon = nextLon
         }
     }
@@ -273,17 +344,24 @@ fun parseDirectionsCoordinate(raw: String): DirectionsLocation? {
         val cleaned = value.replace(Regex("[NSEW°º′'″\"]"), " ").trim()
         val parts = cleaned.split(Regex("\\s+")).map { it.toDoubleOrNull() ?: return null }
         if (parts.size !in 1..3 || parts.drop(1).any { it < 0 || it >= 60 }) return null
-        val magnitude = kotlin.math.abs(parts[0]) + parts.getOrElse(1) { 0.0 } / 60 + parts.getOrElse(2) { 0.0 } / 3600
+        val magnitude =
+            kotlin.math.abs(parts[0]) + parts.getOrElse(1) { 0.0 } / 60 + parts.getOrElse(2) { 0.0 } / 3600
         val negative = parts[0] < 0 || hemisphere.any { it in "SW" }
         if (parts[0] < 0 && hemisphere.any { it in "NE" }) return null
         return magnitude * if (negative) -1 else 1
     }
+
     val pair = if (text.contains(',') || text.contains(';')) text.split(Regex("[,;]"))
     else {
         val cardinal = Regex("^(.+?[NS])\\s+(.+?[EW])$").matchEntire(text)
         cardinal?.groupValues?.drop(1) ?: text.split(Regex("\\s+"))
     }
     if (pair.size != 2) return null
-    val lat = component(pair[0], true) ?: return null; val lon = component(pair[1], false) ?: return null
-    return DirectionsLocation("%.6f, %.6f".format(java.util.Locale.ROOT, lat, lon), lat, lon).takeIf { it.isValid() }
+    val lat = component(pair[0], true) ?: return null;
+    val lon = component(pair[1], false) ?: return null
+    return DirectionsLocation(
+        "%.6f, %.6f".format(java.util.Locale.ROOT, lat, lon),
+        lat,
+        lon
+    ).takeIf { it.isValid() }
 }

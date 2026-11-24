@@ -16,12 +16,23 @@ import org.maplibre.spatialk.geojson.Position
 fun TripPlannerEndpoints(planner: TripPlannerViewModel) {
     listOf(true to planner.origin, false to planner.destination).forEach { (origin, location) ->
         key(origin) {
-          if (location != null) {
-            val source = rememberGeoJsonSource(GeoJsonData.Features(Point(Position(location.lon, location.lat))))
-            SymbolLayer(id = if (origin) "directions-start" else "directions-end", source = source,
-                iconImage = image(painterResource(if (origin) R.drawable.start_point else R.drawable.end_point)),
-                iconAllowOverlap = const(true), iconIgnorePlacement = const(true))
-          }
+            if (location != null) {
+                val source = rememberGeoJsonSource(
+                    GeoJsonData.Features(
+                        Point(
+                            Position(
+                                location.lon,
+                                location.lat
+                            )
+                        )
+                    )
+                )
+                SymbolLayer(
+                    id = if (origin) "directions-start" else "directions-end", source = source,
+                    iconImage = image(painterResource(if (origin) R.drawable.start_point else R.drawable.end_point)),
+                    iconAllowOverlap = const(true), iconIgnorePlacement = const(true)
+                )
+            }
         }
     }
 }

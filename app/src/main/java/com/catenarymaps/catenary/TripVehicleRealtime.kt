@@ -16,7 +16,7 @@ internal suspend fun fetchVehicleRealtimeForLabel(
         URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 
     val url = "https://birch.catenarymaps.org/get_vehicle_information_from_label/" +
-        "${encodeSegment(chateau)}/${encodeSegment(vehicleLabel)}"
+            "${encodeSegment(chateau)}/${encodeSegment(vehicleLabel)}"
     return ktorClient.get(url).body<VehicleRealtimeDataResponse>().data.orEmpty()
 }
 
@@ -24,7 +24,7 @@ internal suspend fun fetchVehicleRealtimeForLabel(
 internal fun VehicleRealtimeData.matchesJourneyTrip(identity: RamondaTripIdentity): Boolean {
     val reported = trip ?: return true
     return (reported.trip_id == null || reported.trip_id == identity.trip_id) &&
-        (reported.route_id == null || identity.route_id == null || reported.route_id == identity.route_id) &&
-        (reported.start_date == null || identity.start_date == null || reported.start_date == identity.start_date) &&
-        (reported.start_time == null || identity.start_time == null || reported.start_time == identity.start_time)
+            (reported.route_id == null || identity.route_id == null || reported.route_id == identity.route_id) &&
+            (reported.start_date == null || identity.start_date == null || reported.start_date == identity.start_date) &&
+            (reported.start_time == null || identity.start_time == null || reported.start_time == identity.start_time)
 }

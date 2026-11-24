@@ -17,30 +17,30 @@ import org.maplibre.compose.expressions.value.StringValue
 import org.maplibre.compose.expressions.value.TextUnitValue
 
 data class LiveDotStyle(
-        val dotRadius: Expression<DpValue>,
-        val dotStrokeWidth: Expression<DpValue>,
-        val dotOpacity: Expression<FloatValue>,
-        val dotStrokeOpacity: Expression<FloatValue>,
-        val bearingIconSize: Expression<FloatValue>,
-        val bearingIconOffset: Expression<DpOffsetValue>,
-        val bearingShellOpacity: Expression<FloatValue>,
-        val bearingFilledOpacity: Expression<FloatValue>,
-        val labelTextSize: Expression<TextUnitValue>,
-        val labelTextFont: Expression<ListValue<StringValue>>,
-        val labelRadialOffset: Expression<TextUnitValue>,
-        val labelIgnorePlacementZoom: Double,
-        val labelTextOpacity: Expression<FloatValue>,
-        val minLayerDotsZoom: Float,
-        val minLabelDotsZoom: Float,
-        val minBearingZoom: Float,
-        val labelHaloWidth: Expression<DpValue>
+    val dotRadius: Expression<DpValue>,
+    val dotStrokeWidth: Expression<DpValue>,
+    val dotOpacity: Expression<FloatValue>,
+    val dotStrokeOpacity: Expression<FloatValue>,
+    val bearingIconSize: Expression<FloatValue>,
+    val bearingIconOffset: Expression<DpOffsetValue>,
+    val bearingShellOpacity: Expression<FloatValue>,
+    val bearingFilledOpacity: Expression<FloatValue>,
+    val labelTextSize: Expression<TextUnitValue>,
+    val labelTextFont: Expression<ListValue<StringValue>>,
+    val labelRadialOffset: Expression<TextUnitValue>,
+    val labelIgnorePlacementZoom: Double,
+    val labelTextOpacity: Expression<FloatValue>,
+    val minLayerDotsZoom: Float,
+    val minLabelDotsZoom: Float,
+    val minBearingZoom: Float,
+    val labelHaloWidth: Expression<DpValue>
 )
 
 fun getLiveDotStyle(
-        category: String,
-        settings: LabelSettings,
-        railInFrame: Boolean,
-        isDark: Boolean
+    category: String,
+    settings: LabelSettings,
+    railInFrame: Boolean,
+    isDark: Boolean
 ): LiveDotStyle {
     val dotRadius: Expression<DpValue>
     val dotStrokeWidth: Expression<DpValue>
@@ -122,193 +122,195 @@ fun getLiveDotStyle(
             minLabelDotsZoom = 0F
             minBearingZoom = 0F
         }
+
         "bus" -> {
             dotRadius =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            7.0 to const(1.dp),
-                            8.0 to const(1.5.dp),
-                            9.0 to const(1.6.dp),
-                            10.0 to const(1.5.dp),
-                            12.0 to const(2.0.dp),
-                            16.0 to const(6.0.dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    7.0 to const(1.dp),
+                    8.0 to const(1.5.dp),
+                    9.0 to const(1.6.dp),
+                    10.0 to const(1.5.dp),
+                    12.0 to const(2.0.dp),
+                    16.0 to const(6.0.dp)
+                )
             dotStrokeWidth =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            9.0 to if (railInFrame) const(0.4.dp) else const(0.8.dp),
-                            14.0 to const(1.0.dp)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    9.0 to if (railInFrame) const(0.4.dp) else const(0.8.dp),
+                    14.0 to const(1.0.dp)
+                )
             dotOpacity = if (railInFrame) const(0.5f) else const(0.8f)
             dotStrokeOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            7.9 to const(0.0f),
-                            8.0 to const(0.3f),
-                            9.0 to const(0.5f),
-                            13.0 to const(0.9f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    7.9 to const(0.0f),
+                    8.0 to const(0.3f),
+                    9.0 to const(0.5f),
+                    13.0 to const(0.9f)
+                )
             bearingIconSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            8.0 to const(0.3f),
-                            9.0 to const(0.4f),
-                            12.0 to const(0.5f),
-                            15.0 to const(0.6f)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    8.0 to const(0.3f),
+                    9.0 to const(0.4f),
+                    12.0 to const(0.5f),
+                    15.0 to const(0.6f)
+                )
             bearingIconOffset =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            9.0 to offset(0.dp, (-4).dp),
-                            10.0 to offset(0.dp, (-5).dp),
-                            12.0 to offset(0.dp, (-5).dp),
-                            13.0 to offset(0.dp, (-5).dp),
-                            15.0 to offset(0.dp, (-5).dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9.0 to offset(0.dp, (-4).dp),
+                    10.0 to offset(0.dp, (-5).dp),
+                    12.0 to offset(0.dp, (-5).dp),
+                    13.0 to offset(0.dp, (-5).dp),
+                    15.0 to offset(0.dp, (-5).dp)
+                )
             bearingShellOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            9.0 to const(0.05f),
-                            10.0 to const(0.2f),
-                            12.0 to const(0.2f),
-                            15.0 to const(0.5f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    9.0 to const(0.05f),
+                    10.0 to const(0.2f),
+                    12.0 to const(0.2f),
+                    15.0 to const(0.5f)
+                )
             bearingFilledOpacity = const(0.4f)
             labelTextSize =
-                    if (settings.headsign) {
-                        interpolate(
-                                type = linear(),
-                                input = zoom(),
-                                9.0 to if (railInFrame) const(0.20f.em) else const(0.25f.em),
-                                11.0 to if (railInFrame) const(0.24f.em) else const(0.3125f.em),
-                                12.0 to if (railInFrame) const(0.3.em) else const(0.4375.em),
-                                13.0 to const(0.5625f.em),
-                                15.0 to const(0.6875f.em)
-                        )
-                    } else {
-                        interpolate(
-                                type = linear(),
-                                input = zoom(),
-                                9.0 to const(0.3125f.em),
-                                11.0 to const(0.4375f.em),
-                                13.0 to const(0.625f.em),
-                                15.0 to const(0.8125f.em)
-                        )
-                    }
+                if (settings.headsign) {
+                    interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        9.0 to if (railInFrame) const(0.20f.em) else const(0.25f.em),
+                        11.0 to if (railInFrame) const(0.24f.em) else const(0.3125f.em),
+                        12.0 to if (railInFrame) const(0.3.em) else const(0.4375.em),
+                        13.0 to const(0.5625f.em),
+                        15.0 to const(0.6875f.em)
+                    )
+                } else {
+                    interpolate(
+                        type = linear(),
+                        input = zoom(),
+                        9.0 to const(0.3125f.em),
+                        11.0 to const(0.4375f.em),
+                        13.0 to const(0.625f.em),
+                        15.0 to const(0.8125f.em)
+                    )
+                }
             labelTextFont =
-                    if (railInFrame) {
-                        if (isDark)
-                                step(
-                                        zoom(),
-                                        const(listOf("Arimo-Regular")),
-                                        12.5 to const(listOf("Arimo-Medium")),
-                                        14.0 to const(listOf("Arimo-SemiBold"))
-                                )
-                        else
-                                step(
-                                        zoom(),
-                                        const(listOf("Arimo-Regular")),
-                                        11.8 to const(listOf("Arimo-Medium")),
-                                        14.0 to const(listOf("Arimo-SemiBold"))
-                                )
-                    } else
-                            step(
-                                    zoom(),
-                                    const(listOf("Arimo-Medium")),
-                                    11.0 to const(listOf("Arimo-SemiBold"))
-                            )
+                if (railInFrame) {
+                    if (isDark)
+                        step(
+                            zoom(),
+                            const(listOf("Arimo-Regular")),
+                            12.5 to const(listOf("Arimo-Medium")),
+                            14.0 to const(listOf("Arimo-SemiBold"))
+                        )
+                    else
+                        step(
+                            zoom(),
+                            const(listOf("Arimo-Regular")),
+                            11.8 to const(listOf("Arimo-Medium")),
+                            14.0 to const(listOf("Arimo-SemiBold"))
+                        )
+                } else
+                    step(
+                        zoom(),
+                        const(listOf("Arimo-Medium")),
+                        11.0 to const(listOf("Arimo-SemiBold"))
+                    )
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = if (railInFrame) 12.0 else 10.5
             labelTextOpacity =
-                    if (isDark)
-                            interpolate(
-                                    linear(),
-                                    zoom(),
-                                    7.9 to const(0.0f),
-                                    8.0 to if (railInFrame) const(0.7f) else const(0.85f),
-                                    11.0 to if (railInFrame) const(0.70f) else const(0.85f),
-                                    12.0 to if (railInFrame) const(0.80f) else const(0.9f),
-                                    13.0 to if (railInFrame) const(0.85f) else const(0.95f),
-                            )
-                    else
-                            interpolate(
-                                    linear(),
-                                    zoom(),
-                                    7.9 to const(0.0f),
-                                    8.0 to if (railInFrame) const(0.7f) else const(0.85f),
-                                    11.0 to if (railInFrame) const(0.75f) else const(0.85f),
-                                    12.0 to if (railInFrame) const(0.85f) else const(0.9f),
-                                    13.0 to if (railInFrame) const(0.9f) else const(0.95f),
-                            )
+                if (isDark)
+                    interpolate(
+                        linear(),
+                        zoom(),
+                        7.9 to const(0.0f),
+                        8.0 to if (railInFrame) const(0.7f) else const(0.85f),
+                        11.0 to if (railInFrame) const(0.70f) else const(0.85f),
+                        12.0 to if (railInFrame) const(0.80f) else const(0.9f),
+                        13.0 to if (railInFrame) const(0.85f) else const(0.95f),
+                    )
+                else
+                    interpolate(
+                        linear(),
+                        zoom(),
+                        7.9 to const(0.0f),
+                        8.0 to if (railInFrame) const(0.7f) else const(0.85f),
+                        11.0 to if (railInFrame) const(0.75f) else const(0.85f),
+                        12.0 to if (railInFrame) const(0.85f) else const(0.9f),
+                        13.0 to if (railInFrame) const(0.9f) else const(0.95f),
+                    )
             labelHaloWidth = if (isDark) const(2.0.dp) else const(1.0.dp)
             minLayerDotsZoom = 11F
             minLabelDotsZoom = 13F
             minBearingZoom = 12F
         }
+
         "metro" -> {
             dotRadius =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            6.0 to const(2.5.dp),
-                        8.0 to const(2.3.dp),
-                        10.0 to const(3.0.dp),
-                        11.0 to const(4.5.dp),
-                        14.0 to const(6.5.dp),
-                        16.0 to const(10.5.dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    6.0 to const(2.5.dp),
+                    8.0 to const(2.3.dp),
+                    10.0 to const(3.0.dp),
+                    11.0 to const(4.5.dp),
+                    14.0 to const(6.5.dp),
+                    16.0 to const(10.5.dp)
+                )
             dotStrokeWidth =
-                    interpolate(linear(), zoom(), 8.0 to const(0.8.dp), 10.0 to const(1.2.dp))
+                interpolate(linear(), zoom(), 8.0 to const(0.8.dp), 10.0 to const(1.2.dp))
             dotOpacity = interpolate(linear(), zoom(), 7.0 to const(0.8f), 9.0 to const(1.0f))
             dotStrokeOpacity = const(1.0f)
             bearingIconSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            4.0 to const(0.4f),
-                            6.0 to const(0.5f),
-                            8.0 to const(0.55f),
-                            9.0 to const(0.6f),
-                            11.0 to const(0.7f),
-                            12.0 to const(0.8f),
-                            15.0 to const(0.9f)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    4.0 to const(0.4f),
+                    6.0 to const(0.5f),
+                    8.0 to const(0.55f),
+                    9.0 to const(0.6f),
+                    11.0 to const(0.7f),
+                    12.0 to const(0.8f),
+                    15.0 to const(0.9f)
+                )
             bearingIconOffset =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            9.0 to offset(0.dp, (-5).dp),
-                            10.0 to offset(0.dp, (-5).dp),
-                            12.0 to offset(0.dp, (-5).dp),
-                            13.0 to offset(0.dp, (-5).dp),
-                            15.0 to offset(0.dp, (-5).dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9.0 to offset(0.dp, (-5).dp),
+                    10.0 to offset(0.dp, (-5).dp),
+                    12.0 to offset(0.dp, (-5).dp),
+                    13.0 to offset(0.dp, (-5).dp),
+                    15.0 to offset(0.dp, (-5).dp)
+                )
             bearingShellOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            9.8 to const(0.3f),
-                            11.0 to const(0.4f),
-                            11.5 to const(0.8f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    9.8 to const(0.3f),
+                    11.0 to const(0.4f),
+                    11.5 to const(0.8f)
+                )
             bearingFilledOpacity = const(0.6f)
             labelTextSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            6.0 to const(0.3125f.em),
-                        9.0 to const(0.4.em),
-                        10.0 to const(0.45.em),
-                        11.0 to const(0.5f.em),
-                        13.0 to const(0.6f.em),
-                        15.0 to const(0.8f.em),
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    6.0 to const(0.3125f.em),
+                    9.0 to const(0.4.em),
+                    10.0 to const(0.45.em),
+                    11.0 to const(0.5f.em),
+                    13.0 to const(0.6f.em),
+                    15.0 to const(0.8f.em),
+                )
             labelTextFont = step(
                 zoom(),
                 const(listOf("Arimo-Regular")),
@@ -317,93 +319,94 @@ fun getLiveDotStyle(
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
             labelTextOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            4.0 to const(0.0f),
-                        4.5 to const(0.6f),
-                        11.0 to const(0.9f),
-                            12.0 to const(1.0f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    4.0 to const(0.0f),
+                    4.5 to const(0.6f),
+                    11.0 to const(0.9f),
+                    12.0 to const(1.0f)
+                )
             minLayerDotsZoom = 6F
             minLabelDotsZoom = 8F
             minBearingZoom = 8F
         }
+
         "tram" -> {
             dotRadius =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            6.0 to const(1.5.dp),
-                            8.0 to const(2.0.dp),
-                            10.0 to const(3.5.dp),
-                            11.0 to const(4.0.dp),
-                            13.0 to const(5.5.dp),
-                        15.0 to const(4.5.dp),
-                            16.0 to const(9.5.dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    6.0 to const(1.5.dp),
+                    8.0 to const(2.0.dp),
+                    10.0 to const(3.5.dp),
+                    11.0 to const(4.0.dp),
+                    13.0 to const(5.5.dp),
+                    15.0 to const(4.5.dp),
+                    16.0 to const(9.5.dp)
+                )
             dotStrokeWidth =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            8.0 to const(0.5.dp),
-                            9.0 to const(0.6.dp),
-                            10.0 to const(1.0.dp)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    8.0 to const(0.5.dp),
+                    9.0 to const(0.6.dp),
+                    10.0 to const(1.0.dp)
+                )
             dotOpacity = interpolate(linear(), zoom(), 7.0 to const(0.8f), 9.0 to const(1.0f))
             dotStrokeOpacity = const(1.0f)
             bearingIconSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            4.0 to const(0.2f),
-                            6.0 to const(0.3f),
-                            8.0 to const(0.4f),
-                            9.0 to const(0.5f),
-                            11.0 to const(0.6f),
-                            12.0 to const(0.7f),
-                            15.0 to const(0.8f)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    4.0 to const(0.2f),
+                    6.0 to const(0.3f),
+                    8.0 to const(0.4f),
+                    9.0 to const(0.5f),
+                    11.0 to const(0.6f),
+                    12.0 to const(0.7f),
+                    15.0 to const(0.8f)
+                )
             bearingIconOffset =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            9.0 to offset(0.dp, (-6).dp),
-                            10.0 to offset(0.dp, (-5).dp),
-                            12.0 to offset(0.dp, (-4).dp),
-                            13.0 to offset(0.dp, (-4).dp),
-                            15.0 to offset(0.dp, (-4).dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9.0 to offset(0.dp, (-6).dp),
+                    10.0 to offset(0.dp, (-5).dp),
+                    12.0 to offset(0.dp, (-4).dp),
+                    13.0 to offset(0.dp, (-4).dp),
+                    15.0 to offset(0.dp, (-4).dp)
+                )
             bearingShellOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            6.0 to const(0.1f),
-                            9.8 to const(0.3f),
-                            11.0 to const(0.3f),
-                            11.5 to const(0.4f),
-                            12.0 to const(0.5f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    6.0 to const(0.1f),
+                    9.8 to const(0.3f),
+                    11.0 to const(0.3f),
+                    11.5 to const(0.4f),
+                    12.0 to const(0.5f)
+                )
             bearingFilledOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            6.0 to const(0.2f),
-                            9.0 to const(0.4f),
-                            11.0 to const(0.5f),
-                            13.0 to const(0.6f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    6.0 to const(0.2f),
+                    9.0 to const(0.4f),
+                    11.0 to const(0.5f),
+                    13.0 to const(0.6f)
+                )
             labelTextSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            6.0 to const(0.25f.em),
-                            9.0 to const(0.375f.em),
-                            10.0 to const(0.4375f.em),
-                        11.0 to const(0.4f.em),
-                        13.0 to const(0.5f.em),
-                        15.0 to const(0.7f.em)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    6.0 to const(0.25f.em),
+                    9.0 to const(0.375f.em),
+                    10.0 to const(0.4375f.em),
+                    11.0 to const(0.4f.em),
+                    13.0 to const(0.5f.em),
+                    15.0 to const(0.7f.em)
+                )
             labelTextFont = step(
                 zoom(),
                 const(listOf("Arimo-Regular")),
@@ -413,193 +416,196 @@ fun getLiveDotStyle(
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
             labelTextOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            4.0 to const(0.0f),
-                        8.0 to const(0.8f),
-                        11.0 to const(0.9f),
-                        13.0 to const(1.0f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    4.0 to const(0.0f),
+                    8.0 to const(0.8f),
+                    11.0 to const(0.9f),
+                    13.0 to const(1.0f)
+                )
             minBearingZoom = 8F
             minLayerDotsZoom = 6.5F
             minLabelDotsZoom = 8F
         }
+
         "intercityrail" -> {
             dotRadius =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            1.0 to const(0.8.dp),
-                            3.0 to const(2.0.dp),
-                            6.0 to const(2.3.dp),
-                            8.0 to const(3.5.dp),
-                            11.0 to const(5.0.dp),
-                            16.0 to const(9.5.dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    1.0 to const(0.8.dp),
+                    3.0 to const(2.0.dp),
+                    6.0 to const(2.3.dp),
+                    8.0 to const(3.5.dp),
+                    11.0 to const(5.0.dp),
+                    16.0 to const(9.5.dp)
+                )
             dotStrokeWidth =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            3.0 to const(0.6.dp),
-                            5.0 to const(0.7.dp),
-                            7.0 to const(0.8.dp)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    3.0 to const(0.6.dp),
+                    5.0 to const(0.7.dp),
+                    7.0 to const(0.8.dp)
+                )
             dotOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            4.0 to const(0.8f),
-                            7.0 to const(0.9f),
-                            11.0 to const(1.0f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    4.0 to const(0.8f),
+                    7.0 to const(0.9f),
+                    11.0 to const(1.0f)
+                )
             dotStrokeOpacity = const(1.0f)
             bearingIconSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            4.0 to const(0.3f),
-                            6.0 to const(0.4f),
-                            8.0 to const(0.45f),
-                            9.0 to const(0.5f),
-                            11.0 to const(0.6f),
-                            12.0 to const(0.7f),
-                            15.0 to const(0.8f)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    4.0 to const(0.3f),
+                    6.0 to const(0.4f),
+                    8.0 to const(0.45f),
+                    9.0 to const(0.5f),
+                    11.0 to const(0.6f),
+                    12.0 to const(0.7f),
+                    15.0 to const(0.8f)
+                )
             bearingIconOffset =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            9.0 to offset(0.dp, (-6).dp),
-                            10.0 to offset(0.dp, (-5).dp),
-                            12.0 to offset(0.dp, (-4).dp),
-                            13.0 to offset(0.dp, (-3).dp),
-                            15.0 to offset(0.dp, (-2).dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9.0 to offset(0.dp, (-6).dp),
+                    10.0 to offset(0.dp, (-5).dp),
+                    12.0 to offset(0.dp, (-4).dp),
+                    13.0 to offset(0.dp, (-3).dp),
+                    15.0 to offset(0.dp, (-2).dp)
+                )
             bearingShellOpacity =
-                    interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
+                interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
             bearingFilledOpacity = const(0.8f)
             labelTextSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            6.0 to const(0.5f.em),
-                            9.0 to const(0.5f.em),
-                            11.0 to const(0.6f.em),
-                            13.0 to const(0.7f.em),
-                            16.0 to const(0.9.em)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    6.0 to const(0.5f.em),
+                    9.0 to const(0.5f.em),
+                    11.0 to const(0.6f.em),
+                    13.0 to const(0.7f.em),
+                    16.0 to const(0.9.em)
+                )
             labelTextFont =
-                    step(
-                            zoom(),
-                            const(listOf("Arimo-Regular")),
-                            9.0 to const(listOf("Arimo-Medium"))
-                    )
+                step(
+                    zoom(),
+                    const(listOf("Arimo-Regular")),
+                    9.0 to const(listOf("Arimo-Medium"))
+                )
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
             labelTextOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            2.0 to const(0.0f),
-                            2.5 to const(0.85f),
-                            13.0 to const(0.95f),
-                            15.0 to const(0.99f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    2.0 to const(0.0f),
+                    2.5 to const(0.85f),
+                    13.0 to const(0.95f),
+                    15.0 to const(0.99f)
+                )
             minBearingZoom = 5.0F
         }
+
         "other" -> {
             dotRadius =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            8.0 to const(5.0.dp),
-                            10.0 to const(6.0.dp),
-                            16.0 to const(8.0.dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    8.0 to const(5.0.dp),
+                    10.0 to const(6.0.dp),
+                    16.0 to const(8.0.dp)
+                )
             dotStrokeWidth = const(1.0.dp)
             dotOpacity = const(0.5f)
             dotStrokeOpacity = const(1.0f)
             bearingIconSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            4.0 to const(0.1f),
-                            6.0 to const(0.1f),
-                            8.0 to const(0.15f),
-                            9.0 to const(0.18f),
-                            11.0 to const(0.2f),
-                            12.0 to const(0.25f),
-                            15.0 to const(0.5f)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    4.0 to const(0.1f),
+                    6.0 to const(0.1f),
+                    8.0 to const(0.15f),
+                    9.0 to const(0.18f),
+                    11.0 to const(0.2f),
+                    12.0 to const(0.25f),
+                    15.0 to const(0.5f)
+                )
             bearingIconOffset =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            9.0 to offset(0.dp, (-20).dp),
-                            13.0 to offset(0.dp, (-20).dp),
-                            15.0 to offset(0.dp, (-20).dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9.0 to offset(0.dp, (-20).dp),
+                    13.0 to offset(0.dp, (-20).dp),
+                    15.0 to offset(0.dp, (-20).dp)
+                )
             bearingShellOpacity =
-                    interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
+                interpolate(linear(), zoom(), 9.0 to const(0.3f), 11.5 to const(0.8f))
             bearingFilledOpacity = const(0.6f)
             labelTextSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            9.0 to const(0.53125f.em),
-                            11.0 to const(0.8125f.em),
-                            13.0 to const(1.0f.em)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9.0 to const(0.53125f.em),
+                    11.0 to const(0.8125f.em),
+                    13.0 to const(1.0f.em)
+                )
             labelTextFont =
-                    step(
-                            zoom(),
-                            const(listOf("Arimo-Regular")),
-                            11.0 to const(listOf("Arimo-Medium"))
-                    )
+                step(
+                    zoom(),
+                    const(listOf("Arimo-Regular")),
+                    11.0 to const(listOf("Arimo-Medium"))
+                )
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
             labelTextOpacity =
-                    interpolate(
-                            linear(),
-                            zoom(),
-                            2.0 to const(0.0f),
-                            2.5 to const(0.8f),
-                            10.0 to const(0.8f)
-                    )
+                interpolate(
+                    linear(),
+                    zoom(),
+                    2.0 to const(0.0f),
+                    2.5 to const(0.8f),
+                    10.0 to const(0.8f)
+                )
         }
+
         else -> {
             // Fallback to your original generic values
             dotRadius =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            6 to const(2.dp),
-                            10 to const(3.dp),
-                            14 to const(5.dp),
-                            18 to const(8.dp)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    6 to const(2.dp),
+                    10 to const(3.dp),
+                    14 to const(5.dp),
+                    18 to const(8.dp)
+                )
             dotStrokeWidth = const(1.5.dp)
             dotOpacity = const(1.0f)
             dotStrokeOpacity = const(1.0f)
             bearingIconSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            10 to const(0.7f),
-                            14 to const(1.0f),
-                            18 to const(1.2f)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    10 to const(0.7f),
+                    14 to const(1.0f),
+                    18 to const(1.2f)
+                )
             bearingIconOffset = offset(0.dp, (-20).dp) // A reasonable guess in dp
             bearingShellOpacity = const(1.0f)
             bearingFilledOpacity = const(0.2f)
             labelTextSize =
-                    interpolate(
-                            type = linear(),
-                            input = zoom(),
-                            9 to const(0.625f.em),
-                            14 to const(0.8125f.em)
-                    )
+                interpolate(
+                    type = linear(),
+                    input = zoom(),
+                    9 to const(0.625f.em),
+                    14 to const(0.8125f.em)
+                )
             labelTextFont = const(listOf("Arimo-SemiBold"))
             labelRadialOffset = const(0.2f.em)
             labelIgnorePlacementZoom = 9.5
@@ -608,22 +614,22 @@ fun getLiveDotStyle(
     }
 
     return LiveDotStyle(
-            dotRadius = dotRadius,
-            dotStrokeWidth = dotStrokeWidth,
-            dotOpacity = dotOpacity,
-            dotStrokeOpacity = dotStrokeOpacity,
-            bearingIconSize = bearingIconSize,
-            bearingIconOffset = bearingIconOffset,
-            bearingShellOpacity = bearingShellOpacity,
-            bearingFilledOpacity = bearingFilledOpacity,
-            labelTextSize = labelTextSize,
-            labelTextFont = labelTextFont,
-            labelRadialOffset = labelRadialOffset,
-            labelIgnorePlacementZoom = labelIgnorePlacementZoom,
-            labelTextOpacity = labelTextOpacity,
-            minLayerDotsZoom = minLayerDotsZoom,
-            minLabelDotsZoom = minLabelDotsZoom,
-            minBearingZoom = minBearingZoom,
-            labelHaloWidth = labelHaloWidth
+        dotRadius = dotRadius,
+        dotStrokeWidth = dotStrokeWidth,
+        dotOpacity = dotOpacity,
+        dotStrokeOpacity = dotStrokeOpacity,
+        bearingIconSize = bearingIconSize,
+        bearingIconOffset = bearingIconOffset,
+        bearingShellOpacity = bearingShellOpacity,
+        bearingFilledOpacity = bearingFilledOpacity,
+        labelTextSize = labelTextSize,
+        labelTextFont = labelTextFont,
+        labelRadialOffset = labelRadialOffset,
+        labelIgnorePlacementZoom = labelIgnorePlacementZoom,
+        labelTextOpacity = labelTextOpacity,
+        minLayerDotsZoom = minLayerDotsZoom,
+        minLabelDotsZoom = minLabelDotsZoom,
+        minBearingZoom = minBearingZoom,
+        labelHaloWidth = labelHaloWidth
     )
 }

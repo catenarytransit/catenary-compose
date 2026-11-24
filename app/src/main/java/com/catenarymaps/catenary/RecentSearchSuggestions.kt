@@ -44,11 +44,14 @@ private fun recentCoordinates(visit: RecentStation): DirectionsLocation? {
     return DirectionsLocation(visit.name, latitude, longitude).takeIf { it.isValid() }
 }
 
-internal fun samePreviouslySelectedPlace(first: DirectionsLocation, second: DirectionsLocation): Boolean {
+internal fun samePreviouslySelectedPlace(
+    first: DirectionsLocation,
+    second: DirectionsLocation
+): Boolean {
     // Equal names alone would collapse distinct branches or stops in other places.
     return first.isValid() && second.isValid() &&
-        normalizePlaceText(first.name) == normalizePlaceText(second.name) &&
-        haversineDistance(first.lat, first.lon, second.lat, second.lon) <= 30.0
+            normalizePlaceText(first.name) == normalizePlaceText(second.name) &&
+            haversineDistance(first.lat, first.lon, second.lat, second.lon) <= 30.0
 }
 
 /**
@@ -101,11 +104,13 @@ internal fun withoutMatchingVisitedResults(
             val sameId = when (row) {
                 is SearchRow.StopRow ->
                     visit.kind == RecentStationKind.GTFS_STOP &&
-                        row.ranking.chateau == visit.chateauId &&
-                        row.ranking.gtfsId == visit.id
+                            row.ranking.chateau == visit.chateauId &&
+                            row.ranking.gtfsId == visit.id
+
                 is SearchRow.OsmStationRow ->
                     visit.kind == RecentStationKind.OSM_STATION &&
-                        row.result.osmId.toString() == visit.id
+                            row.result.osmId.toString() == visit.id
+
                 else -> false
             }
             if (sameId) true
@@ -114,10 +119,10 @@ internal fun withoutMatchingVisitedResults(
                 val previous = recentCoordinates(visit)
                 if (place == null || previous == null) false
                 else samePreviouslySelectedPlace(previous, place) ||
-                    (!visit.address.isNullOrBlank() &&
-                        samePreviouslySelectedPlace(
-                            previous.copy(name = visit.address), place
-                        ))
+                        (!visit.address.isNullOrBlank() &&
+                                samePreviouslySelectedPlace(
+                                    previous.copy(name = visit.address), place
+                                ))
             }
         }
     }

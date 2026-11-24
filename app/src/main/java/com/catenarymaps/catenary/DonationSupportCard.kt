@@ -29,88 +29,92 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private const val CATENARY_DONATION_URL =
-        "https://opencollective.com/catenarymaps/donate?platformTip=0"
+    "https://opencollective.com/catenarymaps/donate?platformTip=0"
 
 @Composable
 fun DonationSupportCard(
-        @StringRes titleRes: Int,
-        @StringRes messageRes: Int,
-        dismissible: Boolean,
-        modifier: Modifier = Modifier,
-        onDismiss: () -> Unit = {}
+    @StringRes titleRes: Int,
+    @StringRes messageRes: Int,
+    dismissible: Boolean,
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit = {}
 ) {
-        val uriHandler = LocalUriHandler.current
+    val uriHandler = LocalUriHandler.current
 
-        Surface(
-                modifier = modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                shadowElevation = 2.dp
-        ) {
-                Box(modifier = Modifier.padding(12.dp)) {
-                        Column(
-                                modifier =
-                                        Modifier.fillMaxWidth()
-                                                .padding(end = if (dismissible) 32.dp else 0.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                                Text(
-                                        text = stringResource(titleRes),
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                        text = stringResource(messageRes),
-                                        style =
-                                                MaterialTheme.typography.bodySmall.copy(
-                                                        fontSize = 12.sp,
-                                                        lineHeight = 15.sp
-                                                )
-                                )
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 2.dp
+    ) {
+        Box(modifier = Modifier.padding(12.dp)) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(end = if (dismissible) 32.dp else 0.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = stringResource(titleRes),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(messageRes),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            lineHeight = 15.sp
+                        )
+                )
 
-                                /*
-                                 * The fundraising amount counter and progress bar are intentionally
-                                 * disabled. Keep this location available if the goal UI returns.
-                                 */
+                /*
+                 * The fundraising amount counter and progress bar are intentionally
+                 * disabled. Keep this location available if the goal UI returns.
+                 */
 
-                                Button(
-                                        onClick = {
-                                                runCatching {
-                                                        uriHandler.openUri(CATENARY_DONATION_URL)
-                                                }
-                                        },
-                                        modifier =
-                                                Modifier.padding(top = 4.dp)
-                                                        .heightIn(min = 32.dp),
-                                        contentPadding =
-                                                PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                                ) {
-                                        Text(
-                                                text = stringResource(R.string.support_donate),
-                                                style = MaterialTheme.typography.labelMedium
-                                        )
-                                }
+                Button(
+                    onClick = {
+                        runCatching {
+                            uriHandler.openUri(CATENARY_DONATION_URL)
                         }
-
-                        if (dismissible) {
-                                IconButton(
-                                        onClick = onDismiss,
-                                        modifier =
-                                                Modifier.align(Alignment.TopEnd).size(32.dp)
-                                ) {
-                                        Icon(
-                                                imageVector = Icons.Filled.Close,
-                                                contentDescription =
-                                                        stringResource(
-                                                                R.string
-                                                                        .support_dismiss_content_description
-                                                        ),
-                                                modifier = Modifier.size(18.dp)
-                                        )
-                                }
-                        }
+                    },
+                    modifier =
+                        Modifier
+                            .padding(top = 4.dp)
+                            .heightIn(min = 32.dp),
+                    contentPadding =
+                        PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.support_donate),
+                        style = MaterialTheme.typography.labelMedium
+                    )
                 }
+            }
+
+            if (dismissible) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription =
+                            stringResource(
+                                R.string
+                                    .support_dismiss_content_description
+                            ),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         }
+    }
 }

@@ -28,32 +28,51 @@ internal data class DirectionsStreamMessage(
     val response: DirectionsPlan? = null, val message: String? = null
 )
 
-internal fun directionsPageQuery(base: JsonObject, direction: ConnectionDirection, cursor: String? = null) =
+internal fun directionsPageQuery(
+    base: JsonObject,
+    direction: ConnectionDirection,
+    cursor: String? = null
+) =
     buildJsonObject {
         base.forEach { (key, value) -> put(key, value) }
         cursor?.let { put("page_cursor", it) }
-        put("number_of_results_before", if (direction == ConnectionDirection.BEFORE) (if (cursor == null) 8 else 3) else 0)
-        put("number_of_results_after", if (direction == ConnectionDirection.AFTER) (if (cursor == null) 8 else 5) else 0)
+        put(
+            "number_of_results_before",
+            if (direction == ConnectionDirection.BEFORE) (if (cursor == null) 8 else 3) else 0
+        )
+        put(
+            "number_of_results_after",
+            if (direction == ConnectionDirection.AFTER) (if (cursor == null) 8 else 5) else 0
+        )
     }
 
 internal fun DirectionsItinerary.identity(): String = id?.takeIf { it.isNotEmpty() }
     ?: buildJsonArray {
         add(startTime); add(endTime)
-        add(buildJsonArray { legs.forEach { leg -> add(buildJsonArray {
-            add(leg.mode); add(leg.startTime); add(leg.endTime); add(leg.routeId)
-            add(leg.from?.name); add(leg.to?.name)
-        }) } })
+        add(buildJsonArray {
+            legs.forEach { leg ->
+                add(buildJsonArray {
+                    add(leg.mode); add(leg.startTime); add(leg.endTime); add(leg.routeId)
+                    add(leg.from?.name); add(leg.to?.name)
+                })
+            }
+        })
     }.toString()
 
 internal fun mergeDirectionsPages(pages: List<DirectionsPlan>): List<DirectionsItinerary> {
     fun valid(itinerary: DirectionsItinerary) = runCatching {
         Instant.parse(itinerary.startTime); Instant.parse(itinerary.endTime)
     }.isSuccess
+
     val seen = mutableSetOf<String>()
     val transit = pages.flatMap { it.itineraries }.filter { valid(it) && seen.add(it.identity()) }
         .sortedWith(compareBy({ Instant.parse(it.startTime) }, { Instant.parse(it.endTime) }))
     val direct = pages.flatMap { it.direct }.filter { valid(it) && seen.add(it.identity()) }
-    return (transit + direct).sortedWith(compareBy({ Instant.parse(it.startTime) }, { Instant.parse(it.endTime) }))
+    return (transit + direct).sortedWith(
+        compareBy(
+            { Instant.parse(it.startTime) },
+            { Instant.parse(it.endTime) })
+    )
 }
 
 private class BackendRouteException(message: String) : Exception(message)
@@ -70,7 +89,11 @@ internal class DirectionsStreamState(private val requestId: String) {
                 sequence = next
                 onPage(requireNotNull(message.response))
             }
-            "complete" -> { onPage(requireNotNull(message.response)); return true }
+
+            "complete" -> {
+                onPage(requireNotNull(message.response)); return true
+            }
+
             "error" -> throw BackendRouteException(message.message ?: "Routing failed")
             "cancelled" -> throw BackendRouteException("Routing cancelled")
         }
@@ -146,7 +169,10 @@ internal class DirectionsSocketSession {
                 }
 
                 override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                    fail(webSocket, IllegalStateException("Routing WebSocket closed: $code $reason"))
+                    fail(
+                        webSocket,
+                        IllegalStateException("Routing WebSocket closed: $code $reason")
+                    )
                 }
             }
         )

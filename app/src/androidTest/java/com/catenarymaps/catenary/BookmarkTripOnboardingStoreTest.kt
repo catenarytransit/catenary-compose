@@ -10,7 +10,8 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class BookmarkTripOnboardingStoreTest {
-    @Test fun completingBookmarkOnboardingPersistsAcrossStoreRecreation() {
+    @Test
+    fun completingBookmarkOnboardingPersistsAcrossStoreRecreation() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val name = "bookmark-trip-onboarding-test"
         val preferences = context.getSharedPreferences(name, Context.MODE_PRIVATE)

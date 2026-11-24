@@ -22,12 +22,17 @@ class JourneyFirebaseMessagingService : FirebaseMessagingService() {
         fun ensureChannel(context: android.content.Context) {
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(
-                NotificationChannel("journey_changes", "Journey changes", NotificationManager.IMPORTANCE_HIGH).apply {
+                NotificationChannel(
+                    "journey_changes",
+                    "Journey changes",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
                     description = "Departure, platform, cancellation and missed-connection alerts"
                 }
             )
         }
     }
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         JourneyNotifierSyncWorker.enqueue(applicationContext)
@@ -46,26 +51,33 @@ class JourneyFirebaseMessagingService : FirebaseMessagingService() {
         }
         val body = message.notification?.body ?: return
         if (Build.VERSION.SDK_INT >= 33 &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             return
         }
         val prefs = getSharedPreferences("journey-notifier-events", MODE_PRIVATE)
         val shown = prefs.getString("seen", "").orEmpty().split(",").filter { it.isNotEmpty() }
         if (shown.contains(id)) return
-        prefs.edit().putString("seen", (listOf(id) + shown).distinct().take(128).joinToString(",")).apply()
+        prefs.edit().putString("seen", (listOf(id) + shown).distinct().take(128).joinToString(","))
+            .apply()
 
         ensureChannel(this)
         val active = ActiveJourneySession.persisted(this)
         val isActive = active != null &&
-            data["journeyId"] == JourneyNotifierSyncWorker.stableId(active.snapshot.journey)
+                data["journeyId"] == JourneyNotifierSyncWorker.stableId(active.snapshot.journey)
         val open = Intent(this, MainActivity::class.java).apply {
             if (isActive) putExtra("openActiveJourney", true)
             else putExtra("openSavedJourneys", true)
             putExtra("journeyId", data["journeyId"])
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
-        val pending = PendingIntent.getActivity(this, id.hashCode(), open,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val pending = PendingIntent.getActivity(
+            this, id.hashCode(), open,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         val notification = NotificationCompat.Builder(this, "journey_changes")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)

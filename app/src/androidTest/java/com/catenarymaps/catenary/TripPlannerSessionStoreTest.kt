@@ -9,7 +9,8 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class TripPlannerSessionStoreTest {
-    @Test fun completedSessionSurvivesANewStoreAndCanBeCleared() {
+    @Test
+    fun completedSessionSurvivesANewStoreAndCanBeCleared() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val file = File(context.noBackupFilesDir, "trip-planner-session-test.json")
         val store = TripPlannerSessionStore(file)
@@ -17,8 +18,12 @@ class TripPlannerSessionStoreTest {
             origin = DirectionsLocation("Start", 34.0, -118.0),
             destination = DirectionsLocation("End", 34.1, -118.1),
             options = DirectionsOptions(), arriveBy = false, now = true, time = 1793898000,
-            itineraries = listOf(DirectionsItinerary("2026-11-05T17:00:00Z", "2026-11-05T18:00:00Z",
-                legs = listOf(DirectionsLeg("BUS")))), details = true
+            itineraries = listOf(
+                DirectionsItinerary(
+                    "2026-11-05T17:00:00Z", "2026-11-05T18:00:00Z",
+                    legs = listOf(DirectionsLeg("BUS"))
+                )
+            ), details = true
         )
         try {
             store.write(session)

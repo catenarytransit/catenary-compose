@@ -29,8 +29,10 @@ class TripPlannerViewModel : ViewModel() {
         private set
     var destinationText by mutableStateOf("")
         private set
+
     // true = origin, false = destination, null = no endpoint has focus.
     var editing by mutableStateOf<Boolean?>(null)
+
     // Endpoint being selected with the fixed centre pin, separate from text search.
     var mapPicking by mutableStateOf<Boolean?>(null)
     var options by mutableStateOf(DirectionsOptions())
@@ -44,6 +46,7 @@ class TripPlannerViewModel : ViewModel() {
         invalidate()
         options = value
     }
+
     var arriveBy by mutableStateOf(false)
     var now by mutableStateOf(true)
     var time by mutableLongStateOf(Instant.now().epochSecond)
@@ -100,10 +103,12 @@ class TripPlannerViewModel : ViewModel() {
     private var initialPage: DirectionsPlan? = null
     private val earlierPages = linkedMapOf<String, DirectionsPlan>()
     private val laterPages = linkedMapOf<String, DirectionsPlan>()
-    val canLoadEarlier get() = previousPageCursor != null && baseQuery != null &&
-        !earlierLoading && !laterLoading && (!loading || itineraries.isNotEmpty())
-    val canLoadLater get() = nextPageCursor != null && baseQuery != null &&
-        !earlierLoading && !laterLoading && !loading
+    val canLoadEarlier
+        get() = previousPageCursor != null && baseQuery != null &&
+                !earlierLoading && !laterLoading && (!loading || itineraries.isNotEmpty())
+    val canLoadLater
+        get() = nextPageCursor != null && baseQuery != null &&
+                !earlierLoading && !laterLoading && !loading
 
     private fun cancelRequests() {
         generation++; request?.cancel(); pageRequest?.cancel()
@@ -112,11 +117,14 @@ class TripPlannerViewModel : ViewModel() {
 
     private fun publishPages() {
         val selectedId = itineraries.getOrNull(selected)?.identity()
-        val merged = mergeDirectionsPages(earlierPages.values.toList() + listOfNotNull(initialPage) + laterPages.values)
+        val merged =
+            mergeDirectionsPages(earlierPages.values.toList() + listOfNotNull(initialPage) + laterPages.values)
         itineraries = merged
         selected = itineraries.indexOfFirst { it.identity() == selectedId }.coerceAtLeast(0)
-        if (details && selectedId != null && itineraries.none { it.identity() == selectedId }) details = false
+        if (details && selectedId != null && itineraries.none { it.identity() == selectedId }) details =
+            false
     }
+
     private var sessionInitialized = false
 
     /** A retained ViewModel already owns the latest state during Activity recreation. */
@@ -155,11 +163,19 @@ class TripPlannerViewModel : ViewModel() {
     internal fun session(visible: Boolean): TripPlannerSession? {
         if (!visible || loading || earlierLoading || laterLoading || !searched || error != null || itineraries.isEmpty()) return null
         return TripPlannerSession(
-            origin = origin ?: return null, destination = destination ?: return null,
-            options = options, arriveBy = arriveBy, now = now, time = time,
-            itineraries = itineraries, selected = selected, details = details,
+            origin = origin ?: return null,
+            destination = destination ?: return null,
+            options = options,
+            arriveBy = arriveBy,
+            now = now,
+            time = time,
+            itineraries = itineraries,
+            selected = selected,
+            details = details,
             showTransfers = showTransfers,
-            requestQuery = baseQuery, previousPageCursor = previousPageCursor, nextPageCursor = nextPageCursor
+            requestQuery = baseQuery,
+            previousPageCursor = previousPageCursor,
+            nextPageCursor = nextPageCursor
         ).validated()
     }
 
@@ -167,8 +183,10 @@ class TripPlannerViewModel : ViewModel() {
         cancelRequests(); searched = false
         baseQuery = null; initialPage = null; earlierPages.clear(); laterPages.clear()
         previousPageCursor = null; nextPageCursor = null; earlierInsertedIds = emptySet()
-        error = null; itineraries = emptyList(); selected = 0; details = false; mapMode = false; showTransfers = false
+        error = null; itineraries = emptyList(); selected = 0; details = false; mapMode =
+            false; showTransfers = false
     }
+
     /** Coordinate-based selections become an empty search when the field is focused again. */
     fun beginEditing(isOrigin: Boolean) {
         val location = if (isOrigin) origin else destination
@@ -182,22 +200,32 @@ class TripPlannerViewModel : ViewModel() {
     fun edit(isOrigin: Boolean, text: String) {
         invalidate()
         if (isOrigin) awaitingCurrentOrigin = false
-        if (isOrigin) { origin = null; originText = text }
-        else { destination = null; destinationText = text }
+        if (isOrigin) {
+            origin = null; originText = text
+        } else {
+            destination = null; destinationText = text
+        }
         editing = isOrigin
     }
+
     fun choose(isOrigin: Boolean, location: DirectionsLocation) {
         if (!location.isValid()) return
         invalidate()
         if (isOrigin) awaitingCurrentOrigin = false
-        if (isOrigin) { origin = location; originText = location.name }
-        else { destination = location; destinationText = location.name }
-        editing = if (isOrigin && destination == null) false else if (!isOrigin && origin == null) true else null
+        if (isOrigin) {
+            origin = location; originText = location.name
+        } else {
+            destination = location; destinationText = location.name
+        }
+        editing =
+            if (isOrigin && destination == null) false else if (!isOrigin && origin == null) true else null
         mapPicking = null
     }
+
     /** Prepare a fresh planner without replacing an existing endpoint or session. */
     fun open(currentLocation: DirectionsLocation?) {
-        awaitingCurrentOrigin = origin == null && destination == null && originText.isBlank() && destinationText.isBlank()
+        awaitingCurrentOrigin =
+            origin == null && destination == null && originText.isBlank() && destinationText.isBlank()
         resolveCurrentOrigin(currentLocation)
         editing = when {
             destination == null -> false
@@ -229,6 +257,7 @@ class TripPlannerViewModel : ViewModel() {
         val text = originText; originText = destinationText; destinationText = text
         editing = null
     }
+
     fun leave() {
         awaitingCurrentOrigin = false
         mapPicking = null
@@ -242,17 +271,29 @@ class TripPlannerViewModel : ViewModel() {
         val to = destination ?: return
         invalidate(); searched = true; loading = true; editing = null
         val token = generation
-        val base = directionsRequest(from, to, if (now) Instant.now().epochSecond else time, arriveBy, options)
+        val base = directionsRequest(
+            from,
+            to,
+            if (now) Instant.now().epochSecond else time,
+            arriveBy,
+            options
+        )
         baseQuery = base
         request = viewModelScope.launch {
             try {
-                DirectionsStreaming.load(client, routingSession, directionsPageQuery(base,
-                    if (arriveBy) ConnectionDirection.BEFORE else ConnectionDirection.AFTER),
-                    "catenary-android-${UUID.randomUUID()}") { page ->
+                DirectionsStreaming.load(
+                    client, routingSession, directionsPageQuery(
+                        base,
+                        if (arriveBy) ConnectionDirection.BEFORE else ConnectionDirection.AFTER
+                    ),
+                    "catenary-android-${UUID.randomUUID()}"
+                ) { page ->
                     if (token == generation) {
                         initialPage = page
-                        if (earlierPages.isEmpty()) previousPageCursor = page.previousPageCursor?.takeIf { it.isNotBlank() }
-                        if (laterPages.isEmpty()) nextPageCursor = page.nextPageCursor?.takeIf { it.isNotBlank() }
+                        if (earlierPages.isEmpty()) previousPageCursor =
+                            page.previousPageCursor?.takeIf { it.isNotBlank() }
+                        if (laterPages.isEmpty()) nextPageCursor =
+                            page.nextPageCursor?.takeIf { it.isNotBlank() }
                         publishPages()
                     }
                 }
@@ -273,13 +314,20 @@ class TripPlannerViewModel : ViewModel() {
         val base = baseQuery ?: return
         val token = generation
         val id = "catenary-android-${UUID.randomUUID()}"
-        if (earlier) { earlierLoading = true; earlierInsertedIds = emptySet() } else laterLoading = true
+        if (earlier) {
+            earlierLoading = true; earlierInsertedIds = emptySet()
+        } else laterLoading = true
         error = null
         pageRequest = viewModelScope.launch {
             try {
                 var completed: DirectionsPlan? = null
-                DirectionsStreaming.load(client, routingSession, directionsPageQuery(base,
-                    if (earlier) ConnectionDirection.BEFORE else ConnectionDirection.AFTER, cursor), id) { page ->
+                DirectionsStreaming.load(
+                    client, routingSession, directionsPageQuery(
+                        base,
+                        if (earlier) ConnectionDirection.BEFORE else ConnectionDirection.AFTER,
+                        cursor
+                    ), id
+                ) { page ->
                     if (token == generation) {
                         completed = page // Publish either direction as one completed batch.
                     }
@@ -288,12 +336,16 @@ class TripPlannerViewModel : ViewModel() {
                     val page = checkNotNull(completed)
                     val existing = itineraries.map { it.identity() }.toSet()
                     if (earlier) {
-                        earlierInsertedIds = page.itineraries.map { it.identity() }.filter { it !in existing }.toSet()
+                        earlierInsertedIds =
+                            page.itineraries.map { it.identity() }.filter { it !in existing }
+                                .toSet()
                         earlierPages[id] = page
-                        previousPageCursor = page.previousPageCursor?.takeIf { it.isNotBlank() && it != cursor }
+                        previousPageCursor =
+                            page.previousPageCursor?.takeIf { it.isNotBlank() && it != cursor }
                     } else {
                         laterPages[id] = page
-                        nextPageCursor = page.nextPageCursor?.takeIf { it.isNotBlank() && it != cursor }
+                        nextPageCursor =
+                            page.nextPageCursor?.takeIf { it.isNotBlank() && it != cursor }
                     }
                     publishPages()
                 }

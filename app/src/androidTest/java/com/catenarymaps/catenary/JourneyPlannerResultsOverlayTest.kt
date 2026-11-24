@@ -17,23 +17,34 @@ import org.junit.Rule
 import org.junit.Test
 
 class JourneyPlannerResultsOverlayTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule
+    val compose = createComposeRule()
 
-    @Test fun switchingFromListToMapReleasesMapPaneForTouch() {
+    @Test
+    fun switchingFromListToMapReleasesMapPaneForTouch() {
         var usingMap by mutableStateOf(false)
         var mapTaps = 0
         var resultsTaps = 0
         var drawerTaps = 0
         compose.setContent {
             MaterialTheme {
-                Box(Modifier.fillMaxSize().testTag("viewport")) {
-                    Box(Modifier.fillMaxSize().clickable { mapTaps++ })
+                Box(Modifier
+                    .fillMaxSize()
+                    .testTag("viewport")) {
+                    Box(Modifier
+                        .fillMaxSize()
+                        .clickable { mapTaps++ })
                     JourneyPlannerResultsOverlay(usingMap) {
                         // Surfaces and scrollable content consume touch within the results pane.
-                        Surface(Modifier.fillMaxSize().clickable { resultsTaps++ }) { }
+                        Surface(Modifier
+                            .fillMaxSize()
+                            .clickable { resultsTaps++ }) { }
                     }
                     if (usingMap) Surface(
-                        Modifier.align(Alignment.BottomStart).fillMaxWidth(0.5f).height(100.dp)
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth(0.5f)
+                            .height(100.dp)
                             .clickable { drawerTaps++ }
                     ) { }
                 }
@@ -45,7 +56,9 @@ class JourneyPlannerResultsOverlayTest {
             }
         }
         tapAt(0.75f)
-        compose.runOnIdle { assertEquals(0, mapTaps); assertEquals(1, resultsTaps); usingMap = true }
+        compose.runOnIdle {
+            assertEquals(0, mapTaps); assertEquals(1, resultsTaps); usingMap = true
+        }
         compose.waitForIdle()
         tapAt(0.75f)
         compose.runOnIdle { assertEquals(1, mapTaps); assertEquals(1, resultsTaps) }

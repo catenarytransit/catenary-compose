@@ -8,34 +8,60 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SavedJourneyStoreTest {
-    @Test fun savedSnapshotSurvivesReopenAndIsDeduplicatedAndRemovable() {
+    @Test
+    fun savedSnapshotSurvivesReopenAndIsDeduplicatedAndRemovable() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val name = "saved-journeys-test.db"
         context.deleteDatabase(name)
-        val journey = DirectionsItinerary("2026-11-09T10:00:00Z", "2026-11-09T11:00:00Z",
-            legs = listOf(DirectionsLeg("BUS", routeId = "42", legGeometry = DirectionsGeometry("test"))), id = "saved-trip")
-        val snapshot = SavedJourney(journey, DirectionsLocation("Home", 34.0, -118.0),
-            DirectionsLocation("Station", 34.1, -118.1), savedAt = 1L)
+        val journey = DirectionsItinerary(
+            "2026-11-09T10:00:00Z", "2026-11-09T11:00:00Z",
+            legs = listOf(
+                DirectionsLeg(
+                    "BUS",
+                    routeId = "42",
+                    legGeometry = DirectionsGeometry("test")
+                )
+            ), id = "saved-trip"
+        )
+        val snapshot = SavedJourney(
+            journey, DirectionsLocation("Home", 34.0, -118.0),
+            DirectionsLocation("Station", 34.1, -118.1), savedAt = 1L
+        )
         try {
             SavedJourneyStore(context, name).use { it.save(snapshot) }
             SavedJourneyStore(context, name).use { store ->
                 assertTrue(store.contains(journey.identity()))
-                assertEquals(listOf(snapshot), store.readAll(java.time.Instant.parse("2026-11-09T12:00:00Z")))
+                assertEquals(
+                    listOf(snapshot),
+                    store.readAll(java.time.Instant.parse("2026-11-09T12:00:00Z"))
+                )
                 val updated = snapshot.copy(savedAt = 2L, journey = journey.copy(duration = 3500.0))
                 store.save(updated)
-                assertEquals(listOf(updated), store.readAll(java.time.Instant.parse("2026-11-09T12:00:00Z")))
+                assertEquals(
+                    listOf(updated),
+                    store.readAll(java.time.Instant.parse("2026-11-09T12:00:00Z"))
+                )
                 store.remove(journey.identity())
                 assertFalse(store.contains(journey.identity()))
                 assertTrue(store.readAll(java.time.Instant.parse("2026-11-09T12:00:00Z")).isEmpty())
             }
-        } finally { context.deleteDatabase(name) }
+        } finally {
+            context.deleteDatabase(name)
+        }
     }
-    @Test fun expiresOnlyAfterTwelveHoursAndPersistsDeletion() {
+
+    @Test
+    fun expiresOnlyAfterTwelveHoursAndPersistsDeletion() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val name = "saved-journeys-expiry-test.db"
         context.deleteDatabase(name)
         val arrival = java.time.Instant.parse("2026-11-10T12:00:00Z")
-        val journey = DirectionsItinerary("2026-11-10T11:00:00Z", arrival.toString(), legs = emptyList(), id = "expiry")
+        val journey = DirectionsItinerary(
+            "2026-11-10T11:00:00Z",
+            arrival.toString(),
+            legs = emptyList(),
+            id = "expiry"
+        )
         val snapshot = SavedJourney(journey, null, null)
         try {
             SavedJourneyStore(context, name).use { store ->
@@ -47,7 +73,9 @@ class SavedJourneyStoreTest {
                 assertFalse(store.contains(journey.identity()))
                 assertTrue(store.readAll(arrival).isEmpty())
             }
-        } finally { context.deleteDatabase(name) }
+        } finally {
+            context.deleteDatabase(name)
+        }
     }
 
 }

@@ -34,104 +34,104 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavigationControls(
-        onBack: () -> Unit,
-        onHome: () -> Unit,
-        onPageInfo: (() -> Unit)? = null,
-        isPageInfoPulse: Boolean = false
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+    onPageInfo: (() -> Unit)? = null,
+    isPageInfoPulse: Boolean = false
 ) {
-        CompositionLocalProvider(LocalMinimumInteractiveComponentEnforcement provides false) {
-                Row {
-                        IconButton(
-                                onClick = onBack,
-                                modifier = Modifier.size(32.dp) // shrink the button hitbox
-                        ) {
-                                Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = stringResource(R.string.osm_back),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier =
-                                                Modifier
-                                                        .background(
-                                                                color =
-                                                                        MaterialTheme.colorScheme
-                                                                                .surfaceVariant,
-                                                                shape = CircleShape
-                                                        )
-                                                        .padding(6.dp)
-                                                        .size(16.dp) // 6dp inset and 20dp icon fit the 32dp circle
+    CompositionLocalProvider(LocalMinimumInteractiveComponentEnforcement provides false) {
+        Row {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(32.dp) // shrink the button hitbox
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.osm_back),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier =
+                        Modifier
+                            .background(
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .surfaceVariant,
+                                shape = CircleShape
+                            )
+                            .padding(6.dp)
+                            .size(16.dp) // 6dp inset and 20dp icon fit the 32dp circle
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            IconButton(onClick = onHome, modifier = Modifier.size(32.dp)) {
+                Icon(
+                    Icons.Filled.Home,
+                    contentDescription = stringResource(R.string.osm_home),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier =
+                        Modifier
+                            .background(
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .surfaceVariant,
+                                shape = CircleShape
+                            )
+                            .padding(6.dp)
+                            .size(16.dp)
+                )
+            }
+
+            if (onPageInfo != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+
+                val scale =
+                    if (isPageInfoPulse) {
+                        val infiniteTransition =
+                            rememberInfiniteTransition(label = "pulse")
+                        infiniteTransition.animateFloat(
+                            initialValue = 1f,
+                            targetValue = 1.2f,
+                            animationSpec =
+                                infiniteRepeatable(
+                                    animation =
+                                        tween(500),
+                                    repeatMode =
+                                        RepeatMode
+                                            .Reverse
+                                ),
+                            label = "scale"
+                        )
+                            .value
+                    } else {
+                        1f
+                    }
+
+                IconButton(
+                    onClick = onPageInfo,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .scale(scale)
+                ) {
+                    Icon(
+                        Icons.Filled
+                            .MoreTime,
+                        contentDescription = stringResource(R.string.osm_page_info),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier =
+                            Modifier
+                                .background(
+                                    color =
+                                        MaterialTheme
+                                            .colorScheme
+                                            .surfaceVariant,
+                                    shape = CircleShape
                                 )
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        IconButton(onClick = onHome, modifier = Modifier.size(32.dp)) {
-                                Icon(
-                                        Icons.Filled.Home,
-                                        contentDescription = stringResource(R.string.osm_home),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier =
-                                                Modifier
-                                                        .background(
-                                                                color =
-                                                                        MaterialTheme.colorScheme
-                                                                                .surfaceVariant,
-                                                                shape = CircleShape
-                                                        )
-                                                        .padding(6.dp)
-                                                        .size(16.dp)
-                                )
-                        }
-
-                        if (onPageInfo != null) {
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                val scale =
-                                        if (isPageInfoPulse) {
-                                                val infiniteTransition =
-                                                        rememberInfiniteTransition(label = "pulse")
-                                                infiniteTransition.animateFloat(
-                                                        initialValue = 1f,
-                                                        targetValue = 1.2f,
-                                                        animationSpec =
-                                                                infiniteRepeatable(
-                                                                        animation =
-                                                                                tween(500),
-                                                                        repeatMode =
-                                                                                RepeatMode
-                                                                                        .Reverse
-                                                                ),
-                                                        label = "scale"
-                                                )
-                                                        .value
-                                        } else {
-                                                1f
-                                        }
-
-                                IconButton(
-                                        onClick = onPageInfo,
-                                        modifier = Modifier
-                                                .size(32.dp)
-                                                .scale(scale)
-                                ) {
-                                        Icon(
-                                                Icons.Filled
-                                                        .MoreTime,
-                                                contentDescription = stringResource(R.string.osm_page_info),
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier =
-                                                        Modifier
-                                                                .background(
-                                                                        color =
-                                                                                MaterialTheme
-                                                                                        .colorScheme
-                                                                                        .surfaceVariant,
-                                                                        shape = CircleShape
-                                                                )
-                                                                .padding(6.dp)
-                                                                .size(16.dp)
-                                        )
-                                }
-                        }
+                                .padding(6.dp)
+                                .size(16.dp)
+                    )
                 }
+            }
         }
+    }
 }

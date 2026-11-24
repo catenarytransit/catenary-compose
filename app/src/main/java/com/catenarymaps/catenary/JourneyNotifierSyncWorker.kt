@@ -41,7 +41,8 @@ internal class JourneyNotifierSyncWorker(
         try {
             require(base.startsWith("https://")) { "Journey notifier requires HTTPS" }
             val token = Tasks.await(FirebaseMessaging.getInstance().token, 20, TimeUnit.SECONDS)
-            val preferences = applicationContext.getSharedPreferences("journey-notifier", Context.MODE_PRIVATE)
+            val preferences =
+                applicationContext.getSharedPreferences("journey-notifier", Context.MODE_PRIVATE)
             val http = OkHttpClient.Builder().callTimeout(25, TimeUnit.SECONDS).build()
             val deviceId = preferences.getString("device_id", null)
             val secret = preferences.getString("device_secret", null)
@@ -55,11 +56,19 @@ internal class JourneyNotifierSyncWorker(
                 registeredSecret = registration.getString("deviceSecret")
                 check(registeredId.isNotBlank() && registeredSecret.isNotBlank())
                 // Save both credentials atomically, *before* synchronizing journeys.
-                check(preferences.edit().putString("device_id", registeredId)
-                    .putString("device_secret", registeredSecret).commit())
+                check(
+                    preferences.edit().putString("device_id", registeredId)
+                        .putString("device_secret", registeredSecret).commit()
+                )
             } else if (preferences.getString("fcm_token", null) != token) {
                 val body = JSONObject().put("fcmToken", token)
-                putJson(http, "$base/v1/devices/$registeredId", body, registeredId, registeredSecret)
+                putJson(
+                    http,
+                    "$base/v1/devices/$registeredId",
+                    body,
+                    registeredId,
+                    registeredSecret
+                )
             }
             preferences.edit().putString("fcm_token", token).apply()
             val bookmarks = SavedJourneyStore(applicationContext).use { it.readForNotifier() }
@@ -84,15 +93,19 @@ internal class JourneyNotifierSyncWorker(
     companion object {
         private val JSON = "application/json".toMediaType()
         private const val UNIQUE_SYNC = "journey-notifier-reconcile"
-        private val network = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        private val network =
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
         fun enqueue(context: Context) {
             if (BuildConfig.JOURNEY_NOTIFIER_BASE_URL.isBlank()) return
             WorkManager.getInstance(context.applicationContext)
-                .enqueueUniqueWork(UNIQUE_SYNC, ExistingWorkPolicy.REPLACE,
+                .enqueueUniqueWork(
+                    UNIQUE_SYNC, ExistingWorkPolicy.REPLACE,
                     OneTimeWorkRequestBuilder<JourneyNotifierSyncWorker>()
-                        .setConstraints(network).build())
+                        .setConstraints(network).build()
+                )
         }
+
         fun ensureStarted(context: Context) {
             if (BuildConfig.JOURNEY_NOTIFIER_BASE_URL.isBlank()) return
             WorkManager.getInstance(context.applicationContext).enqueueUniquePeriodicWork(
@@ -103,26 +116,50 @@ internal class JourneyNotifierSyncWorker(
             enqueue(context)
         }
 
-        private fun postJson(http: OkHttpClient, url: String, body: JSONObject, deviceId: String?, secret: String?): String =
+        private fun postJson(
+            http: OkHttpClient,
+            url: String,
+            body: JSONObject,
+            deviceId: String?,
+            secret: String?
+        ): String =
             request(http, "POST", url, body, deviceId, secret)
 
-        private fun putJson(http: OkHttpClient, url: String, body: JSONObject, deviceId: String, secret: String) {
+        private fun putJson(
+            http: OkHttpClient,
+            url: String,
+            body: JSONObject,
+            deviceId: String,
+            secret: String
+        ) {
             request(http, "PUT", url, body, deviceId, secret)
         }
-        private fun request(http: OkHttpClient, method: String, url: String, body: JSONObject, deviceId: String?, secret: String?): String {
-            val builder = Request.Builder().url(url).method(method, body.toString().toRequestBody(JSON))
-            if (deviceId != null && secret != null) builder.header("X-Device-Id", deviceId).header("Authorization", "Bearer $secret")
+
+        private fun request(
+            http: OkHttpClient,
+            method: String,
+            url: String,
+            body: JSONObject,
+            deviceId: String?,
+            secret: String?
+        ): String {
+            val builder =
+                Request.Builder().url(url).method(method, body.toString().toRequestBody(JSON))
+            if (deviceId != null && secret != null) builder.header("X-Device-Id", deviceId)
+                .header("Authorization", "Bearer $secret")
             http.newCall(builder.build()).execute().use { response ->
                 if (!response.isSuccessful) error("Notifier HTTP ${response.code}")
                 return response.body?.string().orEmpty()
             }
         }
+
         private fun instant(value: String?): Long? =
             runCatching { Instant.parse(value).epochSecond }.getOrNull()
 
         /** Keep server identifiers short even if Edelweiss returns a synthetic long identity. */
         fun stableId(journey: DirectionsItinerary): String =
-            MessageDigest.getInstance("SHA-256").digest(journey.identity().toByteArray(Charsets.UTF_8))
+            MessageDigest.getInstance("SHA-256")
+                .digest(journey.identity().toByteArray(Charsets.UTF_8))
                 .joinToString("") { "%02x".format(it) }
 
         private fun journeyBody(snapshot: SavedJourney): JSONObject? {
@@ -167,7 +204,10 @@ internal class JourneyNotifierSyncWorker(
                     put("scheduledArrival", arrival)
                     put("expectedDeparture", predictedDeparture)
                     put("expectedArrival", predictedArrival)
-                    putNullable("expectedPlatform", from.estimatedQuay ?: leg.fromPlatform ?: from.platform)
+                    putNullable(
+                        "expectedPlatform",
+                        from.estimatedQuay ?: leg.fromPlatform ?: from.platform
+                    )
                     put("transferSeconds", transfer)
                 })
             }
@@ -176,6 +216,7 @@ internal class JourneyNotifierSyncWorker(
                 .put("scheduledEnd", scheduledEnd)
                 .put("legs", legs)
         }
+
         private fun JSONObject.putNullable(key: String, value: Any?) {
             put(key, value ?: JSONObject.NULL)
         }

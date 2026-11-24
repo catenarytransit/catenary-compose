@@ -410,23 +410,48 @@ private fun TimeSelectorDialog(
         }
     }
 }
+
 /** Rounded two-position slider with its labels inside the track. Changes are staged until Apply. */
 @Composable
 private fun DepartureArrivalSlider(arriveBy: Boolean, onChange: (Boolean) -> Unit) {
     val shape = RoundedCornerShape(50)
-    BoxWithConstraints(Modifier.fillMaxWidth().clip(shape)
-        .background(MaterialTheme.colorScheme.surfaceVariant)
-        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)) {
-        val thumbOffset by animateDpAsState(if (arriveBy) maxWidth / 2 else 0.dp, label = "journey time mode")
-        Box(Modifier.offset(x = thumbOffset).width(maxWidth / 2).height(48.dp)
-            .clip(shape).background(MaterialTheme.colorScheme.secondaryContainer)
-            .border(1.dp, MaterialTheme.colorScheme.outline, shape))
-        Row(Modifier.fillMaxWidth().selectableGroup()) {
+    BoxWithConstraints(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+    ) {
+        val thumbOffset by animateDpAsState(
+            if (arriveBy) maxWidth / 2 else 0.dp,
+            label = "journey time mode"
+        )
+        Box(
+            Modifier
+                .offset(x = thumbOffset)
+                .width(maxWidth / 2)
+                .height(48.dp)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .border(1.dp, MaterialTheme.colorScheme.outline, shape)
+        )
+        Row(Modifier
+            .fillMaxWidth()
+            .selectableGroup()) {
             listOf(false, true).forEach { arrival ->
-                Box(Modifier.weight(1f).height(48.dp).selectable(selected = arriveBy == arrival,
-                    role = Role.RadioButton, onClick = { onChange(arrival) }), contentAlignment = Alignment.Center) {
-                    Text(stringResource(if (arrival) R.string.directions_arrival else R.string.directions_departure),
-                        color = if (arriveBy == arrival) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .selectable(
+                            selected = arriveBy == arrival,
+                            role = Role.RadioButton, onClick = { onChange(arrival) }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        stringResource(if (arrival) R.string.directions_arrival else R.string.directions_departure),
+                        color = if (arriveBy == arrival) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

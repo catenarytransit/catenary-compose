@@ -91,6 +91,6 @@ internal fun shouldCarryDownwardFling(
     thresholdPxPerSecond: Float,
 ): Boolean =
     viewportHeightPx.isFinite() && viewportHeightPx > 0f &&
-        sheetTopPx.isFinite() && velocityY.isFinite() &&
-        velocityY >= thresholdPxPerSecond &&
-        viewportHeightPx - sheetTopPx >= viewportHeightPx * 0.25f
+            sheetTopPx.isFinite() && velocityY.isFinite() &&
+            velocityY >= thresholdPxPerSecond &&
+            viewportHeightPx - sheetTopPx >= viewportHeightPx * 0.25f

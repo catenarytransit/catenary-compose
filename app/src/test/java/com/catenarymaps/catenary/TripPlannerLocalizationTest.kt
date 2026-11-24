@@ -15,7 +15,8 @@ class TripPlannerLocalizationTest {
         }
     }
 
-    @Test fun everySupportedLocaleProvidesAllPlannerLabels() {
+    @Test
+    fun everySupportedLocaleProvidesAllPlannerLabels() {
         // Gradle runs JVM tests from the module directory; the second path supports root invocations.
         val resources = listOf(File("src/main/res"), File("app/src/main/res"))
             .firstOrNull { it.isDirectory } ?: error("Cannot find Android resources")

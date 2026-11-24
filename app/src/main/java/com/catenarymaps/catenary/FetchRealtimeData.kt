@@ -16,34 +16,36 @@ data class BoundsInputPerLevel(val min_x: Int, val max_x: Int, val min_y: Int, v
 
 @Serializable
 data class BoundsInput(
-        val level5: BoundsInputPerLevel,
-        val level7: BoundsInputPerLevel,
-        val level8: BoundsInputPerLevel,
-        val level12: BoundsInputPerLevel
+    val level5: BoundsInputPerLevel,
+    val level7: BoundsInputPerLevel,
+    val level8: BoundsInputPerLevel,
+    val level12: BoundsInputPerLevel
 )
 
 // Request classes removed as they are replaced by SpruceWebSocket.MapViewportUpdate
 
 @Serializable
 data class EachCategoryPayloadV2(
-        val vehicle_positions: Map<String, Map<String, Map<String, VehiclePosition>>>? = null,
-        val last_updated_time_ms: Long,
-        val replaces_all: Boolean,
-        val z_level: Int,
-        val list_of_agency_ids: List<String>? = null
+    val vehicle_positions: Map<String, Map<String, Map<String, VehiclePosition>>>? = null,
+    val last_updated_time_ms: Long,
+    val replaces_all: Boolean,
+    val z_level: Int,
+    val list_of_agency_ids: List<String>? = null
 )
 
 @Serializable
 data class PositionDataCategoryV2(
-        val metro: EachCategoryPayloadV2? = null,
-        val bus: EachCategoryPayloadV2? = null,
-        val rail: EachCategoryPayloadV2? = null,
-        val other: EachCategoryPayloadV2? = null
+    val metro: EachCategoryPayloadV2? = null,
+    val bus: EachCategoryPayloadV2? = null,
+    val rail: EachCategoryPayloadV2? = null,
+    val other: EachCategoryPayloadV2? = null
 )
 
-@Serializable data class EachChateauResponseV2(val categories: PositionDataCategoryV2? = null)
+@Serializable
+data class EachChateauResponseV2(val categories: PositionDataCategoryV2? = null)
 
-@Serializable data class BulkRealtimeResponseV2(val chateaus: Map<String, EachChateauResponseV2>)
+@Serializable
+data class BulkRealtimeResponseV2(val chateaus: Map<String, EachChateauResponseV2>)
 
 data class TileBbox(val north: Int, val south: Int, val east: Int, val west: Int)
 
@@ -51,12 +53,12 @@ fun getTileBoundaries(camera: CameraState, zoom: Int): TileBbox? {
     val projection = camera.projection ?: return null
     // Use queryVisibleBoundingBox as it's available on the projection
     val visibleBounds =
-            try {
-                projection.queryVisibleBoundingBox()
-            } catch (e: Exception) {
-                Log.e(TAG, "Could not query visible bounding box", e)
-                return null
-            }
+        try {
+            projection.queryVisibleBoundingBox()
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not query visible bounding box", e)
+            return null
+        }
 
     val north = visibleBounds.northeast.latitude
     val south = visibleBounds.southwest.latitude
@@ -72,19 +74,19 @@ fun getTileBoundaries(camera: CameraState, zoom: Int): TileBbox? {
     val xtileEast = floor((east + 180) / 360 * n).toInt()
 
     val ytileNorth =
-            floor(
-                            (1 -
-                                    Math.log(Math.tan(latRadNorth) + 1 / Math.cos(latRadNorth)) /
-                                            Math.PI) / 2 * n
-                    )
-                    .toInt()
+        floor(
+            (1 -
+                    Math.log(Math.tan(latRadNorth) + 1 / Math.cos(latRadNorth)) /
+                    Math.PI) / 2 * n
+        )
+            .toInt()
     val ytileSouth =
-            floor(
-                            (1 -
-                                    Math.log(Math.tan(latRadSouth) + 1 / Math.cos(latRadSouth)) /
-                                            Math.PI) / 2 * n
-                    )
-                    .toInt()
+        floor(
+            (1 -
+                    Math.log(Math.tan(latRadSouth) + 1 / Math.cos(latRadSouth)) /
+                    Math.PI) / 2 * n
+        )
+            .toInt()
 
     return TileBbox(ytileNorth, ytileSouth, xtileEast, xtileWest)
 }
@@ -101,18 +103,18 @@ fun boundsInputCalculate(camera: CameraState): BoundsInput {
             val maxTiles = (Math.pow(2.0, zoom.toDouble()) - 1).toInt()
 
             val padding =
-                    when (zoom) {
-                        12 -> if (currentZoom > 11) 0 else 1
-                        else -> if (currentZoom > 9) 0 else 1
-                    }
+                when (zoom) {
+                    12 -> if (currentZoom > 11) 0 else 1
+                    else -> if (currentZoom > 9) 0 else 1
+                }
 
             boundsInputMap[zoom] =
-                    BoundsInputPerLevel(
-                            min_x = max(0, boundaries.west - padding),
-                            max_x = min(maxTiles, boundaries.east + padding),
-                            min_y = max(0, boundaries.north - padding),
-                            max_y = min(maxTiles, boundaries.south + padding)
-                    )
+                BoundsInputPerLevel(
+                    min_x = max(0, boundaries.west - padding),
+                    max_x = min(maxTiles, boundaries.east + padding),
+                    min_y = max(0, boundaries.north - padding),
+                    max_y = min(maxTiles, boundaries.south + padding)
+                )
         } else {
             // Fallback if boundaries can't be calculated
             boundsInputMap[zoom] = BoundsInputPerLevel(0, 0, 0, 0)
@@ -120,18 +122,18 @@ fun boundsInputCalculate(camera: CameraState): BoundsInput {
     }
 
     return BoundsInput(
-            level5 = boundsInputMap[5]!!,
-            level7 = boundsInputMap[7]!!,
-            level8 = boundsInputMap[8]!!,
-            level12 = boundsInputMap[12]!!
+        level5 = boundsInputMap[5]!!,
+        level7 = boundsInputMap[7]!!,
+        level8 = boundsInputMap[8]!!,
+        level12 = boundsInputMap[12]!!
     )
 }
 
 fun sendMapUpdate(
-        scope: CoroutineScope,
-        zoom: Double,
-        settings: AllLayerSettings,
-        camera: CameraState,
+    scope: CoroutineScope,
+    zoom: Double,
+    settings: AllLayerSettings,
+    camera: CameraState,
 ) {
     scope.launch {
         val categoriesToRequest = mutableListOf<String>()
@@ -158,8 +160,8 @@ fun sendMapUpdate(
         val boundsInput = boundsInputCalculate(camera)
 
         SpruceWebSocket.updateMap(
-                categories = categoriesToRequest,
-                boundsInput = boundsInput
+            categories = categoriesToRequest,
+            boundsInput = boundsInput
         )
     }
 }

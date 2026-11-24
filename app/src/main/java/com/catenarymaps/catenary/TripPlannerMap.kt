@@ -71,7 +71,8 @@ fun TripPlannerMap(planner: TripPlannerViewModel) {
             val lat = point.lat
             val lon = point.lon
             if (lat != null && lon != null && lat.isFinite() && lon.isFinite() &&
-                lat in -90.0..90.0 && lon in -180.0..180.0) Position(lon, lat) else null
+                lat in -90.0..90.0 && lon in -180.0..180.0
+            ) Position(lon, lat) else null
         }.distinct()
     val source = rememberGeoJsonSource(GeoJsonData.Features(MultiPoint(transfers)))
     CircleLayer(
@@ -89,7 +90,7 @@ private fun JourneyMapLines(journey: DirectionsItinerary) {
         if (points.size >= 2) {
             val source = rememberGeoJsonSource(GeoJsonData.Features(LineString(points)))
             val color = if (leg.street) TripPlannerColors.streetLine
-                else parseColor(leg.routeColor, Color(0xFF2563EB))
+            else parseColor(leg.routeColor, Color(0xFF2563EB))
             LineLayer(
                 id = "directions-selected-$index", source = source, color = const(color),
                 width = const(5.dp), opacity = const(1f),
@@ -123,7 +124,8 @@ private fun JourneyMapVehicles(journey: DirectionsItinerary) {
     }
 
     var features by remember { mutableStateOf(emptyList<Feature<Point, JsonObject>>()) }
-    val empty = remember { GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, JsonObject>>())) }
+    val empty =
+        remember { GeoJsonData.Features(FeatureCollection(emptyList<Feature<Point, JsonObject>>())) }
     val source = rememberGeoJsonSource(empty)
     LaunchedEffect(features) { source.setData(GeoJsonData.Features(FeatureCollection(features))) }
     DisposableEffect(source) {
@@ -147,7 +149,8 @@ private fun JourneyMapVehicles(journey: DirectionsItinerary) {
                         val latitude = position.latitude ?: return@async null
                         val longitude = position.longitude ?: return@async null
                         if (!latitude.isFinite() || !longitude.isFinite() ||
-                            latitude !in -90.0..90.0 || longitude !in -180.0..180.0) {
+                            latitude !in -90.0..90.0 || longitude !in -180.0..180.0
+                        ) {
                             return@async null
                         }
                         vehicleContextFeatureFromSingleTrip(

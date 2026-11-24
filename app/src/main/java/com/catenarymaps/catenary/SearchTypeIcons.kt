@@ -83,7 +83,8 @@ internal fun SearchTypeIcon(name: String, modifier: Modifier = Modifier) {
     val loader = remember(context) {
         ImageLoader.Builder(context).components { add(SvgDecoder.Factory()) }.build()
     }
-    val tint = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color.White else Color.Black
+    val tint =
+        if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color.White else Color.Black
     AsyncImage(
         model = "file:///android_asset/search/$name.svg",
         imageLoader = loader,

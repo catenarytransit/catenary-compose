@@ -6,7 +6,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 
 class TripPlannerRouteLabelsTest {
-    @Test fun nationalRailUsesExistingOperatorExceptions() {
+    @Test
+    fun nationalRailUsesExistingOperatorExceptions() {
         for (agency in listOf("TW", "ME", "LO", "XR", "HX")) {
             assertTrue(NationalRailUtils.showsRouteName("nationalrailuk", agency))
         }
@@ -15,13 +16,15 @@ class TripPlannerRouteLabelsTest {
         assertTrue(NationalRailUtils.showsRouteName("schweiz", null))
     }
 
-    @Test fun routingAgencyIsDecodedAndOlderSavedLegsRemainReadable() {
+    @Test
+    fun routingAgencyIsDecodedAndOlderSavedLegsRemainReadable() {
         val leg = Json.decodeFromString<DirectionsLeg>("""{"mode":"RAIL","agencyId":"XR"}""")
         assertEquals("XR", leg.agencyId)
         assertNull(Json.decodeFromString<DirectionsLeg>("""{"mode":"RAIL"}""").agencyId)
     }
 
-    @Test fun timelineRemovesOnlyTrailingLineAndBranchWords() {
+    @Test
+    fun timelineRemovesOnlyTrailingLineAndBranchWords() {
         assertEquals("Elizabeth", timelineRouteName("Elizabeth Line"))
         assertEquals("Red", timelineRouteName(" Red BRANCH "))
         assertEquals("Red", timelineRouteName("Red Line branch"))

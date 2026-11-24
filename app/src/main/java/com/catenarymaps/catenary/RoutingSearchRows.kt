@@ -14,6 +14,6 @@ internal fun filterRoutingSearchRows(rows: List<SearchRow>): List<SearchRow> {
     if (visibleStationIds.isEmpty()) return rows
     return rows.filterNot { row ->
         row is SearchRow.StopRow &&
-            row.stopInfo.osmStationId in visibleStationIds
+                row.stopInfo.osmStationId in visibleStationIds
     }
 }

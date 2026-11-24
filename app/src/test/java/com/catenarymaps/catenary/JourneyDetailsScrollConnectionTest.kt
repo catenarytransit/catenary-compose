@@ -9,10 +9,14 @@ import org.junit.Test
 
 class JourneyDetailsScrollConnectionTest {
     private var fraction = 0f
-    private val connection = JourneyDetailsScrollConnection(24f, { 100f }, { fraction }, { fraction = it })
-    private fun scroll(y: Float) = connection.onPreScroll(Offset(0f, y), NestedScrollSource.UserInput)
+    private val connection =
+        JourneyDetailsScrollConnection(24f, { 100f }, { fraction }, { fraction = it })
 
-    @Test fun thresholdThenLinearHeightAndClampedConsumption() {
+    private fun scroll(y: Float) =
+        connection.onPreScroll(Offset(0f, y), NestedScrollSource.UserInput)
+
+    @Test
+    fun thresholdThenLinearHeightAndClampedConsumption() {
         assertEquals(Offset.Zero, scroll(-20f))
         assertEquals(0f, fraction, 0.001f)
         assertEquals(-6f, scroll(-10f).y, 0.001f)
@@ -24,7 +28,8 @@ class JourneyDetailsScrollConnectionTest {
         assertEquals(Offset.Zero, scroll(-100f))
     }
 
-    @Test fun reversalRequiresThresholdThenExpandsProportionally() {
+    @Test
+    fun reversalRequiresThresholdThenExpandsProportionally() {
         scroll(-74f)
         assertEquals(0.5f, fraction, 0.001f)
         scroll(10f)
@@ -35,7 +40,8 @@ class JourneyDetailsScrollConnectionTest {
         assertEquals(0f, fraction, 0.001f)
     }
 
-    @Test fun releaseAtMidpointExpandsAndNewGestureHasThreshold() = runBlocking {
+    @Test
+    fun releaseAtMidpointExpandsAndNewGestureHasThreshold() = runBlocking {
         scroll(-74f)
         connection.onPreScroll(Offset(0f, 100f), NestedScrollSource.SideEffect)
         connection.onPreScroll(Offset(100f, 0f), NestedScrollSource.UserInput)
@@ -46,30 +52,42 @@ class JourneyDetailsScrollConnectionTest {
         assertEquals(0f, fraction, 0.001f)
     }
 
-    @Test fun releasePastMidpointCollapsesEvenWithoutFlingVelocity() = runBlocking {
+    @Test
+    fun releasePastMidpointCollapsesEvenWithoutFlingVelocity() = runBlocking {
         scroll(-84f)
         connection.onPreFling(Velocity.Zero)
         assertEquals(1f, fraction, 0.001f)
     }
 
-    @Test fun releaseBelowMidpointExpandsEvenAfterUpwardMotion() = runBlocking {
+    @Test
+    fun releaseBelowMidpointExpandsEvenAfterUpwardMotion() = runBlocking {
         scroll(-64f)
         connection.onPreFling(Velocity.Zero)
         assertEquals(0f, fraction, 0.001f)
     }
 
-    @Test fun drawerAndSummaryShareMidpointAndEndpoints() {
+    @Test
+    fun drawerAndSummaryShareMidpointAndEndpoints() {
         assertEquals(0f, drawerSummaryCollapseFraction(700f, 500f, 100f), 0.001f)
         assertEquals(0f, drawerSummaryCollapseFraction(500f, 500f, 100f), 0.001f)
         assertEquals(0.5f, drawerSummaryCollapseFraction(300f, 500f, 100f), 0.001f)
         assertEquals(1f, drawerSummaryCollapseFraction(100f, 500f, 100f), 0.001f)
         assertEquals(1f, drawerSummaryCollapseFraction(50f, 500f, 100f), 0.001f)
         assertEquals(0f, drawerSummaryCollapseFraction(100f, 100f, 100f), 0.001f)
-        assertEquals(0f, summarySettleTarget(drawerSummaryCollapseFraction(301f, 500f, 100f)), 0.001f)
-        assertEquals(1f, summarySettleTarget(drawerSummaryCollapseFraction(299f, 500f, 100f)), 0.001f)
+        assertEquals(
+            0f,
+            summarySettleTarget(drawerSummaryCollapseFraction(301f, 500f, 100f)),
+            0.001f
+        )
+        assertEquals(
+            1f,
+            summarySettleTarget(drawerSummaryCollapseFraction(299f, 500f, 100f)),
+            0.001f
+        )
     }
 
-    @Test fun settlingReceivesNearestEndpoint() = runBlocking {
+    @Test
+    fun settlingReceivesNearestEndpoint() = runBlocking {
         var target = -1f
         val custom = JourneyDetailsScrollConnection(24f, { 100f }, { 0.75f }, {}, { target = it })
         custom.onPreFling(Velocity.Zero)

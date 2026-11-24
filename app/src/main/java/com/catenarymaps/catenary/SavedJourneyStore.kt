@@ -36,7 +36,14 @@ internal class SavedJourneyStore(context: Context, name: String = "saved-journey
             put("saved_at", snapshot.savedAt)
             put("snapshot", Json.encodeToString(snapshot))
         }
-        check(writableDatabase.insertWithOnConflict("saved_journeys", null, values, SQLiteDatabase.CONFLICT_REPLACE) != -1L)
+        check(
+            writableDatabase.insertWithOnConflict(
+                "saved_journeys",
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_REPLACE
+            ) != -1L
+        )
         JourneyNotifierSyncWorker.enqueue(appContext)
     }
 
@@ -56,13 +63,23 @@ internal class SavedJourneyStore(context: Context, name: String = "saved-journey
             "saved_journeys", arrayOf("snapshot"), null, null, null, null, "saved_at DESC"
         ).use { cursor ->
             buildList {
-                while (cursor.moveToNext()) add(Json.decodeFromString<SavedJourney>(cursor.getString(0)))
+                while (cursor.moveToNext()) add(
+                    Json.decodeFromString<SavedJourney>(
+                        cursor.getString(
+                            0
+                        )
+                    )
+                )
             }
         }
         return snapshots.filter { snapshot ->
             val end = runCatching { java.time.Instant.parse(snapshot.journey.endTime) }.getOrNull()
             val expired = end != null && end.isBefore(now.minusSeconds(30L * 24 * 60 * 60))
-            if (expired) writableDatabase.delete("saved_journeys", "identity = ?", arrayOf(snapshot.journey.identity()))
+            if (expired) writableDatabase.delete(
+                "saved_journeys",
+                "identity = ?",
+                arrayOf(snapshot.journey.identity())
+            )
             !expired
         }
     }

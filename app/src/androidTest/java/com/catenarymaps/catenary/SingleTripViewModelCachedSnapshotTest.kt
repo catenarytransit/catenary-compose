@@ -83,10 +83,12 @@ class SingleTripViewModelCachedSnapshotTest {
         )
         val update = TripRtUpdateData(
             trip_id = "trip",
-            stoptimes = listOf(StopTimeRefresh(
-                stop_id = "board", gtfs_stop_sequence = 1,
-                rt_departure = RtTime(now + 180)
-            ))
+            stoptimes = listOf(
+                StopTimeRefresh(
+                    stop_id = "board", gtfs_stop_sequence = 1,
+                    rt_departure = RtTime(now + 180)
+                )
+            )
         )
         val snapshots = MutableStateFlow(
             mapOf(identity to RamondaTripSnapshot(initial = initial, latestUpdate = update))

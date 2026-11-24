@@ -41,25 +41,45 @@ internal fun HomeNavigation(
 ) {
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
         Row(
-            Modifier.fillMaxWidth()
-                .windowInsetsPadding(if (includeBottomInset)
-                    WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
-                else WindowInsets(0, 0, 0, 0))
+            Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(
+                    if (includeBottomInset)
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+                    else WindowInsets(0, 0, 0, 0)
+                )
                 .selectableGroup()
                 .padding(horizontal = 8.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            HomeNavigationItem(!tripsSelected, onExplore, Icons.Default.Map, stringResource(R.string.home_explore))
-            HomeNavigationItem(tripsSelected, onTrips, Icons.Default.Bookmark, stringResource(R.string.home_trips))
+            HomeNavigationItem(
+                !tripsSelected,
+                onExplore,
+                Icons.Default.Map,
+                stringResource(R.string.home_explore)
+            )
+            HomeNavigationItem(
+                tripsSelected,
+                onTrips,
+                Icons.Default.Bookmark,
+                stringResource(R.string.home_trips)
+            )
         }
     }
 }
 
 @Composable
-private fun RowScope.HomeNavigationItem(selected: Boolean, onClick: () -> Unit, icon: ImageVector, label: String) {
+private fun RowScope.HomeNavigationItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    icon: ImageVector,
+    label: String
+) {
     val interactionSource = remember { MutableInteractionSource() }
     Column(
-        Modifier.weight(1f).heightIn(min = 48.dp)
+        Modifier
+            .weight(1f)
+            .heightIn(min = 48.dp)
             .selectable(
                 selected = selected, onClick = onClick, role = Role.Tab,
                 interactionSource = interactionSource, indication = null
@@ -68,9 +88,12 @@ private fun RowScope.HomeNavigationItem(selected: Boolean, onClick: () -> Unit, 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically)
     ) {
-        val color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+        val color =
+            if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
         Box(
-            Modifier.size(26.dp).clip(CircleShape)
+            Modifier
+                .size(26.dp)
+                .clip(CircleShape)
                 .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
                 .indication(interactionSource, ripple(bounded = true)),
             contentAlignment = Alignment.Center
@@ -90,7 +113,8 @@ internal fun SavedJourneysScreen(
     onNotificationHandled: () -> Unit = {}
 ) {
     val context = LocalContext.current.applicationContext
-    val planner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "saved-journey-details")
+    val planner: TripPlannerViewModel =
+        androidx.lifecycle.viewmodel.compose.viewModel(key = "saved-journey-details")
     var snapshots by remember { mutableStateOf<List<SavedJourney>>(emptyList()) }
     var loaded by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
@@ -99,9 +123,11 @@ internal fun SavedJourneysScreen(
     LaunchedEffect(refresh, foreground, notificationJourneyId) {
         if (foreground) while (true) {
             try {
-                snapshots = withContext(Dispatchers.IO) { SavedJourneyStore(context).use {
-                    if (notificationJourneyId != null) it.readForNotifier() else it.readAll()
-                } }
+                snapshots = withContext(Dispatchers.IO) {
+                    SavedJourneyStore(context).use {
+                        if (notificationJourneyId != null) it.readForNotifier() else it.readAll()
+                    }
+                }
                 failed = false
                 val selected = snapshots.firstOrNull { it.journey.identity() == selectedIdentity }
                 // Removing a bookmark deletes the persisted snapshot, but the currently open
@@ -115,16 +141,20 @@ internal fun SavedJourneysScreen(
                     selectedIdentity = null
                     planner.details = false
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
-            catch (_: Exception) { failed = true }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                failed = true
+            }
             loaded = true
             delay(60_000)
         }
     }
     LaunchedEffect(notificationJourneyId, snapshots) {
         val target = notificationJourneyId?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
-        val snapshot = snapshots.firstOrNull { JourneyNotifierSyncWorker.stableId(it.journey) == target }
-            ?: return@LaunchedEffect
+        val snapshot =
+            snapshots.firstOrNull { JourneyNotifierSyncWorker.stableId(it.journey) == target }
+                ?: return@LaunchedEffect
         if (planner.selectedJourney?.identity() != snapshot.journey.identity() || !planner.details) {
             selectedIdentity = snapshot.journey.identity()
             planner.openSavedJourney(snapshot)
@@ -135,57 +165,119 @@ internal fun SavedJourneysScreen(
     val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
         .withLocale(LocalConfiguration.current.locales[0])
     BackHandler {
-        if (planner.details) { planner.details = false; selectedIdentity = null } else onExplore()
+        if (planner.details) {
+            planner.details = false; selectedIdentity = null
+        } else onExplore()
     }
-    Surface(modifier, color = TripPlannerColors.background, contentColor = TripPlannerColors.content) {
-        Row(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))) {
-            if (wide || !planner.details) Column(Modifier.weight(1f).fillMaxHeight()) {
-                Text(stringResource(R.string.home_trips), style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold, modifier = Modifier.padding(20.dp))
-                LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Surface(
+        modifier,
+        color = TripPlannerColors.background,
+        contentColor = TripPlannerColors.content
+    ) {
+        Row(
+            Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+        ) {
+            if (wide || !planner.details) Column(Modifier
+                .weight(1f)
+                .fillMaxHeight()) {
+                Text(
+                    stringResource(R.string.home_trips),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(20.dp)
+                )
+                LazyColumn(
+                    Modifier.weight(1f),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     if (!loaded) item { CircularProgressIndicator() }
                     if (failed) item { Text(stringResource(R.string.directions_save_error)) }
                     if (loaded && !failed && snapshots.isEmpty()) item {
-                        Text(stringResource(R.string.saved_journeys_empty), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.saved_journeys_empty),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
                         Spacer(Modifier.height(16.dp))
                         Text(stringResource(R.string.saved_journeys_description))
                     }
                     groups.forEach { (date, journeys) ->
                         if (date != null) item(key = "date-$date") {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text(date.format(dateFormatter), style = MaterialTheme.typography.titleSmall,
-                                    color = TripPlannerColors.secondaryContent)
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    date.format(dateFormatter),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = TripPlannerColors.secondaryContent
+                                )
                                 HorizontalDivider(Modifier.weight(1f))
                             }
                         }
                         items(journeys, key = { it.journey.identity() }) { snapshot ->
-                            Card(onClick = {
-                                selectedIdentity = snapshot.journey.identity()
-                                planner.openSavedJourney(snapshot)
-                            }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-                                containerColor = TripPlannerColors.card, contentColor = TripPlannerColors.content)) {
-                                Text("${snapshot.origin?.name.orEmpty()} → ${snapshot.destination?.name.orEmpty()}",
-                                    fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp))
+                            Card(
+                                onClick = {
+                                    selectedIdentity = snapshot.journey.identity()
+                                    planner.openSavedJourney(snapshot)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = TripPlannerColors.card,
+                                    contentColor = TripPlannerColors.content
+                                )
+                            ) {
+                                Text(
+                                    "${snapshot.origin?.name.orEmpty()} → ${snapshot.destination?.name.orEmpty()}",
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(
+                                        start = 12.dp,
+                                        end = 12.dp,
+                                        top = 12.dp
+                                    )
+                                )
                                 JourneyPreviewContent(snapshot.journey, streetUsUnits)
                             }
                         }
                     }
                 }
-                Button(onClick = onPlan, modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Button(onClick = onPlan, modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)) {
                     Text(stringResource(R.string.saved_journeys_plan))
                 }
             }
             if (wide) VerticalDivider()
-            if (wide || planner.details) Column(Modifier.weight(1f).fillMaxHeight()) {
+            if (wide || planner.details) Column(Modifier
+                .weight(1f)
+                .fillMaxHeight()) {
                 if (planner.details) {
-                    JourneySummary(planner, streetUsUnits, showBack = !wide, showMapAction = false,
-                        onSavedChanged = { refresh++ }, client = client, onHome = onExplore)
+                    JourneySummary(
+                        planner, streetUsUnits, showBack = !wide, showMapAction = false,
+                        onSavedChanged = { refresh++ }, client = client, onHome = onExplore
+                    )
                     Box(Modifier.weight(1f)) {
-                        planner.selectedJourney?.let { JourneyDetails(planner, it, streetUsUnits, onTripInfo = onTripInfo) }
+                        planner.selectedJourney?.let {
+                            JourneyDetails(
+                                planner,
+                                it,
+                                streetUsUnits,
+                                onTripInfo = onTripInfo
+                            )
+                        }
                     }
-                } else Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    Text(stringResource(R.string.saved_journeys_select), modifier = Modifier.padding(24.dp))
+                } else Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = androidx.compose.ui.Alignment.Center
+                ) {
+                    Text(
+                        stringResource(R.string.saved_journeys_select),
+                        modifier = Modifier.padding(24.dp)
+                    )
                 }
             }
         }

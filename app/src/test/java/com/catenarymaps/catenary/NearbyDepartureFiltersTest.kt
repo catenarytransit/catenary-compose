@@ -8,7 +8,8 @@ class NearbyDepartureFiltersTest {
     private fun busVisible(filters: NearbyDepartureFilters, routeType: Int = 3) =
         isAllowedByFilter(routeType, filters, false, false, false)
 
-    @Test fun savedRailFilterOnBusOnlyResponseRemainsRecoverable() {
+    @Test
+    fun savedRailFilterOnBusOnlyResponseRemainsRecoverable() {
         val saved = NearbyDepartureFilters(rail = true)
         // Reproduces a successful Santa Cruz response with every route filtered out.
         assertFalse(busVisible(saved))
@@ -19,7 +20,8 @@ class NearbyDepartureFiltersTest {
         assertFalse(reset.isActive)
     }
 
-    @Test fun everySavedSelectionKeepsControlsVisibleWithoutNonBusResults() {
+    @Test
+    fun everySavedSelectionKeepsControlsVisibleWithoutNonBusResults() {
         val selections = listOf(
             NearbyDepartureFilters(rail = true), NearbyDepartureFilters(metro = true),
             NearbyDepartureFilters(tram = true), NearbyDepartureFilters(bus = true),
@@ -32,14 +34,16 @@ class NearbyDepartureFiltersTest {
         }
     }
 
-    @Test fun unfilteredBusOnlyResponseKeepsCompactControls() {
+    @Test
+    fun unfilteredBusOnlyResponseKeepsCompactControls() {
         val filters = NearbyDepartureFilters()
         assertTrue(busVisible(filters))
         assertFalse(filters.shouldShowControls(hasNonBusDepartures = false))
         assertTrue(filters.shouldShowControls(hasNonBusDepartures = true))
     }
 
-    @Test fun togglingBusOnRecoversResultsWithoutClearingOtherSelections() {
+    @Test
+    fun togglingBusOnRecoversResultsWithoutClearingOtherSelections() {
         val saved = NearbyDepartureFilters(metro = true, tram = true)
         assertFalse(busVisible(saved))
         assertTrue(busVisible(saved.copy(bus = true)))

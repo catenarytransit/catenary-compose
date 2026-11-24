@@ -4,7 +4,8 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class TripPlannerMapLayersTest {
-    @Test fun stopsOnlyMapLeavesPreferencesAndStopVisibilityUntouched() {
+    @Test
+    fun stopsOnlyMapLeavesPreferencesAndStopVisibilityUntouched() {
         val original = AllLayerSettings(
             bus = LayerCategorySettings(stops = false, labelstops = false),
             localrail = LayerCategorySettings(),
@@ -27,12 +28,15 @@ class TripPlannerMapLayersTest {
         assertEquals(original.more, map.more)
     }
 
-    @Test fun reusedVehicleLabelCannotRenderAnotherTrip() {
+    @Test
+    fun reusedVehicleLabelCannotRenderAnotherTrip() {
         val identity = RamondaTripIdentity("agency", "trip-a", "route", "20261120", "08:00:00")
         fun vehicle(tripId: String?, date: String? = "20261120") =
-            VehicleRealtimeData(trip = VehicleRealtimeTripInfo(
-                trip_id = tripId, route_id = "route", start_date = date, start_time = "08:00:00"
-            ))
+            VehicleRealtimeData(
+                trip = VehicleRealtimeTripInfo(
+                    trip_id = tripId, route_id = "route", start_date = date, start_time = "08:00:00"
+                )
+            )
         assertTrue(vehicle("trip-a").matchesJourneyTrip(identity))
         assertFalse(vehicle("trip-b").matchesJourneyTrip(identity))
         assertFalse(vehicle("trip-a", date = "20261119").matchesJourneyTrip(identity))

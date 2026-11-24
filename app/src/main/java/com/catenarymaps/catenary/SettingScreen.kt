@@ -149,7 +149,10 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Switch(checked = showLocalTransitCountdowns, onCheckedChange = onShowLocalTransitCountdownsChange)
+            Switch(
+                checked = showLocalTransitCountdowns,
+                onCheckedChange = onShowLocalTransitCountdownsChange
+            )
         }
 
         // Show distance to nearby stops on the trip screen
@@ -199,13 +202,16 @@ fun SettingsScreen(
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .clickable { onStreetUsUnitsChange(!streetUsUnits) }
                 .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(stringResource(R.string.settings_imperial_street),
-                style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Text(
+                stringResource(R.string.settings_imperial_street),
+                style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f)
+            )
             Switch(checked = streetUsUnits, onCheckedChange = onStreetUsUnitsChange)
         }
 

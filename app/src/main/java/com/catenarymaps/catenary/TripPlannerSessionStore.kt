@@ -12,7 +12,8 @@ internal class TripPlannerSessionStore(file: File) {
 
     fun read(): TripPlannerSession? = synchronized(lock) {
         try {
-            val session = TripPlannerSessionCodec.decode(atomicFile.openRead().bufferedReader().use { it.readText() })
+            val session = TripPlannerSessionCodec.decode(
+                atomicFile.openRead().bufferedReader().use { it.readText() })
             if (session == null) atomicFile.delete()
             session
         } catch (_: FileNotFoundException) {

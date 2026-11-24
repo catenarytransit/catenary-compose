@@ -10,7 +10,8 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class TripPlannerOptionsStoreTest {
-    @Test fun preferencesRoundTripResetAndRecoverFromMalformedData() {
+    @Test
+    fun preferencesRoundTripResetAndRecoverFromMalformedData() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val name = "trip-planner-options-test-${UUID.randomUUID()}"
         val preferences = context.getSharedPreferences(name, Context.MODE_PRIVATE)
@@ -32,7 +33,8 @@ class TripPlannerOptionsStoreTest {
             assertEquals(DirectionsOptions(), store().read())
             preferences.edit().putString("options_v1", "{broken").commit()
             assertEquals(DirectionsOptions(), store().read())
-            preferences.edit().putString("options_v1", """{"cycling":true,"futureField":1}""").commit()
+            preferences.edit().putString("options_v1", """{"cycling":true,"futureField":1}""")
+                .commit()
             assertEquals(DirectionsOptions(cycling = true), store().read())
             preferences.edit().putString("options_v1", """{"walkingPace":0}""").commit()
             assertEquals(DirectionsOptions(), store().read())

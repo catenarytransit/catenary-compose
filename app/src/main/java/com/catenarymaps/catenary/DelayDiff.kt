@@ -191,7 +191,7 @@ fun locale_min_marking(show_seconds: Boolean): String {
     val l = Locale.getDefault().language
     return when {
         l == "ko" -> "분"
-        l == "zh"|| l == "ja" -> "分"
+        l == "zh" || l == "ja" -> "分"
         show_seconds -> "m"
         else -> "min"
     }

@@ -24,56 +24,56 @@ import coil.request.ImageRequest
 
 @Composable
 internal fun MtaSubwayIcon(
-        routeId: String,
-        modifier: Modifier = Modifier,
-        size: Dp = 24.dp,
-        contentDescription: String? = routeId
+    routeId: String,
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    contentDescription: String? = routeId
 ) {
-        val iconUrl = MtaSubwayUtils.getMtaIconUrl(routeId)
+    val iconUrl = MtaSubwayUtils.getMtaIconUrl(routeId)
 
-        if (iconUrl != null) {
-                val context = LocalContext.current
-                val imageLoader =
-                        remember(context) {
-                                ImageLoader.Builder(context)
-                                        .components { add(SvgDecoder.Factory()) }
-                                        .build()
-                        }
+    if (iconUrl != null) {
+        val context = LocalContext.current
+        val imageLoader =
+            remember(context) {
+                ImageLoader.Builder(context)
+                    .components { add(SvgDecoder.Factory()) }
+                    .build()
+            }
 
-                AsyncImage(
-                        model =
-                                ImageRequest.Builder(context)
-                                        .data(iconUrl)
-                                        .crossfade(true)
-                                        .build(),
-                        imageLoader = imageLoader,
-                        contentDescription = contentDescription,
-                        modifier = modifier.size(size),
-                        colorFilter = null
-                )
-        } else {
-                MtaSubwayFallbackIcon(routeId = routeId, modifier = modifier, size = size)
-        }
+        AsyncImage(
+            model =
+                ImageRequest.Builder(context)
+                    .data(iconUrl)
+                    .crossfade(true)
+                    .build(),
+            imageLoader = imageLoader,
+            contentDescription = contentDescription,
+            modifier = modifier.size(size),
+            colorFilter = null
+        )
+    } else {
+        MtaSubwayFallbackIcon(routeId = routeId, modifier = modifier, size = size)
+    }
 }
 
 @Composable
 private fun MtaSubwayFallbackIcon(routeId: String, modifier: Modifier, size: Dp) {
-        Box(
-                modifier =
-                        modifier
-                                .size(size)
-                                .clip(CircleShape)
-                                .background(MtaSubwayUtils.getMtaSubwayColor(routeId)),
-                contentAlignment = Alignment.Center
-        ) {
-                Text(
-                        text = MtaSubwayUtils.getMtaSymbolShortName(routeId),
-                        color = Color.White,
-                        style =
-                                MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold
-                                ),
-                        textAlign = TextAlign.Center
-                )
-        }
+    Box(
+        modifier =
+            modifier
+                .size(size)
+                .clip(CircleShape)
+                .background(MtaSubwayUtils.getMtaSubwayColor(routeId)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = MtaSubwayUtils.getMtaSymbolShortName(routeId),
+            color = Color.White,
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+            textAlign = TextAlign.Center
+        )
+    }
 }

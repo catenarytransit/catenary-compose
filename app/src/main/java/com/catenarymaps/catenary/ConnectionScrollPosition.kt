@@ -15,7 +15,10 @@ internal fun PreserveConnectionScrollPosition(state: LazyListState, identities: 
             val anchor = state.layoutInfo.visibleItemsInfo.firstOrNull {
                 it.key is String && indices.containsKey(it.key as String)
             }
-            if (anchor != null) state.requestScrollToItem(indices.getValue(anchor.key as String), -anchor.offset)
+            if (anchor != null) state.requestScrollToItem(
+                indices.getValue(anchor.key as String),
+                -anchor.offset
+            )
             previous = identities
         }
     }

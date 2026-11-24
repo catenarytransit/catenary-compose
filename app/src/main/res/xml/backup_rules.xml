@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <!-- Device bearer credentials must never be restored onto another device. -->
-    <exclude domain="sharedpref" path="journey-notifier.xml" />
-    <exclude domain="sharedpref" path="journey-notifier-events.xml" />
+    <exclude
+        domain="sharedpref"
+        path="journey-notifier.xml" />
+    <exclude
+        domain="sharedpref"
+        path="journey-notifier-events.xml" />
 </full-backup-content>

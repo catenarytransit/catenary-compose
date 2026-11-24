@@ -106,7 +106,9 @@ internal object ActiveJourneySession {
 }
 
 internal sealed interface JourneyGuidance {
-    data class Boarding(val leg: DirectionsLeg, val minutes: Long, val transfer: Boolean) : JourneyGuidance
+    data class Boarding(val leg: DirectionsLeg, val minutes: Long, val transfer: Boolean) :
+        JourneyGuidance
+
     data class Riding(val stop: String, val minutes: Long) : JourneyGuidance
     data class FinalStreet(val cycling: Boolean, val remainingMeters: Double?) : JourneyGuidance
     data class Arriving(val destination: String) : JourneyGuidance
@@ -144,7 +146,12 @@ internal fun shouldShowActiveJourney(
     if (start - now > 3L * 60 * 60) return false
     val origin = startCoordinates(active.snapshot) ?: return false
     val positionSafe = position ?: return false
-    return haversineDistance(origin.first, origin.second, positionSafe.first, positionSafe.second) <= 5_000.0
+    return haversineDistance(
+        origin.first,
+        origin.second,
+        positionSafe.first,
+        positionSafe.second
+    ) <= 5_000.0
 }
 
 /** Suppress eligible guidance while a search or journey endpoint field has focus. */
@@ -152,7 +159,7 @@ internal fun shouldDisplayActiveJourneyBar(
     active: ActiveJourney?, now: Long, position: Pair<Double, Double>?,
     searchFocused: Boolean, plannerInputFocused: Boolean
 ): Boolean = active != null && !searchFocused && !plannerInputFocused &&
-    shouldShowActiveJourney(active, now, position)
+        shouldShowActiveJourney(active, now, position)
 
 /** No time-only completion while a usable device position still shows the rider away from the destination. */
 internal fun hasArrivedAtJourneyDestination(
@@ -183,7 +190,9 @@ internal fun journeyGuidance(
         val end = timestamp(leg.arrivalCurrent) ?: timestamp(leg.endTime)
         end == null || now < end
     }
-    if (current < 0) return JourneyGuidance.Arriving(destination?.name ?: legs.last().to?.name.orEmpty())
+    if (current < 0) return JourneyGuidance.Arriving(
+        destination?.name ?: legs.last().to?.name.orEmpty()
+    )
     val leg = legs[current]
     if (leg.street) {
         if (current > lastTransit || lastTransit == -1) {
@@ -194,14 +203,18 @@ internal fun journeyGuidance(
             return JourneyGuidance.FinalStreet(!leg.walking, remaining)
         }
         val next = legs.drop(current + 1).firstOrNull { !it.street }
-        if (next != null) return JourneyGuidance.Boarding(next,
-            minutesRemaining(timestamp(next.departureCurrent), now), current > 0)
+        if (next != null) return JourneyGuidance.Boarding(
+            next,
+            minutesRemaining(timestamp(next.departureCurrent), now), current > 0
+        )
     }
     val departure = timestamp(leg.departureCurrent) ?: timestamp(leg.startTime)
     if (!leg.street) {
         return if (departure != null && now >= departure) {
-            JourneyGuidance.Riding(leg.to?.name.orEmpty(),
-                minutesRemaining(timestamp(leg.arrivalCurrent), now))
+            JourneyGuidance.Riding(
+                leg.to?.name.orEmpty(),
+                minutesRemaining(timestamp(leg.arrivalCurrent), now)
+            )
         } else JourneyGuidance.Boarding(leg, minutesRemaining(departure, now), current > 0)
     }
     return JourneyGuidance.Arriving(destination?.name.orEmpty())
@@ -213,7 +226,13 @@ internal fun journeyServiceName(leg: DirectionsLeg): String {
     if (!NationalRailUtils.showsRouteName(leg.chateau, leg.agencyId)) {
         return leg.tripShortName?.trim()?.takeIf { it.isNotBlank() } ?: leg.mode
     }
-    return sequenceOf(leg.routeShortName, leg.routeLongName, leg.tripShortName, leg.routeId, leg.mode)
+    return sequenceOf(
+        leg.routeShortName,
+        leg.routeLongName,
+        leg.tripShortName,
+        leg.routeId,
+        leg.mode
+    )
         .filterNotNull().map(::timelineRouteName).firstOrNull { it.isNotBlank() }.orEmpty()
 }
 
@@ -232,7 +251,7 @@ private fun ActiveJourneyServiceLabel(leg: DirectionsLeg) {
     val shortName = leg.routeShortName?.let(::timelineRouteName)?.takeIf { it.isNotBlank() }
     val longName = leg.routeLongName?.let(::timelineRouteName)?.takeIf { it.isNotBlank() }
     val label = shortName ?: longName ?: leg.tripShortName?.takeIf { it.isNotBlank() }
-        ?: leg.routeId?.takeIf { it.isNotBlank() } ?: leg.mode
+    ?: leg.routeId?.takeIf { it.isNotBlank() } ?: leg.mode
     SelectionRouteBadges(
         routeIds = listOf(leg.routeId ?: label),
         modifier = Modifier.widthIn(max = 112.dp),
@@ -251,8 +270,10 @@ private fun ActiveJourneyServiceLabel(leg: DirectionsLeg) {
 }
 
 internal fun journeyPlatform(leg: DirectionsLeg): String? =
-    sequenceOf(leg.from?.estimatedQuay, leg.fromPlatform, leg.from?.plannedQuay,
-        leg.from?.platformCode, leg.from?.platform)
+    sequenceOf(
+        leg.from?.estimatedQuay, leg.fromPlatform, leg.from?.plannedQuay,
+        leg.from?.platformCode, leg.from?.platform
+    )
         .filterNotNull().firstOrNull { it.isNotBlank() }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -286,35 +307,49 @@ internal fun ActiveJourneyBar(
     // localized word order; some languages place the service name in the middle.
     val guidanceText = when (progress) {
         is JourneyGuidance.Boarding -> {
-            val departure = directionsTime(progress.leg.departureCurrent, progress.leg.from?.timezone)
+            val departure =
+                directionsTime(progress.leg.departureCurrent, progress.leg.from?.timezone)
             val stopName = progress.leg.from?.name.orEmpty()
             val main = if (progress.transfer) stringResource(
-                R.string.journey_tracking_transfer, stopName, ROUTE_BADGE_MARKER, departure, progress.minutes
+                R.string.journey_tracking_transfer,
+                stopName,
+                ROUTE_BADGE_MARKER,
+                departure,
+                progress.minutes
             ) else stringResource(
                 R.string.journey_tracking_departing, ROUTE_BADGE_MARKER, departure, progress.minutes
             )
             val platform = journeyPlatform(progress.leg)
             if (platform == null) main else main + " · " +
-                stringResource(R.string.journey_tracking_platform, platform)
+                    stringResource(R.string.journey_tracking_platform, platform)
         }
+
         is JourneyGuidance.Riding -> stringResource(
             R.string.journey_tracking_alight, progress.stop, progress.minutes
         )
+
         is JourneyGuidance.FinalStreet -> {
             val distance = progress.remainingMeters?.let { formatDistanceMeters(it, streetUsUnits) }
                 ?: stringResource(R.string.directions_distance_unavailable)
             stringResource(R.string.journey_tracking_remaining, distance)
         }
-        is JourneyGuidance.Arriving -> stringResource(R.string.journey_tracking_arriving, progress.destination)
+
+        is JourneyGuidance.Arriving -> stringResource(
+            R.string.journey_tracking_arriving,
+            progress.destination
+        )
     }
     val serviceFragments = if (progress is JourneyGuidance.Boarding)
         guidanceText.split(ROUTE_BADGE_MARKER, limit = 2) else emptyList()
     Surface(
-        modifier = modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onOpenDetails),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(role = Role.Button, onClick = onOpenDetails),
         color = Color.Black, contentColor = Color.White, shadowElevation = 6.dp
     ) {
         Row(
-            Modifier.fillMaxWidth()
+            Modifier
+                .fillMaxWidth()
                 // Keep the surface edge-to-edge and reserve only the inset actually needed.
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
                 .heightIn(min = 42.dp)
@@ -352,8 +387,10 @@ internal fun ActiveJourneyBar(
                     GuidanceText(guidanceText)
                 }
             }
-            Icon(Icons.Default.ChevronRight, stringResource(R.string.directions_show_details),
-                modifier = Modifier.size(18.dp), tint = Color.White)
+            Icon(
+                Icons.Default.ChevronRight, stringResource(R.string.directions_show_details),
+                modifier = Modifier.size(18.dp), tint = Color.White
+            )
 
         }
     }

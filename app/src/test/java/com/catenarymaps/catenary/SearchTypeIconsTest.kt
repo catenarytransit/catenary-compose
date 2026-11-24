@@ -4,7 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class SearchTypeIconsTest {
-    @Test fun transitModesUseCopiedSvgIcons() {
+    @Test
+    fun transitModesUseCopiedSvgIcons() {
         assertEquals(SearchTypeIcons.Tram, SearchTypeIcons.route(0))
         assertEquals(SearchTypeIcons.Metro, SearchTypeIcons.route(1))
         assertEquals(SearchTypeIcons.Train, SearchTypeIcons.route(2))
@@ -16,7 +17,8 @@ class SearchTypeIconsTest {
         assertEquals(SearchTypeIcons.Location, SearchTypeIcons.route(null))
     }
 
-    @Test fun cypressCategoriesDeterminePlaceIcons() {
+    @Test
+    fun cypressCategoriesDeterminePlaceIcons() {
         val categories = listOf(
             "tourism:hotel" to SearchTypeIcons.Hotel,
             "amenity:restaurant" to SearchTypeIcons.Restaurant,
@@ -32,20 +34,23 @@ class SearchTypeIconsTest {
         }
     }
 
-    @Test fun birchStopsUseRouteTypesWithBusFallback() {
+    @Test
+    fun birchStopsUseRouteTypesWithBusFallback() {
         assertEquals(SearchTypeIcons.Train, SearchTypeIcons.stop(listOf(2)))
         assertEquals(SearchTypeIcons.Metro, SearchTypeIcons.stop(listOf(1)))
         assertEquals(SearchTypeIcons.Bus, SearchTypeIcons.stop(emptyList()))
         assertEquals(SearchTypeIcons.Bus, SearchTypeIcons.stop(listOf(4)))
     }
 
-    @Test fun stationsUseModeThenAssociatedRoutes() {
+    @Test
+    fun stationsUseModeThenAssociatedRoutes() {
         assertEquals(SearchTypeIcons.Train, SearchTypeIcons.station("station", listOf(3)))
         assertEquals(SearchTypeIcons.Bus, SearchTypeIcons.station("unknown", listOf(3)))
         assertEquals(SearchTypeIcons.Location, SearchTypeIcons.station("unknown", emptyList()))
     }
 
-    @Test fun unknownPlacesFallBackToLocationPin() {
+    @Test
+    fun unknownPlacesFallBackToLocationPin() {
         assertEquals(SearchTypeIcons.Location, SearchTypeIcons.place(listOf("amenity:library")))
         assertEquals(SearchTypeIcons.Location, SearchTypeIcons.place(emptyList(), "address"))
     }

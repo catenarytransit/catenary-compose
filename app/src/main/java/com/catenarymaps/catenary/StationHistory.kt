@@ -62,14 +62,16 @@ class StationHistory(context: Context) {
         longitude: Double? = null,
     ) {
         if (chateauId.isBlank() || stopId.isBlank() || name.isBlank()) return
-        record(RecentStation(
-            kind = RecentStationKind.GTFS_STOP,
-            id = stopId,
-            chateauId = chateauId,
-            name = name.trim(),
-            latitude = latitude,
-            longitude = longitude,
-        ))
+        record(
+            RecentStation(
+                kind = RecentStationKind.GTFS_STOP,
+                id = stopId,
+                chateauId = chateauId,
+                name = name.trim(),
+                latitude = latitude,
+                longitude = longitude,
+            )
+        )
     }
 
     fun recordOsmStation(
@@ -80,14 +82,16 @@ class StationHistory(context: Context) {
         longitude: Double? = null,
     ) {
         if (osmId.isBlank() || name.isBlank()) return
-        record(RecentStation(
-            kind = RecentStationKind.OSM_STATION,
-            id = osmId,
-            name = name.trim(),
-            modeType = modeType,
-            latitude = latitude,
-            longitude = longitude,
-        ))
+        record(
+            RecentStation(
+                kind = RecentStationKind.OSM_STATION,
+                id = osmId,
+                name = name.trim(),
+                modeType = modeType,
+                latitude = latitude,
+                longitude = longitude,
+            )
+        )
     }
 
     /** Record any successfully selected OSM object, independent of its entry point. */
@@ -96,17 +100,19 @@ class StationHistory(context: Context) {
         val name = item.name?.trim()?.takeIf { it.isNotEmpty() }
             ?: item.names["default"]?.trim()?.takeIf { it.isNotEmpty() }
             ?: "${item.osm_class.replaceFirstChar { it.titlecase() }} ${item.osm_id}"
-        record(RecentStation(
-            kind = RecentStationKind.OSM_ITEM,
-            id = item.osm_id,
-            name = name,
-            osmClass = item.osm_class,
-            osmType = item.osm_type,
-            address = item.address,
-            names = item.names,
-            latitude = item.lat,
-            longitude = item.lon,
-        ))
+        record(
+            RecentStation(
+                kind = RecentStationKind.OSM_ITEM,
+                id = item.osm_id,
+                name = name,
+                osmClass = item.osm_class,
+                osmType = item.osm_type,
+                address = item.address,
+                names = item.names,
+                latitude = item.lat,
+                longitude = item.lon,
+            )
+        )
     }
 
     private fun record(item: RecentStation) {

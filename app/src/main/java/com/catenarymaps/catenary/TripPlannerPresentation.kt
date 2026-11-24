@@ -6,7 +6,11 @@ import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.roundToInt
 
-internal fun formatDistanceMeters(meters: Double, imperial: Boolean, locale: Locale = Locale.getDefault()): String =
+internal fun formatDistanceMeters(
+    meters: Double,
+    imperial: Boolean,
+    locale: Locale = Locale.getDefault()
+): String =
     if (imperial) {
         if (meters >= 1609.344) String.format(locale, "%.1f mi", meters / 1609.344)
         else "${(meters / 0.3048).roundToInt()} ft"
@@ -35,31 +39,60 @@ internal data class PreviewTimeMarker(
     val time: String, val endpoint: Boolean, val timezone: String? = null,
     val delaySeconds: Long? = null
 )
-internal data class PreviewTimeGroups(val departure: List<PreviewTimeMarker>, val arrival: List<PreviewTimeMarker>)
+
+internal data class PreviewTimeGroups(
+    val departure: List<PreviewTimeMarker>,
+    val arrival: List<PreviewTimeMarker>
+)
 
 /** Match the web preview: negligible access/egress uses only the endpoint time. */
 internal fun DirectionsItinerary.previewTimeGroups(): PreviewTimeGroups {
     val first = legs.indexOfFirst { !it.street }
-    if (first < 0) return PreviewTimeGroups(listOf(PreviewTimeMarker(startTime, true, departureTimezone)), listOf(PreviewTimeMarker(endTime, true, arrivalTimezone)))
+    if (first < 0) return PreviewTimeGroups(
+        listOf(
+            PreviewTimeMarker(
+                startTime,
+                true,
+                departureTimezone
+            )
+        ), listOf(PreviewTimeMarker(endTime, true, arrivalTimezone))
+    )
     val last = legs.indexOfLast { !it.street }
     fun atStop(streetLegs: List<DirectionsLeg>): Boolean {
         var meters = 0.0
         for (leg in streetLegs) meters += directionsDistance(leg) ?: return false
         return meters < 25
     }
+
     fun instant(time: String?) = runCatching { Instant.parse(time) }.getOrNull()
     val boarding = legs[first].startTime ?: legs.getOrNull(first - 1)?.endTime
     val alighting = legs[last].endTime ?: legs.getOrNull(last + 1)?.startTime
-        ?: endTime.takeIf { last == legs.lastIndex }
+    ?: endTime.takeIf { last == legs.lastIndex }
     val boardingDelay = legs[first].departureDelaySeconds
     val originAtStop = atStop(legs.take(first))
     val destinationAtStop = atStop(legs.drop(last + 1))
-    val showBoarding = !originAtStop && instant(boarding) != null && instant(boarding) != instant(startTime)
-    val showAlighting = !destinationAtStop && instant(alighting) != null && instant(alighting) != instant(endTime)
+    val showBoarding =
+        !originAtStop && instant(boarding) != null && instant(boarding) != instant(startTime)
+    val showAlighting =
+        !destinationAtStop && instant(alighting) != null && instant(alighting) != instant(endTime)
     return PreviewTimeGroups(
         buildList {
-            add(PreviewTimeMarker(startTime, true, departureTimezone, if (showBoarding) null else boardingDelay))
-            if (showBoarding) add(PreviewTimeMarker(boarding!!, false, legs[first].from?.timezone, boardingDelay))
+            add(
+                PreviewTimeMarker(
+                    startTime,
+                    true,
+                    departureTimezone,
+                    if (showBoarding) null else boardingDelay
+                )
+            )
+            if (showBoarding) add(
+                PreviewTimeMarker(
+                    boarding!!,
+                    false,
+                    legs[first].from?.timezone,
+                    boardingDelay
+                )
+            )
         },
         buildList {
             if (showAlighting) add(PreviewTimeMarker(alighting!!, false, legs[last].to?.timezone))
@@ -71,12 +104,13 @@ internal fun DirectionsItinerary.previewTimeGroups(): PreviewTimeGroups {
 /** A walking interchange is flanked by transit legs, unlike access and egress walks. */
 internal fun isTimelineWalkingTransfer(legs: List<DirectionsLeg>, index: Int): Boolean =
     index > 0 && index < legs.lastIndex &&
-        legs[index].walking && !legs[index - 1].street && !legs[index + 1].street
+            legs[index].walking && !legs[index - 1].street && !legs[index + 1].street
 
 /** Train-to-train interchanges often contain internal station walking instructions. */
 internal fun timelineTransferVisibilitySeconds(legs: List<DirectionsLeg>, index: Int): Double =
     if (isTimelineWalkingTransfer(legs, index) &&
-        legs[index - 1].routeType == 2 && legs[index + 1].routeType == 2) 420.0 else 300.0
+        legs[index - 1].routeType == 2 && legs[index + 1].routeType == 2
+    ) 420.0 else 300.0
 
 /** Keep a full icon for transit/access/egress, but make transfer walking more compact. */
 internal fun timelineSegmentMinimums(
@@ -133,7 +167,10 @@ internal fun connectionPageAtEdge(
 internal fun connectionDateHeading(
     previousDeparture: String?, departure: String, zone: ZoneId = ZoneId.systemDefault()
 ): LocalDate? {
-    val previous = runCatching { Instant.parse(previousDeparture).atZone(zone).toLocalDate() }.getOrNull() ?: return null
-    val date = runCatching { Instant.parse(departure).atZone(zone).toLocalDate() }.getOrNull() ?: return null
+    val previous =
+        runCatching { Instant.parse(previousDeparture).atZone(zone).toLocalDate() }.getOrNull()
+            ?: return null
+    val date = runCatching { Instant.parse(departure).atZone(zone).toLocalDate() }.getOrNull()
+        ?: return null
     return date.takeIf { it != previous }
 }

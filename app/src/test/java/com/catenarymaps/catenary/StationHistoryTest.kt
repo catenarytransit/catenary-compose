@@ -26,9 +26,11 @@ class StationHistoryTest {
         assertEquals(entry, restored)
         assertEquals("osm-item:way:12345", restored.stableKey())
         assertNotEquals(restored.stableKey(), restored.copy(osmClass = "node").stableKey())
-        assertNotEquals(restored.stableKey(), RecentStation(
-            kind = RecentStationKind.OSM_STATION, id = "12345", name = "City Hall"
-        ).stableKey())
+        assertNotEquals(
+            restored.stableKey(), RecentStation(
+                kind = RecentStationKind.OSM_STATION, id = "12345", name = "City Hall"
+            ).stableKey()
+        )
     }
 
     @Test

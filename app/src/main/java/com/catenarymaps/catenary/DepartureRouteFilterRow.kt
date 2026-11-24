@@ -36,7 +36,9 @@ internal fun DepartureRouteFilterRow(
             modifier = Modifier.weight(1f),
             horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            items(filters, key = { "${it.key.chateau.length}:${it.key.chateau}${it.key.name.length}:${it.key.name}${it.key.color}" }) { filter ->
+            items(
+                filters,
+                key = { "${it.key.chateau.length}:${it.key.chateau}${it.key.name.length}:${it.key.name}${it.key.color}" }) { filter ->
                 val active = filter.key in selected
                 val routeId = filter.routeIds.first()
                 val badge = ResolvedRouteBadgeInfo(

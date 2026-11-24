@@ -27,10 +27,14 @@ internal data class TripPlannerSession(
     fun validated(): TripPlannerSession? {
         if (version != 1 || !origin.isValid() || !destination.isValid() || itineraries.isEmpty()) return null
         if (listOf(options.walkingPace, options.cyclingKmh).any { !it.isFinite() || it <= 0 } ||
-            listOf(options.accessSeconds, options.egressSeconds, options.directSeconds).any { !it.isFinite() || it < 0 }) return null
+            listOf(
+                options.accessSeconds,
+                options.egressSeconds,
+                options.directSeconds
+            ).any { !it.isFinite() || it < 0 }) return null
         if (itineraries.any { journey ->
-            runCatching { Instant.parse(journey.startTime); Instant.parse(journey.endTime) }.isFailure
-        }) return null
+                runCatching { Instant.parse(journey.startTime); Instant.parse(journey.endTime) }.isFailure
+            }) return null
         return copy(selected = selected.coerceIn(itineraries.indices))
     }
 }

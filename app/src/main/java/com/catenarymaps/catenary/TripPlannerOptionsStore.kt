@@ -27,9 +27,16 @@ internal class SharedPreferencesTripPlannerOptionsStore(
         return runCatching {
             json.decodeFromString<DirectionsOptions>(checkNotNull(preferences.getString(KEY, null)))
                 .takeIf { options ->
-                    listOf(options.walkingPace, options.cyclingKmh).all { it.isFinite() && it > 0 } &&
-                        listOf(options.accessSeconds, options.egressSeconds, options.directSeconds)
-                            .all { it.isFinite() && it >= 0 }
+                    listOf(
+                        options.walkingPace,
+                        options.cyclingKmh
+                    ).all { it.isFinite() && it > 0 } &&
+                            listOf(
+                                options.accessSeconds,
+                                options.egressSeconds,
+                                options.directSeconds
+                            )
+                                .all { it.isFinite() && it >= 0 }
                 }
         }.getOrNull() ?: DirectionsOptions()
     }

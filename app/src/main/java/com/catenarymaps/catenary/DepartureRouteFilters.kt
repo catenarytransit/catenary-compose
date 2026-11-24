@@ -2,7 +2,11 @@ package com.catenarymaps.catenary
 
 import java.util.Locale
 
-internal data class DepartureRouteFilterKey(val chateau: String, val name: String, val color: String)
+internal data class DepartureRouteFilterKey(
+    val chateau: String,
+    val name: String,
+    val color: String
+)
 
 internal data class DepartureRouteFilter(
     val key: DepartureRouteFilterKey,
@@ -29,6 +33,7 @@ internal val departureRouteNameComparator = Comparator<String> { left, right ->
                 val ny = y.trimStart('0').ifEmpty { "0" }
                 nx.length.compareTo(ny.length).takeIf { it != 0 } ?: nx.compareTo(ny)
             }
+
             xn != yn -> if (xn) -1 else 1
             else -> x.compareTo(y, ignoreCase = true)
         }
@@ -51,8 +56,9 @@ internal fun departureRouteFilters(routes: Map<String, Map<String, StopRouteInfo
         }.map { (key, entries) ->
             DepartureRouteFilter(key, entries.map { it.key }.toSet(), entries.first().value)
         }
-    }.sortedWith(compareBy(departureRouteNameComparator) { filter: DepartureRouteFilter -> filter.key.name }
-        .thenBy { it.key.chateau }.thenBy { it.key.color })
+    }
+        .sortedWith(compareBy(departureRouteNameComparator) { filter: DepartureRouteFilter -> filter.key.name }
+            .thenBy { it.key.chateau }.thenBy { it.key.color })
 
 internal fun matchesDepartureRouteFilters(
     chateau: String,

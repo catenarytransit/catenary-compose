@@ -55,8 +55,10 @@ internal fun mergeNearbyDepartures(
             closestDistance = minOf(previous.closestDistance, route.closestDistance),
             headsigns = (previous.headsigns.keys + route.headsigns.keys).associateWith { headsign ->
                 (previous.headsigns[headsign].orEmpty().associateBy { it.identity() } +
-                    route.headsigns[headsign].orEmpty().associateBy { it.identity() })
-                    .values.sortedBy { it.departureRealtime ?: it.departureSchedule ?: Long.MAX_VALUE }
+                        route.headsigns[headsign].orEmpty().associateBy { it.identity() })
+                    .values.sortedBy {
+                        it.departureRealtime ?: it.departureSchedule ?: Long.MAX_VALUE
+                    }
             }
         )
     }
@@ -67,7 +69,7 @@ internal fun mergeNearbyDepartures(
         stations[key] = if (previous == null) station else station.copy(
             distanceM = minOf(previous.distanceM, station.distanceM),
             departures = (previous.departures.associateBy { it.identity() } +
-                station.departures.associateBy { it.identity() }).values
+                    station.departures.associateBy { it.identity() }).values
                 .sortedBy { it.realtimeDeparture ?: it.scheduledDeparture ?: Long.MAX_VALUE }
         )
     }
@@ -95,7 +97,9 @@ internal class NearbyDepartureStreamState(
             throw IOException(message.message ?: "Nearby departures unavailable")
         }
         if (message.requestId != requestId) return false
-        if (message.type == "nearby_departures_error") throw IOException(message.message ?: "Nearby departures failed")
+        if (message.type == "nearby_departures_error") throw IOException(
+            message.message ?: "Nearby departures failed"
+        )
         if (message.type != "nearby_departures") return false
         val data = message.data ?: throw IOException("Missing nearby departures payload")
         when (message.phase) {
@@ -105,16 +109,23 @@ internal class NearbyDepartureStreamState(
                 priority = data
                 if (publishPriority) onSnapshot(data)
             }
+
             "remaining" -> {
                 check(message.complete) { "Remaining frame must finish the request" }
-                onSnapshot(mergeNearbyDepartures(priority ?: throw IOException("Missing priority frame"), data))
+                onSnapshot(
+                    mergeNearbyDepartures(
+                        priority ?: throw IOException("Missing priority frame"), data
+                    )
+                )
                 finished = true
             }
+
             "full" -> {
                 check(message.complete) { "Full frame must finish the request" }
                 onSnapshot(data)
                 finished = true
             }
+
             else -> throw IOException("Unknown nearby departures phase")
         }
         return finished
@@ -153,13 +164,19 @@ internal fun nearbyDepartureSnapshots(
                     }
                     if (!webSocket.send(request.toString())) close(IOException("Unable to send nearby request"))
                 }
+
                 override fun onMessage(webSocket: WebSocket, text: String) {
                     if (trySend(text).isFailure) close(IOException("Nearby response buffer full"))
                 }
-                override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) { close(t) }
+
+                override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                    close(t)
+                }
+
                 override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                     close(IOException("Nearby socket closed before completion: $code"))
                 }
+
                 override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                     webSocket.close(code, reason)
                     close(IOException("Nearby socket closed before completion: $code"))
@@ -171,7 +188,8 @@ internal fun nearbyDepartureSnapshots(
     // Completion cancels callbackFlow and releases its socket immediately.
     frames.first { text ->
         val snapshots = mutableListOf<NearbyResponseV3>()
-        val complete = state.accept(json.decodeFromString<NearbyDepartureMessage>(text), snapshots::add)
+        val complete =
+            state.accept(json.decodeFromString<NearbyDepartureMessage>(text), snapshots::add)
         snapshots.forEach { emit(it) }
         complete
     }

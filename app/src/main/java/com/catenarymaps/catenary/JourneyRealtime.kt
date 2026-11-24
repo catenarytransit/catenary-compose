@@ -60,8 +60,10 @@ private fun findCall(
     reference: String?
 ): TripStoptime? {
     if (sequence != null) {
-        return calls.firstOrNull { it.gtfs_stop_sequence == sequence &&
-            (stopId == null || it.stop_id == stopId) }
+        return calls.firstOrNull {
+            it.gtfs_stop_sequence == sequence &&
+                    (stopId == null || it.stop_id == stopId)
+        }
     }
     val sameStop = calls.filter { stopId != null && it.stop_id == stopId }
     if (sameStop.size == 1) return sameStop.single()
@@ -81,8 +83,10 @@ private fun findUpdate(
     reference: String?
 ): StopTimeRefresh? {
     if (sequence != null) {
-        return updates.firstOrNull { it.gtfs_stop_sequence == sequence &&
-            (stopId == null || it.stop_id == stopId) }
+        return updates.firstOrNull {
+            it.gtfs_stop_sequence == sequence &&
+                    (stopId == null || it.stop_id == stopId)
+        }
     }
     val sameStop = updates.filter { stopId != null && it.stop_id == stopId }
     // A repeated stop ID cannot safely identify a specific loop occurrence.
@@ -133,33 +137,48 @@ internal fun DirectionsItinerary.withRamonda(
             updateStop(leg.from, leg.fromStopSequence, leg.departureScheduled ?: leg.startTime)
         val (alight, alightRt, alightLocation) =
             updateStop(leg.to, leg.toStopSequence, leg.arrivalScheduled ?: leg.endTime)
-        val dep = event(leg.serviceDeparture,
+        val dep = event(
+            leg.serviceDeparture,
             board?.scheduled_departure_time_unix_seconds,
-            boardRt?.rt_departure?.time ?: board?.rt_departure?.time)
-        val arr = event(leg.serviceArrival,
+            boardRt?.rt_departure?.time ?: board?.rt_departure?.time
+        )
+        val arr = event(
+            leg.serviceArrival,
             alight?.scheduled_arrival_time_unix_seconds,
-            alightRt?.rt_arrival?.time ?: alight?.rt_arrival?.time)
+            alightRt?.rt_arrival?.time ?: alight?.rt_arrival?.time
+        )
         val revisedStops = leg.intermediateStops.map { stop ->
-            val scheduled = findCall(initial?.stoptimes.orEmpty(), null, stop.stopId,
-                stop.serviceDeparture?.timetabledTime ?: stop.scheduledDeparture)
-            val rt = findUpdate(updates, scheduled?.gtfs_stop_sequence, stop.stopId,
-                stop.serviceDeparture?.timetabledTime ?: stop.scheduledDeparture)
-            val arrive = event(stop.serviceArrival, scheduled?.scheduled_arrival_time_unix_seconds,
-                rt?.rt_arrival?.time ?: scheduled?.rt_arrival?.time)
-            val depart = event(stop.serviceDeparture, scheduled?.scheduled_departure_time_unix_seconds,
-                rt?.rt_departure?.time ?: scheduled?.rt_departure?.time)
+            val scheduled = findCall(
+                initial?.stoptimes.orEmpty(), null, stop.stopId,
+                stop.serviceDeparture?.timetabledTime ?: stop.scheduledDeparture
+            )
+            val rt = findUpdate(
+                updates, scheduled?.gtfs_stop_sequence, stop.stopId,
+                stop.serviceDeparture?.timetabledTime ?: stop.scheduledDeparture
+            )
+            val arrive = event(
+                stop.serviceArrival, scheduled?.scheduled_arrival_time_unix_seconds,
+                rt?.rt_arrival?.time ?: scheduled?.rt_arrival?.time
+            )
+            val depart = event(
+                stop.serviceDeparture, scheduled?.scheduled_departure_time_unix_seconds,
+                rt?.rt_departure?.time ?: scheduled?.rt_departure?.time
+            )
             stop.copy(
                 arrival = arrive?.effectiveTime ?: stop.arrival,
                 departure = depart?.effectiveTime ?: stop.departure,
                 serviceArrival = arrive, serviceDeparture = depart,
-                estimatedQuay = rt?.rt_platform_string ?: scheduled?.rt_platform_string ?: stop.estimatedQuay,
+                estimatedQuay = rt?.rt_platform_string ?: scheduled?.rt_platform_string
+                ?: stop.estimatedQuay,
                 notServicedStop = rt?.schedule_relationship == 1 || stop.notServicedStop
             )
         }
         leg.copy(
             from = boardLocation, to = alightLocation,
-            fromPlatform = boardRt?.rt_platform_string ?: board?.rt_platform_string ?: leg.fromPlatform,
-            toPlatform = alightRt?.rt_platform_string ?: alight?.rt_platform_string ?: leg.toPlatform,
+            fromPlatform = boardRt?.rt_platform_string ?: board?.rt_platform_string
+            ?: leg.fromPlatform,
+            toPlatform = alightRt?.rt_platform_string ?: alight?.rt_platform_string
+            ?: leg.toPlatform,
             startTime = dep?.effectiveTime ?: leg.startTime,
             endTime = arr?.effectiveTime ?: leg.endTime,
             serviceDeparture = dep,
@@ -173,7 +192,8 @@ internal fun DirectionsItinerary.withRamonda(
     val firstTransit = legs.indexOfFirst { !it.street }
     val lastTransit = legs.indexOfLast { !it.street }
     val start = if (firstTransit == 0) revised.firstOrNull()?.startTime ?: startTime else startTime
-    val end = if (lastTransit == legs.lastIndex) revised.lastOrNull()?.endTime ?: endTime else endTime
+    val end =
+        if (lastTransit == legs.lastIndex) revised.lastOrNull()?.endTime ?: endTime else endTime
     return copy(
         startTime = start,
         endTime = end,

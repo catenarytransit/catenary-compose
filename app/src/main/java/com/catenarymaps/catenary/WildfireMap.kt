@@ -33,10 +33,14 @@ import org.maplibre.compose.expressions.dsl.offset
 
 private const val TAG = "WildfireMap"
 
-private const val EVACUATION_CA_FIRE_URL = "https://fireboundscache.catenarymaps.org/data/ca_evacuations.json"
-private const val LOS_ANGELES_EVAC_URL = "https://fireboundscache.catenarymaps.org/data/los_angeles_evac.json"
-private const val WATCHDUTY_EVENTS_URL = "https://fireboundscache.catenarymaps.org/data/watchduty_events.json"
-private const val MODIS_URL = "https://raw.githubusercontent.com/catenarytransit/fire-bounds-cache/refs/heads/main/data/modis.json"
+private const val EVACUATION_CA_FIRE_URL =
+    "https://fireboundscache.catenarymaps.org/data/ca_evacuations.json"
+private const val LOS_ANGELES_EVAC_URL =
+    "https://fireboundscache.catenarymaps.org/data/los_angeles_evac.json"
+private const val WATCHDUTY_EVENTS_URL =
+    "https://fireboundscache.catenarymaps.org/data/watchduty_events.json"
+private const val MODIS_URL =
+    "https://raw.githubusercontent.com/catenarytransit/fire-bounds-cache/refs/heads/main/data/modis.json"
 private const val VIIRS_URL = "https://fireboundscache.catenarymaps.org/data/viirs_nw.json"
 
 @Serializable
@@ -117,7 +121,11 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         )
     }
 
-    var fireNamesData by remember { mutableStateOf<FeatureCollection<Point, FireProperties>>(FeatureCollection(emptyList())) }
+    var fireNamesData by remember {
+        mutableStateOf<FeatureCollection<Point, FireProperties>>(
+            FeatureCollection(emptyList())
+        )
+    }
 
     LaunchedEffect(fireNamesData) {
         fireNamesSource.setData(GeoJsonData.Features(fireNamesData))
@@ -126,7 +134,8 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
     LaunchedEffect(Unit) {
         while (true) {
             try {
-                val watchdutyResponse = ktorClient.get(WATCHDUTY_EVENTS_URL).body<List<WatchdutyFireData>>()
+                val watchdutyResponse =
+                    ktorClient.get(WATCHDUTY_EVENTS_URL).body<List<WatchdutyFireData>>()
                 fireNamesData = createFirePointFeatures(watchdutyResponse)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to fetch wildfire data", e)
@@ -142,7 +151,7 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
         id = "evacuation_ca_fire_bounds",
         source = evacuationCaSource,
         minZoom = 5f,
-        color = const(Color(0xFFDD3300)), 
+        color = const(Color(0xFFDD3300)),
         opacity = interpolate(
             linear(),
             zoom(),
@@ -215,7 +224,9 @@ fun WildfireMapLayers(darkMode: Boolean = false) {
             1000.0 to const(0.05f),
             5000.0 to const(0.06f)
         ),
-        textField = get("name").cast<StringValue>() + const(" ") + get("ha_rounded").cast<StringValue>() + const("ha"),
+        textField = get("name").cast<StringValue>() + const(" ") + get("ha_rounded").cast<StringValue>() + const(
+            "ha"
+        ),
         textOffset = offset(
             0.em,
             1.5.em

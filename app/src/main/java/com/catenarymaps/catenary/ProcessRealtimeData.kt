@@ -267,120 +267,121 @@ suspend fun rerenderCategoryLiveDots(
 
             chateauVehiclesList.mapNotNull { (rtId, vehicleData) ->
 
-            if (vehicleData.position == null) {
-                return@mapNotNull null
-            }
-
-            // Filter out known bad data points
-            val lat = vehicleData.position.latitude
-            val lon = vehicleData.position.longitude
-            if ((lat == 34.099503 && lon == -117.29602) || (lat == 34.250793 && lon == -119.205025) || (lat == 34.05573 && lon == -118.23351)) {
-                return@mapNotNull null
-            }
-
-            var vehicleLabel = vehicleData.vehicle?.label ?: vehicleData.vehicle?.id ?: ""
-            if (chateauId == "new-south-wales" && vehicleLabel.contains(" to ")) {
-                vehicleLabel = vehicleData.vehicle?.id ?: ""
-            }
-            vehicleLabel = vehicleLabel.replace("ineo-tram:", "").replace("ineo-bus:", "")
-
-            var color = "#aaaaaa"
-            var textColor = "#000000"
-            var tripIdLabel = ""
-            var tripShortName: String? = null
-            var headsign = ""
-
-            vehicleData.trip?.let { trip ->
-                tripIdLabel = trip.trip_short_name ?: ""
-                tripShortName = trip.trip_short_name
-                if (tripIdLabel.isEmpty()) {
-                    tripIdLabel =
-                        trip.trip_id?.split('_')?.getOrNull(1)?.filter { it.isDigit() } ?: ""
+                if (vehicleData.position == null) {
+                    return@mapNotNull null
                 }
-                headsign = trip.trip_headsign ?: ""
-                if (headsign == headsign.uppercase()) {
-                    headsign =
-                        headsign.lowercase().replaceFirstChar { it.titlecase() } // Basic title case
-                }
-                if (chateauId == "new-south-wales") {
-                    headsign = headsign.replace(" Station", "")
-                }
-            }
-            if (headsign.contains("Line  - ") && chateauId == "metro~losangeles") {
-                headsign = headsign.split("-").getOrNull(1)?.trim() ?: ""
-            }
 
-            val routeId = vehicleData.trip?.route_id
-            var maptag = ""
-            var routeShortName: String? = null
-            var routeLongName: String? = null
+                // Filter out known bad data points
+                val lat = vehicleData.position.latitude
+                val lon = vehicleData.position.longitude
+                if ((lat == 34.099503 && lon == -117.29602) || (lat == 34.250793 && lon == -119.205025) || (lat == 34.05573 && lon == -118.23351)) {
+                    return@mapNotNull null
+                }
 
-            val chateauRouteCache = routeCache[chateauId]
-            if (chateauRouteCache != null && routeId != null) {
-                val route = chateauRouteCache[routeId]
-                if (route != null) {
-                    routeLongName = route.long_name
-                    routeShortName = route.short_name
-                    maptag = if (!route.short_name.isNullOrEmpty()) {
-                        route.short_name
-                    } else {
-                        route.long_name ?: ""
+                var vehicleLabel = vehicleData.vehicle?.label ?: vehicleData.vehicle?.id ?: ""
+                if (chateauId == "new-south-wales" && vehicleLabel.contains(" to ")) {
+                    vehicleLabel = vehicleData.vehicle?.id ?: ""
+                }
+                vehicleLabel = vehicleLabel.replace("ineo-tram:", "").replace("ineo-bus:", "")
+
+                var color = "#aaaaaa"
+                var textColor = "#000000"
+                var tripIdLabel = ""
+                var tripShortName: String? = null
+                var headsign = ""
+
+                vehicleData.trip?.let { trip ->
+                    tripIdLabel = trip.trip_short_name ?: ""
+                    tripShortName = trip.trip_short_name
+                    if (tripIdLabel.isEmpty()) {
+                        tripIdLabel =
+                            trip.trip_id?.split('_')?.getOrNull(1)?.filter { it.isDigit() } ?: ""
                     }
-                    color = route.color
-                    textColor = route.text_color
+                    headsign = trip.trip_headsign ?: ""
+                    if (headsign == headsign.uppercase()) {
+                        headsign =
+                            headsign.lowercase()
+                                .replaceFirstChar { it.titlecase() } // Basic title case
+                    }
+                    if (chateauId == "new-south-wales") {
+                        headsign = headsign.replace(" Station", "")
+                    }
                 }
-            }
+                if (headsign.contains("Line  - ") && chateauId == "metro~losangeles") {
+                    headsign = headsign.split("-").getOrNull(1)?.trim() ?: ""
+                }
 
-            // Agency-specific tag mapping
-            maptag = when (maptag) {
-                "Metro E Line" -> "E"
-                "Metro A Line" -> "A"
-                "Metro B Line" -> "B"
-                "Metro C Line" -> "C"
-                "Metro D Line" -> "D"
-                "Metro L Line" -> "L"
-                "Metro K Line" -> "K"
-                "Metrolink Ventura County Line" -> "Ventura"
-                "Metrolink Antelope Valley Line" -> "Antelope"
-                "Metrolink San Bernardino Line" -> "SB"
-                "Metrolink Riverside Line" -> "Riverside"
-                "Metrolink Orange County Line" -> "Orange"
-                "Metrolink 91/Perris Valley Line" -> "91/Perris"
-                "Metrolink Inland Empire-Orange County Line" -> "IE-OC"
-                else -> maptag
-            }
+                val routeId = vehicleData.trip?.route_id
+                var maptag = ""
+                var routeShortName: String? = null
+                var routeLongName: String? = null
 
-            // Color processing
-            val (contrastColor, contrastBearingColor) = processColor(color, isDark)
+                val chateauRouteCache = routeCache[chateauId]
+                if (chateauRouteCache != null && routeId != null) {
+                    val route = chateauRouteCache[routeId]
+                    if (route != null) {
+                        routeLongName = route.long_name
+                        routeShortName = route.short_name
+                        maptag = if (!route.short_name.isNullOrEmpty()) {
+                            route.short_name
+                        } else {
+                            route.long_name ?: ""
+                        }
+                        color = route.color
+                        textColor = route.text_color
+                    }
+                }
 
-            // Speed string
-            val speedStr = vehicleData.position.speed?.let {
-                val speed = it * if (usUnits) 2.23694 else 3.6
-                "%.1f %s".format(speed, if (usUnits) "mph" else "km/h")
-            } ?: ""
+                // Agency-specific tag mapping
+                maptag = when (maptag) {
+                    "Metro E Line" -> "E"
+                    "Metro A Line" -> "A"
+                    "Metro B Line" -> "B"
+                    "Metro C Line" -> "C"
+                    "Metro D Line" -> "D"
+                    "Metro L Line" -> "L"
+                    "Metro K Line" -> "K"
+                    "Metrolink Ventura County Line" -> "Ventura"
+                    "Metrolink Antelope Valley Line" -> "Antelope"
+                    "Metrolink San Bernardino Line" -> "SB"
+                    "Metrolink Riverside Line" -> "Riverside"
+                    "Metrolink Orange County Line" -> "Orange"
+                    "Metrolink 91/Perris Valley Line" -> "91/Perris"
+                    "Metrolink Inland Empire-Orange County Line" -> "IE-OC"
+                    else -> maptag
+                }
 
-            //println(vehicleData.toString())
+                // Color processing
+                val (contrastColor, contrastBearingColor) = processColor(color, isDark)
 
-            // Occupancy symbol
-            val crowdSymbol = occupancy_to_symbol(vehicleData.occupancy_status)
+                // Speed string
+                val speedStr = vehicleData.position.speed?.let {
+                    val speed = it * if (usUnits) 2.23694 else 3.6
+                    "%.1f %s".format(speed, if (usUnits) "mph" else "km/h")
+                } ?: ""
 
-            //println("Crowd symbol made ${crowdSymbol}")
+                //println(vehicleData.toString())
 
-            // Delay label
-            val delayLabel = vehicleData.trip?.delay?.let {
-                val prefix = if (it < 0) "-" else "+"
-                val absDelay = abs(it)
-                val minutes = floor(absDelay / 60.0)
-                val hours = floor(minutes / 60.0)
-                val remMinutes = minutes % 60
-                "%s%s%.0fm".format(
-                    prefix,
-                    if (hours > 0) "%.0fh".format(hours) else "",
-                    remMinutes
-                )
-            } ?: ""
+                // Occupancy symbol
+                val crowdSymbol = occupancy_to_symbol(vehicleData.occupancy_status)
 
-            // Build GeoJSON properties
+                //println("Crowd symbol made ${crowdSymbol}")
+
+                // Delay label
+                val delayLabel = vehicleData.trip?.delay?.let {
+                    val prefix = if (it < 0) "-" else "+"
+                    val absDelay = abs(it)
+                    val minutes = floor(absDelay / 60.0)
+                    val hours = floor(minutes / 60.0)
+                    val remMinutes = minutes % 60
+                    "%s%s%.0fm".format(
+                        prefix,
+                        if (hours > 0) "%.0fh".format(hours) else "",
+                        remMinutes
+                    )
+                } ?: ""
+
+                // Build GeoJSON properties
                 val properties = JsonObject(
                     buildMap<String, JsonElement> {
                         put("vehicleIdLabel", JsonPrimitive(vehicleLabel))
@@ -444,15 +445,15 @@ suspend fun rerenderCategoryLiveDots(
                         )
                     })
 
-            val point = Point(Position(lon, lat))
-            // This will now work correctly
-            //val featureId = "${category}:${chateauId}:${rtId}"
-            Feature(
-                id = JsonPrimitive("$chateauId:$rtId".hashCode().absoluteValue.toString()),
-                geometry = point,
-                properties = properties
-            )
-        }
+                val point = Point(Position(lon, lat))
+                // This will now work correctly
+                //val featureId = "${category}:${chateauId}:${rtId}"
+                Feature(
+                    id = JsonPrimitive("$chateauId:$rtId".hashCode().absoluteValue.toString()),
+                    geometry = point,
+                    properties = properties
+                )
+            }
         }
     }
 

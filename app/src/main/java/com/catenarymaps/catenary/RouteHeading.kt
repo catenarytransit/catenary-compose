@@ -34,20 +34,20 @@ import coil.request.ImageRequest
 
 @Composable
 fun RouteHeading(
-        color: String,
-        textColor: String,
-        routeType: Int?,
-        agencyName: String?,
-        shortName: String?,
-        longName: String?,
-        description: String? = null,
-        tripShortName: String? = null,
-        chateauId: String? = null, // Added chateauId
-        isCompact: Boolean,
-        routeClickable: Boolean = false,
-        headsign: String? = null,
-        onRouteClick: (() -> Unit)? = null,
-        controls: @Composable () -> Unit = {}
+    color: String,
+    textColor: String,
+    routeType: Int?,
+    agencyName: String?,
+    shortName: String?,
+    longName: String?,
+    description: String? = null,
+    tripShortName: String? = null,
+    chateauId: String? = null, // Added chateauId
+    isCompact: Boolean,
+    routeClickable: Boolean = false,
+    headsign: String? = null,
+    onRouteClick: (() -> Unit)? = null,
+    controls: @Composable () -> Unit = {}
 ) {
     if (isCompact) {
         // Compact version not implemented based on svelte file
@@ -60,42 +60,42 @@ fun RouteHeading(
     val routeTextColor = parseColor(textColor, MaterialTheme.colorScheme.onPrimary)
 
     val displayColor =
-            if (androidx.compose.foundation.isSystemInDarkTheme()) {
-                lightenColour(routeColor, minContrast = 7.0)
-            } else {
-                darkenColour(routeColor)
-            }
+        if (androidx.compose.foundation.isSystemInDarkTheme()) {
+            lightenColour(routeColor, minContrast = 7.0)
+        } else {
+            darkenColour(routeColor)
+        }
 
     val clickableModifier =
-            if (routeClickable && onRouteClick != null) {
-                Modifier.clickable(onClick = onRouteClick)
-            } else {
-                Modifier
-            }
+        if (routeClickable && onRouteClick != null) {
+            Modifier.clickable(onClick = onRouteClick)
+        } else {
+            Modifier
+        }
 
     val textStyle =
-            if (routeClickable) {
-                MaterialTheme.typography.titleMedium.copy(
-                        textDecoration = TextDecoration.Underline,
-                        lineHeight = MaterialTheme.typography.titleLarge.fontSize * 0.8
-                )
-            } else {
-                MaterialTheme.typography.titleMedium.copy(
-                        lineHeight = MaterialTheme.typography.titleLarge.fontSize * 0.8
-                )
-            }
+        if (routeClickable) {
+            MaterialTheme.typography.titleMedium.copy(
+                textDecoration = TextDecoration.Underline,
+                lineHeight = MaterialTheme.typography.titleLarge.fontSize * 0.8
+            )
+        } else {
+            MaterialTheme.typography.titleMedium.copy(
+                lineHeight = MaterialTheme.typography.titleLarge.fontSize * 0.8
+            )
+        }
 
     Column {
         // ⬇️ This Box replaces the Row, putting controls in the top-right
         Box(modifier = Modifier.fillMaxWidth()) {
             // Main text content; padded on the end so it "wraps around" controls
             Column(
-                    modifier =
-                        Modifier
-                            .align(Alignment.TopStart)
-                            .padding(
-                                end = 48.dp
-                            ) // adjust if your controls are wider/narrower
+                modifier =
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .padding(
+                            end = 48.dp
+                        ) // adjust if your controls are wider/narrower
             ) {
                 // Route Name Header
                 // Define logic variables early to flatten the UI tree
@@ -133,13 +133,13 @@ fun RouteHeading(
                         iconComposable = {
                             val context = LocalContext.current
                             AsyncImage(
-                                    model =
-                                            ImageRequest.Builder(context)
-                                                    .data(iconUrl)
-                                                    .crossfade(true)
-                                                .decoderFactory(SvgDecoder.Factory())
-                                                    .build(),
-                                    contentDescription = shortName,
+                                model =
+                                    ImageRequest.Builder(context)
+                                        .data(iconUrl)
+                                        .crossfade(true)
+                                        .decoderFactory(SvgDecoder.Factory())
+                                        .build(),
+                                contentDescription = shortName,
                                 modifier = Modifier
                                     .height(32.dp)
                                     .padding(end = 8.dp)
@@ -152,13 +152,13 @@ fun RouteHeading(
                         iconComposable = {
                             val context = LocalContext.current
                             AsyncImage(
-                                    model =
-                                            ImageRequest.Builder(context)
-                                                    .data(iconUrl)
-                                                    .crossfade(true)
-                                                .decoderFactory(SvgDecoder.Factory())
-                                                    .build(),
-                                    contentDescription = shortName,
+                                model =
+                                    ImageRequest.Builder(context)
+                                        .data(iconUrl)
+                                        .crossfade(true)
+                                        .decoderFactory(SvgDecoder.Factory())
+                                        .build(),
+                                contentDescription = shortName,
                                 modifier = Modifier
                                     .height(32.dp)
                                     .padding(end = 8.dp)
@@ -170,18 +170,18 @@ fun RouteHeading(
                         val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(shortName)
                         iconComposable = {
                             Box(
-                                    modifier =
-                                        Modifier
-                                            .size(24.dp)
-                                            .clip(CircleShape)
-                                            .background(mtaColor),
-                                    contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(mtaColor),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                        text = symbolShortName,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center
+                                    text = symbolShortName,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
@@ -243,7 +243,7 @@ fun RouteHeading(
                         // Part A: Short Name (Only if no icon was displayed)
                         if (iconComposable == null &&
                             (!shortName.isNullOrBlank() || isDbFernverkehr) &&
-                                        (!isNationalRail || isLondonOverground || isElizabethLine)
+                            (!isNationalRail || isLondonOverground || isElizabethLine)
                         ) {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                 if (isDbFernverkehr && dbDisplayName != null) {

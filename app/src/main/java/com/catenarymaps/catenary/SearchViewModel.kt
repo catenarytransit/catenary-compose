@@ -34,8 +34,8 @@ fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): D
     val deltaLambda = Math.toRadians(lon2 - lon1)
 
     val a =
-            sin(deltaPhi / 2) * sin(deltaPhi / 2) +
-                    cos(phi1) * cos(phi2) * sin(deltaLambda / 2) * sin(deltaLambda / 2)
+        sin(deltaPhi / 2) * sin(deltaPhi / 2) +
+                cos(phi1) * cos(phi2) * sin(deltaLambda / 2) * sin(deltaLambda / 2)
     val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     return r * c // distance in metres
@@ -88,23 +88,24 @@ class SearchViewModel : ViewModel() {
     // Completed snapshots only: partial or failed network requests must not be cached.
     private val completedSearchCache = CompletedSearchCache<SearchCacheKey, List<SearchRow>>()
     private var searchJob: Job? = null
-    @Volatile private var searchGeneration = 0
+    @Volatile
+    private var searchGeneration = 0
 
     // Setup the JSON parser for Ktor
     private val json = Json { ignoreUnknownKeys = true }
 
     // Create a reusable Ktor client
     private val client =
-            HttpClient(Android) {
-                install(ContentNegotiation) {
-                    json(json) // Use kotlinx.serialization
-                }
+        HttpClient(Android) {
+            install(ContentNegotiation) {
+                json(json) // Use kotlinx.serialization
             }
+        }
 
     fun onSearchQueryChanged(
-            query: String,
-            userLocation: Pair<Double, Double>?,
-            mapCenter: Position,
+        query: String,
+        userLocation: Pair<Double, Double>?,
+        mapCenter: Position,
     ) {
         searchJob?.cancel() // Invalidate any in-flight response before showing a cached snapshot.
         val generation = ++searchGeneration
@@ -117,165 +118,165 @@ class SearchViewModel : ViewModel() {
         if (query.isBlank() || cachedRows != null) return
 
         searchJob =
-                viewModelScope.launch(Dispatchers.IO) {
-                    _isLoading.value = true
-                    delay(200) // Debounce for 200ms
+            viewModelScope.launch(Dispatchers.IO) {
+                _isLoading.value = true
+                delay(200) // Debounce for 200ms
 
-                    try {
-                        data class PartialResults(
-                            var catenary: CatenarySearchResponse? = null,
-                            var cypress: List<CypressFeature> = emptyList(),
-                            var osmStations: List<OsmStationSearchResult> = emptyList(),
-                            var catenarySucceeded: Boolean = false,
-                            var cypressSucceeded: Boolean = false,
-                            var osmStationsSucceeded: Boolean = false,
-                        )
+                try {
+                    data class PartialResults(
+                        var catenary: CatenarySearchResponse? = null,
+                        var cypress: List<CypressFeature> = emptyList(),
+                        var osmStations: List<OsmStationSearchResult> = emptyList(),
+                        var catenarySucceeded: Boolean = false,
+                        var cypressSucceeded: Boolean = false,
+                        var osmStationsSucceeded: Boolean = false,
+                    )
 
-                        val partialResults = PartialResults()
-                        coroutineScope {
-                            fun recomputeRows() {
-                                if (generation != searchGeneration) return
-                                _searchRows.value =
-                                    buildCombinedRows(
-                                        partialResults.catenary,
-                                        partialResults.cypress,
-                                        partialResults.osmStations,
-                                        userLocation,
+                    val partialResults = PartialResults()
+                    coroutineScope {
+                        fun recomputeRows() {
+                            if (generation != searchGeneration) return
+                            _searchRows.value =
+                                buildCombinedRows(
+                                    partialResults.catenary,
+                                    partialResults.cypress,
+                                    partialResults.osmStations,
+                                    userLocation,
+                                )
+                        }
+
+                        // --- Catenary Search API (Ktor) ---
+                        launch {
+                            val response =
+                                try {
+                                    val catenaryUrl = buildCatenarySearchUrl(
+                                        query = query,
+                                        mapLatitude = mapCenter.latitude,
+                                        mapLongitude = mapCenter.longitude,
+                                        userLocation = userLocation,
                                     )
-                            }
 
-                            // --- Catenary Search API (Ktor) ---
-                            launch {
-                                val response =
-                                    try {
-                                        val catenaryUrl = buildCatenarySearchUrl(
-                                            query = query,
-                                            mapLatitude = mapCenter.latitude,
-                                            mapLongitude = mapCenter.longitude,
-                                            userLocation = userLocation,
-                                        )
-
-                                        client.get(catenaryUrl).body<CatenarySearchResponse>().also {
-                                            partialResults.catenarySucceeded = true
-                                        }
-                                    } catch (e: Exception) {
-                                        if (e is kotlinx.coroutines.CancellationException) throw e
-                                        e.printStackTrace()
-                                        null
+                                    client.get(catenaryUrl).body<CatenarySearchResponse>().also {
+                                        partialResults.catenarySucceeded = true
                                     }
+                                } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
+                                    e.printStackTrace()
+                                    null
+                                }
 
-                                partialResults.catenary = response
-                                recomputeRows()
-                            }
+                            partialResults.catenary = response
+                            recomputeRows()
+                        }
 
-                            // --- Cypress v2 Search API (Ktor) ---
-                            launch {
-                                val features =
-                                    try {
-                                        val cypressUrl = buildCypressSearchUrl(
-                                            query = query,
-                                            focusLatitude = mapCenter.latitude,
-                                            focusLongitude = mapCenter.longitude,
-                                        )
+                        // --- Cypress v2 Search API (Ktor) ---
+                        launch {
+                            val features =
+                                try {
+                                    val cypressUrl = buildCypressSearchUrl(
+                                        query = query,
+                                        focusLatitude = mapCenter.latitude,
+                                        focusLongitude = mapCenter.longitude,
+                                    )
 
-                                        val response = client.get(cypressUrl).body<CypressResponse>()
-                                        response.features.also {
-                                            partialResults.cypressSucceeded = true
-                                        }
-                                    } catch (e: Exception) {
-                                        if (e is kotlinx.coroutines.CancellationException) throw e
-                                        e.printStackTrace()
-                                        emptyList()
+                                    val response = client.get(cypressUrl).body<CypressResponse>()
+                                    response.features.also {
+                                        partialResults.cypressSucceeded = true
                                     }
+                                } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
+                                    e.printStackTrace()
+                                    emptyList()
+                                }
 
-                                partialResults.cypress = features
-                                recomputeRows()
-                            }
+                            partialResults.cypress = features
+                            recomputeRows()
+                        }
 
-                            // --- OSM Station Search API (Ktor) ---
-                            launch {
-                                val stations =
-                                    try {
-                                        val httpResponse =
-                                            client.get(
-                                                "https://birch.catenarymaps.org/osm_station_search"
-                                            ) {
-                                                url {
-                                                    parameters.append("text", query)
+                        // --- OSM Station Search API (Ktor) ---
+                        launch {
+                            val stations =
+                                try {
+                                    val httpResponse =
+                                        client.get(
+                                            "https://birch.catenarymaps.org/osm_station_search"
+                                        ) {
+                                            url {
+                                                parameters.append("text", query)
 
-                                                    // Mirror Svelte behavior: only apply focus when
-                                                    // we have a user location, and focus around the
-                                                    // current map center.
-                                                    if (userLocation != null) {
+                                                // Mirror Svelte behavior: only apply focus when
+                                                // we have a user location, and focus around the
+                                                // current map center.
+                                                if (userLocation != null) {
 
-                                                    }
                                                 }
                                             }
+                                        }
 
-                                        val bodyText = httpResponse.bodyAsText()
-                                        Log.d(
-                                            "SearchViewModel",
-                                            "OSM station search raw response: $bodyText"
-                                        )
+                                    val bodyText = httpResponse.bodyAsText()
+                                    Log.d(
+                                        "SearchViewModel",
+                                        "OSM station search raw response: $bodyText"
+                                    )
 
-                                        try {
-                                            val parsed =
-                                                json.decodeFromString<
+                                    try {
+                                        val parsed =
+                                            json.decodeFromString<
                                                     OsmStationSearchResponse
-                                                >(bodyText)
-                                            parsed.results.also {
-                                                partialResults.osmStationsSucceeded = true
-                                            }
-                                        } catch (e: Exception) {
-                                            if (e is kotlinx.coroutines.CancellationException) throw e
-                                            Log.e(
-                                                "SearchViewModel",
-                                                "Failed to deserialize OSM station search response",
-                                                e
-                                            )
-                                            Log.e(
-                                                "SearchViewModel",
-                                                "Offending OSM body: $bodyText"
-                                            )
-                                            emptyList()
+                                                    >(bodyText)
+                                        parsed.results.also {
+                                            partialResults.osmStationsSucceeded = true
                                         }
                                     } catch (e: Exception) {
                                         if (e is kotlinx.coroutines.CancellationException) throw e
                                         Log.e(
                                             "SearchViewModel",
-                                            "OSM station search request failed",
+                                            "Failed to deserialize OSM station search response",
                                             e
+                                        )
+                                        Log.e(
+                                            "SearchViewModel",
+                                            "Offending OSM body: $bodyText"
                                         )
                                         emptyList()
                                     }
+                                } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
+                                    Log.e(
+                                        "SearchViewModel",
+                                        "OSM station search request failed",
+                                        e
+                                    )
+                                    emptyList()
+                                }
 
-                                partialResults.osmStations = stations
-                                recomputeRows()
-                            }
+                            partialResults.osmStations = stations
+                            recomputeRows()
                         }
-
-                        // Rebuild after all three requests finish, so a cache hit always restores
-                        // the complete sorted list, including legitimate empty searches.
-                        if (generation == searchGeneration) {
-                            val completedRows = buildCombinedRows(
-                                partialResults.catenary,
-                                partialResults.cypress,
-                                partialResults.osmStations,
-                                userLocation,
-                            )
-                            _searchRows.value = completedRows
-                            if (partialResults.catenarySucceeded &&
-                                partialResults.cypressSucceeded &&
-                                partialResults.osmStationsSucceeded
-                            ) {
-                                completedSearchCache.put(cacheKey, completedRows)
-                            }
-                        }
-                    } finally {
-                        // This now correctly runs *after* both jobs are finished
-                        if (generation == searchGeneration) _isLoading.value = false
                     }
+
+                    // Rebuild after all three requests finish, so a cache hit always restores
+                    // the complete sorted list, including legitimate empty searches.
+                    if (generation == searchGeneration) {
+                        val completedRows = buildCombinedRows(
+                            partialResults.catenary,
+                            partialResults.cypress,
+                            partialResults.osmStations,
+                            userLocation,
+                        )
+                        _searchRows.value = completedRows
+                        if (partialResults.catenarySucceeded &&
+                            partialResults.cypressSucceeded &&
+                            partialResults.osmStationsSucceeded
+                        ) {
+                            completedSearchCache.put(cacheKey, completedRows)
+                        }
+                    }
+                } finally {
+                    // This now correctly runs *after* both jobs are finished
+                    if (generation == searchGeneration) _isLoading.value = false
                 }
+            }
     }
 
     override fun onCleared() {

@@ -6,9 +6,13 @@ import org.junit.Test
 class TripPlannerSessionTest {
     private val journey = DirectionsItinerary(
         "2026-11-05T17:00:00Z", "2026-11-05T17:30:00Z",
-        legs = listOf(DirectionsLeg("BUS", routeId = "42",
-            intermediateStops = listOf(DirectionsStop("Transfer")),
-            legGeometry = DirectionsGeometry("_p~iF~ps|U_ulLnnqC_mqNvxq`@", 5)))
+        legs = listOf(
+            DirectionsLeg(
+                "BUS", routeId = "42",
+                intermediateStops = listOf(DirectionsStop("Transfer")),
+                legGeometry = DirectionsGeometry("_p~iF~ps|U_ulLnnqC_mqNvxq`@", 5)
+            )
+        )
     )
     private val saved = TripPlannerSession(
         origin = DirectionsLocation("Home", 34.0, -118.0, true),
@@ -19,7 +23,8 @@ class TripPlannerSessionTest {
         selected = 1, details = true, showTransfers = true
     )
 
-    @Test fun freshViewModelRestoresDetailsAndCompleteResultsWithoutSearching() {
+    @Test
+    fun freshViewModelRestoresDetailsAndCompleteResultsWithoutSearching() {
         val decoded = TripPlannerSessionCodec.decode(TripPlannerSessionCodec.encode(saved))
         assertEquals(saved, decoded)
         val planner = TripPlannerViewModel()
@@ -33,9 +38,16 @@ class TripPlannerSessionTest {
         assertEquals("Station", planner.destinationText)
     }
 
-    @Test fun tripInfoRoundTripPreservesSelectedDetailsResultsAndPaging() {
+    @Test
+    fun tripInfoRoundTripPreservesSelectedDetailsResultsAndPaging() {
         val session = saved.copy(
-            requestQuery = directionsRequest(saved.origin, saved.destination, saved.time, saved.arriveBy, saved.options),
+            requestQuery = directionsRequest(
+                saved.origin,
+                saved.destination,
+                saved.time,
+                saved.arriveBy,
+                saved.options
+            ),
             previousPageCursor = "before", nextPageCursor = "after"
         )
         val planner = TripPlannerViewModel()
@@ -54,23 +66,37 @@ class TripPlannerSessionTest {
         assertNull(planner.session(false))
     }
 
-    @Test fun resultsListRestoresAndDetailsBackKeepsResults() {
+    @Test
+    fun resultsListRestoresAndDetailsBackKeepsResults() {
         val planner = TripPlannerViewModel()
         planner.restoreSession(saved.copy(details = false))
         assertFalse(planner.details)
         planner.details = true
         planner.selected = 0
         val nextLaunch = TripPlannerViewModel()
-        nextLaunch.restoreSession(TripPlannerSessionCodec.decode(TripPlannerSessionCodec.encode(planner.session(true)!!)))
+        nextLaunch.restoreSession(
+            TripPlannerSessionCodec.decode(
+                TripPlannerSessionCodec.encode(
+                    planner.session(true)!!
+                )
+            )
+        )
         assertTrue(nextLaunch.details)
         assertEquals(journey, nextLaunch.itineraries[nextLaunch.selected])
         nextLaunch.details = false
         assertEquals(saved.itineraries, nextLaunch.itineraries)
     }
 
-    @Test fun completedSearchKeepsPagingAvailableAfterProcessRestart() {
+    @Test
+    fun completedSearchKeepsPagingAvailableAfterProcessRestart() {
         val session = saved.copy(
-            requestQuery = directionsRequest(saved.origin, saved.destination, saved.time, saved.arriveBy, saved.options),
+            requestQuery = directionsRequest(
+                saved.origin,
+                saved.destination,
+                saved.time,
+                saved.arriveBy,
+                saved.options
+            ),
             previousPageCursor = "before", nextPageCursor = "after"
         )
         val planner = TripPlannerViewModel()
@@ -80,7 +106,8 @@ class TripPlannerSessionTest {
         assertEquals(session, planner.session(true))
     }
 
-    @Test fun transitOpensInListModeAndStreetOnlyConnectionsAlwaysUseTheMap() {
+    @Test
+    fun transitOpensInListModeAndStreetOnlyConnectionsAlwaysUseTheMap() {
         val planner = TripPlannerViewModel()
         planner.restoreSession(saved)
         planner.selectJourney(journey)
@@ -101,7 +128,8 @@ class TripPlannerSessionTest {
         assertFalse(planner.usingMap)
     }
 
-    @Test fun blankOrUnsubmittedPlannerHasNoSession() {
+    @Test
+    fun blankOrUnsubmittedPlannerHasNoSession() {
         val planner = TripPlannerViewModel()
         planner.restoreSession(null)
         assertNull(planner.session(true))
@@ -110,7 +138,8 @@ class TripPlannerSessionTest {
         assertNull(planner.session(true))
     }
 
-    @Test fun leavingOrEditingRemovesTheSavedSession() {
+    @Test
+    fun leavingOrEditingRemovesTheSavedSession() {
         val planner = TripPlannerViewModel()
         planner.restoreSession(saved)
         assertNull(planner.session(false))
@@ -118,7 +147,8 @@ class TripPlannerSessionTest {
         assertNull(planner.session(true))
     }
 
-    @Test fun configurationChangeDoesNotReplaceNewerInMemoryState() {
+    @Test
+    fun configurationChangeDoesNotReplaceNewerInMemoryState() {
         val planner = TripPlannerViewModel()
         planner.restoreSession(saved)
         planner.details = false
@@ -128,13 +158,16 @@ class TripPlannerSessionTest {
         assertEquals(0, planner.selected)
     }
 
-    @Test fun malformedEmptyAndUnsupportedCachesAreDiscarded() {
+    @Test
+    fun malformedEmptyAndUnsupportedCachesAreDiscarded() {
         assertNull(TripPlannerSessionCodec.decode("{"))
         assertNull(TripPlannerSessionCodec.decode("{}"))
         assertNull(saved.copy(version = 2).validated())
         assertNull(saved.copy(itineraries = emptyList()).validated())
         assertNull(saved.copy(origin = saved.origin.copy(lat = 91.0)).validated())
-        assertNull(saved.copy(itineraries = listOf(journey.copy(startTime = "invalid"))).validated())
+        assertNull(
+            saved.copy(itineraries = listOf(journey.copy(startTime = "invalid"))).validated()
+        )
         assertEquals(1, saved.copy(selected = 99).validated()!!.selected)
     }
 }

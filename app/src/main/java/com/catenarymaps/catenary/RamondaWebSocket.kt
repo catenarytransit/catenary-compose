@@ -59,7 +59,8 @@ data class RamondaTripIdentity(
     )
 }
 
-fun SubscribeTrip.identity() = RamondaTripIdentity(chateau, trip_id, route_id, start_date, start_time)
+fun SubscribeTrip.identity() =
+    RamondaTripIdentity(chateau, trip_id, route_id, start_date, start_time)
 
 @Serializable
 data class RamondaCommonMessage(
@@ -86,6 +87,7 @@ internal class RamondaSubscriptionRegistry {
         counts[identity] = count + 1
         return count == 0
     }
+
     fun release(identity: RamondaTripIdentity): Boolean {
         val count = counts[identity] ?: return false
         if (count > 1) {
@@ -95,6 +97,7 @@ internal class RamondaSubscriptionRegistry {
         counts.remove(identity)
         return true
     }
+
     fun contains(identity: RamondaTripIdentity) = counts.containsKey(identity)
     fun active(): Set<RamondaTripIdentity> = counts.keys.toSet()
     fun isNotEmpty() = counts.isNotEmpty()
@@ -122,14 +125,18 @@ object RamondaWebSocket {
     private var reconnectJob: Job? = null
     private var pingJob: Job? = null
     private val subscriptions = RamondaSubscriptionRegistry()
-    private val _tripSnapshots = MutableStateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>>(emptyMap())
-    val tripSnapshots: StateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>> = _tripSnapshots.asStateFlow()
+    private val _tripSnapshots =
+        MutableStateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>>(emptyMap())
+    val tripSnapshots: StateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>> =
+        _tripSnapshots.asStateFlow()
     private val _ramondaStatus = MutableStateFlow("disconnected")
     val ramondaStatus: StateFlow<String> = _ramondaStatus.asStateFlow()
     private val _ramondaError = MutableStateFlow<String?>(null)
     val ramondaError: StateFlow<String?> = _ramondaError.asStateFlow()
 
-    fun init() { scope.launch { ensureConnection() } }
+    fun init() {
+        scope.launch { ensureConnection() }
+    }
 
     fun subscribeTrip(
         chateau: String, tripId: String, routeId: String? = null,
@@ -165,11 +172,15 @@ object RamondaWebSocket {
     }
 
     private fun sendUnsubscribe(identity: RamondaTripIdentity) {
-        webSocket?.send(json.encodeToString(UnsubscribeTrip(
-            chateau = identity.chateau, trip_id = identity.trip_id,
-            route_id = identity.route_id, start_date = identity.start_date,
-            start_time = identity.start_time
-        )))
+        webSocket?.send(
+            json.encodeToString(
+                UnsubscribeTrip(
+                    chateau = identity.chateau, trip_id = identity.trip_id,
+                    route_id = identity.route_id, start_date = identity.start_date,
+                    start_time = identity.start_time
+                )
+            )
+        )
     }
 
     private fun ensureConnection() {
@@ -209,9 +220,11 @@ object RamondaWebSocket {
                 override fun onFailure(socket: WebSocket, t: Throwable, response: Response?) {
                     scope.launch { disconnect(generation, "error") }
                 }
+
                 override fun onClosed(socket: WebSocket, code: Int, reason: String) {
                     scope.launch { disconnect(generation, "disconnected") }
                 }
+
                 override fun onClosing(socket: WebSocket, code: Int, reason: String) {
                     socket.close(code, reason)
                 }
@@ -242,9 +255,11 @@ object RamondaWebSocket {
                 val existing = _tripSnapshots.value[identity] ?: RamondaTripSnapshot()
                 val replacement = when (frame.type) {
                     "initial_trip" -> {
-                        val initial = json.decodeFromJsonElement(TripDataResponse.serializer(), body)
+                        val initial =
+                            json.decodeFromJsonElement(TripDataResponse.serializer(), body)
                         if ((initial.trip_id != null && initial.trip_id != identity.trip_id) ||
-                            (initial.chateau != null && initial.chateau != identity.chateau)) return
+                            (initial.chateau != null && initial.chateau != identity.chateau)
+                        ) return
                         existing.copy(
                             initial = initial,
                             // Keep a response that preceded the first initial_trip,
@@ -253,6 +268,7 @@ object RamondaWebSocket {
                             lastError = null
                         )
                     }
+
                     else -> {
                         val update = json.decodeFromJsonElement(TripRtUpdateData.serializer(), body)
                         if (update.trip_id != null && update.trip_id != identity.trip_id) return
@@ -262,12 +278,13 @@ object RamondaWebSocket {
                 }
                 _tripSnapshots.value = _tripSnapshots.value + (identity to replacement)
             }
+
             "error" -> {
                 val identity = frame.subscription
                 if (identity != null && subscriptions.contains(identity)) {
                     val old = _tripSnapshots.value[identity] ?: RamondaTripSnapshot()
                     _tripSnapshots.value = _tripSnapshots.value +
-                        (identity to old.copy(lastError = frame.message))
+                            (identity to old.copy(lastError = frame.message))
                 } else if (identity == null) {
                     _ramondaError.value = frame.message
                 }

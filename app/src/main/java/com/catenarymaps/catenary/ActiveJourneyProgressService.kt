@@ -59,22 +59,34 @@ internal fun notificationLegProgress(
         (100.0 * (now - departure).toDouble() / (arrival - departure).toDouble())
             .coerceIn(0.0, 100.0).toInt()
     } else if (current == legs.lastIndex && now >= (arrival ?: Long.MAX_VALUE)) 100 else 0
-    return JourneyLegNotificationProgress(index, legs.size, leg, percent, next != null || (departure != null && now < departure))
+    return JourneyLegNotificationProgress(
+        index,
+        legs.size,
+        leg,
+        percent,
+        next != null || (departure != null && now < departure)
+    )
 }
 
 /** Same-process cache: use existing Ramonda predictions without another subscription. */
 internal object ActiveJourneyLiveState {
-    @Volatile private var identity: String? = null
-    @Volatile private var live: DirectionsItinerary? = null
+    @Volatile
+    private var identity: String? = null
+    @Volatile
+    private var live: DirectionsItinerary? = null
     fun update(journeyIdentity: String, journey: DirectionsItinerary) {
         if (ActiveJourneySession.current?.snapshot?.journey?.identity() == journeyIdentity) {
             live = journey
             identity = journeyIdentity
         }
     }
+
     fun journey(journeyIdentity: String): DirectionsItinerary? =
         live?.takeIf { identity == journeyIdentity }
-    fun clear() { identity = null; live = null }
+
+    fun clear() {
+        identity = null; live = null
+    }
 }
 
 /**
@@ -90,7 +102,10 @@ class ActiveJourneyProgressService : Service() {
         fun start(context: Context) {
             val app = context.applicationContext
             try {
-                ContextCompat.startForegroundService(app, Intent(app, ActiveJourneyProgressService::class.java))
+                ContextCompat.startForegroundService(
+                    app,
+                    Intent(app, ActiveJourneyProgressService::class.java)
+                )
             } catch (error: RuntimeException) {
                 // A background FGS launch can be denied by Android; session and FCM
                 // reconciliation remain persisted and the UI can retry on resume.
@@ -113,8 +128,10 @@ class ActiveJourneyProgressService : Service() {
     private fun channel() {
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, getString(R.string.journey_tracking_notification_channel),
-                NotificationManager.IMPORTANCE_LOW).apply {
+            NotificationChannel(
+                CHANNEL_ID, getString(R.string.journey_tracking_notification_channel),
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
                 description = getString(R.string.journey_tracking_notification_channel_description)
                 setSound(null, null)
                 enableVibration(false)
@@ -122,7 +139,11 @@ class ActiveJourneyProgressService : Service() {
         )
     }
 
-    private fun buildNotification(active: ActiveJourney, journey: DirectionsItinerary, now: Long): Notification {
+    private fun buildNotification(
+        active: ActiveJourney,
+        journey: DirectionsItinerary,
+        now: Long
+    ): Notification {
         val destination = active.snapshot.destination?.name?.takeIf { it.isNotBlank() }
             ?: journey.legs.lastOrNull()?.to?.name?.takeIf { it.isNotBlank() }
             ?: getString(R.string.app_name)
@@ -143,7 +164,10 @@ class ActiveJourneyProgressService : Service() {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val pending = PendingIntent.getActivity(
-            this, NOTIFICATION_ID, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            NOTIFICATION_ID,
+            open,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -171,7 +195,9 @@ class ActiveJourneyProgressService : Service() {
         val journey = ActiveJourneyLiveState.journey(identity) ?: active.snapshot.journey
         try {
             ServiceCompat.startForeground(
-                this, NOTIFICATION_ID, buildNotification(active, journey, Instant.now().epochSecond),
+                this,
+                NOTIFICATION_ID,
+                buildNotification(active, journey, Instant.now().epochSecond),
                 if (Build.VERSION.SDK_INT >= 34) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
             )
         } catch (error: RuntimeException) {
@@ -189,9 +215,16 @@ class ActiveJourneyProgressService : Service() {
                     break
                 }
                 val currentIdentity = current.snapshot.journey.identity()
-                val latest = ActiveJourneyLiveState.journey(currentIdentity) ?: current.snapshot.journey
+                val latest =
+                    ActiveJourneyLiveState.journey(currentIdentity) ?: current.snapshot.journey
                 val now = Instant.now().epochSecond
-                if (hasArrivedAtJourneyDestination(latest, current.snapshot.destination, now, null)) {
+                if (hasArrivedAtJourneyDestination(
+                        latest,
+                        current.snapshot.destination,
+                        now,
+                        null
+                    )
+                ) {
                     ActiveJourneySession.end(currentIdentity)
                     break
                 }

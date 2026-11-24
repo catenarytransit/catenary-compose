@@ -52,6 +52,7 @@ internal class NearbyDeparturesMemoryCache(
         val matches = when (mode) {
             NearbyDeparturesLocationMode.CURRENT_LOCATION ->
                 distanceMeters(origin, cached.origin) <= gpsReuseRadiusMeters
+
             NearbyDeparturesLocationMode.PINNED_LOCATION -> origin == cached.origin
         }
         return cached.takeIf { matches }
@@ -76,8 +77,8 @@ internal class NearbyDeparturesMemoryCache(
         val latitudeDelta = Math.toRadians(a.first - b.first)
         val longitudeDelta = Math.toRadians(a.second - b.second)
         val haversine = sin(latitudeDelta / 2).pow(2) +
-            cos(Math.toRadians(a.first)) * cos(Math.toRadians(b.first)) *
-            sin(longitudeDelta / 2).pow(2)
+                cos(Math.toRadians(a.first)) * cos(Math.toRadians(b.first)) *
+                sin(longitudeDelta / 2).pow(2)
         return 2 * 6_371_000.0 * asin(sqrt(min(1.0, haversine)))
     }
 }

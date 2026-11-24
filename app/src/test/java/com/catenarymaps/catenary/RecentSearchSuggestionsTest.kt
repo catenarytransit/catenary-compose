@@ -19,7 +19,11 @@ class RecentSearchSuggestionsTest {
             longitude = savedAddress.lon,
         )
 
-    private fun cypress(name: String, lat: Double = savedAddress.lat, lon: Double = savedAddress.lon): SearchRow {
+    private fun cypress(
+        name: String,
+        lat: Double = savedAddress.lat,
+        lon: Double = savedAddress.lon
+    ): SearchRow {
         return SearchRow.CypressRow(
             CypressFeature(
                 type = "Feature",
@@ -39,7 +43,10 @@ class RecentSearchSuggestionsTest {
             emptyList()
         )
         assertEquals(listOf(savedAddress), suggestions)
-        assertEquals(listOf(savedAddress), matchingRecentDirections("  1604 s", listOf(savedAddress), emptyList()))
+        assertEquals(
+            listOf(savedAddress),
+            matchingRecentDirections("  1604 s", listOf(savedAddress), emptyList())
+        )
         assertTrue(matchingRecentDirections("", listOf(savedAddress), emptyList()).isEmpty())
     }
 
@@ -48,7 +55,10 @@ class RecentSearchSuggestionsTest {
         val visit = stationHistory("8", "Home", "1604 S Primrose Ave")
         val matched = matchingRecentStationHistory("1604", listOf(visit))
         assertEquals(listOf(visit), matched)
-        assertEquals("Home", matchingRecentDirections("1604", emptyList(), listOf(visit)).single().name)
+        assertEquals(
+            "Home",
+            matchingRecentDirections("1604", emptyList(), listOf(visit)).single().name
+        )
     }
 
     @Test

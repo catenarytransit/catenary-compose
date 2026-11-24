@@ -27,41 +27,40 @@ private const val TAG = "SpruceWebSocket"
 
 @Serializable
 data class MapViewportUpdate(
-        @EncodeDefault val type: String = "subscribe_map_v2",
-        val categories: List<String>,
-        val bounds_input: BoundsInput
+    @EncodeDefault val type: String = "subscribe_map_v2",
+    val categories: List<String>,
+    val bounds_input: BoundsInput
 )
-
 
 
 @Serializable
 data class SubscribeTrajectories(
-        @EncodeDefault val type: String = "subscribe_trajectories",
-        val bbox: List<Double>,
-        val zoom: Int,
-        val modes: List<String>,
-        //val precision: Int? = null,
-        @EncodeDefault val client_reference: String = "trajectories_layer"
+    @EncodeDefault val type: String = "subscribe_trajectories",
+    val bbox: List<Double>,
+    val zoom: Int,
+    val modes: List<String>,
+    //val precision: Int? = null,
+    @EncodeDefault val client_reference: String = "trajectories_layer"
 )
 
 @Serializable
 data class UnsubscribeTrajectories(
-        @EncodeDefault val type: String = "unsubscribe_trajectories"
+    @EncodeDefault val type: String = "unsubscribe_trajectories"
 )
 
 @Serializable
 data class SpruceCommonMessage(
-        val type: String,
-        val data: JsonElement? = null, // For initial_trip and update_trip
-        val chateaus: Map<String, EachChateauResponseV2>? =
-                null, // For map_update (top level in legacy/TS sometimes?)
-        val map_update: BulkRealtimeResponseV2? = null, // In case it's wrapped
-        val message: String? = null, // For error
-        val content: List<TrajectoryWrapper>? = null, // For buffer (trajectories)
-        val timestamp: Long? = null,
-        val chateau: String? = null,
-        val total_chunks: Int? = null,
-        val chunk_index: Int? = null
+    val type: String,
+    val data: JsonElement? = null, // For initial_trip and update_trip
+    val chateaus: Map<String, EachChateauResponseV2>? =
+        null, // For map_update (top level in legacy/TS sometimes?)
+    val map_update: BulkRealtimeResponseV2? = null, // In case it's wrapped
+    val message: String? = null, // For error
+    val content: List<TrajectoryWrapper>? = null, // For buffer (trajectories)
+    val timestamp: Long? = null,
+    val chateau: String? = null,
+    val total_chunks: Int? = null,
+    val chunk_index: Int? = null
 )
 
 object SpruceWebSocket {
@@ -81,7 +80,6 @@ object SpruceWebSocket {
 
     private val _spruceMapData = MutableStateFlow<BulkRealtimeResponseV2?>(null)
     val spruceMapData: StateFlow<BulkRealtimeResponseV2?> = _spruceMapData.asStateFlow()
-
 
 
     private val _spruceError = MutableStateFlow<String?>(null)
@@ -105,7 +103,7 @@ object SpruceWebSocket {
 
     private fun ensureConnection() {
         if (webSocket != null &&
-                        (_spruceStatus.value == "connected" || _spruceStatus.value == "connecting")
+            (_spruceStatus.value == "connected" || _spruceStatus.value == "connecting")
         ) {
             return
         }
@@ -114,106 +112,115 @@ object SpruceWebSocket {
         val request = Request.Builder().url("wss://spruce.catenarymaps.org/ws/").build()
 
         webSocket =
-                client.newWebSocket(
-                        request,
-                        object : WebSocketListener() {
-                            override fun onOpen(webSocket: WebSocket, response: Response) {
-                                Log.d(TAG, "Spruce WS Connected")
-                                _spruceStatus.value = "connected"
-                                startPingLoop(webSocket)
+            client.newWebSocket(
+                request,
+                object : WebSocketListener() {
+                    override fun onOpen(webSocket: WebSocket, response: Response) {
+                        Log.d(TAG, "Spruce WS Connected")
+                        _spruceStatus.value = "connected"
+                        startPingLoop(webSocket)
 
-                                // Resend active map subscription
-                                activeMapParams?.let {
-                                    Log.d(TAG, "Resending active map params")
-                                    sendMapUpdate(it)
-                                }
+                        // Resend active map subscription
+                        activeMapParams?.let {
+                            Log.d(TAG, "Resending active map params")
+                            sendMapUpdate(it)
+                        }
 
 
 
-                                activeTrajectoryParams?.let {
-                                    Log.d(TAG, "Resending active trajectory params")
-                                    sendTrajectorySubscription(it)
-                                }
-                            }
+                        activeTrajectoryParams?.let {
+                            Log.d(TAG, "Resending active trajectory params")
+                            sendTrajectorySubscription(it)
+                        }
+                    }
 
-                            override fun onMessage(webSocket: WebSocket, text: String) {
-                                scope.launch {
-                                    try {
-                                        val msg = json.decodeFromString<SpruceCommonMessage>(text)
-                                        when (msg.type) {
+                    override fun onMessage(webSocket: WebSocket, text: String) {
+                        scope.launch {
+                            try {
+                                val msg = json.decodeFromString<SpruceCommonMessage>(text)
+                                when (msg.type) {
 
-                                            "buffer" -> {
-                                                //Log.d(TAG, "Spruce WS Trajectory buffer received, text size: ${text.length}")
-                                                _spruceTrajectoryData.value = msg
-                                            }
-                                            "map_update" -> {
-                                                // Handle various potential payload locations
-                                                if (msg.map_update != null) {
-                                                    Log.d(TAG, "Spruce WS Map update received via map_update field, chateaus count: ${msg.map_update.chateaus.size}")
-                                                    _spruceMapData.value = msg.map_update
-                                                } else if (msg.chateaus != null) {
-                                                    Log.d(TAG, "Spruce WS Map update received via chateaus field, chateaus count: ${msg.chateaus.size}")
-                                                    _spruceMapData.value =
-                                                            BulkRealtimeResponseV2(
-                                                                    chateaus = msg.chateaus
-                                                            )
-                                                }
-                                            }
-                                            "pong" -> {
-                                                 Log.d(TAG, "Spruce WS received pong")
-                                            }
-                                            "error" -> {
-                                                _spruceError.value = msg.message
-                                                Log.e(TAG, "Spruce WS Error: ${msg.message}")
-                                            }
+                                    "buffer" -> {
+                                        //Log.d(TAG, "Spruce WS Trajectory buffer received, text size: ${text.length}")
+                                        _spruceTrajectoryData.value = msg
+                                    }
+
+                                    "map_update" -> {
+                                        // Handle various potential payload locations
+                                        if (msg.map_update != null) {
+                                            Log.d(
+                                                TAG,
+                                                "Spruce WS Map update received via map_update field, chateaus count: ${msg.map_update.chateaus.size}"
+                                            )
+                                            _spruceMapData.value = msg.map_update
+                                        } else if (msg.chateaus != null) {
+                                            Log.d(
+                                                TAG,
+                                                "Spruce WS Map update received via chateaus field, chateaus count: ${msg.chateaus.size}"
+                                            )
+                                            _spruceMapData.value =
+                                                BulkRealtimeResponseV2(
+                                                    chateaus = msg.chateaus
+                                                )
                                         }
-                                    } catch (e: Exception) {
-                                        Log.e(TAG, "Error parsing Spruce WS message", e)
+                                    }
+
+                                    "pong" -> {
+                                        Log.d(TAG, "Spruce WS received pong")
+                                    }
+
+                                    "error" -> {
+                                        _spruceError.value = msg.message
+                                        Log.e(TAG, "Spruce WS Error: ${msg.message}")
                                     }
                                 }
-                            }
-
-                            override fun onClosing(
-                                    webSocket: WebSocket,
-                                    code: Int,
-                                    reason: String
-                            ) {
-                                Log.d(TAG, "Spruce WS Closing: $code / $reason")
-                                _spruceStatus.value = "disconnected"
-                                this@SpruceWebSocket.webSocket = null
-                                pingJob?.cancel()
-                                pingJob = null
-                            }
-
-                            override fun onFailure(
-                                    webSocket: WebSocket,
-                                    t: Throwable,
-                                    response: Response?
-                            ) {
-                                Log.e(TAG, "Spruce WS Failure", t)
-                                _spruceStatus.value = "error"
-                                this@SpruceWebSocket.webSocket = null
-                                pingJob?.cancel()
-                                pingJob = null
-
-                                // Retry connection after delay
-                                scope.launch {
-                                    delay(5000)
-                                    ensureConnection()
-                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing Spruce WS message", e)
                             }
                         }
-                )
+                    }
+
+                    override fun onClosing(
+                        webSocket: WebSocket,
+                        code: Int,
+                        reason: String
+                    ) {
+                        Log.d(TAG, "Spruce WS Closing: $code / $reason")
+                        _spruceStatus.value = "disconnected"
+                        this@SpruceWebSocket.webSocket = null
+                        pingJob?.cancel()
+                        pingJob = null
+                    }
+
+                    override fun onFailure(
+                        webSocket: WebSocket,
+                        t: Throwable,
+                        response: Response?
+                    ) {
+                        Log.e(TAG, "Spruce WS Failure", t)
+                        _spruceStatus.value = "error"
+                        this@SpruceWebSocket.webSocket = null
+                        pingJob?.cancel()
+                        pingJob = null
+
+                        // Retry connection after delay
+                        scope.launch {
+                            delay(5000)
+                            ensureConnection()
+                        }
+                    }
+                }
+            )
     }
 
     fun updateMap(categories: List<String>, boundsInput: BoundsInput) {
         scope.launch {
             ensureConnection()
             val params =
-                    MapViewportUpdate(
-                            categories = categories,
-                            bounds_input = boundsInput
-                    )
+                MapViewportUpdate(
+                    categories = categories,
+                    bounds_input = boundsInput
+                )
             activeMapParams = params
             sendMapUpdate(params)
         }
@@ -244,7 +251,6 @@ object SpruceWebSocket {
     }
 
 
-
     private fun sendMapUpdate(params: MapViewportUpdate) {
         if (_spruceStatus.value == "connected") {
             try {
@@ -255,7 +261,6 @@ object SpruceWebSocket {
             }
         }
     }
-
 
 
     private fun sendTrajectorySubscription(params: SubscribeTrajectories) {

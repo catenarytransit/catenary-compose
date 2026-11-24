@@ -134,19 +134,26 @@ fun condenseActivePeriods(
     when (language) {
         "de" -> {
             baseRule = "Nächte $firstLabel–$lastLabel$yearSuffix, jeweils $start–$end Uhr"
-            exceptionsRule = if (exceptionText.isEmpty()) "" else "Ausnahmen: ${exceptionText.joinToString("; ")}"
+            exceptionsRule =
+                if (exceptionText.isEmpty()) "" else "Ausnahmen: ${exceptionText.joinToString("; ")}"
         }
+
         "fr" -> {
             baseRule = "Nuits du $firstLabel au $lastLabel$yearSuffix, de $start à $end"
-            exceptionsRule = if (exceptionText.isEmpty()) "" else "Exceptions : ${exceptionText.joinToString("; ")}"
+            exceptionsRule =
+                if (exceptionText.isEmpty()) "" else "Exceptions : ${exceptionText.joinToString("; ")}"
         }
+
         "it" -> {
             baseRule = "Notti dal $firstLabel all’$lastLabel$yearSuffix, $start–$end"
-            exceptionsRule = if (exceptionText.isEmpty()) "" else "Eccezioni: ${exceptionText.joinToString("; ")}"
+            exceptionsRule =
+                if (exceptionText.isEmpty()) "" else "Eccezioni: ${exceptionText.joinToString("; ")}"
         }
+
         else -> {
             baseRule = "Nights $firstLabel–$lastLabel$commaYearSuffix, $start–$end"
-            exceptionsRule = if (exceptionText.isEmpty()) "" else "Exceptions: ${exceptionText.joinToString("; ")}"
+            exceptionsRule =
+                if (exceptionText.isEmpty()) "" else "Exceptions: ${exceptionText.joinToString("; ")}"
         }
     }
 
@@ -213,6 +220,7 @@ private fun formatNightLabel(
                 "%02d./%s".format(locale, start.dayOfMonth, endDate)
             }
         }
+
         "fr", "it" -> {
             val month = start.month.getDisplayName(TextStyle.FULL, locale).lowercase(locale)
             if (sameDay) {
@@ -221,6 +229,7 @@ private fun formatNightLabel(
                 "${start.dayOfMonth}/${end.dayOfMonth} $month"
             }
         }
+
         else -> {
             val month = start.month.getDisplayName(TextStyle.SHORT, locale)
             if (sameDay) {

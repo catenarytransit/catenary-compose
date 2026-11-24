@@ -5,7 +5,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BookmarkTripOnboardingTest {
-    @Test fun promptsOnlyForAValidUnsavedJourneyBeforeFirstUse() {
+    @Test
+    fun promptsOnlyForAValidUnsavedJourneyBeforeFirstUse() {
         assertTrue(shouldShowBookmarkTooltip(false, false, false, true))
         assertFalse(shouldShowBookmarkTooltip(true, false, false, true))
         assertFalse(shouldShowBookmarkTooltip(false, true, false, true))

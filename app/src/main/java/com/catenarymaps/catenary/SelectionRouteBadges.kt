@@ -41,24 +41,24 @@ import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 
 data class ResolvedRouteBadgeInfo(
-        val routeId: String,
-        val shortName: String?,
-        val longName: String?,
-        val color: String,
-        val textColor: String,
-        val agencyId: String? = null,
-        val chateauId: String? = null
+    val routeId: String,
+    val shortName: String?,
+    val longName: String?,
+    val color: String,
+    val textColor: String,
+    val agencyId: String? = null,
+    val chateauId: String? = null
 )
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SelectionRouteBadges(
-        routeIds: List<String>,
-        resolveRouteInfo: (String) -> ResolvedRouteBadgeInfo?,
-        modifier: Modifier = Modifier,
-        textSize: TextUnit = 10.sp,
-        compact: Boolean = false,
-        flush: Boolean = false
+    routeIds: List<String>,
+    resolveRouteInfo: (String) -> ResolvedRouteBadgeInfo?,
+    modifier: Modifier = Modifier,
+    textSize: TextUnit = 10.sp,
+    compact: Boolean = false,
+    flush: Boolean = false
 ) {
     val routeInfos =
         remember(routeIds) {
@@ -70,185 +70,192 @@ fun SelectionRouteBadges(
             }
         }
 
-        if (routeInfos.isEmpty()) return
+    if (routeInfos.isEmpty()) return
 
-        val handledRoutes = mutableSetOf<String>()
+    val handledRoutes = mutableSetOf<String>()
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = modifier) {
-                // --- National Rail Logic ---
-                val nrRoutes = routeInfos.filter { it.chateauId == "nationalrailuk" }
-                if (nrRoutes.isNotEmpty()) {
-                    val groupedRoutes =
-                        nrRoutes
-                            .mapNotNull { route ->
-                                NationalRailUtils.getAgencyInfo(
-                                    route.agencyId,
-                                    null
-                                )
-                                    ?.let { it to route }
-                            }
-                            .groupBy({ it.first }, { it.second })
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = modifier) {
+        // --- National Rail Logic ---
+        val nrRoutes = routeInfos.filter { it.chateauId == "nationalrailuk" }
+        if (nrRoutes.isNotEmpty()) {
+            val groupedRoutes =
+                nrRoutes
+                    .mapNotNull { route ->
+                        NationalRailUtils.getAgencyInfo(
+                            route.agencyId,
+                            null
+                        )
+                            ?.let { it to route }
+                    }
+                    .groupBy({ it.first }, { it.second })
 
-                    groupedRoutes.forEach { (info, routes) ->
-                        routes.forEach { handledRoutes.add(it.routeId) }
+            groupedRoutes.forEach { (info, routes) ->
+                routes.forEach { handledRoutes.add(it.routeId) }
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier =
-                                Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(
-                                        MaterialTheme.colorScheme
-                                            .surfaceVariant
-                                    )
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            if (info.icon != null) {
-                                AgencyIcon(
-                                    iconName = info.icon,
-                                    contentDescription = info.name
-                                )
-                            }
-                            if (compact) {
-                                FadingBadgeText(
-                                    text = info.name, style = MaterialTheme.typography.labelSmall,
-                                    fontSize = textSize, fontWeight = FontWeight.Normal
-                                )
-                            } else {
-                                Text(
-                                    text = info.name, style = MaterialTheme.typography.labelSmall,
-                                    fontSize = if (textSize == 10.sp) TextUnit.Unspecified else textSize,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                                }
-                        }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(
+                                MaterialTheme.colorScheme
+                                    .surfaceVariant
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    if (info.icon != null) {
+                        AgencyIcon(
+                            iconName = info.icon,
+                            contentDescription = info.name
+                        )
+                    }
+                    if (compact) {
+                        FadingBadgeText(
+                            text = info.name, style = MaterialTheme.typography.labelSmall,
+                            fontSize = textSize, fontWeight = FontWeight.Normal
+                        )
+                    } else {
+                        Text(
+                            text = info.name, style = MaterialTheme.typography.labelSmall,
+                            fontSize = if (textSize == 10.sp) TextUnit.Unspecified else textSize,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
-
-                // --- Remaining Routes (Including MTA / RATP) ---
-                val remainingRoutes = routeInfos.filter { !handledRoutes.contains(it.routeId) }
-
-                if (remainingRoutes.isNotEmpty()) {
-                        FlowRow(
-                                modifier = Modifier.padding(top = if (flush) 0.dp else 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                                remainingRoutes.forEach { route ->
-                                        // check RATP
-                                        val isRatp =
-                                                RatpUtils.isIdfmChateau(route.chateauId) &&
-                                                        RatpUtils.isRatpRoute(route.shortName)
-                                        // check MTA
-                                        val isMta =
-                                                MtaSubwayUtils.MTA_CHATEAU_ID == route.chateauId &&
-                                                        !route.shortName.isNullOrEmpty() &&
-                                                        MtaSubwayUtils.isSubwayRouteId(
-                                                                route.shortName!!
-                                                        )
-
-                                        if (isRatp) {
-                                                val iconUrl =
-                                                        RatpUtils.getRatpIconUrl(route.shortName)
-                                                if (iconUrl != null) {
-                                                        val context = LocalContext.current
-                                                        val imageLoader =
-                                                                remember(context) {
-                                                                        ImageLoader.Builder(context)
-                                                                                .components {
-                                                                                        add(
-                                                                                                SvgDecoder
-                                                                                                        .Factory()
-                                                                                        )
-                                                                                }
-                                                                                .build()
-                                                                }
-                                                        AsyncImage(
-                                                                model =
-                                                                        ImageRequest.Builder(
-                                                                                        context
-                                                                                )
-                                                                                .data(iconUrl)
-                                                                                .crossfade(true)
-                                                                                .build(),
-                                                                imageLoader = imageLoader,
-                                                                contentDescription =
-                                                                        route.shortName,
-                                                                modifier = Modifier.size(if (compact) 16.dp else 20.dp)
-                                                        )
-                                                } else {
-                                                        // Fallback to standard badge if icon fails?
-                                                        // Or just skip?
-                                                        // Usually existing logic falls back to
-                                                        // standard badge.
-                                                        StandardRouteBadge(route, textSize, compact)
-                                                }
-                                        } else if (isMta) {
-                                                val iconUrl =
-                                                        MtaSubwayUtils.getMtaIconUrl(
-                                                                route.shortName!!
-                                                        )
-                                                if (iconUrl != null) {
-                                                        val context = LocalContext.current
-                                                        val imageLoader =
-                                                                remember(context) {
-                                                                        ImageLoader.Builder(context)
-                                                                                .components {
-                                                                                        add(
-                                                                                                SvgDecoder
-                                                                                                        .Factory()
-                                                                                        )
-                                                                                }
-                                                                                .build()
-                                                                }
-                                                        AsyncImage(
-                                                                model =
-                                                                        ImageRequest.Builder(
-                                                                                        context
-                                                                                )
-                                                                                .data(iconUrl)
-                                                                                .crossfade(true)
-                                                                                .build(),
-                                                                imageLoader = imageLoader,
-                                                                contentDescription =
-                                                                        route.shortName,
-                                                                modifier = Modifier.size(if (compact) 16.dp else 20.dp)
-                                                        )
-                                                } else {
-                                                        StandardRouteBadge(route, textSize, compact)
-                                                }
-                                        } else {
-                                                StandardRouteBadge(route, textSize, compact)
-                                        }
-                                }
-                        }
-                }
+            }
         }
+
+        // --- Remaining Routes (Including MTA / RATP) ---
+        val remainingRoutes = routeInfos.filter { !handledRoutes.contains(it.routeId) }
+
+        if (remainingRoutes.isNotEmpty()) {
+            FlowRow(
+                modifier = Modifier.padding(top = if (flush) 0.dp else 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                remainingRoutes.forEach { route ->
+                    // check RATP
+                    val isRatp =
+                        RatpUtils.isIdfmChateau(route.chateauId) &&
+                                RatpUtils.isRatpRoute(route.shortName)
+                    // check MTA
+                    val isMta =
+                        MtaSubwayUtils.MTA_CHATEAU_ID == route.chateauId &&
+                                !route.shortName.isNullOrEmpty() &&
+                                MtaSubwayUtils.isSubwayRouteId(
+                                    route.shortName!!
+                                )
+
+                    if (isRatp) {
+                        val iconUrl =
+                            RatpUtils.getRatpIconUrl(route.shortName)
+                        if (iconUrl != null) {
+                            val context = LocalContext.current
+                            val imageLoader =
+                                remember(context) {
+                                    ImageLoader.Builder(context)
+                                        .components {
+                                            add(
+                                                SvgDecoder
+                                                    .Factory()
+                                            )
+                                        }
+                                        .build()
+                                }
+                            AsyncImage(
+                                model =
+                                    ImageRequest.Builder(
+                                        context
+                                    )
+                                        .data(iconUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                imageLoader = imageLoader,
+                                contentDescription =
+                                    route.shortName,
+                                modifier = Modifier.size(if (compact) 16.dp else 20.dp)
+                            )
+                        } else {
+                            // Fallback to standard badge if icon fails?
+                            // Or just skip?
+                            // Usually existing logic falls back to
+                            // standard badge.
+                            StandardRouteBadge(route, textSize, compact)
+                        }
+                    } else if (isMta) {
+                        val iconUrl =
+                            MtaSubwayUtils.getMtaIconUrl(
+                                route.shortName!!
+                            )
+                        if (iconUrl != null) {
+                            val context = LocalContext.current
+                            val imageLoader =
+                                remember(context) {
+                                    ImageLoader.Builder(context)
+                                        .components {
+                                            add(
+                                                SvgDecoder
+                                                    .Factory()
+                                            )
+                                        }
+                                        .build()
+                                }
+                            AsyncImage(
+                                model =
+                                    ImageRequest.Builder(
+                                        context
+                                    )
+                                        .data(iconUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                imageLoader = imageLoader,
+                                contentDescription =
+                                    route.shortName,
+                                modifier = Modifier.size(if (compact) 16.dp else 20.dp)
+                            )
+                        } else {
+                            StandardRouteBadge(route, textSize, compact)
+                        }
+                    } else {
+                        StandardRouteBadge(route, textSize, compact)
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
-fun StandardRouteBadge(route: ResolvedRouteBadgeInfo, textSize: TextUnit = 10.sp, compact: Boolean = false) {
-        Box(
-                modifier =
-                        Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(parseColor(route.color, Color.Black))
-                            .padding(horizontal = if (compact) 3.dp else 4.dp, vertical = if (compact) 1.dp else 2.dp)
-        ) {
-                 val label = route.shortName ?: route.longName?.replace(" Line", "") ?: route.routeId
-                 if (compact) {
-                     FadingBadgeText(
-                         text = label, color = parseColor(route.textColor, Color.White),
-                         style = MaterialTheme.typography.labelSmall, fontSize = textSize,
-                         fontWeight = FontWeight.Normal
-                     )
-                 } else {
-                     Text(
-                         text = label, color = parseColor(route.textColor, Color.White),
-                         style = MaterialTheme.typography.labelSmall, fontSize = textSize
-                     )
-                 }
+fun StandardRouteBadge(
+    route: ResolvedRouteBadgeInfo,
+    textSize: TextUnit = 10.sp,
+    compact: Boolean = false
+) {
+    Box(
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(parseColor(route.color, Color.Black))
+                .padding(
+                    horizontal = if (compact) 3.dp else 4.dp,
+                    vertical = if (compact) 1.dp else 2.dp
+                )
+    ) {
+        val label = route.shortName ?: route.longName?.replace(" Line", "") ?: route.routeId
+        if (compact) {
+            FadingBadgeText(
+                text = label, color = parseColor(route.textColor, Color.White),
+                style = MaterialTheme.typography.labelSmall, fontSize = textSize,
+                fontWeight = FontWeight.Normal
+            )
+        } else {
+            Text(
+                text = label, color = parseColor(route.textColor, Color.White),
+                style = MaterialTheme.typography.labelSmall, fontSize = textSize
+            )
         }
+    }
 }
 
 /**
@@ -286,23 +293,23 @@ internal fun FadingBadgeText(
 
 @Composable
 fun AgencyIcon(iconName: String, contentDescription: String?) {
-        val context = LocalContext.current
-        val imageLoader =
-                remember(context) {
-                        ImageLoader.Builder(context)
-                                .components { add(SvgDecoder.Factory()) }
-                                .build()
-                }
-        AsyncImage(
-                model =
-                        ImageRequest.Builder(context)
-                                .data("https://maps.catenarymaps.org/agencyicons/$iconName")
-                                .decoderFactory(SvgDecoder.Factory())
-                                .build(),
-                imageLoader = imageLoader,
-                contentDescription = contentDescription,
-                modifier = Modifier
-                    .size(12.dp)
-                    .padding(end = 4.dp)
-        )
+    val context = LocalContext.current
+    val imageLoader =
+        remember(context) {
+            ImageLoader.Builder(context)
+                .components { add(SvgDecoder.Factory()) }
+                .build()
+        }
+    AsyncImage(
+        model =
+            ImageRequest.Builder(context)
+                .data("https://maps.catenarymaps.org/agencyicons/$iconName")
+                .decoderFactory(SvgDecoder.Factory())
+                .build(),
+        imageLoader = imageLoader,
+        contentDescription = contentDescription,
+        modifier = Modifier
+            .size(12.dp)
+            .padding(end = 4.dp)
+    )
 }

@@ -30,11 +30,15 @@ class DepartureRouteFiltersTest {
     @Test
     fun groupsOnlyMatchingNamesAndColoursWithinChateau() {
         val route = StopRouteInfo(color = "#aabbcc", text_color = "FFFFFF", short_name = "29")
-        val filters = departureRouteFilters(mapOf(
-            "a" to mapOf("one" to route, "two" to route.copy(color = "AABBCC"),
-                "three" to route.copy(color = "000000")),
-            "b" to mapOf("one" to route)
-        ))
+        val filters = departureRouteFilters(
+            mapOf(
+                "a" to mapOf(
+                    "one" to route, "two" to route.copy(color = "AABBCC"),
+                    "three" to route.copy(color = "000000")
+                ),
+                "b" to mapOf("one" to route)
+            )
+        )
         assertEquals(3, filters.size)
         val group = filters.single { "two" in it.routeIds }
         assertEquals(setOf("one", "two"), group.routeIds)
@@ -44,15 +48,31 @@ class DepartureRouteFiltersTest {
         assertFalse(matchesDepartureRouteFilters("a", "three", selected, filters))
         assertFalse(matchesDepartureRouteFilters("b", "one", selected, filters))
         assertTrue(matchesDepartureRouteFilters("b", "one", emptySet(), filters))
-        assertTrue(matchesDepartureRouteFilters("b", "one", selected + filters.single { it.key.chateau == "b" }.key, filters))
+        assertTrue(
+            matchesDepartureRouteFilters(
+                "b",
+                "one",
+                selected + filters.single { it.key.chateau == "b" }.key,
+                filters
+            )
+        )
     }
 
     @Test
     fun fallsBackToLongNameThenRouteId() {
-        val filters = departureRouteFilters(mapOf("a" to mapOf(
-            "id" to StopRouteInfo("000000", "FFFFFF", short_name = " ", long_name = "Airport"),
-            "29" to StopRouteInfo("000000", "FFFFFF")
-        )))
+        val filters = departureRouteFilters(
+            mapOf(
+                "a" to mapOf(
+                    "id" to StopRouteInfo(
+                        "000000",
+                        "FFFFFF",
+                        short_name = " ",
+                        long_name = "Airport"
+                    ),
+                    "29" to StopRouteInfo("000000", "FFFFFF")
+                )
+            )
+        )
         assertEquals(listOf("29", "Airport"), filters.map { it.key.name })
     }
 }

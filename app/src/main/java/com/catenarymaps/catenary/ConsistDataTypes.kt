@@ -50,10 +50,13 @@ data class Amenity(
 enum class AmenityStatus {
     @SerialName("Available")
     Available,
+
     @SerialName("NotAvailable")
     NotAvailable,
+
     @SerialName("Unknown")
     Unknown,
+
     @SerialName("Restricted")
     Restricted
 }
@@ -62,20 +65,28 @@ enum class AmenityStatus {
 enum class AmenityType {
     @SerialName("AIR_CONDITION")
     AirCondition,
+
     @SerialName("WHEELCHAIR_SPACE")
     WheelchairSpace,
+
     @SerialName("BIKE_SPACE")
     BikeSpace,
+
     @SerialName("QUIET_ZONE")
     QuietZone,
+
     @SerialName("FAMILY_ZONE")
     FamilyZone,
+
     @SerialName("INFO_POINT")
     InfoPoint,
+
     @SerialName("DINING_CAR")
     DiningCar,
+
     @SerialName("TOILET")
     Toilet,
+
     @SerialName("LOW_FLOOR")
     LowFloor
 }
@@ -99,8 +110,10 @@ data class PlatformSectorDefinition(
 enum class FormationStatus {
     @SerialName("MatchesSchedule")
     MatchesSchedule,
+
     @SerialName("DifferentRearLoad")
     DifferentRearLoad,
+
     @SerialName("Unknown")
     Unknown
 }
@@ -109,8 +122,10 @@ enum class FormationStatus {
 enum class Orientation {
     @SerialName("Forwards")
     Forwards,
+
     @SerialName("Backwards")
     Backwards,
+
     @SerialName("Unknown")
     Unknown
 }
@@ -119,8 +134,10 @@ enum class Orientation {
 enum class PassengerClass {
     @SerialName("FIRST")
     First,
+
     @SerialName("SECOND")
     Second,
+
     @SerialName("UNKNOWN")
     Unknown
 }
@@ -129,20 +146,28 @@ enum class PassengerClass {
 enum class SiriOccupancy {
     @SerialName("LOW")
     Low,
+
     @SerialName("MEDIUM")
     Medium,
+
     @SerialName("HIGH")
     High,
+
     @SerialName("VERY_HIGH")
     VeryHigh,
+
     @SerialName("EMPTY")
     Empty,
+
     @SerialName("STANDING_ROOM_ONLY")
     StandingRoomOnly,
+
     @SerialName("FULL")
     Full,
+
     @SerialName("NOT_ACCEPTING_PASSENGERS")
     NotAcceptingPassengers,
+
     @SerialName("UNKNOWN")
     Unknown
 }

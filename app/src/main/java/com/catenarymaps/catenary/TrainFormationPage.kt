@@ -77,14 +77,16 @@ fun CoachSequencePage(
 ) {
     when {
         sbbFormation != null && (
-            sbbFormation.formations.isNotEmpty() ||
-                sbbFormation.formationsAtScheduledStops.any {
-                    !it.formationShort?.formationShortString.isNullOrBlank()
-                }
-        ) ->
+                sbbFormation.formations.isNotEmpty() ||
+                        sbbFormation.formationsAtScheduledStops.any {
+                            !it.formationShort?.formationShortString.isNullOrBlank()
+                        }
+                ) ->
             SbbFormationPage(data = sbbFormation, modifier = modifier)
+
         coachSequence != null ->
             UnifiedFormationPage(coachSequence = coachSequence, modifier = modifier)
+
         else ->
             EmptyFormationMessage(modifier)
     }
@@ -530,7 +532,10 @@ private fun SbbVehicle(
 private fun NoPassageIcon() {
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     Canvas(modifier = Modifier.size(15.dp)) {
-        drawCircle(color = color, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx()))
+        drawCircle(
+            color = color,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
+        )
         drawLine(
             color = color,
             start = Offset(size.width * 0.2f, size.height * 0.8f),
@@ -657,7 +662,7 @@ private fun findSbbVehicleStop(
     if (matches.size <= 1) return matches.firstOrNull()
     return matches.firstOrNull {
         it.stopTime?.departureTime == station.stopTime?.departureTime &&
-            it.stopTime?.arrivalTime == station.stopTime?.arrivalTime
+                it.stopTime?.arrivalTime == station.stopTime?.arrivalTime
     } ?: matches.first()
 }
 
@@ -782,7 +787,7 @@ private fun Char.isSbbFormationShortStatus(): Boolean =
 
 private fun Char.isSbbFormationShortDelimiter(): Boolean =
     this == ':' || this == '#' || this == ',' || this == '@' ||
-        this == '[' || this == ']' || this == '(' || this == ')'
+            this == '[' || this == ']' || this == '(' || this == ')'
 
 /**
  * Parses the CUS formationShortString used by the stop-based SBB endpoint.
@@ -816,11 +821,13 @@ private fun parseSbbFormationShort(value: String?): List<SbbFormationShortVehicl
                     .takeIf { it.isNotEmpty() }
                 continue
             }
+
             '[' -> {
                 belongsToTrain = true
                 index++
                 continue
             }
+
             ']' -> {
                 belongsToTrain = false
                 index++
@@ -917,7 +924,7 @@ private fun buildStopBasedSbbFormation(station: SbbStationOption?): SbbFormation
             formationVehicleAtScheduledStops = listOf(
                 SbbFormationVehicleAtScheduledStop(
                     accessToPreviousVehicle = !parsed.noAccessToPreviousVehicle &&
-                        previous?.noAccessToNextVehicle != true,
+                            previous?.noAccessToNextVehicle != true,
                     sectors = parsed.sector,
                     stopPoint = stopPoint,
                     stopTime = station.stopTime,
@@ -1151,12 +1158,14 @@ private fun UnifiedFormationPage(
                                             topEnd = 8.dp,
                                             bottomEnd = 8.dp
                                         )
+
                                         vehicles.lastIndex -> RoundedCornerShape(
                                             topStart = 8.dp,
                                             bottomStart = 8.dp,
                                             topEnd = 20.dp,
                                             bottomEnd = 20.dp
                                         )
+
                                         else -> RoundedCornerShape(8.dp)
                                     }
                                 )
@@ -1230,7 +1239,10 @@ private fun UnifiedFormationPage(
             Spacer(Modifier.height(16.dp))
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (presentOccupancies.isNotEmpty()) {
-                    LegendItem(vectorIcon = Icons.Filled.Person, text = "Low to average occupancy expected")
+                    LegendItem(
+                        vectorIcon = Icons.Filled.Person,
+                        text = "Low to average occupancy expected"
+                    )
                     LegendItem(vectorIcon = Icons.Filled.Group, text = "High occupancy expected")
                     LegendItem(
                         vectorIcon = Icons.Filled.Groups,
@@ -1295,6 +1307,7 @@ private fun LegendItem(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
+
                 iconUrl != null -> AsyncImage(
                     model = iconUrl,
                     contentDescription = null,
@@ -1302,12 +1315,14 @@ private fun LegendItem(
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.size(18.dp)
                 )
+
                 vectorIcon != null -> Icon(
                     imageVector = vectorIcon,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                     tint = if (isRed) Color.Red else MaterialTheme.colorScheme.onSurface
                 )
+
                 textIcon != null -> Text(
                     text = textIcon,
                     color = if (isRed) Color.Red else MaterialTheme.colorScheme.onSurface,

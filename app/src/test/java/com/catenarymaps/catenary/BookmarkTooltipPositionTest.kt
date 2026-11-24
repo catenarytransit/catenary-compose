@@ -7,7 +7,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class BookmarkTooltipPositionTest {
-    @Test fun remainsBelowBookmarkWithUpwardPointingCaret() {
+    @Test
+    fun remainsBelowBookmarkWithUpwardPointingCaret() {
         val anchor = IntRect(left = 32, top = 180, right = 76, bottom = 224)
         assertEquals(
             IntOffset(32, 228),
@@ -15,7 +16,8 @@ class BookmarkTooltipPositionTest {
         )
     }
 
-    @Test fun doesNotFlipAboveBookmarkNearBottomOfWindow() {
+    @Test
+    fun doesNotFlipAboveBookmarkNearBottomOfWindow() {
         val anchor = IntRect(left = 32, top = 180, right = 76, bottom = 224)
         assertEquals(
             IntOffset(20, 228),
@@ -23,7 +25,8 @@ class BookmarkTooltipPositionTest {
         )
     }
 
-    @Test fun clampsHorizontalPositionToAvailableScreenWidth() {
+    @Test
+    fun clampsHorizontalPositionToAvailableScreenWidth() {
         val anchor = IntRect(left = 380, top = 60, right = 424, bottom = 104)
         assertEquals(
             IntOffset(160, 108),

@@ -159,7 +159,8 @@ class RTree<T> internal constructor(
                 val nodes = ArrayList<Node<T>>()
                 var i = 0
                 while (i < byX.size) {
-                    val slice = byX.subList(i, minOf(i + sliceSize, byX.size)).sortedBy { it.rect.minY }
+                    val slice =
+                        byX.subList(i, minOf(i + sliceSize, byX.size)).sortedBy { it.rect.minY }
                     var j = 0
                     while (j < slice.size) {
                         val group = slice.subList(j, minOf(j + M, slice.size))
@@ -172,6 +173,7 @@ class RTree<T> internal constructor(
                 }
                 return nodes
             }
+
             fun buildUpperLevel(children: List<Node<T>>): Node<T> {
                 if (children.size <= maxEntries) {
                     var mbr = children.first().mbr
@@ -186,7 +188,8 @@ class RTree<T> internal constructor(
                 val parentNodes = ArrayList<Node<T>>()
                 var i = 0
                 while (i < byX.size) {
-                    val slice = byX.subList(i, minOf(i + sliceSize, byX.size)).sortedBy { it.mbr.minY }
+                    val slice =
+                        byX.subList(i, minOf(i + sliceSize, byX.size)).sortedBy { it.mbr.minY }
                     var j = 0
                     while (j < slice.size) {
                         val group = slice.subList(j, minOf(j + M, slice.size))
@@ -271,8 +274,14 @@ fun <T> nodeSerializer(tSer: KSerializer<T>): KSerializer<RTree.Node<T>> {
                     is RTree.Node.Leaf -> {
                         encodeStringElement(descriptor, 0, "leaf")
                         encodeSerializableElement(descriptor, 1, Rect.serializer(), value.mbr)
-                        encodeSerializableElement(descriptor, 2, ListSerializer(entrySer), value.entries)
+                        encodeSerializableElement(
+                            descriptor,
+                            2,
+                            ListSerializer(entrySer),
+                            value.entries
+                        )
                     }
+
                     is RTree.Node.Branch -> {
                         encodeStringElement(descriptor, 0, "branch")
                         encodeSerializableElement(descriptor, 1, Rect.serializer(), value.mbr)
@@ -292,7 +301,9 @@ fun <T> nodeSerializer(tSer: KSerializer<T>): KSerializer<RTree.Node<T>> {
                     when (val i = decodeElementIndex(descriptor)) {
                         0 -> kind = decodeStringElement(descriptor, 0)
                         1 -> mbr = decodeSerializableElement(descriptor, 1, Rect.serializer())
-                        2 -> entries = decodeSerializableElement(descriptor, 2, ListSerializer(entrySer))
+                        2 -> entries =
+                            decodeSerializableElement(descriptor, 2, ListSerializer(entrySer))
+
                         3 -> children = decodeSerializableElement(descriptor, 3, childrenSer)
                         CompositeDecoder.DECODE_DONE -> break@loop
                         else -> throw SerializationException("Unexpected index: $i")
@@ -303,10 +314,12 @@ fun <T> nodeSerializer(tSer: KSerializer<T>): KSerializer<RTree.Node<T>> {
                         mbr ?: error("mbr missing"),
                         entries ?: error("entries missing")
                     )
+
                     "branch" -> RTree.Node.Branch(
                         mbr ?: error("mbr missing"),
                         children ?: error("children missing")
                     )
+
                     else -> error("Unknown kind: $kind")
                 }
             }
@@ -377,18 +390,26 @@ private fun computeBBox(geom: Geometry): BoundingBox {
         return BoundingBox(minX, minY, maxX, maxY)
     }
     return when (geom) {
-        is Point -> geom.bbox ?: BoundingBox(geom.longitude, geom.latitude, geom.longitude, geom.latitude)
+        is Point -> geom.bbox ?: BoundingBox(
+            geom.longitude,
+            geom.latitude,
+            geom.longitude,
+            geom.latitude
+        )
+
         is MultiPoint -> geom.bbox ?: fromPositions(geom.coordinates)
         is LineString -> geom.bbox ?: fromPositions(geom.coordinates)
         is MultiLineString -> geom.bbox ?: fromPositions(geom.coordinates.flatten())
         is Polygon -> geom.bbox ?: fromPositions(geom.coordinates.flatten())
         is MultiPolygon -> geom.bbox ?: fromPositions(geom.coordinates.flatten().flatten())
         is GeometryCollection<*> -> {
-            val boxes = geom.geometries.map { g -> (g as Geometry).bbox ?: computeBBox(g as Geometry) }
+            val boxes =
+                geom.geometries.map { g -> (g as Geometry).bbox ?: computeBBox(g as Geometry) }
             var rect = Rect.from(boxes.first())
             for (i in 1 until boxes.size) rect = rect.expandToInclude(Rect.from(boxes[i]))
             rect.toBoundingBox()
         }
+
         else -> error("Unsupported geometry type: $geom")
     }
 }
@@ -458,7 +479,8 @@ fun <P : Any> queryTouching(
 // ---------------------------- Small conveniences ----------------------------
 
 /** Easier construction of BoundingBox from lon/lat pairs. */
-fun bbox(west: Double, south: Double, east: Double, north: Double) = BoundingBox(west, south, east, north)
+fun bbox(west: Double, south: Double, east: Double, north: Double) =
+    BoundingBox(west, south, east, north)
 
 // ---------------------------- Parallel build ----------------------------
 
@@ -475,7 +497,12 @@ suspend fun <P : Any> buildRTreeParallel(
             .chunked(chunkSize)
             .map { chunk ->
                 async {
-                    chunk.map { f -> Entry(rect = featureRect(f as Feature<Geometry?, *>), value = f) }
+                    chunk.map { f ->
+                        Entry(
+                            rect = featureRect(f as Feature<Geometry?, *>),
+                            value = f
+                        )
+                    }
                 }
             }
             .toList()

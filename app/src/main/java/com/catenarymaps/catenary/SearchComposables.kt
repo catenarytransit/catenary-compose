@@ -49,15 +49,15 @@ import coil.request.ImageRequest
 
 @Composable
 fun SearchResultsOverlay(
-        modifier: Modifier = Modifier,
-        viewModel: SearchViewModel,
-        searchQuery: String,
-        stationHistory: StationHistory,
-        onRecentClick: (RecentStation) -> Unit,
-        onCypressClick: (CypressFeature) -> Unit,
-        onStopClick: (String, String, StopRanking, StopInfo) -> Unit,
-        onRouteClick: (RouteRanking, RouteInfo, Agency?) -> Unit,
-        onOsmStationClick: (OsmStationSearchResult) -> Unit
+    modifier: Modifier = Modifier,
+    viewModel: SearchViewModel,
+    searchQuery: String,
+    stationHistory: StationHistory,
+    onRecentClick: (RecentStation) -> Unit,
+    onCypressClick: (CypressFeature) -> Unit,
+    onStopClick: (String, String, StopRanking, StopInfo) -> Unit,
+    onRouteClick: (RouteRanking, RouteInfo, Agency?) -> Unit,
+    onOsmStationClick: (OsmStationSearchResult) -> Unit
 ) {
     val combinedRows by viewModel.searchRows.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -70,22 +70,24 @@ fun SearchResultsOverlay(
     val networkRows = withoutMatchingVisitedResults(combinedRows, matchingVisits)
 
     Surface(
-            modifier =
-                    modifier
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(top = 64.dp), // Offset for the search bar
-            tonalElevation = 6.dp,
-            shadowElevation = 8.dp
+        modifier =
+            modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(top = 64.dp), // Offset for the search bar
+        tonalElevation = 6.dp,
+        shadowElevation = 8.dp
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+        ) {
             LazyColumn(
-                    modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.surface)
-                                .windowInsetsPadding(WindowInsets.safeDrawing)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
             ) {
                 if (searchQuery.isBlank()) {
                     if (recentStations.isNotEmpty()) {
@@ -117,31 +119,34 @@ fun SearchResultsOverlay(
                     }
                     // Incoming results never repeat an already promoted visit.
                     items(networkRows) { row ->
-                    when (row) {
-                        is SearchRow.CypressRow -> {
-                            CypressResultItem(
+                        when (row) {
+                            is SearchRow.CypressRow -> {
+                                CypressResultItem(
                                     item = row.item,
                                     onClick = { onCypressClick(row.item) }
-                            )
-                        }
-                        is SearchRow.OsmStationRow -> {
-                            OsmStationResultItem(
-                                result = row.result,
-                                onClick = { onOsmStationClick(row.result) },
-                                listRoutes = true,
-                            )
-                        }
-                        is SearchRow.RouteRow -> {
-                            RouteResultItem(
+                                )
+                            }
+
+                            is SearchRow.OsmStationRow -> {
+                                OsmStationResultItem(
+                                    result = row.result,
+                                    onClick = { onOsmStationClick(row.result) },
+                                    listRoutes = true,
+                                )
+                            }
+
+                            is SearchRow.RouteRow -> {
+                                RouteResultItem(
                                     routeInfo = row.routeInfo,
                                     agency = row.agency,
                                     onClick = {
                                         onRouteClick(row.ranking, row.routeInfo, row.agency)
                                     }
-                            )
-                        }
-                        is SearchRow.StopRow -> {
-                            StopResultItem(
+                                )
+                            }
+
+                            is SearchRow.StopRow -> {
+                                StopResultItem(
                                     stopInfo = row.stopInfo,
                                     ranking = row.ranking,
                                     routes = row.routes,
@@ -149,18 +154,18 @@ fun SearchResultsOverlay(
                                     distanceMetres = row.distanceMetres,
                                     onClick = {
                                         onStopClick(
-                                                row.ranking.chateau,
-                                                row.ranking.gtfsId,
-                                                row.ranking,
-                                                row.stopInfo
+                                            row.ranking.chateau,
+                                            row.ranking.gtfsId,
+                                            row.ranking,
+                                            row.stopInfo
                                         )
                                     },
                                     listRoutes = true
-                            )
+                                )
+                            }
                         }
-                    }
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                     }
                 }
             }
@@ -172,7 +177,9 @@ fun SearchResultsOverlay(
 @Composable
 fun RecentStationResultItem(recent: RecentStation, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -184,29 +191,29 @@ fun RecentStationResultItem(recent: RecentStation, onClick: () -> Unit) {
             modifier = Modifier.size(24.dp)
         )
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(
-            text = recent.name,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = when (recent.kind) {
-                RecentStationKind.GTFS_STOP -> "Stop"
-                RecentStationKind.OSM_STATION -> "Station"
-                RecentStationKind.OSM_ITEM -> listOfNotNull(
-                    recent.osmType?.replace('_', ' ')
-                        ?.replaceFirstChar { it.titlecase() }
-                        ?.takeIf { it.isNotBlank() } ?: "OSM place",
-                    recent.address?.takeIf { it.isNotBlank() }
-                ).joinToString(" - ")
-            },
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1
-        )
+            Text(
+                text = recent.name,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = when (recent.kind) {
+                    RecentStationKind.GTFS_STOP -> "Stop"
+                    RecentStationKind.OSM_STATION -> "Station"
+                    RecentStationKind.OSM_ITEM -> listOfNotNull(
+                        recent.osmType?.replace('_', ' ')
+                            ?.replaceFirstChar { it.titlecase() }
+                            ?.takeIf { it.isNotBlank() } ?: "OSM place",
+                        recent.address?.takeIf { it.isNotBlank() }
+                    ).joinToString(" - ")
+                },
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
         }
     }
 }
@@ -220,17 +227,23 @@ private fun LocationResultItem(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         SearchTypeIcon(icon)
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp),
-            content = content)
+        Column(
+            modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp),
+            content = content
+        )
         if (distance != null) {
-            Text(distance, style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text(
+                distance, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1
+            )
         }
     }
 }
@@ -246,49 +259,53 @@ fun CypressResultItem(item: CypressFeature, distance: String? = null, onClick: (
     // Logic: if address layer, show street/housenumber.
     // if venue, show address components.
     val addressParts =
-            listOfNotNull(
-                    props.housenumber,
-                    props.street,
-                    props.neighbourhood,
-                    props.locality ?: props.county,
-                    props.region,
-                    props.country
-            )
+        listOfNotNull(
+            props.housenumber,
+            props.street,
+            props.neighbourhood,
+            props.locality ?: props.county,
+            props.region,
+            props.country
+        )
     val subtitle =
-            if (addressParts.isNotEmpty()) {
-                addressParts.joinToString(", ")
-            } else {
-                props.layer.replaceFirstChar { it.uppercase() }
-            }
+        if (addressParts.isNotEmpty()) {
+            addressParts.joinToString(", ")
+        } else {
+            props.layer.replaceFirstChar { it.uppercase() }
+        }
 
-    LocationResultItem(icon = SearchTypeIcons.place(props.categories, props.layer), distance = distance, onClick = onClick) {
+    LocationResultItem(
+        icon = SearchTypeIcons.place(props.categories, props.layer),
+        distance = distance,
+        onClick = onClick
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                    text = title,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f, fill = false),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                text = title,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f, fill = false),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             // Optional: Show layer type or category tag
             val tag = props.categories?.firstOrNull()?.split(":")?.getOrNull(1) ?: props.layer
             Text(
-                    text = tag,
-                    fontWeight = FontWeight.Light,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-            )
-        }
-        Text(
-                text = subtitle,
-                fontSize = 12.sp,
+                text = tag,
+                fontWeight = FontWeight.Light,
+                fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
+            )
+        }
+        Text(
+            text = subtitle,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -296,14 +313,14 @@ fun CypressResultItem(item: CypressFeature, distance: String? = null, onClick: (
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StopResultItem(
-        stopInfo: StopInfo,
-        ranking: StopRanking,
-        routes: List<RouteInfo>,
-        agencyNames: List<String>,
-        distanceMetres: Double?,
-        distance: String? = null,
-        onClick: () -> Unit,
-        listRoutes: Boolean = true,
+    stopInfo: StopInfo,
+    ranking: StopRanking,
+    routes: List<RouteInfo>,
+    agencyNames: List<String>,
+    distanceMetres: Double?,
+    distance: String? = null,
+    onClick: () -> Unit,
+    listRoutes: Boolean = true,
 ) {
     val distanceText = distance ?: distanceMetres?.let {
         if (it > 1000) String.format("%.1f km", it / 1000) else String.format("%.0f m", it)
@@ -322,11 +339,11 @@ fun StopResultItem(
         // Agency Names
         if (agencyNames.isNotEmpty()) {
             Text(
-                    text = agencyNames.joinToString(" • "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                text = agencyNames.joinToString(" • "),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -336,7 +353,11 @@ fun StopResultItem(
 
 @Composable
 fun RouteResultItem(routeInfo: RouteInfo, agency: Agency?, onClick: () -> Unit) {
-    LocationResultItem(icon = SearchTypeIcons.route(routeInfo.routeType), distance = null, onClick = onClick) {
+    LocationResultItem(
+        icon = SearchTypeIcons.route(routeInfo.routeType),
+        distance = null,
+        onClick = onClick
+    ) {
         Text(
             text = routeInfo.shortName ?: routeInfo.longName ?: routeInfo.routeId,
             fontWeight = FontWeight.Medium,
@@ -346,20 +367,29 @@ fun RouteResultItem(routeInfo: RouteInfo, agency: Agency?, onClick: () -> Unit) 
             overflow = TextOverflow.Ellipsis
         )
         if (!routeInfo.longName.isNullOrBlank()) {
-            Text(routeInfo.longName, style = MaterialTheme.typography.bodySmall,
+            Text(
+                routeInfo.longName, style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
         }
         if (agency != null) {
-            Text(agency.agencyName, style = MaterialTheme.typography.bodySmall,
+            Text(
+                agency.agencyName, style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
 
 @Composable
-fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = null, onClick: () -> Unit, listRoutes: Boolean) {
+fun OsmStationResultItem(
+    result: OsmStationSearchResult,
+    distance: String? = null,
+    onClick: () -> Unit,
+    listRoutes: Boolean
+) {
     val hierarchy = result.adminHierarchy
     val subtitleParts =
         listOfNotNull(
@@ -369,7 +399,11 @@ fun OsmStationResultItem(result: OsmStationSearchResult, distance: String? = nul
         )
     val subtitle = subtitleParts.joinToString(", ")
 
-    LocationResultItem(icon = SearchTypeIcons.station(result.modeType, result.routes.map { it.routeType }), distance = distance, onClick = onClick) {
+    LocationResultItem(
+        icon = SearchTypeIcons.station(
+            result.modeType,
+            result.routes.map { it.routeType }), distance = distance, onClick = onClick
+    ) {
         Text(
             text = result.name ?: "Unknown station",
             fontWeight = FontWeight.Medium,
@@ -406,9 +440,9 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
 
     val isRatp = RatpUtils.isIdfmChateau(chateauId) && RatpUtils.isRatpRoute(route.shortName)
     val isMta =
-            MtaSubwayUtils.MTA_CHATEAU_ID == chateauId &&
-                    !route.shortName.isNullOrEmpty() &&
-                    MtaSubwayUtils.isSubwayRouteId(route.shortName!!)
+        MtaSubwayUtils.MTA_CHATEAU_ID == chateauId &&
+                !route.shortName.isNullOrEmpty() &&
+                MtaSubwayUtils.isSubwayRouteId(route.shortName!!)
     val isSbb = chateauId == "schweiz" &&
             !route.shortName.isNullOrEmpty() &&
             (route.shortName!!.startsWith("IR") || route.shortName!!.startsWith("IC") || route.shortName == "EC")
@@ -417,16 +451,16 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
         val iconUrl = RatpUtils.getRatpIconUrl(route.shortName)
         if (iconUrl != null) {
             AsyncImage(
-                    model =
-                            ImageRequest.Builder(LocalContext.current)
-                                    .data(iconUrl)
-                                    .crossfade(true)
-                                    .decoderFactory(SvgDecoder.Factory())
-                                    .build(),
-                    contentDescription = route.shortName,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .padding(end = 2.dp)
+                model =
+                    ImageRequest.Builder(LocalContext.current)
+                        .data(iconUrl)
+                        .crossfade(true)
+                        .decoderFactory(SvgDecoder.Factory())
+                        .build(),
+                contentDescription = route.shortName,
+                modifier = Modifier
+                    .size(20.dp)
+                    .padding(end = 2.dp)
             )
             return
         }
@@ -434,18 +468,18 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
         val mtaColor = MtaSubwayUtils.getMtaSubwayColor(route.shortName!!)
         val symbolShortName = MtaSubwayUtils.getMtaSymbolShortName(route.shortName)
         Box(
-                modifier =
-                        Modifier
-                            .size(20.dp)
-                            .clip(androidx.compose.foundation.shape.CircleShape)
-                            .background(mtaColor),
-                contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .size(20.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(mtaColor),
+            contentAlignment = Alignment.Center
         ) {
             Text(
-                    text = symbolShortName,
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                text = symbolShortName,
+                color = Color.White,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
         return
@@ -473,14 +507,14 @@ fun RouteBadge(route: RouteInfo, chateauId: String) {
     val text = route.shortName ?: route.longName ?: ""
 
     Text(
-            text = text,
-            color = textColor,
-            modifier =
-                    Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(bgColor)
-                        .padding(horizontal = 6.dp, vertical = 1.dp),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
+        text = text,
+        color = textColor,
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(bgColor)
+                .padding(horizontal = 6.dp, vertical = 1.dp),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium
     )
 }
