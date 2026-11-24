@@ -34,6 +34,16 @@ class TripPlannerViewModel : ViewModel() {
     // Endpoint being selected with the fixed centre pin, separate from text search.
     var mapPicking by mutableStateOf<Boolean?>(null)
     var options by mutableStateOf(DirectionsOptions())
+        private set
+    private var optionsStore: TripPlannerOptionsStore? = null
+
+    /** Save on every user change, independently of completed searches and navigation. */
+    fun updateOptions(value: DirectionsOptions) {
+        if (options == value) return
+        optionsStore?.write(value)
+        invalidate()
+        options = value
+    }
     var arriveBy by mutableStateOf(false)
     var now by mutableStateOf(true)
     var time by mutableLongStateOf(Instant.now().epochSecond)
@@ -110,13 +120,27 @@ class TripPlannerViewModel : ViewModel() {
     private var sessionInitialized = false
 
     /** A retained ViewModel already owns the latest state during Activity recreation. */
-    internal fun restoreSession(session: TripPlannerSession?): Boolean {
+    internal fun restoreSession(
+        session: TripPlannerSession?,
+        optionsStore: TripPlannerOptionsStore? = null
+    ): Boolean {
         if (sessionInitialized) return false
         sessionInitialized = true
+        this.optionsStore = optionsStore
+        val preferredOptions = optionsStore?.read()
+        options = preferredOptions ?: DirectionsOptions()
         val saved = session?.validated() ?: return true
+        // An older journey snapshot must not replace newer preferences or display
+        // results that were calculated using different options.
+        if (preferredOptions != null && saved.options != preferredOptions) return true
+        // Upgrade existing installations that only saved options with a completed journey.
+        if (preferredOptions == null) {
+            options = saved.options
+            optionsStore?.write(options)
+        }
         origin = saved.origin; originText = saved.origin.name
         destination = saved.destination; destinationText = saved.destination.name
-        options = saved.options; arriveBy = saved.arriveBy; now = saved.now; time = saved.time
+        arriveBy = saved.arriveBy; now = saved.now; time = saved.time
         itineraries = saved.itineraries; selected = saved.selected
         details = saved.details; showTransfers = saved.showTransfers
         baseQuery = saved.requestQuery
