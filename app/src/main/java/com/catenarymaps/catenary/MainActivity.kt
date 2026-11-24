@@ -3750,7 +3750,7 @@ class MainActivity : ComponentActivity() {
                                 id = "major-livedots-context-label",
                                 visible = !directionsVisible && !activeJourneyVisible,
                                 source = majorDotsSource.value,
-                                textField = get("maptag").cast<StringValue>(),
+                                textField = contextVehicleLabelExpression(layerSettings.value, usUnits),
                                 textFont = const(listOf("Arimo-SemiBold")),
                                 textSize =
                                     interpolate(
@@ -3823,7 +3823,7 @@ class MainActivity : ComponentActivity() {
                             // Fixed pin tied to the active map selection; no drag hitbox.
                             SelectedLocationPinLayers(pin = selectedLocationPin)
                             if (directionsVisible || activeJourneyVisible) {
-                                if (journeyMapVisible) TripPlannerMap(journeyMapPlanner)
+                                if (journeyMapVisible) TripPlannerMap(journeyMapPlanner, layerSettings.value, usUnits)
                                 if (journeyMapVisible || (directionsVisible && tripPlanner.mapPicking != null)) {
                                     TripPlannerEndpoints(journeyMapPlanner)
                                 }

@@ -1,7 +1,6 @@
 package com.catenarymaps.catenary
 
 import androidx.compose.runtime.MutableState
-import kotlin.math.abs
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -31,45 +30,6 @@ private fun normalizeHexColor(value: String?, fallback: String = DEFAULT_ROUTE_C
 
 private fun normalizeRouteId(routeId: String?): String? =
     routeId?.trim('"')?.takeIf { it.isNotBlank() }
-
-private fun routeMapTag(
-    chateauId: String,
-    shortName: String?,
-    longName: String?,
-    routeId: String?
-): String {
-    val raw =
-        shortName?.takeIf { it.isNotBlank() }
-            ?: longName?.takeIf { it.isNotBlank() }
-            ?: routeId.orEmpty()
-
-    return fixRouteName(chateauId, raw, routeId)
-        .replace(" Branch", "")
-        .replace(" Line", "")
-        .replace("Counterclockwise", "ACW")
-        .replace("Clockwise", "CW")
-}
-
-private fun cleanHeadsign(headsign: String?, mapTag: String): String =
-    fixHeadsignText(headsign.orEmpty(), mapTag)
-        .replace("Counterclockwise", "ACW")
-        .replace("Clockwise", "CW")
-
-private fun vehicleDisplayLabel(label: String?, id: String?): String? =
-    label?.takeIf { it.isNotBlank() } ?: id?.takeIf { it.isNotBlank() }
-
-private fun makeVehicleContextDelayLabel(delaySeconds: Int?): String {
-    val delay = delaySeconds ?: return ""
-    if (delay == 0) return "+0m"
-
-    val sign = if (delay > 0) "+" else "-"
-    val absSeconds = abs(delay)
-
-    if (absSeconds < 60) return "$sign${absSeconds}s"
-
-    val roundedMinutes = (absSeconds + 30) / 60
-    return "$sign${roundedMinutes}m"
-}
 
 private fun contrastTextColorForLightMode(textColor: String): String =
     if (textColor.equals("#FFFFFF", ignoreCase = true)) "#111111" else textColor
@@ -104,16 +64,18 @@ private fun buildVehicleContextFeature(
     occupancyStatus: Int?,
     delaySeconds: Int?
 ): Feature<Point, JsonObject>? {
-    val displayVehicle = vehicleDisplayLabel(vehicleLabel, vehicleId) ?: return null
+    if (vehicleLabel.isNullOrBlank() && vehicleId.isNullOrBlank()) return null
+    val displayVehicle = vehicleMapVehicleLabel(chateauId, vehicleLabel, vehicleId)
     val normalizedRouteId = normalizeRouteId(routeId)
     val color = normalizeHexColor(routeColor)
     val textColor = normalizeHexColor(routeTextColor, DEFAULT_TEXT_COLOR)
     val lightContrast = contrastTextColorForLightMode(textColor)
     val darkContrast = contrastTextColorForDarkMode(textColor)
-    val routeLabel = routeMapTag(chateauId, routeShortName, routeLongName, normalizedRouteId)
-    val delayLabel = makeVehicleContextDelayLabel(delaySeconds)
-    val cleanedHeadsign = cleanHeadsign(headsign, routeLabel)
-    val tripLabel = tripShortName?.takeIf { it.isNotBlank() } ?: tripId.orEmpty()
+    val routeLabels = vehicleMapRouteLabels(
+        chateauId, normalizedRouteId, routeShortName, routeLongName, headsign
+    )
+    val delayLabel = vehicleMapDelayLabel(delaySeconds)
+    val tripLabel = vehicleMapTripLabel(tripShortName, tripId)
     val normalizedBearing = normalizeBearing(bearing)
 
     return Feature(
@@ -129,7 +91,7 @@ private fun buildVehicleContextFeature(
                 put("route_id", normalizedRouteId ?: "")
                 put("color", color)
                 put("text_color", textColor)
-                put("maptag", routeLabel)
+                put("maptag", routeLabels.route)
                 put("route_short_name", routeShortName ?: "")
                 put("route_long_name", routeLongName ?: "")
                 put("contrastlightmode", lightContrast)
@@ -137,15 +99,17 @@ private fun buildVehicleContextFeature(
                 put("contrastdarkmodebearing", darkContrast)
                 put("route_type", routeType ?: 3)
                 put("routeType", routeType ?: 3)
-                put("headsign", cleanedHeadsign)
+                put("headsign", routeLabels.headsign)
                 put("vehicleIdLabel", displayVehicle)
-                put("vehicle_id", vehicleId ?: displayVehicle)
+                put("vehicle_id", vehicleId ?: vehicleLabel ?: displayVehicle)
                 put("trip_short_name", tripShortName ?: "")
                 put("start_time", startTime ?: "")
                 put("start_date", startDate ?: "")
                 normalizedBearing?.let { put("bearing", it) }
                 put("has_bearing", normalizedBearing != null)
                 put("speed", speed ?: 0f)
+                put("speed_mph", vehicleMapSpeedLabel(speed, true))
+                put("speed_kmh", vehicleMapSpeedLabel(speed, false))
                 put("occupancy_status", occupancyStatus ?: -1)
                 put(
                     "crowd_symbol",
