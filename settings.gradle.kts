@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "Catenary"
 include(":app")
  
+include(":core:journey", ":feature:journeyplanner", ":feature:journeytracking")

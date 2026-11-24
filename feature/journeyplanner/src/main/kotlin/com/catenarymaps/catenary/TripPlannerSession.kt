@@ -8,7 +8,7 @@ import java.time.Instant
 
 /** One completed search, including the exact itinerary being viewed. */
 @Serializable
-internal data class TripPlannerSession(
+data class TripPlannerSession(
     val version: Int = 1,
     val origin: DirectionsLocation,
     val destination: DirectionsLocation,
@@ -39,7 +39,7 @@ internal data class TripPlannerSession(
     }
 }
 
-internal object TripPlannerSessionCodec {
+object TripPlannerSessionCodec {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
     fun encode(session: TripPlannerSession): String = json.encodeToString(session)

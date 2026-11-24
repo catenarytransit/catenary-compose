@@ -5,13 +5,13 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /** Long-lived search preferences, independent of the transient journey session. */
-internal interface TripPlannerOptionsStore {
+interface TripPlannerOptionsStore {
     /** Null means there are no saved preferences yet (including on upgrade). */
     fun read(): DirectionsOptions?
     fun write(options: DirectionsOptions)
 }
 
-internal class SharedPreferencesTripPlannerOptionsStore(
+class SharedPreferencesTripPlannerOptionsStore(
     context: Context,
     preferencesName: String = "trip_planner_options"
 ) : TripPlannerOptionsStore {
