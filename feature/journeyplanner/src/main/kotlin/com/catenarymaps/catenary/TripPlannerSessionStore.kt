@@ -7,7 +7,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 
 /** Called on Dispatchers.IO. Keep route geometry out of Bundles and device backups. */
-internal class TripPlannerSessionStore(file: File) {
+class TripPlannerSessionStore(file: File) {
     private val atomicFile = AtomicFile(file)
 
     fun read(): TripPlannerSession? = synchronized(lock) {

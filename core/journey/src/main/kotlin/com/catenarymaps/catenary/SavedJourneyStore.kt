@@ -10,14 +10,14 @@ import kotlinx.serialization.json.Json
 
 /** A self-contained snapshot: recalling a saved journey will not require the planner session. */
 @Serializable
-internal data class SavedJourney(
+data class SavedJourney(
     val journey: DirectionsItinerary,
     val origin: DirectionsLocation?,
     val destination: DirectionsLocation?,
     val savedAt: Long = System.currentTimeMillis()
 )
 
-internal class SavedJourneyStore(context: Context, name: String = "saved-journeys.db") :
+class SavedJourneyStore(context: Context, name: String = "saved-journeys.db") :
     SQLiteOpenHelper(context.applicationContext, name, null, 1) {
     private val appContext = context.applicationContext
     override fun onCreate(db: SQLiteDatabase) {

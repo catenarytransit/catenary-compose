@@ -72,6 +72,9 @@ android {
 kotlin { jvmToolchain(25) }
 
 dependencies {
+    implementation(project(":core:journey"))
+    implementation(project(":feature:journeyplanner"))
+    implementation(project(":feature:journeytracking"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

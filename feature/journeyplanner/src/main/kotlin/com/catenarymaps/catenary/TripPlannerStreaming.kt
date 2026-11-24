@@ -19,16 +19,16 @@ import okhttp3.WebSocketListener
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-internal enum class ConnectionDirection { BEFORE, AFTER }
+enum class ConnectionDirection { BEFORE, AFTER }
 
 /** Wire envelope shared with catenary-web and Edelweiss /v2/route/ws. */
 @Serializable
-internal data class DirectionsStreamMessage(
+data class DirectionsStreamMessage(
     val type: String, val requestId: String? = null, val sequence: Long? = null,
     val response: DirectionsPlan? = null, val message: String? = null
 )
 
-internal fun directionsPageQuery(
+fun directionsPageQuery(
     base: JsonObject,
     direction: ConnectionDirection,
     cursor: String? = null
@@ -46,20 +46,7 @@ internal fun directionsPageQuery(
         )
     }
 
-internal fun DirectionsItinerary.identity(): String = id?.takeIf { it.isNotEmpty() }
-    ?: buildJsonArray {
-        add(startTime); add(endTime)
-        add(buildJsonArray {
-            legs.forEach { leg ->
-                add(buildJsonArray {
-                    add(leg.mode); add(leg.startTime); add(leg.endTime); add(leg.routeId)
-                    add(leg.from?.name); add(leg.to?.name)
-                })
-            }
-        })
-    }.toString()
-
-internal fun mergeDirectionsPages(pages: List<DirectionsPlan>): List<DirectionsItinerary> {
+fun mergeDirectionsPages(pages: List<DirectionsPlan>): List<DirectionsItinerary> {
     fun valid(itinerary: DirectionsItinerary) = runCatching {
         Instant.parse(itinerary.startTime); Instant.parse(itinerary.endTime)
     }.isSuccess
@@ -78,7 +65,7 @@ internal fun mergeDirectionsPages(pages: List<DirectionsPlan>): List<DirectionsI
 private class BackendRouteException(message: String) : Exception(message)
 
 /** Ignore unrelated/stale frames; complete always carries the authoritative replacement. */
-internal class DirectionsStreamState(private val requestId: String) {
+class DirectionsStreamState(private val requestId: String) {
     private var sequence = 0L
     fun accept(message: DirectionsStreamMessage, onPage: (DirectionsPlan) -> Unit): Boolean {
         if (message.requestId != requestId) return false
@@ -102,7 +89,7 @@ internal class DirectionsStreamState(private val requestId: String) {
 }
 
 /** One WebSocket per visible planner, multiplexed by requestId. */
-internal class DirectionsSocketSession {
+class DirectionsSocketSession {
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
     private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).build()
     private val lock = Any()
@@ -221,7 +208,7 @@ internal class DirectionsSocketSession {
 }
 
 /** Try the retained WebSocket first, preserving the existing HTTP fallback. */
-internal object DirectionsStreaming {
+object DirectionsStreaming {
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
     suspend fun load(

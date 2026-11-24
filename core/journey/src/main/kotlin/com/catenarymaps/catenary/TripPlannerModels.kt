@@ -299,23 +299,6 @@ fun directionsDistance(leg: DirectionsLeg): Double? {
         .sumOf { (a, b) -> haversineDistance(a.first, a.second, b.first, b.second) }
 }
 
-fun SearchRow.directionsLocation(): DirectionsLocation? = when (this) {
-    is SearchRow.CypressRow -> item.geometry.coordinates.takeIf { it.size >= 2 }?.let {
-        DirectionsLocation(item.properties.name, it[1], it[0])
-    }
-
-    is SearchRow.StopRow -> DirectionsLocation(stopInfo.name, stopInfo.point.y, stopInfo.point.x)
-    is SearchRow.OsmStationRow -> result.point?.let {
-        DirectionsLocation(
-            result.name ?: "Station",
-            it.y,
-            it.x
-        )
-    }
-
-    is SearchRow.RouteRow -> null
-}?.takeIf { it.isValid() }
-
 fun encodeDirectionsPolyline(points: List<Pair<Double, Double>>): String {
     var lat = 0L;
     var lon = 0L
