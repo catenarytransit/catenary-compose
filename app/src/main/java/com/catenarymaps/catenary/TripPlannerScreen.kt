@@ -653,7 +653,7 @@ private fun JourneyOptionsContent(
         HorizontalDivider()
         // Fixed footer stays accessible even while the settings scroll.
         Button(
-            onClick = { planner.invalidate(); planner.options = DirectionsOptions() },
+            onClick = { planner.updateOptions(DirectionsOptions()) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
             Text(stringResource(R.string.directions_reset))
@@ -664,7 +664,7 @@ private fun JourneyOptionsContent(
 @Composable
 private fun TransportModeOptions(planner: TripPlannerViewModel) {
     val options = planner.options
-    fun update(value: DirectionsOptions) { planner.invalidate(); planner.options = value }
+    fun update(value: DirectionsOptions) = planner.updateOptions(value)
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable {
             update(options.copy(filterTransportModes = !options.filterTransportModes))
@@ -714,7 +714,7 @@ private fun TransportModeOptions(planner: TripPlannerViewModel) {
 @Composable
 private fun StreetOptions(planner: TripPlannerViewModel) {
     val options = planner.options
-    fun update(value: DirectionsOptions) { planner.invalidate(); planner.options = value }
+    fun update(value: DirectionsOptions) = planner.updateOptions(value)
     Column {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(selected = !options.cycling, onClick = { update(options.copy(cycling = false, accessSeconds = 900f, egressSeconds = 900f)) },

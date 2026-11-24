@@ -1277,7 +1277,9 @@ class MainActivity : ComponentActivity() {
                         val tripPlanner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                         // Guidance details must not overwrite the user's planner alternatives.
                         val activeJourneyPlanner: TripPlannerViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "active-journey-details")
-                        val plannerWasCreated = remember(tripPlanner) { tripPlanner.restoreSession(initialPlannerSession) }
+                        val plannerWasCreated = remember(tripPlanner) {
+                            tripPlanner.restoreSession(initialPlannerSession, SharedPreferencesTripPlannerOptionsStore(applicationContext))
+                        }
                         val restorePlanner = remember(tripPlanner) { tripPlanner.session(visible = true) != null }
                         val directionsSearch: SearchViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "directions-search")
 
