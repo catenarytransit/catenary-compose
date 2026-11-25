@@ -4684,9 +4684,17 @@ class MainActivity : ComponentActivity() {
                             if (journeyMapVisible) {
                                 withFrameNanos { }
                                 draggableState.snapTo(normalSheetTarget)
-                                val positions = journeyMapPlanner.selectedJourney?.legs.orEmpty()
-                                    .flatMap { directionsCoordinates(it) }
-                                if (positions.isNotEmpty()) {
+                                val legs = journeyMapPlanner.selectedJourney?.legs.orEmpty()
+                                val bounds = withContext(Dispatchers.Default) {
+                                    val positions = legs.flatMap { directionsCoordinates(it) }
+                                    if (positions.isEmpty()) null else org.maplibre.spatialk.geojson.BoundingBox(
+                                        positions.minOf { it.second } - 0.001,
+                                        positions.minOf { it.first } - 0.001,
+                                        positions.maxOf { it.second } + 0.001,
+                                        positions.maxOf { it.first } + 0.001
+                                    )
+                                }
+                                if (bounds != null) {
                                     geoLock.deactivate()
                                     val fitPadding = if (contentWidthFraction == 1f) PaddingValues(
                                         top = with(density) { (directionsDetailsHeight + directionsTopInset).toDp() } + 16.dp,
@@ -4697,11 +4705,7 @@ class MainActivity : ComponentActivity() {
                                         top = 24.dp, end = 24.dp, bottom = 24.dp
                                     )
                                     camera.animateTo(
-                                        boundingBox = org.maplibre.spatialk.geojson.BoundingBox(
-                                        positions.minOf { it.second } - 0.001,
-                                        positions.minOf { it.first } - 0.001,
-                                        positions.maxOf { it.second } + 0.001,
-                                        positions.maxOf { it.first } + 0.001), padding = fitPadding)
+                                        boundingBox = bounds, padding = fitPadding)
                                 }
                             }
                         }

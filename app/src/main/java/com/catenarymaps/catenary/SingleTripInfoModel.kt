@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,8 +85,9 @@ class SingleTripViewModel(
         )
     }
 
-    // All state touched by snapshot collection must be initialized before init:
-    // a cached Ramonda StateFlow value is emitted synchronously on Main.immediate.
+    // Serialize stop-time merges and progress scans on one background lane.
+    // StateFlow is thread-safe; the UI collects its published values on Main.
+    private val processingDispatcher = Dispatchers.Default.limitedParallelism(1)
     private var lastAppliedUpdate: TripRtUpdateData? = null
     private val _movingDotSegmentIdx = MutableStateFlow(-1)
     val movingDotSegmentIdx = _movingDotSegmentIdx.asStateFlow()
@@ -99,7 +102,7 @@ class SingleTripViewModel(
 
     private fun observeWebSocketData() {
         val identity = subscription ?: return
-        viewModelScope.launch {
+        viewModelScope.launch(processingDispatcher) {
             snapshots.collect { snapshots ->
                 val snapshot = snapshots[identity] ?: return@collect
                 snapshot.initial?.let { data ->
@@ -156,7 +159,7 @@ class SingleTripViewModel(
     }
 
     private fun fetchVehicleInfo() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             val vehicleId =
                 tripData.value?.vehicle?.label
                     ?: tripData.value?.vehicle?.id ?: tripSelected.vehicle_id
@@ -167,6 +170,8 @@ class SingleTripViewModel(
                 _vehicleData.value = fetchVehicleRealtimeForLabel(
                     tripSelected.chateau_id, vehicleId
                 ).firstOrNull()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("SingleTripViewModel", "Error fetching vehicle info: ${e.message}")
             }
@@ -182,8 +187,8 @@ class SingleTripViewModel(
             }
         }
 
-        // 100ms current time updater
-        viewModelScope.launch {
+        // 100ms current time updater, serialized with incoming realtime snapshots.
+        viewModelScope.launch(processingDispatcher) {
             while (true) {
                 delay(100L)
                 _currentTime.value = System.currentTimeMillis()
