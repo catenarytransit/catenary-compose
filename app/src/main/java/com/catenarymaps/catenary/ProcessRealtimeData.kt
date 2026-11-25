@@ -271,12 +271,8 @@ suspend fun rerenderCategoryLiveDots(
                     return@mapNotNull null
                 }
 
-                // Filter out known bad data points
                 val lat = vehicleData.position.latitude
                 val lon = vehicleData.position.longitude
-                if ((lat == 34.099503 && lon == -117.29602) || (lat == 34.250793 && lon == -119.205025) || (lat == 34.05573 && lon == -118.23351)) {
-                    return@mapNotNull null
-                }
 
                 var vehicleLabel = vehicleData.vehicle?.label ?: vehicleData.vehicle?.id ?: ""
                 if (chateauId == "new-south-wales" && vehicleLabel.contains(" to ")) {
