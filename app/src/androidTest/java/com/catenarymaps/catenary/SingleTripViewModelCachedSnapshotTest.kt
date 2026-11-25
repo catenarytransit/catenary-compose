@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -38,18 +41,21 @@ class SingleTripViewModelCachedSnapshotTest {
                 )
             )
         )
-        // StateFlow replays this snapshot immediately to a Main.immediate collector,
-        // before the ViewModel constructor returns.
+        // A cached snapshot must still hydrate the model when processing runs off Main.
         val snapshots = MutableStateFlow(mapOf(identity to RamondaTripSnapshot(initial = initial)))
         val store = ViewModelStore()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         try {
+            lateinit var model: SingleTripViewModel
             instrumentation.runOnMainSync {
-                val model = SingleTripViewModel(
+                model = SingleTripViewModel(
                     selected, snapshots,
                     subscribeTrip = {}, unsubscribeTrip = {}
                 )
                 store.put("cached-trip", model)
+            }
+            runBlocking { withTimeout(5_000) { model.isLoading.first { !it } } }
+            instrumentation.runOnMainSync {
                 assertFalse(model.isLoading.value)
                 assertNull(model.error.value)
                 assertEquals("trip", model.tripData.value?.trip_id)
@@ -96,12 +102,20 @@ class SingleTripViewModelCachedSnapshotTest {
         val store = ViewModelStore()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         try {
+            lateinit var model: SingleTripViewModel
             instrumentation.runOnMainSync {
-                val model = SingleTripViewModel(
+                model = SingleTripViewModel(
                     selected, snapshots,
                     subscribeTrip = {}, unsubscribeTrip = {}
                 )
                 store.put("updated-trip", model)
+            }
+            runBlocking {
+                withTimeout(5_000) {
+                    model.stopTimes.first { it.singleOrNull()?.rtDepartureTime == now + 180 }
+                }
+            }
+            instrumentation.runOnMainSync {
                 assertFalse(model.isLoading.value)
                 assertNull(model.error.value)
                 assertEquals(now + 180, model.stopTimes.value.single().rtDepartureTime)

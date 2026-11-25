@@ -84,8 +84,8 @@ fun TripPlannerMap(planner: TripPlannerViewModel) {
 @Composable
 private fun JourneyMapLines(journey: DirectionsItinerary) {
     journey.legs.forEachIndexed { index, leg ->
-        val points = remember(leg) {
-            directionsCoordinates(leg).map { (lat, lon) -> Position(lon, lat) }
+        val points = rememberBackgroundValue(leg, emptyList<Position>()) {
+            directionsCoordinates(it).map { (lat, lon) -> Position(lon, lat) }
         }
         if (points.size >= 2) {
             val source = rememberGeoJsonSource(GeoJsonData.Features(LineString(points)))

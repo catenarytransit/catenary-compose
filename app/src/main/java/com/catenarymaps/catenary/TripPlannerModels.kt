@@ -280,8 +280,13 @@ fun directionsCoordinates(leg: DirectionsLeg): List<Pair<Double, Double>> {
     val first = if (reverse) chosen.second else chosen.first
     val last = if (reverse) chosen.first else chosen.second
     val clipped =
-        (listOf(first.point) + points.subList(first.index + 1, last.index + 1) + last.point)
-            .fold(emptyList<Pair<Double, Double>>()) { acc, p -> if (acc.lastOrNull() == p) acc else acc + p }
+        buildList {
+            add(first.point)
+            for (p in points.subList(first.index + 1, last.index + 1)) {
+                if (lastOrNull() != p) add(p)
+            }
+            if (lastOrNull() != last.point) add(last.point)
+        }
     return if (clipped.size < 2) points else if (reverse) clipped.reversed() else clipped
 }
 

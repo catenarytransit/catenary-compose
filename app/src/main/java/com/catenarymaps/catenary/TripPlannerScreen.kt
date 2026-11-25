@@ -154,6 +154,7 @@ internal fun JourneyDetails(
 ) {
     key(journey.identity()) {
         val liveJourney = rememberLiveJourney(journey)
+        val detailLegs = rememberBackgroundValue(liveJourney, liveJourney.legs) { it.detailLegs() }
         val state = rememberLazyListState()
         val thresholdPx = with(LocalDensity.current) { 24.dp.toPx() }
         val summaryScroll = remember(planner, state, thresholdPx) {
@@ -189,7 +190,7 @@ internal fun JourneyDetails(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item { JourneyEndpoint(planner.origin?.name.orEmpty(), true) }
-            items(liveJourney.detailLegs()) { leg ->
+            items(detailLegs) { leg ->
                 JourneyLegDetails(
                     leg,
                     streetUsUnits,
@@ -1323,8 +1324,14 @@ private fun JourneyPreview(
 
 @Composable
 internal fun JourneyPreviewContent(journey: DirectionsItinerary, streetUsUnits: Boolean) {
-    val visible = remember(journey) { journey.previewLegs() }
-    val times = remember(journey) { journey.previewTimeGroups() }
+    val preview = rememberBackgroundValue(journey, null as Pair<List<DirectionsLeg>, PreviewTimeGroups>?) {
+        it.previewLegs() to it.previewTimeGroups()
+    }
+    val visible = preview?.first ?: journey.legs
+    val times = preview?.second ?: PreviewTimeGroups(
+        listOf(PreviewTimeMarker(journey.startTime, true, journey.departureTimezone)),
+        listOf(PreviewTimeMarker(journey.endTime, true, journey.arrivalTimezone))
+    )
     Column(
         Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -1611,11 +1618,16 @@ private fun JourneyLegDetails(
             )
         ) {
             if (leg.street) {
+                val distance = rememberBackgroundValue(leg, null as Result<Double?>?) {
+                    Result.success(directionsDistance(it))
+                }
                 ConnectionRow(rail, time = directionsDuration(leg.seconds), dotted = true) {
                     LegModeIcon(leg)
-                    Text(directionsDistance(leg)?.let { plannerDistance(it, streetUsUnits) }
-                        ?: stringResource(R.string.directions_distance_unavailable),
-                        style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        if (distance == null) "" else distance.getOrNull()?.let { plannerDistance(it, streetUsUnits) }
+                            ?: stringResource(R.string.directions_distance_unavailable),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             } else {
                 ConnectionRow(

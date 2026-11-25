@@ -6,6 +6,8 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
@@ -207,7 +209,9 @@ internal class DirectionsSocketSession {
             val stream = DirectionsStreamState(requestId)
             val completed = withTimeoutOrNull(45_000) {
                 for (text in messages) {
-                    val message = json.decodeFromString<DirectionsStreamMessage>(text)
+                    val message = withContext(Dispatchers.Default) {
+                        json.decodeFromString<DirectionsStreamMessage>(text)
+                    }
                     if (stream.accept(message, onPage)) return@withTimeoutOrNull true
                 }
                 error("Routing WebSocket closed before completion")
@@ -242,7 +246,11 @@ internal object DirectionsStreaming {
                 contentType(ContentType.Application.Json); setBody(identified.toString())
             }
             check(response.status.isSuccess()) { "Edelweiss HTTP ${response.status.value}" }
-            onPage(json.decodeFromString<DirectionsPlan>(response.bodyAsText()))
+            val text = response.bodyAsText()
+            val page = withContext(Dispatchers.Default) {
+                json.decodeFromString<DirectionsPlan>(text)
+            }
+            onPage(page)
         }
     }
 }
