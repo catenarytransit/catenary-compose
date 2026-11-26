@@ -21,7 +21,6 @@ import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.em
 import org.maplibre.compose.expressions.dsl.nil
 import org.maplibre.compose.expressions.value.ColorValue
-import org.maplibre.compose.expressions.value.StringValue
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.layers.SymbolLayer
@@ -54,12 +53,16 @@ internal fun AllLayerSettings.forJourneyDetailsMap(): AllLayerSettings {
 
 /** All planner-owned layers and subscriptions disappear when map details exits. */
 @Composable
-fun TripPlannerMap(planner: TripPlannerViewModel) {
+fun TripPlannerMap(
+    planner: TripPlannerViewModel,
+    layerSettings: AllLayerSettings,
+    usUnits: Boolean
+) {
     // Details should never show the other journey alternatives.
     planner.selectedJourney?.let { journey ->
         key(journey.identity()) {
             JourneyMapLines(journey)
-            JourneyMapVehicles(journey)
+            JourneyMapVehicles(journey, layerSettings, usUnits)
         }
     }
 
@@ -108,7 +111,11 @@ private data class JourneyVehicleCandidate(
 
 /** Ramonda supplies trip/vehicle identity; Birch supplies its changing GPS position. */
 @Composable
-private fun JourneyMapVehicles(journey: DirectionsItinerary) {
+private fun JourneyMapVehicles(
+    journey: DirectionsItinerary,
+    layerSettings: AllLayerSettings,
+    usUnits: Boolean
+) {
     val tripIdentities = journey.ramondaTrips()
     DisposableEffect(tripIdentities) {
         tripIdentities.forEach(RamondaWebSocket::subscribe)
@@ -175,7 +182,7 @@ private fun JourneyMapVehicles(journey: DirectionsItinerary) {
     )
     SymbolLayer(
         id = "directions-selected-vehicle-labels", source = source,
-        textField = get("maptag").cast<StringValue>(),
+        textField = contextVehicleLabelExpression(layerSettings, usUnits),
         textFont = const(listOf("Arimo-SemiBold")),
         textSize = const(0.75f).em, textColor = const(Color.White),
         textHaloColor = const(Color.Black), textHaloWidth = const(1.dp)
