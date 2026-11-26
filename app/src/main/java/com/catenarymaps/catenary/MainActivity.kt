@@ -1008,6 +1008,16 @@ class MainActivity : ComponentActivity() {
         refreshChateauxIndex()
     }
 
+    override fun onStart() {
+        super.onStart()
+        RamondaWebSocket.init()
+    }
+
+    override fun onStop() {
+        RamondaWebSocket.stopIdleConnection()
+        super.onStop()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
