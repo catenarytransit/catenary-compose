@@ -2,7 +2,6 @@ package com.catenarymaps.catenary
 
 import java.io.IOException
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -13,11 +12,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.WebSocket
-import okhttp3.WebSocketListener
 
 @Serializable
 internal data class NearbyDepartureMessage(
@@ -132,64 +126,32 @@ internal class NearbyDepartureStreamState(
     }
 }
 
-private val nearbySocketClient = OkHttpClient.Builder()
-    .readTimeout(0, TimeUnit.MILLISECONDS)
-    .pingInterval(5, TimeUnit.SECONDS)
-    .build()
-
 internal fun nearbyDepartureSnapshots(
     lat: Double, lon: Double, departureTime: Long?, progressive: Boolean
 ): Flow<NearbyResponseV3> = flow {
     val requestId = UUID.randomUUID().toString()
-    val json = Json { ignoreUnknownKeys = true }
     // First load can render priority routes early. Refreshes keep the previous complete
     // dataset visible until this request has assembled both phases, even if the server
     // sends progressive frames despite progressive=false.
     val state = NearbyDepartureStreamState(requestId, publishPriority = progressive)
-    val frames = callbackFlow<String> {
-        // A request-scoped socket keeps nearby refreshes independent of trip subscriptions.
-        val socket = nearbySocketClient.newWebSocket(
-            Request.Builder().url("wss://ramonda.catenarymaps.org/ws/").build(),
-            object : WebSocketListener() {
-                override fun onOpen(webSocket: WebSocket, response: Response) {
-                    val request = buildJsonObject {
-                        put("type", "nearby_departures")
-                        put("request_id", requestId)
-                        put("lat", lat)
-                        put("lon", lon)
-                        put("limit_per_station", 10)
-                        put("limit_per_headsign", 20)
-                        put("progressive", progressive)
-                        departureTime?.let { put("departure_time", it) }
-                    }
-                    if (!webSocket.send(request.toString())) close(IOException("Unable to send nearby request"))
-                }
-
-                override fun onMessage(webSocket: WebSocket, text: String) {
-                    if (trySend(text).isFailure) close(IOException("Nearby response buffer full"))
-                }
-
-                override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                    close(t)
-                }
-
-                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                    close(IOException("Nearby socket closed before completion: $code"))
-                }
-
-                override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                    webSocket.close(code, reason)
-                    close(IOException("Nearby socket closed before completion: $code"))
-                }
-            }
-        )
-        awaitClose { socket.cancel() }
+    val request = buildJsonObject {
+        put("type", "nearby_departures")
+        put("request_id", requestId)
+        put("lat", lat)
+        put("lon", lon)
+        put("limit_per_station", 10)
+        put("limit_per_headsign", 20)
+        put("progressive", progressive)
+        departureTime?.let { put("departure_time", it) }
     }
-    // Completion cancels callbackFlow and releases its socket immediately.
-    frames.first { text ->
+    val frames = callbackFlow<NearbyDepartureMessage> {
+        RamondaWebSocket.requestNearby(requestId, request.toString(), channel)
+        // Only cancel this request, never the application WebSocket.
+        awaitClose { RamondaWebSocket.cancelNearby(requestId) }
+    }
+    frames.first { frame ->
         val snapshots = mutableListOf<NearbyResponseV3>()
-        val complete =
-            state.accept(json.decodeFromString<NearbyDepartureMessage>(text), snapshots::add)
+        val complete = state.accept(frame, snapshots::add)
         snapshots.forEach { emit(it) }
         complete
     }

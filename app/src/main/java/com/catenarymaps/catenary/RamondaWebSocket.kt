@@ -1,17 +1,21 @@
 package com.catenarymaps.catenary
 
 import android.util.Log
+import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -67,7 +71,10 @@ data class RamondaCommonMessage(
     val type: String,
     val subscription: RamondaTripIdentity? = null,
     val data: JsonElement? = null,
-    val message: String? = null
+    val message: String? = null,
+    @SerialName("request_id") val requestId: String? = null,
+    val phase: String? = null,
+    val complete: Boolean = false
 )
 
 data class RamondaTripSnapshot(
@@ -111,19 +118,33 @@ internal class RamondaSubscriptionRegistry {
  * subscribe to the same run without unsubscribing each other. Only the final
  * release sends unsubscribe_trip. All mutations run on a single dispatcher.
  */
-object RamondaWebSocket {
-    private val client = OkHttpClient.Builder()
+object RamondaWebSocket : RamondaConnection()
+
+/** The application socket is also used for successive nearby-departure queries. */
+open class RamondaConnection internal constructor(
+    private val client: WebSocket.Factory = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .pingInterval(15, TimeUnit.SECONDS)
         .minWebSocketMessageToCompress(0)
-        .build()
-    private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-    private val scope = CoroutineScope(dispatcher)
+        .build(),
+    private val scope: CoroutineScope =
+        CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
+) {
     private val json = Json { ignoreUnknownKeys = true }
     private var webSocket: WebSocket? = null
     private var socketGeneration = 0L
     private var reconnectJob: Job? = null
     private var pingJob: Job? = null
+    private var keepWarm = false
+
+    private data class NearbyRequest(
+        val id: String,
+        val payload: String,
+        val frames: SendChannel<NearbyDepartureMessage>
+    )
+
+    // Ramonda permits one nearby job per socket, independently of trip subscriptions.
+    private var nearby: NearbyRequest? = null
     private val subscriptions = RamondaSubscriptionRegistry()
     private val _tripSnapshots =
         MutableStateFlow<Map<RamondaTripIdentity, RamondaTripSnapshot>>(emptyMap())
@@ -135,7 +156,60 @@ object RamondaWebSocket {
     val ramondaError: StateFlow<String?> = _ramondaError.asStateFlow()
 
     fun init() {
-        scope.launch { ensureConnection() }
+        scope.launch {
+            keepWarm = true
+            ensureConnection()
+        }
+    }
+
+    /** Keep existing trip subscriptions alive in the background, but not an idle socket. */
+    fun stopIdleConnection() {
+        scope.launch {
+            keepWarm = false
+            closeIfIdle()
+        }
+    }
+
+    internal fun requestNearby(
+        requestId: String, payload: String, frames: SendChannel<NearbyDepartureMessage>
+    ): Job = scope.launch {
+        finishNearby(CancellationException("Nearby request superseded"))
+        nearby = NearbyRequest(requestId, payload, frames)
+        ensureConnection()
+        if (_ramondaStatus.value == "connected") sendNearby()
+    }
+
+    internal fun cancelNearby(requestId: String): Job = scope.launch {
+        // A cancelled old collector must not cancel its replacement on the server.
+        if (nearby?.id != requestId) return@launch
+        finishNearby()
+        sendNearbyCancel()
+        closeIfIdle()
+    }
+
+    private fun finishNearby(error: Throwable? = null) {
+        val request = nearby ?: return
+        nearby = null
+        request.frames.close(error)
+    }
+
+    private fun sendNearby() {
+        val request = nearby ?: return
+        if (webSocket?.send(request.payload) != true) {
+            disconnect(socketGeneration, "error")
+        }
+    }
+
+    private fun sendNearbyCancel() {
+        if (_ramondaStatus.value == "connected" &&
+            webSocket?.send("{\"type\":\"cancel_nearby_departures\"}") != true
+        ) disconnect(socketGeneration, "error")
+    }
+
+    private fun closeIfIdle() {
+        if (!keepWarm && !subscriptions.isNotEmpty() && nearby == null) {
+            disconnect(socketGeneration, "disconnected")
+        }
     }
 
     fun subscribeTrip(
@@ -158,6 +232,7 @@ object RamondaWebSocket {
             if (subscriptions.release(identity)) {
                 _tripSnapshots.value = _tripSnapshots.value - identity
                 if (_ramondaStatus.value == "connected") sendUnsubscribe(identity)
+                closeIfIdle()
             }
         }
     }
@@ -185,6 +260,8 @@ object RamondaWebSocket {
 
     private fun ensureConnection() {
         if (webSocket != null) return
+        reconnectJob?.cancel()
+        reconnectJob = null
         _ramondaStatus.value = "connecting"
         val generation = ++socketGeneration
         webSocket = client.newWebSocket(
@@ -194,6 +271,9 @@ object RamondaWebSocket {
                     scope.launch {
                         if (generation != socketGeneration) return@launch
                         _ramondaStatus.value = "connected"
+                        // A cold/reopened connection sends the waiting nearby query immediately.
+                        sendNearby()
+                        if (_ramondaStatus.value != "connected") return@launch
                         subscriptions.active().forEach(::sendSubscribe)
                         pingJob?.cancel()
                         pingJob = scope.launch {
@@ -218,7 +298,7 @@ object RamondaWebSocket {
                 }
 
                 override fun onFailure(socket: WebSocket, t: Throwable, response: Response?) {
-                    scope.launch { disconnect(generation, "error") }
+                    scope.launch { disconnect(generation, "error", t) }
                 }
 
                 override fun onClosed(socket: WebSocket, code: Int, reason: String) {
@@ -232,21 +312,78 @@ object RamondaWebSocket {
         )
     }
 
-    private fun disconnect(generation: Long, status: String) {
+    private fun disconnect(
+        generation: Long, status: String, cause: Throwable? = null
+    ) {
         if (generation != socketGeneration) return
+        ++socketGeneration
+        val socket = webSocket
         webSocket = null
+        socket?.cancel()
         pingJob?.cancel()
         pingJob = null
         _ramondaStatus.value = status
+        finishNearby(cause ?: IOException("Ramonda socket disconnected"))
         reconnectJob?.cancel()
-        if (subscriptions.isNotEmpty()) reconnectJob = scope.launch {
+        reconnectJob = null
+        // Reconnect even between requests while the activity is foregrounded.
+        if (keepWarm || subscriptions.isNotEmpty()) reconnectJob = scope.launch {
             delay(5_000)
+            reconnectJob = null
             ensureConnection()
         }
     }
 
+    private fun acceptNearbyFrame(frame: RamondaCommonMessage) {
+        val request = nearby ?: return
+        val unscopedError = frame.type == "error" && frame.subscription == null &&
+                frame.requestId == null
+        if (frame.requestId != request.id && !unscopedError) return
+
+        val message = try {
+            NearbyDepartureMessage(
+                type = frame.type,
+                requestId = frame.requestId,
+                phase = frame.phase,
+                complete = frame.complete,
+                data = if (frame.type == "nearby_departures") {
+                    frame.data?.let { json.decodeFromJsonElement(NearbyResponseV3.serializer(), it) }
+                } else null,
+                message = frame.message
+            )
+        } catch (e: Exception) {
+            finishNearby(e)
+            sendNearbyCancel()
+            closeIfIdle()
+            return
+        }
+        val terminal = frame.complete || frame.type != "nearby_departures"
+        if (request.frames.trySend(message).isFailure) {
+            finishNearby(IOException("Unable to deliver nearby response"))
+            if (!terminal) sendNearbyCancel()
+        } else if (terminal) {
+            finishNearby()
+        }
+        closeIfIdle()
+    }
+
     /** Missing identities are deliberately rejected: guessing is unsafe for multi-trip views. */
     private fun acceptFrame(frame: RamondaCommonMessage) {
+        if (frame.type == "nearby_departures" || frame.type == "nearby_departures_error") {
+            acceptNearbyFrame(frame)
+            return
+        }
+        // Older deployments may reject nearby commands with an unscoped error.
+        if (frame.type == "error" && frame.subscription == null) {
+            if (frame.requestId != null) {
+                if (frame.requestId == nearby?.id) {
+                    finishNearby(IOException(frame.message ?: "Nearby departures failed"))
+                    closeIfIdle()
+                }
+                return
+            }
+            acceptNearbyFrame(frame)
+        }
         when (frame.type) {
             "initial_trip", "update_trip" -> {
                 val identity = frame.subscription ?: return
