@@ -1930,43 +1930,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val onPinDrop: () -> Unit = {
-                    // val proj = camera.projection
-
-                    println("on pin drop triggered")
-
-                    if (pin.position == null) {
-
-                        // val centerDp = with(density) {
-                        // DpOffset((mapSize.width / 2f).toDp(), (mapSize.height /
-                        // 2f).toDp())
-                        // val pos = proj.positionFromScreenLocation(centerDp)
-                        val camerapos = camera.position
-                        val pos =
-                            Position(
-                                latitude = camerapos.target.latitude,
-                                longitude = camerapos.target.longitude
-                            )
-                        pin = PinState(active = true, position = pos)
-                    } else {
-
-                        pin = pin.copy(active = true, position = pin.position)
-                    }
-                }
-
-                val onCenterPin: () -> Unit = {
-                    println("on centre pin dropped")
-
-                    val camerapos = camera.position
-                    val pos =
-                        Position(
-                            latitude = camerapos.target.latitude,
-                            longitude = camerapos.target.longitude
-                        )
-
-                    pin = PinState(active = true, position = pos)
-                }
-
                 val geoLock = rememberGeoLockController()
 
                 // Launch location fetch once
@@ -2265,6 +2228,22 @@ class MainActivity : ComponentActivity() {
                             sideDrawerVisible = isSearchFocused || sheetHalfOrMore,
                             layoutDirection = mapLayoutDirection,
                         )
+
+                        // Use the visible map midpoint for pin placement only.
+                        // Never apply drawer padding to the interactive camera here.
+                        fun nearbyPinPosition(): Position {
+                            val screenCenter = nearbyDeparturePinScreenCenter(
+                                mapWidth = with(density) { mapSize.width.toDp() },
+                                mapHeight = with(density) { mapSize.height.toDp() },
+                                sheetTop = with(density) { draggableState.requireOffset().toDp() },
+                                isPortraitPhone = isPortraitPhone,
+                                sheetPartiallyExpanded =
+                                    draggableState.currentValue == SheetSnapPoint.PartiallyExpanded,
+                            )
+                            return screenCenter?.let {
+                                camera.projection?.positionFromScreenLocation(it)
+                            } ?: camera.position.target
+                        }
 
                         val recenterGps: suspend (Pair<Double, Double>, Double?) -> Unit =
                             { loc, zoom ->
@@ -3977,9 +3956,14 @@ class MainActivity : ComponentActivity() {
                                                         false
                                                 )
                                         },
-                                        onPinDrop = { onPinDrop() },
+                                        onPinDrop = {
+                                            pin = PinState(
+                                                active = true,
+                                                position = pin.position ?: nearbyPinPosition(),
+                                            )
+                                        },
                                         onCenterPin = {
-                                            onCenterPin()
+                                            pin = PinState(active = true, position = nearbyPinPosition())
                                         },
                                         onTripClick = { r ->
                                             val newStack =

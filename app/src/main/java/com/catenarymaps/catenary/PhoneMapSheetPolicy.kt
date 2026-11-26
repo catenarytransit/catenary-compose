@@ -81,6 +81,28 @@ internal fun gpsRecenterPadding(
     )
 }
 
+/**
+ * Screen point for a new or recentered Nearby Departures pin on a half-open portrait phone.
+ * The sheet top already accounts for bottom navigation and insets. This is a projection
+ * point, not camera padding; other drawer states keep the existing camera-target behavior.
+ */
+internal fun nearbyDeparturePinScreenCenter(
+    mapWidth: Dp,
+    mapHeight: Dp,
+    sheetTop: Dp,
+    isPortraitPhone: Boolean,
+    sheetPartiallyExpanded: Boolean,
+): DpOffset? {
+    if (!isPortraitPhone || !sheetPartiallyExpanded ||
+        mapWidth <= 0.dp || mapHeight <= 0.dp || !sheetTop.value.isFinite()
+    ) return null
+
+    return DpOffset(
+        x = mapWidth / 2f,
+        y = sheetTop.coerceIn(0.dp, mapHeight) / 2f,
+    )
+}
+
 /** Geographic coordinate to preserve when discarding one-shot camera padding. */
 internal fun mapViewportCenter(
     mapWidth: Dp,

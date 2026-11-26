@@ -54,6 +54,40 @@ class PhoneMapSheetPolicyTest {
     }
 
     @Test
+    fun nearbyPinUsesVisibleMapCenterWithoutPersistentPadding() {
+        val center = nearbyDeparturePinScreenCenter(
+            mapWidth = 400.dp,
+            mapHeight = 800.dp,
+            sheetTop = 360.dp,
+            isPortraitPhone = true,
+            sheetPartiallyExpanded = true,
+        )
+        assertEquals(200.dp, center?.x)
+        assertEquals(180.dp, center?.y)
+        assertFalse(usesPersistentDrawerPadding(nearbyDeparturesVisible = true, isPortraitPhone = true))
+    }
+
+    @Test
+    fun nearbyPinUsesActualSheetTopRatherThanFixedHalfScreen() {
+        val center = nearbyDeparturePinScreenCenter(390.dp, 900.dp, 410.dp, true, true)
+        assertEquals(195.dp, center?.x)
+        assertEquals(205.dp, center?.y)
+    }
+
+    @Test
+    fun nearbyPinKeepsCameraTargetOutsideHalfOpenPortraitPhone() {
+        assertEquals(null, nearbyDeparturePinScreenCenter(400.dp, 800.dp, 720.dp, true, false))
+        assertEquals(null, nearbyDeparturePinScreenCenter(400.dp, 800.dp, 60.dp, true, false))
+        assertEquals(null, nearbyDeparturePinScreenCenter(800.dp, 400.dp, 200.dp, false, true))
+    }
+
+    @Test
+    fun nearbyPinHandlesUnavailableMapGeometry() {
+        assertEquals(null, nearbyDeparturePinScreenCenter(0.dp, 0.dp, 360.dp, true, true))
+        assertEquals(null, nearbyDeparturePinScreenCenter(400.dp, 800.dp, Float.NaN.dp, true, true))
+    }
+
+    @Test
     fun gpsRecenterUsesSpaceAbovePortraitPhoneDrawer() {
         val padding = gpsRecenterPadding(
             cameraPadding = PaddingValues(0.dp),
