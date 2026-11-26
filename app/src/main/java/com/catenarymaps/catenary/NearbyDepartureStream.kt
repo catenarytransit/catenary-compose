@@ -96,31 +96,16 @@ internal class NearbyDepartureStreamState(
         )
         if (message.type != "nearby_departures") return false
         val data = message.data ?: throw IOException("Missing nearby departures payload")
-        when (message.phase) {
-            "priority" -> {
-                if (priority != null) return false
-                check(!message.complete) { "Priority frame cannot finish the request" }
-                priority = data
-                if (publishPriority) onSnapshot(data)
-            }
-
-            "remaining" -> {
-                check(message.complete) { "Remaining frame must finish the request" }
-                onSnapshot(
-                    mergeNearbyDepartures(
-                        priority ?: throw IOException("Missing priority frame"), data
-                    )
-                )
-                finished = true
-            }
-
-            "full" -> {
-                check(message.complete) { "Full frame must finish the request" }
-                onSnapshot(data)
-                finished = true
-            }
-
-            else -> throw IOException("Unknown nearby departures phase")
+        if (message.phase == "full") {
+            check(message.complete) { "Full frame must finish the request" }
+            onSnapshot(data)
+            finished = true
+        } else {
+            check(!message.phase.isNullOrBlank()) { "Missing nearby departures phase" }
+            val snapshot = priority?.let { mergeNearbyDepartures(it, data) } ?: data
+            priority = snapshot
+            finished = message.complete
+            if (finished || publishPriority) onSnapshot(snapshot)
         }
         return finished
     }
@@ -142,6 +127,7 @@ internal fun nearbyDepartureSnapshots(
         put("limit_per_station", 10)
         put("limit_per_headsign", 20)
         put("progressive", progressive)
+        put("three_phase", true)
         departureTime?.let { put("departure_time", it) }
     }
     val frames = callbackFlow<NearbyDepartureMessage> {
